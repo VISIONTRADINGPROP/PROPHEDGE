@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "rewrites": [
-    { "source": "/app", "destination": "/public/app.html" },
-    { "source": "/app.html", "destination": "/public/app.html" },
-    { "source": "/", "destination": "/public/index.html" }
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/app", "dest": "/app.html" },
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
