@@ -1,7 +1,3 @@
-// api/check-license.js
-// Verifica che l'utente abbia una licenza valida
-// Chiamata dalla pagina di login e dall'app
-
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
@@ -9,7 +5,7 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
-  if (req.method !== 'POST')    { res.status(405).json({ error: 'Method not allowed' }); return; }
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
 
   try {
     const { user_id, token } = req.body;
@@ -17,10 +13,10 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ valid: false, reason: 'missing_params' });
     }
 
-    // Usa il token dell'utente per verificare la sessione (sicuro)
+    // Usa il token utente per verificare la sessione
     const sb = createClient(
       process.env.SUPABASE_URL,
-      process.env.SUPABASE_ANON_KEY
+      process.env.SUPABASE_SERVICE_KEY  // sb_secret_... (nuova chiave)
     );
 
     const { data: { user }, error } = await sb.auth.getUser(token);
@@ -28,7 +24,6 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ valid: false, reason: 'invalid_session' });
     }
 
-    // Controlla license_end nei metadati utente
     const meta = user.user_metadata || {};
     const licenseEnd = meta.license_end;
 
@@ -40,20 +35,11 @@ module.exports = async function handler(req, res) {
     const end = new Date(licenseEnd);
 
     if (now > end) {
-      return res.status(200).json({
-        valid: false,
-        reason: 'expired',
-        expired_at: licenseEnd
-      });
+      return res.status(200).json({ valid: false, reason: 'expired', expired_at: licenseEnd });
     }
 
-    // Licenza valida
     const daysLeft = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
-    return res.status(200).json({
-      valid: true,
-      expires: licenseEnd,
-      days_left: daysLeft
-    });
+    return res.status(200).json({ valid: true, expires: licenseEnd, days_left: daysLeft });
 
   } catch (err) {
     console.error('check-license error:', err.message);
