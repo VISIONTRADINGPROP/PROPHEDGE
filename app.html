@@ -1164,8 +1164,12 @@ function doRegister(){
   <div class="tab mrow" onclick="goTab('proplist',this)" id="tabProp">Prop</div>
   <div class="tab mrow" onclick="goTab('brokerlist',this)" id="tabBroker">Broker</div>
   <div class="tab mrow" onclick="goTab('guide',this)" id="tabGuide">Guida</div>
-  <div class="tab mrow" onclick="goTab('account',this)" id="tabAccount" style="margin-left:auto;display:flex;align-items:center;gap:7px;padding:6px 12px"><span id="tabAccountFlag" style="line-height:1;flex-shrink:0"></span><div id="tabAccountPhoto" style="width:26px;height:26px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--t3)"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="4" fill="var(--teal)" opacity=".5"/><path d="M3 19c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="var(--teal)" stroke-width="1.5" fill="none" opacity=".4"/></svg></div><span id="tabAccountName" style="font-size:11px">Account</span></div>
+  <div class="tab mrow" onclick="toggleAccDrop(event)" id="tabAccount" style="margin-left:auto;display:flex;align-items:center;gap:7px;padding:6px 12px;position:relative"><span id="tabAccountFlag" style="line-height:1;flex-shrink:0"></span><div id="tabAccountPhoto" style="width:26px;height:26px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--t3)"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="4" fill="var(--teal)" opacity=".5"/><path d="M3 19c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="var(--teal)" stroke-width="1.5" fill="none" opacity=".4"/></svg></div><span id="tabAccountName" style="font-size:11px">Account</span></div>
 </div>
+
+<!-- ACCOUNT DROPDOWN OVERLAY -->
+<div id="accDropOverlay" style="display:none;position:fixed;inset:0;z-index:88888" onclick="closeAccDrop()"></div>
+<div id="accDropPanel" style="display:none;position:fixed;top:54px;right:12px;z-index:88889;width:min(420px,calc(100vw - 24px));max-height:calc(100vh - 70px);overflow-y:auto;background:var(--bg2);border:1px solid var(--border2);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.6);padding:0" onclick="event.stopPropagation()"></div>
 
 <div class="content" id="main"></div>
 
@@ -1892,21 +1896,49 @@ function goTab(tab, el) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
   if (el) el.classList.add('active');
-  // Reset content styles when leaving platform tab
   var ct = document.getElementById('main');
   if (ct && tab !== 'platform') {
     ct.style.padding = '';
     ct.style.maxWidth = '';
   }
-  // Chiudi i menu account se si cambia tab
-  if (tab !== 'account') {
-    acState.myAccount = false;
-    acState.resetPwd  = false;
-    acState.settings  = false;
-    acState.lang      = false;
-    acState.theme     = false;
-  }
+  acState.myAccount = false;
+  acState.resetPwd  = false;
+  acState.settings  = false;
+  acState.lang      = false;
+  acState.theme     = false;
+  closeAccDrop();
   render();
+}
+
+function toggleAccDrop(e) {
+  if (e) e.stopPropagation();
+  var panel = document.getElementById('accDropPanel');
+  var overlay = document.getElementById('accDropOverlay');
+  if (!panel || !overlay) return;
+  if (panel.style.display === 'none' || !panel.style.display) {
+    panel.innerHTML = renderAccount();
+    panel.style.display = 'block';
+    overlay.style.display = 'block';
+    document.getElementById('tabAccount').classList.add('active');
+  } else {
+    closeAccDrop();
+  }
+}
+
+function closeAccDrop() {
+  var panel = document.getElementById('accDropPanel');
+  var overlay = document.getElementById('accDropOverlay');
+  if (panel) panel.style.display = 'none';
+  if (overlay) overlay.style.display = 'none';
+  var tab = document.getElementById('tabAccount');
+  if (tab) tab.classList.remove('active');
+}
+
+function refreshAccDrop() {
+  var panel = document.getElementById('accDropPanel');
+  if (panel && panel.style.display !== 'none') {
+    panel.innerHTML = renderAccount();
+  }
 }
 
 // ===== RENDER DASHBOARD =====
@@ -2492,7 +2524,7 @@ function toggleAc(key) {
   acState[key] = !acState[key];
   if (key === 'myAccount' && !acState[key]) { acState.resetPwd = false; }
   if (key === 'settings' && !acState[key]) { acState.lang = false; acState.theme = false; }
-  render();
+  refreshAccDrop();
 }
 
 function fmtDate(s) {
@@ -2667,6 +2699,7 @@ function setLang(l) {
   saveAccountData();
   applyLangToUI();
   render();
+  refreshAccDrop();
 }
 
 function applyLangToUI() {
@@ -2712,7 +2745,7 @@ function setTheme(t) {
   accountData.theme = t;
   applyTheme();
   saveAccountData();
-  render();
+  refreshAccDrop();
 }
 
 function triggerPhotoUpload() {
@@ -2727,8 +2760,7 @@ function onPhotoChange(input) {
   reader.onload = function(e) {
     accountData.photo = e.target.result;
     saveAccountData();
-    render();
-    // Aggiorna foto nel tab immediatamente
+    refreshAccDrop();
     var tabPhoto = document.getElementById('tabAccountPhoto');
     if (tabPhoto) {
       tabPhoto.innerHTML = '<img src="' + accountData.photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
@@ -3275,7 +3307,7 @@ function render() {
   else if (currentTab==='broker')    ct.innerHTML = renderBroker();
   else if (currentTab==='proplist')  ct.innerHTML = renderPropList();
   else if (currentTab==='brokerlist') ct.innerHTML = renderBrokerList();
-  else if (currentTab==='account')   ct.innerHTML = renderAccount();
+  else if (currentTab==='account')   { /* gestito dal dropdown */ }
   else if (currentTab==='platform')  { renderPlatform(); return; }
   else                               ct.innerHTML = renderGuide();
 }
