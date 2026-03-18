@@ -293,55 +293,6 @@ window._sbLoadError = false;
   crossorigin="anonymous"></script>
 </head>
 <body>
-<script>
-// PROTEZIONE ACCESSO — verifica licenza prima di mostrare l'app
-(function(){
-  var REDIRECT = '/';
-  function deny(reason){
-    document.body.innerHTML = '<div style="position:fixed;inset:0;background:#060810;display:flex;align-items:center;justify-content:center;font-family:Plus Jakarta Sans,sans-serif;color:#eef0f8;text-align:center;padding:24px"><div><div style="font-size:32px;margin-bottom:16px">🔒</div><div style="font-size:20px;font-weight:700;margin-bottom:8px">Accesso negato</div><div style="font-size:14px;color:#8090b8;margin-bottom:24px">' + (reason||'Licenza non valida o scaduta.') + '</div><a href="/" style="background:linear-gradient(135deg,#00b8a4,#7a40cc);border:none;color:#fff;border-radius:12px;padding:12px 32px;font-size:13px;font-weight:700;text-decoration:none;display:inline-block">Rinnova licenza →</a></div></div>';
-  }
-  // Controlla sessione Supabase
-  if(typeof supabase === 'undefined'){
-    // Supabase non ancora caricato — aspetta
-    window.addEventListener('load', checkAccess);
-  } else {
-    checkAccess();
-  }
-  function checkAccess(){
-    if(!window._sb) return setTimeout(checkAccess, 200);
-    _sb.auth.getSession().then(function(res){
-      if(!res.data || !res.data.session){
-        window.location.href = REDIRECT;
-        return;
-      }
-      var session = res.data.session;
-      // Verifica licenza lato server
-      fetch('/api/check-license',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({user_id: session.user.id, token: session.access_token})
-      }).then(function(r){return r.json();}).then(function(d){
-        if(!d.valid){
-          if(d.reason==='expired') deny('La tua licenza è scaduta il ' + new Date(d.expired_at).toLocaleDateString('it-IT') + '.');
-          else if(d.reason==='no_license') deny('Nessuna licenza attiva trovata.');
-          else deny();
-        }
-        // Se valida: mostra avviso scadenza imminente
-        else if(d.days_left && d.days_left <= 30){
-          var bar = document.createElement('div');
-          bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999999;background:rgba(255,190,11,.95);color:#060810;text-align:center;padding:8px;font-size:12px;font-weight:700;font-family:Plus Jakarta Sans,sans-serif';
-          bar.textContent = '⚠️ La tua licenza scade tra ' + d.days_left + ' giorni. Rinnova su visiontrading.it';
-          document.body.prepend(bar);
-        }
-        // Se tutto ok: non fare nulla, l'app gira normalmente
-      }).catch(function(){
-        // In caso di errore di rete lascia accedere (graceful degradation)
-        console.warn('License check failed — allowing access');
-      });
-    });
-  }
-})();
-</script>
 <div style="position:fixed;inset:0;background:var(--bg);z-index:-1;pointer-events:none"></div>
 
 <!-- ===== SPLASH LANDING PAGE ===== -->
@@ -1029,16 +980,12 @@ function doRegister(){
         <div style="flex:1;height:1px;background:#1e2840"></div>
       </div>
 
-      <button onclick="goToPurchase()" style="width:100%;background:none;border:1px solid #2a3560;color:#8090b8;border-radius:12px;padding:13px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans','Inter',sans-serif;letter-spacing:.06em;text-transform:uppercase;transition:all .2s"
-        onmouseover="this.style.borderColor='#9b5de5';this.style.color='#9b5de5'"
-        onmouseout="this.style.borderColor='#2a3560';this.style.color='#8090b8'">
-        &#9672; Acquista licenza
-      </button>
+      <button onclick="goToPurchase()" style="width:100%;background:#00c97a;border:none;border-radius:999px;padding:15px 0;color:#ffffff;font-family:'Plus Jakarta Sans','Inter',sans-serif;font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:all .2s;box-shadow:0 4px 20px rgba(0,201,122,.3);" onmouseover="this.style.background='#00e085';this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 28px rgba(0,224,133,.5)';" onmouseout="this.style.background='#00c97a';this.style.transform='none';this.style.boxShadow='0 4px 20px rgba(0,201,122,.3)';" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='translateY(-2px)'"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="3" y="11" width="18" height="11" rx="5.5"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>ACQUISTA LICENZA</button>
     </div>
   </div>
 
   <div style="margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:9px;color:#3d4d78;text-align:center;position:relative;z-index:1">
-    PropHedge &middot; VISIONTRADING &middot; Russo Antonino Christian
+    PropHedge &middot; VISIONTRADING &middot; di Russo Antonino Christian
   </div>
 </div>
 <!-- ===== END LOGIN PAGE ===== -->
@@ -1212,17 +1159,18 @@ function doRegister(){
 <!-- TABS -->
 <div class="tabs">
   <div class="tab mrow active" onclick="goTab('dash',this)" id="tabDash">Dashboard</div>
+  <div class="tab mrow" onclick="goTab('platform',this)" id="tabPlatform">Piattaforma</div>
   <div class="tab mrow" onclick="goTab('calc',this)" id="tabCalc">Nuova sfida</div>
   <div class="tab mrow" onclick="goTab('proplist',this)" id="tabProp">Prop</div>
   <div class="tab mrow" onclick="goTab('brokerlist',this)" id="tabBroker">Broker</div>
   <div class="tab mrow" onclick="goTab('guide',this)" id="tabGuide">Guida</div>
-  <div class="tab mrow" onclick="goTab('account',this)" id="tabAccount" style="margin-left:auto"><span id="tabAccountFlag"></span> <span id="tabAccountName">Account</span></div>
+  <div class="tab mrow" onclick="goTab('account',this)" id="tabAccount" style="margin-left:auto;display:flex;align-items:center;gap:7px;padding:6px 12px"><span id="tabAccountFlag" style="line-height:1;flex-shrink:0"></span><div id="tabAccountPhoto" style="width:26px;height:26px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--t3)"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="4" fill="var(--teal)" opacity=".5"/><path d="M3 19c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="var(--teal)" stroke-width="1.5" fill="none" opacity=".4"/></svg></div><span id="tabAccountName" style="font-size:11px">Account</span></div>
 </div>
 
 <div class="content" id="main"></div>
 
 <div class="footer">
-  <div>PropHedge Pro - VISIONTRADING - Russo Antonino Christian - calcoli indicativi</div>
+  <div>PropHedge Pro - VISIONTRADING - di Russo Antonino Christian - calcoli indicativi</div>
 </div>
 
 <!-- BOTTOM BANNER UNIFICATO -->
@@ -1244,7 +1192,7 @@ function doRegister(){
     <span style="color:var(--border2);font-size:9px">|</span>
     <a href="javascript:void(0)" onclick="resetConsent()" style="color:#8090b8;text-decoration:none;font-size:10px;font-family:var(--fd);letter-spacing:.05em;transition:color .2s" onmouseover="this.style.color='#eef0f8'" onmouseout="this.style.color='#8090b8'">Gestisci consenso</a>
   </div>
-  <div style="font-size:8px;color:var(--t3);font-family:var(--fd);opacity:.5;letter-spacing:.04em">PropHedge · VISIONTRADING · Russo Antonino Christian · calcoli indicativi</div>
+  <div style="font-size:8px;color:var(--t3);font-family:var(--fd);opacity:.5;letter-spacing:.04em">PropHedge · VISIONTRADING · di Russo Antonino Christian · calcoli indicativi</div>
 </div>
 
 <!-- MODAL NUOVA SFIDA -->
@@ -1581,6 +1529,10 @@ var currentTab = 'dash';
 var botMode = 'prop';
 var botTimer = null;
 var broker = {key:'',accId:'',env:'practice',connected:false,account:null,sel:'oanda'};
+var ctrader = {
+  clientId:'', clientSecret:'', accessToken:'', accountId:'',
+  connected:false, accounts:[], positions:[], balance:null, env:'demo'
+};
 
 // ===== HELPERS =====
 function logoUrl(d) { return 'https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://' + d + '&size=128'; }
@@ -1940,6 +1892,20 @@ function goTab(tab, el) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
   if (el) el.classList.add('active');
+  // Reset content styles when leaving platform tab
+  var ct = document.getElementById('main');
+  if (ct && tab !== 'platform') {
+    ct.style.padding = '';
+    ct.style.maxWidth = '';
+  }
+  // Chiudi i menu account se si cambia tab
+  if (tab !== 'account') {
+    acState.myAccount = false;
+    acState.resetPwd  = false;
+    acState.settings  = false;
+    acState.lang      = false;
+    acState.theme     = false;
+  }
   render();
 }
 
@@ -2082,8 +2048,8 @@ function renderBroker() {
   var brokers = [
     {id:'oanda',   name:'OANDA',         domain:'oanda.com',       note:'API REST - Collegamento diretto'},
     {id:'ig',      name:'IG Group',       domain:'ig.com',          note:'API REST - In sviluppo'},
-    {id:'mt4',     name:'MetaTrader 4/5', domain:'metatrader4.com', note:'Solo tramite EA (Expert Advisor)'},
-    {id:'ctrader', name:'cTrader',        domain:'ctrader.com',     note:'Open API - In sviluppo'}
+    {id:'ctrader', name:'cTrader', domain:'ctrader.com', note:'Open API OAuth2 ✓'},
+    {id:'mt4', name:'MetaTrader 4/5', domain:'metatrader4.com', note:'Expert Advisor (EA)'}
   ];
   var cards = '';
   brokers.forEach(function(b) {
@@ -2125,12 +2091,324 @@ function renderBroker() {
         detail += '<div id="oa-trade"></div>';
       }
     }
+  } else if (broker.sel === 'ctrader') {
+    detail = renderCtraderPanel();
   } else if (broker.sel === 'mt4') {
-    detail = '<div class="note note-amber" style="margin-top:16px"><strong>MetaTrader 4/5 non supporta connessioni browser.</strong><br><br>Soluzione: usa OANDA come conto hedge personale (connessione diretta qui), gestisci la prop su MT4 manualmente. Apri prima la SELL su OANDA poi subito la BUY sulla prop in MT4.</div>';
+    detail = renderMT4Panel();
   } else {
     detail = '<div class="note note-amber" style="margin-top:16px">Integrazione in sviluppo. Usa OANDA per il conto hedge personale.</div>';
   }
   return '<div style="max-width:760px"><div class="panel ai"><div class="ph"><h3>Seleziona broker</h3></div><div class="pb"><div class="bk-grid">' + cards + '</div>' + detail + '</div></div></div>';
+}
+
+// ═══════════════════════════════════════════════════════
+// CTRADER PANEL
+// ═══════════════════════════════════════════════════════
+function renderCtraderPanel() {
+  var html = '<div class="sect" style="margin-top:16px">Connessione cTrader</div>';
+
+  if (!ctrader.connected) {
+    // Fase 1: inserisci credenziali app
+    if (!ctrader.clientId) {
+      html += '<div class="note note-teal" style="margin-bottom:14px">'
+        + '<strong>Come ottenere le credenziali:</strong><br>'
+        + '1. Vai su <strong>connect.ctrader.com</strong><br>'
+        + '2. Crea un account sviluppatore gratuito<br>'
+        + '3. Clicca "Create Application" → nome: PropHedge<br>'
+        + '4. Tipo: Web Application<br>'
+        + '5. Redirect URI: <code style="background:rgba(0,229,204,.1);padding:2px 6px;border-radius:4px">' + window.location.origin + '/ctrader-callback</code><br>'
+        + '6. Copia Client ID e Client Secret qui sotto'
+        + '</div>';
+      html += '<div class="fr2">'
+        + '<div class="f"><label>Client ID</label><input type="text" id="ct-clientid" placeholder="12345" value="' + (ctrader.clientId||'') + '"></div>'
+        + '<div class="f"><label>Client Secret</label><input type="password" id="ct-secret" placeholder="••••••••" value="' + (ctrader.clientSecret||'') + '"></div>'
+        + '</div>';
+      html += '<div class="f"><label>Ambiente</label><select id="ct-env">'
+        + '<option value="demo"' + (ctrader.env==='demo'?' selected':'') + '>Demo (Paper trading)</option>'
+        + '<option value="live"' + (ctrader.env==='live'?' selected':'') + '>Live (Reale)</option>'
+        + '</select></div>';
+      html += '<button class="btn-p" onclick="saveCtraderCredentials()">Salva e connetti →</button>';
+    } else {
+      // Fase 2: autorizza con OAuth
+      html += '<div class="note note-teal" style="margin-bottom:14px">'
+        + 'Client ID salvato: <strong>' + ctrader.clientId + '</strong><br>'
+        + 'Clicca il pulsante per autorizzare PropHedge ad accedere al tuo conto cTrader.'
+        + '</div>';
+      html += '<button class="btn-p" onclick="startCtraderOAuth()">🔐 Autorizza cTrader →</button>';
+      html += '&nbsp;<button class="btn-g" onclick="ctrader.clientId=\'\';render()">Cambia credenziali</button>';
+
+      // Controlla se abbiamo già un token (dal callback URL)
+      var urlParams = new URLSearchParams(window.location.search);
+      var authCode = urlParams.get('code');
+      if (authCode && !ctrader.accessToken) {
+        html += '<div class="conn-bar cb-wait" style="margin-top:10px"><div class="cd cd-wait"></div>Codice ricevuto, scambio token...</div>';
+        setTimeout(function(){ exchangeCtraderToken(authCode); }, 500);
+      }
+    }
+  } else {
+    // Connesso — mostra conto e posizioni
+    html += '<div class="conn-bar cb-ok" style="margin-bottom:12px"><div class="cd cd-ok"></div>Connesso a cTrader ✓</div>';
+    if (ctrader.balance !== null) {
+      html += '<div class="ai-grid">'
+        + '<div class="ai-card"><div class="ai-lb">Balance</div><div class="ai-v v-green">$' + parseFloat(ctrader.balance).toFixed(2) + '</div></div>'
+        + '<div class="ai-card"><div class="ai-lb">Account</div><div class="ai-v">' + (ctrader.accountId||'—') + '</div></div>'
+        + '<div class="ai-card"><div class="ai-lb">Ambiente</div><div class="ai-v">' + (ctrader.env==='live'?'<span class="v-green">LIVE</span>':'<span class="v-amber">DEMO</span>') + '</div></div>'
+        + '</div>';
+    }
+
+    // Posizioni aperte
+    if (ctrader.positions && ctrader.positions.length > 0) {
+      html += '<div class="sect" style="margin-top:12px">Posizioni aperte (' + ctrader.positions.length + ')</div>';
+      html += '<table class="pt" style="margin-bottom:14px"><thead><tr>'
+        + '<th>Simbolo</th><th>Direzione</th><th>Lotti</th><th>P/L</th><th>Azione</th>'
+        + '</tr></thead><tbody>';
+      ctrader.positions.forEach(function(p) {
+        var pnl = parseFloat(p.unrealizedGrossPnl||0);
+        html += '<tr>'
+          + '<td><strong>' + (p.symbol||p.symbolName||'—') + '</strong></td>'
+          + '<td><span class="' + (p.tradeSide==='BUY'?'v-green':'v-red') + '">' + (p.tradeSide||'—') + '</span></td>'
+          + '<td>' + ((p.volume||0)/100).toFixed(2) + ' lot</td>'
+          + '<td class="' + (pnl>=0?'v-green':'v-red') + '">' + (pnl>=0?'+':'') + pnl.toFixed(2) + '</td>'
+          + '<td><button class="btn-g" style="padding:4px 10px;font-size:10px" onclick="closeCtraderPosition(\'' + p.positionId + '\')">Chiudi</button></td>'
+          + '</tr>';
+      });
+      html += '</tbody></table>';
+    } else {
+      html += '<div class="note note-teal" style="margin-top:10px;margin-bottom:12px">Nessuna posizione aperta.</div>';
+    }
+
+    // Pannello apri hedge
+    if (props.length) {
+      html += '<div class="sect">Apri SELL hedge su cTrader</div>';
+      html += '<div class="note note-amber" style="margin-bottom:12px">Apri prima il BUY sulla prop firm, poi clicca "Apri SELL hedge" per la copertura automatica.</div>';
+      html += '<div class="fr3">'
+        + '<div class="f"><label>Sfida prop</label><select id="ct-prop">';
+      props.forEach(function(p) { html += '<option value="' + p.id + '">' + p.name + '</option>'; });
+      var c0 = calcChallenge(props[0]);
+      html += '</select></div>'
+        + '<div class="f"><label>Simbolo</label><input type="text" id="ct-symbol" value="EURUSD" placeholder="EURUSD, XAUUSD..."></div>'
+        + '<div class="f"><label>Lotti hedge</label><input type="number" id="ct-lots" step="0.01" value="' + c0.hedgeLots + '"></div>'
+        + '</div>';
+      html += '<div class="fr2">'
+        + '<div class="f"><label>Stop Loss (pip)</label><input type="number" id="ct-sl" value="' + (props[0].slPips||50) + '"></div>'
+        + '<div class="f"><label>Take Profit (pip)</label><input type="number" id="ct-tp" value="' + (props[0].tpPips||props[0].slPips||50) + '"></div>'
+        + '</div>';
+      html += '<button class="btn-p" style="background:linear-gradient(135deg,var(--violet2),#c0392b)" onclick="placeCtraderHedge()">⚡ Apri SELL hedge su cTrader</button>';
+      html += '<div id="ct-trade"></div>';
+    }
+
+    html += '<div style="margin-top:14px">'
+      + '<button class="btn-g" style="margin-right:8px" onclick="refreshCtraderPositions()">↻ Aggiorna posizioni</button>'
+      + '<button class="btn-g" onclick="disconnectCtrader()">Disconnetti</button>'
+      + '</div>';
+  }
+  return html;
+}
+
+function renderMT4Panel() {
+  return '<div class="sect" style="margin-top:16px">MetaTrader 4/5 — Expert Advisor</div>'
+    + '<div class="note note-teal" style="margin-bottom:14px">'
+    + '<strong>Come funziona:</strong><br>'
+    + '1. Scarica l\'EA PropHedge qui sotto<br>'
+    + '2. Installalo su MT4/MT5: File → Open Data Folder → MQL4/Experts<br>'
+    + '3. Riavvia MT4/MT5 e trascina l\'EA sul grafico<br>'
+    + '4. L\'EA si connette automaticamente a PropHedge<br>'
+    + '5. Clicca "Apri hedge" dal software → l\'EA esegue l\'ordine'
+    + '</div>'
+    + '<div class="note note-amber" style="margin-bottom:14px">'
+    + '⚠️ L\'EA è in fase di sviluppo. Disponibile nella prossima versione.'
+    + '</div>'
+    + '<button class="btn-g" disabled>⬇ Scarica EA PropHedge (prossimamente)</button>';
+}
+
+// ─── Salva credenziali cTrader ─────────────────────────────────────
+function saveCtraderCredentials() {
+  var id  = document.getElementById('ct-clientid').value.trim();
+  var sec = document.getElementById('ct-secret').value.trim();
+  var env = document.getElementById('ct-env').value;
+  if (!id || !sec) { alert('Inserisci Client ID e Client Secret.'); return; }
+  ctrader.clientId     = id;
+  ctrader.clientSecret = sec;
+  ctrader.env          = env;
+  saveCtraderState();
+  render();
+}
+
+// ─── Avvia OAuth2 cTrader ──────────────────────────────────────────
+function startCtraderOAuth() {
+  var authBase = ctrader.env === 'live'
+    ? 'https://connect.ctrader.com/oauth/authorize'
+    : 'https://id.ctrader.com/oauth2/auth';
+  var params = new URLSearchParams({
+    response_type: 'code',
+    client_id:     ctrader.clientId,
+    redirect_uri:  window.location.origin + '/ctrader-callback',
+    scope:         'trading',
+    state:         'prophedge'
+  });
+  window.location.href = authBase + '?' + params.toString();
+}
+
+// ─── Scambia codice con token ──────────────────────────────────────
+async function exchangeCtraderToken(code) {
+  try {
+    var r = await fetch('/api/ctrader-token', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        code: code,
+        client_id:     ctrader.clientId,
+        client_secret: ctrader.clientSecret,
+        redirect_uri:  window.location.origin + '/ctrader-callback',
+        env:           ctrader.env
+      })
+    });
+    var d = await r.json();
+    if (d.access_token) {
+      ctrader.accessToken = d.access_token;
+      // Rimuovi il codice dall'URL
+      window.history.replaceState({}, '', window.location.pathname);
+      // Carica gli account
+      await loadCtraderAccounts();
+    } else {
+      alert('Errore token cTrader: ' + (d.error||'Sconosciuto'));
+    }
+  } catch(e) {
+    alert('Errore connessione: ' + e.message);
+  }
+}
+
+// ─── Carica account cTrader ────────────────────────────────────────
+async function loadCtraderAccounts() {
+  try {
+    var r = await fetch('/api/ctrader-accounts', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({access_token: ctrader.accessToken, env: ctrader.env})
+    });
+    var d = await r.json();
+    if (d.accounts && d.accounts.length > 0) {
+      ctrader.accounts  = d.accounts;
+      ctrader.accountId = d.accounts[0].ctidTraderAccountId;
+      ctrader.balance   = d.accounts[0].balance / 100; // in centesimi
+      ctrader.connected = true;
+      saveCtraderState();
+      await refreshCtraderPositions();
+      render();
+    } else {
+      alert('Nessun account cTrader trovato.');
+    }
+  } catch(e) {
+    alert('Errore caricamento account: ' + e.message);
+  }
+}
+
+// ─── Aggiorna posizioni aperte ─────────────────────────────────────
+async function refreshCtraderPositions() {
+  if (!ctrader.connected || !ctrader.accessToken) return;
+  try {
+    var r = await fetch('/api/ctrader-positions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        access_token: ctrader.accessToken,
+        account_id:   ctrader.accountId,
+        env:          ctrader.env
+      })
+    });
+    var d = await r.json();
+    if (d.positions) {
+      ctrader.positions = d.positions;
+      render();
+    }
+  } catch(e) { console.error('Refresh positions error:', e); }
+}
+
+// ─── Apri SELL hedge su cTrader ────────────────────────────────────
+async function placeCtraderHedge() {
+  var symbol = document.getElementById('ct-symbol').value.trim().toUpperCase();
+  var lots   = parseFloat(document.getElementById('ct-lots').value);
+  var sl     = parseFloat(document.getElementById('ct-sl').value);
+  var tp     = parseFloat(document.getElementById('ct-tp').value);
+  var propId = document.getElementById('ct-prop').value;
+  var st     = document.getElementById('ct-trade');
+
+  if (!symbol || isNaN(lots) || lots <= 0) {
+    st.innerHTML = '<div class="conn-bar cb-err"><div class="cd cd-err"></div>Inserisci simbolo e lotti validi.</div>';
+    return;
+  }
+
+  st.innerHTML = '<div class="conn-bar cb-wait"><div class="cd cd-wait"></div>Apertura ordine hedge...</div>';
+
+  try {
+    var r = await fetch('/api/ctrader-order', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        access_token: ctrader.accessToken,
+        account_id:   ctrader.accountId,
+        env:          ctrader.env,
+        symbol:       symbol,
+        side:         'SELL',
+        volume:       Math.round(lots * 100), // cTrader usa centilotti
+        stop_loss_pips:  sl,
+        take_profit_pips: tp
+      })
+    });
+    var d = await r.json();
+    if (d.success) {
+      st.innerHTML = '<div class="conn-bar cb-ok"><div class="cd cd-ok"></div>✓ SELL ' + lots + ' lotti ' + symbol + ' aperta! ID: ' + (d.orderId||'—') + '</div>';
+      setTimeout(refreshCtraderPositions, 1500);
+    } else {
+      st.innerHTML = '<div class="conn-bar cb-err"><div class="cd cd-err"></div>Errore: ' + (d.error||'Sconosciuto') + '</div>';
+    }
+  } catch(e) {
+    st.innerHTML = '<div class="conn-bar cb-err"><div class="cd cd-err"></div>Errore: ' + e.message + '</div>';
+  }
+}
+
+// ─── Chiudi posizione cTrader ──────────────────────────────────────
+async function closeCtraderPosition(positionId) {
+  if (!confirm('Chiudere questa posizione?')) return;
+  try {
+    var r = await fetch('/api/ctrader-close', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        access_token: ctrader.accessToken,
+        account_id:   ctrader.accountId,
+        env:          ctrader.env,
+        position_id:  positionId
+      })
+    });
+    var d = await r.json();
+    if (d.success) {
+      await refreshCtraderPositions();
+    } else {
+      alert('Errore chiusura: ' + (d.error||'Sconosciuto'));
+    }
+  } catch(e) { alert('Errore: ' + e.message); }
+}
+
+function disconnectCtrader() {
+  ctrader.accessToken = ''; ctrader.connected = false;
+  ctrader.positions = []; ctrader.balance = null;
+  saveCtraderState(); render();
+}
+
+// ─── Persist cTrader state ─────────────────────────────────────────
+function saveCtraderState() {
+  try { localStorage.setItem('ct_state', JSON.stringify({
+    clientId: ctrader.clientId, clientSecret: ctrader.clientSecret,
+    accessToken: ctrader.accessToken, accountId: ctrader.accountId,
+    env: ctrader.env, connected: ctrader.connected, balance: ctrader.balance
+  })); } catch(e){}
+}
+function loadCtraderState() {
+  try {
+    var s = localStorage.getItem('ct_state');
+    if (s) { var d = JSON.parse(s); Object.assign(ctrader, d); }
+  } catch(e){}
 }
 
 async function connectOanda() {
@@ -2360,6 +2638,12 @@ function loadAccountData() {
         var fullName = ((accountData.firstName||'') + ' ' + (accountData.lastName||'')).trim();
         if(tabName) tabName.textContent = fullName || (accountData.email ? accountData.email.split('@')[0] : 'Account');
         if(tabFlag && LANGS[accountData.lang]) tabFlag.innerHTML = LANGS[accountData.lang].flag;
+        // Update photo in tab
+        var tabPhoto = document.getElementById('tabAccountPhoto');
+        if(tabPhoto && accountData.photo) {
+          tabPhoto.innerHTML = '<img src="' + accountData.photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+          tabPhoto.style.borderColor = 'var(--teal)';
+        }
       }
     });
   } catch(e) {}
@@ -2400,6 +2684,12 @@ function applyLangToUI() {
   if(tp) tp.textContent = t.tabProp || 'Prop';
   if(tb) tb.textContent = t.tabBroker || 'Broker';
   if(tf && LANGS[accountData.lang]) tf.innerHTML = LANGS[accountData.lang].flag;
+  // Refresh foto tab
+  var tp2 = document.getElementById('tabAccountPhoto');
+  if(tp2 && accountData.photo) {
+    tp2.innerHTML = '<img src="' + accountData.photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    tp2.style.borderColor = 'var(--teal)';
+  }
   // Logout button
   var lb = document.getElementById('logoutBtn');
   if(lb) lb.textContent = t.logout;
@@ -2438,6 +2728,12 @@ function onPhotoChange(input) {
     accountData.photo = e.target.result;
     saveAccountData();
     render();
+    // Aggiorna foto nel tab immediatamente
+    var tabPhoto = document.getElementById('tabAccountPhoto');
+    if (tabPhoto) {
+      tabPhoto.innerHTML = '<img src="' + accountData.photo + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+      tabPhoto.style.borderColor = 'var(--teal)';
+    }
   };
   reader.readAsDataURL(file);
 }
@@ -2546,20 +2842,18 @@ function renderAccount() {
 
   // ── FINAL RENDER ──────────────────────────────────────────────
   return '<input type="file" id="acPhotoInput" accept="image/*" style="display:none" onchange="onPhotoChange(this)">'
-    + '<div style="max-width:600px;margin:0 auto">'
+    + '<div style="max-width:600px;margin:0 auto" onclick="event.stopPropagation()">'
 
     // ─── PROFILE HEADER PROMINENTE ────────────────────────────────
     + '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:14px;display:flex;align-items:center;gap:18px">'
+    + '<div style="flex-shrink:0;font-size:36px;line-height:1">' + langFlag + '</div>'
     + '<div onclick="triggerPhotoUpload()" title="Cambia foto" style="width:80px;height:80px;border-radius:50%;background:var(--bg3);border:3px solid var(--teal);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;position:relative;box-shadow:0 0 20px rgba(0,229,204,.2)" onmouseover="this.style.borderColor=\'#00ffdd\'" onmouseout="this.style.borderColor=\'var(--teal)\'">'
     + photo
     + '<div style="position:absolute;bottom:2px;right:2px;width:22px;height:22px;background:var(--teal);border-radius:50%;border:2px solid var(--bg2);display:flex;align-items:center;justify-content:center;font-size:10px">✏</div>'
     + '</div>'
     + '<div style="flex:1;min-width:0">'
-    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:5px;flex-wrap:wrap">'
-    + langFlag
-    + '<span style="font-size:20px;font-weight:800;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + displayName + '</span>'
-    + '</div>'
-    + '<div style="font-size:12px;color:var(--t3);font-family:var(--fd);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (accountData.email||'—') + '</div>'
+    + '<div style="font-size:22px;font-weight:800;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px">' + displayName + '</div>'
+    + '<div style="font-size:12px;color:var(--t3);font-family:var(--fd);margin-bottom:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + (accountData.email||'—') + '</div>'
     + '<div style="display:inline-flex;align-items:center;gap:6px;background:var(--teal-bg);border:1px solid rgba(0,229,204,.25);border-radius:20px;padding:4px 12px">'
     + langFlag
     + '<span style="font-size:11px;font-family:var(--fd);color:var(--teal);font-weight:600">' + langLabel + '</span>'
@@ -2568,13 +2862,15 @@ function renderAccount() {
     + '</div>'
 
     // ─── PROFILE ROW (clickable → Il mio account) ─────────
-    + '<div onclick="toggleAc(\'myAccount\')" style="display:flex;align-items:center;gap:14px;background:var(--bg2);border:1px solid ' + (myAccOpen?'var(--teal)':'var(--border)') + ';border-radius:' + (myAccOpen?'14px 14px 0 0':'14px') + ';padding:14px 18px;cursor:pointer;transition:all .2s;margin-bottom:' + (myAccOpen?'0':'14px') + '">'
-    + '<div style="width:36px;height:36px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px">👤</div>'
-    + '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:' + (myAccOpen?'var(--teal)':'var(--t)') + '">Il mio account</div></div>'
+    + '<div onclick="toggleAc(\'myAccount\')" style="display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid ' + (myAccOpen?'var(--teal)':'var(--border)') + ';border-radius:' + (myAccOpen?'14px 14px 0 0':'14px') + ';padding:14px 18px;cursor:pointer;transition:all .2s;margin-bottom:' + (myAccOpen?'0':'14px') + '">'
+    + '<div style="display:flex;align-items:center;flex-shrink:0;margin-right:2px">' + langFlag + '</div>'
+    + '<div style="width:40px;height:40px;border-radius:50%;background:var(--bg3);border:2px solid ' + (myAccOpen?'var(--teal)':'var(--border)') + ';overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;">' + photo + '</div>'
+    + '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:' + (myAccOpen?'var(--teal)':'var(--t)') + '">Il mio account</div>'
+    + '<div style="font-size:11px;color:var(--t3);font-family:var(--fd);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + displayName + '</div></div>'
     + '<span style="font-size:13px;color:var(--t3);display:inline-block;transform:' + (myAccOpen?'rotate(180deg)':'none') + ';transition:transform .2s">▾</span>'
     + '</div>'
 
-    // ─── MY ACCOUNT BODY ─────────────────────────────────────────
+// ─── MY ACCOUNT BODY ─────────────────────────────────────────
     + (myAccOpen ? '<div style="background:var(--bg2);border:1px solid var(--teal);border-top:none;border-radius:0 0 14px 14px;margin-bottom:14px">' + myAccBody + '</div>' : '')
 
     // ─── SETTINGS ROW ────────────────────────────────────────────
@@ -2684,6 +2980,293 @@ function renderGuide() {
     + '</div></div></div>';
 }
 
+// ===== RENDER PLATFORM =====
+var PH_TV_KEY = 'ph_tv_state_v3';
+
+function _tvSaveState() {
+  try { localStorage.setItem(PH_TV_KEY, JSON.stringify(window._tvState || {})); } catch(e) {}
+}
+function _tvLoadState() {
+  try { var r = localStorage.getItem(PH_TV_KEY); return r ? JSON.parse(r) : {}; } catch(e) { return {}; }
+}
+
+function renderPlatform() {
+  var ct = document.getElementById('main'); if (!ct) return;
+  ct.innerHTML = '';
+  ct.style.padding = '0';
+  ct.style.maxWidth = '100%';
+
+  var isDark = !document.body.classList.contains('light-theme');
+  var state  = _tvLoadState();
+
+  var wrapper = document.createElement('div');
+  wrapper.id = 'tvWrapper';
+  wrapper.style.cssText = 'display:flex;flex-direction:column;height:calc(100vh - 158px);min-height:620px;background:' + (isDark?'#060810':'#f0f2f8') + ';position:relative;overflow:hidden;';
+
+  var chartContainer = document.createElement('div');
+  chartContainer.id = 'tv_chart_container';
+  chartContainer.style.cssText = 'flex:1;width:100%;height:100%;position:relative;';
+
+  var loading = document.createElement('div');
+  loading.id = 'tvLoading';
+  loading.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;background:' + (isDark?'#060810':'#f0f2f8') + ';gap:14px;';
+  loading.innerHTML = '<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="17" stroke="#1e2840" stroke-width="2.5"/><path d="M20 3 a17 17 0 0 1 17 17" stroke="#00e5cc" stroke-width="3" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" dur=".85s" repeatCount="indefinite"/></path></svg><span style="font-family:JetBrains Mono,monospace;font-size:11px;color:#3d4d78;letter-spacing:.08em">Caricamento piattaforma...</span>';
+  chartContainer.appendChild(loading);
+  wrapper.appendChild(chartContainer);
+
+  // ---- PULSANTE TRADINGVIEW.COM ----
+  // Posizionato in alto a destra, sovrapposto al grafico
+  var tvBtn = document.createElement('a');
+  tvBtn.id = 'tvOpenBtn';
+  tvBtn.href = '#';
+  tvBtn.title = 'Apri su TradingView.com';
+  tvBtn.style.cssText = 'position:absolute;top:10px;right:12px;z-index:20;display:flex;align-items:center;gap:6px;background:#131722;border:1px solid #2a2e39;border-radius:6px;padding:5px 10px 5px 8px;text-decoration:none;cursor:pointer;transition:all .18s;box-shadow:0 2px 8px rgba(0,0,0,.45);';
+  tvBtn.onmouseover = function(){ this.style.background='#1e222d'; this.style.borderColor='#434651'; };
+  tvBtn.onmouseout  = function(){ this.style.background='#131722'; this.style.borderColor='#2a2e39'; };
+  tvBtn.onclick = function(e){
+    e.preventDefault();
+    var sym = (window._tvState && window._tvState.symbol) || 'FX:EURUSD';
+    window.open('https://www.tradingview.com/chart/?symbol=' + encodeURIComponent(sym), '_blank', 'noopener');
+  };
+  // Logo TradingView SVG ufficiale (stesso colore #131722 sfondo, blu #1848cc)
+  tvBtn.innerHTML = ''
+    + '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">'
+    +   '<rect width="18" height="18" rx="3" fill="#131722"/>'
+    +   '<path d="M2 13L6.5 7.5L9.5 10.5L13 5L16 8" stroke="#2962FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>'
+    + '</svg>'
+    + '<span style="font-family:-apple-system,BlinkMacSystemFont,Trebuchet MS,Roboto,Ubuntu,sans-serif;font-size:12px;font-weight:700;color:#d1d4dc;letter-spacing:-.01em;white-space:nowrap;">TradingView</span>'
+    + '<svg width="10" height="10" viewBox="0 0 10 10" fill="none" style="margin-left:1px;opacity:.55">'
+    +   '<path d="M2 8L8 2M8 2H4M8 2V6" stroke="#d1d4dc" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '</svg>';
+  wrapper.style.position = 'relative';
+  wrapper.appendChild(tvBtn);
+
+  ct.appendChild(wrapper);
+
+  if (window.TradingView) {
+    _initTVChart(isDark, state);
+  } else {
+    var script = document.createElement('script');
+    script.src = 'https://s3.tradingview.com/tv.js';
+    script.onload = function() { _initTVChart(isDark, state); };
+    script.onerror = function() { _tvFallback(isDark, state); };
+    document.head.appendChild(script);
+  }
+}
+
+function _initTVChart(isDark, state) {
+  var sym        = state.symbol     || 'FX:EURUSD';
+  var interval   = state.interval   || 'D';
+  var chartStyle = state.chartStyle || '1';
+
+  window._tvState = window._tvState || {};
+  window._tvState.symbol     = sym;
+  window._tvState.interval   = interval;
+  window._tvState.chartStyle = chartStyle;
+
+  // ---- SAVE/LOAD ADAPTER completo ----
+  var savedChartData = {};
+  try { savedChartData = JSON.parse(localStorage.getItem(PH_TV_KEY + '_chart') || '{}'); } catch(e) {}
+
+  var adapter = {
+    charts: savedChartData.charts || [],
+    getAllCharts: function() { return Promise.resolve(this.charts); },
+    removeChart: function(id) {
+      this.charts = this.charts.filter(function(c){ return c.id !== id; });
+      _tvPersistCharts(this.charts); return Promise.resolve();
+    },
+    saveChart: function(data) {
+      this.charts = this.charts.filter(function(c){ return c.id !== data.id; });
+      data.id = data.id || ('ph_' + Date.now());
+      this.charts.push(data);
+      _tvPersistCharts(this.charts); return Promise.resolve(data.id);
+    },
+    getChartContent: function(id) {
+      var f = this.charts.find(function(c){ return c.id===id; });
+      return Promise.resolve(f ? f.content : null);
+    },
+    getAllStudyTemplates: function() {
+      return Promise.resolve(JSON.parse(localStorage.getItem(PH_TV_KEY+'_stpl') || '[]'));
+    },
+    removeStudyTemplate: function(t) {
+      var d = JSON.parse(localStorage.getItem(PH_TV_KEY+'_stpl')||'[]').filter(function(x){ return x.name!==t.name; });
+      try { localStorage.setItem(PH_TV_KEY+'_stpl', JSON.stringify(d)); } catch(e) {}
+      return Promise.resolve();
+    },
+    saveStudyTemplate: function(t) {
+      var d = JSON.parse(localStorage.getItem(PH_TV_KEY+'_stpl')||'[]').filter(function(x){ return x.name!==t.name; });
+      d.push(t); try { localStorage.setItem(PH_TV_KEY+'_stpl', JSON.stringify(d)); } catch(e) {}
+      return Promise.resolve();
+    },
+    getStudyTemplateContent: function(t) {
+      var f = JSON.parse(localStorage.getItem(PH_TV_KEY+'_stpl')||'[]').find(function(x){ return x.name===t.name; });
+      return Promise.resolve(f ? f.content : null);
+    },
+    getAllDrawingTemplates: function(tool) {
+      return Promise.resolve(JSON.parse(localStorage.getItem(PH_TV_KEY+'_dtpl_'+tool)||'[]'));
+    },
+    removeDrawingTemplate: function(tool, name) {
+      var d = JSON.parse(localStorage.getItem(PH_TV_KEY+'_dtpl_'+tool)||'[]').filter(function(x){ return x.name!==name; });
+      try { localStorage.setItem(PH_TV_KEY+'_dtpl_'+tool, JSON.stringify(d)); } catch(e) {}
+      return Promise.resolve();
+    },
+    saveDrawingTemplate: function(tool, t) {
+      var d = JSON.parse(localStorage.getItem(PH_TV_KEY+'_dtpl_'+tool)||'[]').filter(function(x){ return x.name!==t.name; });
+      d.push(t); try { localStorage.setItem(PH_TV_KEY+'_dtpl_'+tool, JSON.stringify(d)); } catch(e) {}
+      return Promise.resolve();
+    },
+    getDrawingTemplateContent: function(tool, name) {
+      var f = JSON.parse(localStorage.getItem(PH_TV_KEY+'_dtpl_'+tool)||'[]').find(function(x){ return x.name===name; });
+      return Promise.resolve(f ? f.content : null);
+    }
+  };
+
+  // Recupera il lastChartId salvato per il load_last_chart
+  var lastChartId = state.lastChartId || null;
+
+  try {
+    var widgetConfig = {
+      container_id: 'tv_chart_container',
+      autosize: true,
+      symbol: sym,
+      interval: interval,
+      timezone: 'Europe/Rome',
+      theme: isDark ? 'dark' : 'light',
+      style: chartStyle,
+      locale: 'it',
+      toolbar_bg: isDark ? '#0c0f1a' : '#ffffff',
+      enable_publishing: false,
+      allow_symbol_change: true,
+      save_image: true,
+      hideideas: true,
+      hide_legend: false,
+      hide_side_toolbar: false,
+      withdateranges: true,
+      details: true,
+      hotlist: false,
+      calendar: false,
+      show_popup_button: true,
+      popup_width: '1000',
+      popup_height: '650',
+      // NON passiamo studies di default: TradingView caricherà quelli dell'ultimo stato salvato
+      drawings_access: { type: 'all' },
+      save_load_adapter: adapter,
+      auto_save_delay: 2,
+      load_last_chart: true,
+      client_id: 'prophedge.visiontrading',
+      user_id: 'ph_user_local',
+      overrides: isDark ? {
+        'mainSeriesProperties.candleStyle.upColor':        '#00d68f',
+        'mainSeriesProperties.candleStyle.downColor':      '#ff4060',
+        'mainSeriesProperties.candleStyle.borderUpColor':  '#00d68f',
+        'mainSeriesProperties.candleStyle.borderDownColor':'#ff4060',
+        'mainSeriesProperties.candleStyle.wickUpColor':    '#00d68f',
+        'mainSeriesProperties.candleStyle.wickDownColor':  '#ff4060',
+        'paneProperties.background':                       '#060810',
+        'paneProperties.backgroundType':                   'solid',
+        'paneProperties.vertGridProperties.color':         '#0e1422',
+        'paneProperties.horzGridProperties.color':         '#0e1422',
+        'scalesProperties.textColor':                      '#3d4d78',
+        'scalesProperties.lineColor':                      '#1e2840'
+      } : {},
+      loading_screen: { backgroundColor: isDark?'#060810':'#f0f2f8', foregroundColor: '#00e5cc' },
+      onready: function() {
+        var ld = document.getElementById('tvLoading');
+        if (ld) { ld.style.transition='opacity .5s'; ld.style.opacity='0'; setTimeout(function(){if(ld)ld.style.display='none';},500); }
+
+        widget.onChartReady(function() {
+          var c = widget.activeChart();
+
+          // Salva simbolo/intervallo/stile ad ogni cambio
+          function persistBasic() {
+            try {
+              window._tvState = window._tvState || {};
+              window._tvState.symbol   = c.symbol();
+              window._tvState.interval = c.resolution();
+              try { window._tvState.chartStyle = String(c.chartType()); } catch(e2){}
+              _tvSaveState();
+            } catch(e){}
+          }
+          try { c.onSymbolChanged().subscribe(null, persistBasic); } catch(e){}
+          try { c.onIntervalChanged().subscribe(null, persistBasic); } catch(e){}
+
+          // Auto-save completo ogni 4s se ci sono modifiche
+          var _dirty = false;
+          setInterval(function(){
+            if (!_dirty) return; _dirty = false;
+            try {
+              widget.save(function(chartState) {
+                // Salva anche l'id del grafico per load_last_chart
+                var id = chartState && chartState.id ? chartState.id : null;
+                window._tvState = window._tvState || {};
+                window._tvState.chartContent = chartState;
+                if (id) window._tvState.lastChartId = id;
+                _tvSaveState();
+                // Propaga anche nell'adapter
+                adapter.saveChart({ id: id || ('ph_auto'), content: chartState });
+              });
+            } catch(e){}
+          }, 4000);
+
+          // Marca dirty su qualsiasi evento utente
+          try { c.onDataLoaded().subscribe(null, function(){ _dirty = true; }); } catch(e){}
+          try { widget.subscribe('onAutoSaveNeeded', function() { _dirty = true; }); } catch(e){}
+          // Marca dirty anche sui disegni
+          try { c.onChartTypeChanged().subscribe(null, function(){ _dirty=true; persistBasic(); }); } catch(e){}
+
+          persistBasic();
+          // Prima apertura: se c'e' un grafico salvato, caricalo
+          if (lastChartId && adapter.charts.length) {
+            try { widget.load(adapter.charts[adapter.charts.length-1].content); } catch(e){}
+          }
+        });
+      }
+    };
+
+    // Se abbiamo un chartContent salvato, lo passiamo come saved_data
+    if (state.chartContent) {
+      widgetConfig.saved_data = state.chartContent;
+    }
+
+    var widget = new TradingView.widget(widgetConfig);
+    window._tvWidget = widget;
+  } catch(e) {
+    _tvFallback(isDark, state);
+  }
+}
+
+function _tvPersistCharts(charts) {
+  try {
+    var cur = JSON.parse(localStorage.getItem(PH_TV_KEY+'_chart') || '{}');
+    cur.charts = charts;
+    localStorage.setItem(PH_TV_KEY+'_chart', JSON.stringify(cur));
+  } catch(e) {}
+}
+
+function _tvFallback(isDark, state) {
+  var container = document.getElementById('tv_chart_container'); if (!container) return;
+  var ld = document.getElementById('tvLoading');
+  var s = (state && state.symbol) || 'FX:EURUSD';
+  var i = (state && state.interval) || 'D';
+  var theme = isDark ? 'dark' : 'light';
+  var url = 'https://s.tradingview.com/widgetembed/?' 
+    + 'symbol=' + encodeURIComponent(s)
+    + '&interval=' + encodeURIComponent(i)
+    + '&hidesidetoolbar=0&hidetoptoolbar=0&symboledit=1&saveimage=1'
+    + '&theme=' + theme + '&style=1&timezone=Europe%2FRome&withdateranges=1&showpopupbutton=1&locale=it';
+  var iframe = document.createElement('iframe');
+  iframe.src = url;
+  iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;display:block;';
+  iframe.allow = 'fullscreen';
+  iframe.onload = function() { if(ld){ ld.style.opacity='0'; setTimeout(function(){if(ld)ld.style.display='none';},400); } };
+  container.appendChild(iframe);
+}
+
+function openTVFull() {
+  var sym = (window._tvState && window._tvState.symbol) || 'FX:EURUSD';
+  window.open('https://www.tradingview.com/chart/?symbol=' + encodeURIComponent(sym), '_blank', 'noopener');
+}
+
 // ===== MAIN RENDER =====
 function render() {
   var ct = document.getElementById('main'); if (!ct) return;
@@ -2693,6 +3276,7 @@ function render() {
   else if (currentTab==='proplist')  ct.innerHTML = renderPropList();
   else if (currentTab==='brokerlist') ct.innerHTML = renderBrokerList();
   else if (currentTab==='account')   ct.innerHTML = renderAccount();
+  else if (currentTab==='platform')  { renderPlatform(); return; }
   else                               ct.innerHTML = renderGuide();
 }
 
@@ -2715,6 +3299,15 @@ window.addEventListener('DOMContentLoaded', function() {
   setTimeout(checkNet, 2000);
 
   loadAccountData();
+  loadCtraderState();
+  var urlParams = new URLSearchParams(window.location.search);
+  var authCode = urlParams.get('code');
+  var authState = urlParams.get('state');
+  if (authCode && authState === 'prophedge' && ctrader.clientId) {
+    goTab('broker', document.getElementById('tabBroker'));
+    broker.sel = 'ctrader';
+    setTimeout(function(){ exchangeCtraderToken(authCode); }, 300);
+  }
   setTimeout(function(){
     applyLangToUI();
     var tf=document.getElementById("tabAccountFlag");
@@ -2722,6 +3315,24 @@ window.addEventListener('DOMContentLoaded', function() {
   }, 150);
   loadTicker();
   setInterval(loadTicker, 60000); // aggiorna ogni 60 secondi
+
+  // Chiudi menu account cliccando OVUNQUE fuori
+  document.addEventListener('mousedown', function(e) {
+    // Click fuori dal pannello account -> chiudi tutto e torna alla Dashboard
+    if (currentTab !== 'account') return;
+    // Qui arriviamo solo se il click è FUORI (il pannello ha stopPropagation)
+    acState.myAccount = false;
+    acState.resetPwd  = false;
+    acState.settings  = false;
+    acState.lang      = false;
+    acState.theme     = false;
+    // Torna alla Dashboard: deseleziona Account, seleziona Dashboard
+    currentTab = 'dash';
+    document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+    var dashTab = document.getElementById('tabDash');
+    if (dashTab) dashTab.classList.add('active');
+    render();
+  });
   buildBot(BOT_ALL);
   loadFX();
   render();
