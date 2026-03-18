@@ -1163,6 +1163,7 @@ function doRegister(){
   <div class="tab mrow" onclick="goTab('calc',this)" id="tabCalc">Nuova sfida</div>
   <div class="tab mrow" onclick="goTab('proplist',this)" id="tabProp">Prop</div>
   <div class="tab mrow" onclick="goTab('brokerlist',this)" id="tabBroker">Broker</div>
+  <div class="tab mrow" onclick="goTab('journal',this)" id="tabJournal">Journal</div>
   <div class="tab mrow" onclick="goTab('guide',this)" id="tabGuide">Guida</div>
   <div class="tab mrow" onclick="toggleAccDrop(event)" id="tabAccount" style="margin-left:auto;display:flex;align-items:center;gap:7px;padding:6px 12px;position:relative"><span id="tabAccountFlag" style="line-height:1;flex-shrink:0"></span><div id="tabAccountPhoto" style="width:26px;height:26px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--t3)"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="4" fill="var(--teal)" opacity=".5"/><path d="M3 19c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="var(--teal)" stroke-width="1.5" fill="none" opacity=".4"/></svg></div><span id="tabAccountName" style="font-size:11px">Account</span></div>
 </div>
@@ -2994,6 +2995,417 @@ function renderBrokerList() {
 }
 
 // ===== RENDER GUIDE =====
+// ═══════════════════════════════════════════════════════
+// TRADE JOURNAL SYSTEM
+// ═══════════════════════════════════════════════════════
+
+var journal = {
+  trades: [],          // trade live + storici
+  liveTrades: [],      // solo aperti in tempo reale
+  loading: false,
+  filter: 'all',       // 'all', 'open', 'closed'
+  filterPlatform: 'all',
+  accounts: [],        // conti collegati
+  tradovateToken: '',
+  tradovateAccountId: '',
+  syncInterval: null
+};
+
+// Connessioni piattaforme
+var connections = {
+  mt4: { connected: false, label: '', token: '', accountId: '' },
+  mt5: { connected: false, label: '', token: '', accountId: '' },
+  tradovate: { connected: false, token: '', accountId: '', label: '' }
+};
+
+function loadJournalState() {
+  try {
+    var s = localStorage.getItem('ph_journal');
+    if (s) { var d = JSON.parse(s); Object.assign(journal, {accounts: d.accounts||[], tradovateToken: d.tradovateToken||'', tradovateAccountId: d.tradovateAccountId||''}); }
+    var c = localStorage.getItem('ph_connections');
+    if (c) Object.assign(connections, JSON.parse(c));
+  } catch(e) {}
+}
+
+function saveJournalState() {
+  try {
+    localStorage.setItem('ph_journal', JSON.stringify({accounts: journal.accounts, tradovateToken: journal.tradovateToken, tradovateAccountId: journal.tradovateAccountId}));
+    localStorage.setItem('ph_connections', JSON.stringify(connections));
+  } catch(e) {}
+}
+
+// ─── Render Journal ─────────────────────────────────────────────
+function renderJournal() {
+  var ct = document.getElementById('main');
+  ct.innerHTML = '<div id="journalRoot" style="max-width:900px;padding:20px"></div>';
+  refreshJournalUI();
+  loadTrades();
+}
+
+function refreshJournalUI() {
+  var root = document.getElementById('journalRoot');
+  if (!root) return;
+
+  // Stats live
+  var open   = journal.trades.filter(function(t){ return t.status==='open'; });
+  var closed = journal.trades.filter(function(t){ return t.status==='closed'; });
+  var totalPnl = closed.reduce(function(s,t){ return s + parseFloat(t.pnl_realized||0); }, 0);
+  var livePnl  = open.reduce(function(s,t){ return s + parseFloat(t.pnl_realized||0); }, 0);
+
+  var html = '';
+
+  // ── Header stats ──────────────────────────────────────────────
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px">';
+  html += _jCard('Trade aperti',  open.length,   'var(--teal)');
+  html += _jCard('Trade chiusi',  closed.length, 'var(--t2)');
+  html += _jCard('P/L realizzato', (totalPnl>=0?'+':'')+totalPnl.toFixed(2)+' $', totalPnl>=0?'var(--teal)':'var(--red)');
+  html += _jCard('P/L non realizzato', (livePnl>=0?'+':'')+livePnl.toFixed(2)+' $', livePnl>=0?'var(--teal)':'var(--red)');
+  html += '</div>';
+
+  // ── Connessioni piattaforme ───────────────────────────────────
+  html += '<div class="panel ai" style="margin-bottom:16px">';
+  html += '<div class="ph" style="display:flex;justify-content:space-between;align-items:center"><h3>Piattaforme collegate</h3><button class="btn-p" style="padding:6px 14px;font-size:11px" onclick="refreshJournalUI()">↻ Aggiorna</button></div>';
+  html += '<div class="pb">';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">';
+
+  // cTrader
+  var ctConn = ctrader.connected;
+  html += _jPlatformCard('cTrader', ctConn, ctConn ? (ctrader.accountId||'') : '', 'openCtraderInBroker()');
+
+  // MT4
+  html += _jPlatformCard('MT4', connections.mt4.connected, connections.mt4.label||'', 'showMT4Setup(\'mt4\')');
+
+  // MT5
+  html += _jPlatformCard('MT5', connections.mt5.connected, connections.mt5.label||'', 'showMT5Setup(\'mt5\')');
+
+  // Tradovate
+  html += _jPlatformCard('Tradovate', connections.tradovate.connected, connections.tradovate.label||'', 'showTradovateSetup()');
+
+  html += '</div>';
+
+  // MT4/MT5 setup inline
+  if (window._showMT4Setup) {
+    html += renderMTSetupPanel('mt4');
+  }
+  if (window._showMT5Setup) {
+    html += renderMTSetupPanel('mt5');
+  }
+  if (window._showTradovateSetup) {
+    html += renderTradovateSetupPanel();
+  }
+
+  html += '</div></div>';
+
+  // ── Filtri ────────────────────────────────────────────────────
+  html += '<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">';
+  ['all','open','closed'].forEach(function(f) {
+    var labels = {all:'Tutti', open:'Aperti', closed:'Chiusi'};
+    html += '<button onclick="journal.filter=\'' + f + '\';refreshJournalUI()" style="padding:6px 14px;border-radius:20px;border:1px solid ' + (journal.filter===f?'var(--teal)':'var(--border)') + ';background:' + (journal.filter===f?'var(--teal-bg)':'var(--bg2)') + ';color:' + (journal.filter===f?'var(--teal)':'var(--t2)') + ';font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fm)">' + labels[f] + '</button>';
+  });
+  html += '</div>';
+
+  // ── Tabella trade ─────────────────────────────────────────────
+  var filtered = journal.trades.filter(function(t) {
+    if (journal.filter === 'open')   return t.status === 'open';
+    if (journal.filter === 'closed') return t.status === 'closed';
+    return true;
+  });
+
+  if (journal.loading) {
+    html += '<div class="conn-bar cb-wait"><div class="cd cd-wait"></div>Caricamento trade...</div>';
+  } else if (filtered.length === 0) {
+    html += '<div class="note note-teal" style="text-align:center;padding:30px">';
+    html += '<div style="font-size:32px;margin-bottom:10px;opacity:.4">📊</div>';
+    html += '<div style="font-weight:700;margin-bottom:6px">Nessun trade trovato</div>';
+    html += '<div style="font-size:12px;color:var(--t3)">Collega una piattaforma per vedere i tuoi trade qui</div>';
+    html += '</div>';
+  } else {
+    html += '<div style="overflow-x:auto">';
+    html += '<table class="pt"><thead><tr>';
+    html += '<th>Data</th><th>Simbolo</th><th>Dir.</th><th>Lotti</th><th>Entrata</th><th>P/L</th><th>Stato</th><th>Piattaforma</th>';
+    html += '</tr></thead><tbody>';
+    filtered.forEach(function(t) {
+      var pnl = parseFloat(t.pnl_realized||0);
+      var dt = t.opened_at ? new Date(t.opened_at).toLocaleDateString('it-IT') : '—';
+      var platform = (t.platform||'').toUpperCase();
+      var badge = t.status === 'open'
+        ? '<span style="background:rgba(0,229,204,.15);color:var(--teal);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">APERTO</span>'
+        : '<span style="background:rgba(255,64,96,.1);color:var(--red);padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">CHIUSO</span>';
+      html += '<tr>';
+      html += '<td style="font-family:var(--fd);font-size:11px">' + dt + '</td>';
+      html += '<td><strong>' + (t.symbol||'—') + '</strong></td>';
+      html += '<td><span class="' + (t.direction==='BUY'?'v-green':'v-red') + '">' + (t.direction||'—') + '</span></td>';
+      html += '<td>' + parseFloat(t.volume||0).toFixed(2) + '</td>';
+      html += '<td style="font-family:var(--fd)">' + parseFloat(t.entry_price||0).toFixed(5) + '</td>';
+      html += '<td class="' + (pnl>=0?'v-green':'v-red') + '"><strong>' + (pnl>=0?'+':'') + pnl.toFixed(2) + ' $</strong></td>';
+      html += '<td>' + badge + '</td>';
+      html += '<td style="font-size:11px;color:var(--t3);font-family:var(--fd)">' + platform + (t.account_label?' · '+t.account_label:'') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  // ── Aggiungi trade manuale ────────────────────────────────────
+  html += '<div style="margin-top:16px">';
+  html += '<button class="btn-g" onclick="toggleManualTrade()">+ Aggiungi trade manuale</button>';
+  html += '</div>';
+  if (window._showManualTrade) {
+    html += renderManualTradeForm();
+  }
+
+  root.innerHTML = html;
+}
+
+function _jCard(label, value, color) {
+  return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">'
+    + '<div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">' + label + '</div>'
+    + '<div style="font-size:22px;font-weight:800;color:' + color + '">' + value + '</div>'
+    + '</div>';
+}
+
+function _jPlatformCard(name, connected, accountId, onclick) {
+  return '<div style="background:var(--bg3);border:1px solid ' + (connected?'var(--teal)':'var(--border)') + ';border-radius:12px;padding:14px;cursor:pointer" onclick="' + onclick + '">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    + '<span style="font-weight:700;font-size:13px">' + name + '</span>'
+    + '<span style="width:8px;height:8px;border-radius:50%;background:' + (connected?'var(--teal)':'var(--border2)') + ';display:inline-block"></span>'
+    + '</div>'
+    + '<div style="font-size:11px;color:' + (connected?'var(--teal)':'var(--t3)') + ';font-family:var(--fd)">' + (connected ? '✓ Connesso · ' + accountId : 'Clicca per connettere') + '</div>'
+    + '</div>';
+}
+
+function renderMTSetupPanel(platform) {
+  var conn = connections[platform];
+  return '<div style="background:var(--bg);border:1px solid var(--teal);border-radius:12px;padding:16px;margin-top:12px">'
+    + '<div style="font-weight:700;margin-bottom:12px">' + platform.toUpperCase() + ' — Configurazione EA</div>'
+    + '<div class="note note-teal" style="margin-bottom:12px">'
+    + '1. Scarica l\'EA PropHedgeBridge.mq4 dalla sezione Broker<br>'
+    + '2. Installalo su ' + platform.toUpperCase() + ' e inserisci il tuo <strong>User Token</strong> nei parametri<br>'
+    + '3. Abilita WebRequest per: <code>prophedge-iota.vercel.app</code><br>'
+    + '4. Inserisci qui sotto il nome del conto per identificarlo'
+    + '</div>'
+    + '<div class="fr2">'
+    + '<div class="f"><label>Nome conto</label><input type="text" id="mt-label-' + platform + '" placeholder="Es. Pepperstone Demo MT4" value="' + (conn.label||'') + '"></div>'
+    + '</div>'
+    + '<button class="btn-p" onclick="saveMTConnection(\'' + platform + '\')">Salva connessione</button>'
+    + ' <button class="btn-g" onclick="window._show' + (platform==='mt4'?'MT4':'MT5') + 'Setup=false;refreshJournalUI()">Annulla</button>'
+    + '</div>';
+}
+
+function renderTradovateSetupPanel() {
+  return '<div style="background:var(--bg);border:1px solid var(--teal);border-radius:12px;padding:16px;margin-top:12px">'
+    + '<div style="font-weight:700;margin-bottom:12px">Tradovate — Configurazione API</div>'
+    + '<div class="note note-teal" style="margin-bottom:12px">'
+    + '1. Vai su trader.tradovate.com → Impostazioni → API Access<br>'
+    + '2. Genera un API token<br>'
+    + '3. Incollalo qui sotto'
+    + '</div>'
+    + '<div class="f"><label>API Token</label><input type="password" id="tv-token" placeholder="Incolla il tuo Tradovate API token" value="' + (connections.tradovate.token||'') + '"></div>'
+    + '<div class="f"><label>Account Label</label><input type="text" id="tv-label" placeholder="Es. Tradovate Live" value="' + (connections.tradovate.label||'') + '"></div>'
+    + '<button class="btn-p" onclick="connectTradovate()">Connetti Tradovate</button>'
+    + ' <button class="btn-g" onclick="window._showTradovateSetup=false;refreshJournalUI()">Annulla</button>'
+    + '</div>';
+}
+
+function renderManualTradeForm() {
+  return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:12px">'
+    + '<div style="font-weight:700;margin-bottom:12px">Aggiungi trade manuale</div>'
+    + '<div class="fr3">'
+    + '<div class="f"><label>Simbolo</label><input type="text" id="mt-sym" placeholder="EURUSD"></div>'
+    + '<div class="f"><label>Direzione</label><select id="mt-dir"><option value="BUY">BUY</option><option value="SELL">SELL</option></select></div>'
+    + '<div class="f"><label>Lotti</label><input type="number" id="mt-vol" step="0.01" value="0.1"></div>'
+    + '</div>'
+    + '<div class="fr3">'
+    + '<div class="f"><label>Prezzo entrata</label><input type="number" id="mt-entry" step="0.00001" placeholder="1.08500"></div>'
+    + '<div class="f"><label>P/L ($)</label><input type="number" id="mt-pnl" step="0.01" value="0"></div>'
+    + '<div class="f"><label>Stato</label><select id="mt-status"><option value="open">Aperto</option><option value="closed">Chiuso</option></select></div>'
+    + '</div>'
+    + '<div class="f"><label>Piattaforma/conto</label><input type="text" id="mt-plat" placeholder="Es. FTMO MT5 Prop"></div>'
+    + '<button class="btn-p" onclick="saveManualTrade()">Salva trade</button>'
+    + ' <button class="btn-g" onclick="window._showManualTrade=false;refreshJournalUI()">Annulla</button>'
+    + '</div>';
+}
+
+// ─── Funzioni di controllo ─────────────────────────────────────
+function showMT4Setup() { window._showMT4Setup = !window._showMT4Setup; refreshJournalUI(); }
+function showMT5Setup() { window._showMT5Setup = !window._showMT5Setup; refreshJournalUI(); }
+function showTradovateSetup() { window._showTradovateSetup = !window._showTradovateSetup; refreshJournalUI(); }
+function toggleManualTrade() { window._showManualTrade = !window._showManualTrade; refreshJournalUI(); }
+
+function openCtraderInBroker() {
+  goTab('broker', document.getElementById('tabBroker'));
+  broker.sel = 'ctrader';
+  render();
+}
+
+function saveMTConnection(platform) {
+  var label = document.getElementById('mt-label-' + platform);
+  if (label) {
+    connections[platform].label     = label.value.trim() || platform.toUpperCase();
+    connections[platform].connected = true;
+    saveJournalState();
+    window['_show' + (platform==='mt4'?'MT4':'MT5') + 'Setup'] = false;
+    refreshJournalUI();
+  }
+}
+
+async function connectTradovate() {
+  var token = document.getElementById('tv-token').value.trim();
+  var label = document.getElementById('tv-label').value.trim() || 'Tradovate';
+  if (!token) { alert('Inserisci il token Tradovate.'); return; }
+  connections.tradovate.token     = token;
+  connections.tradovate.label     = label;
+  connections.tradovate.connected = true;
+  saveJournalState();
+  window._showTradovateSetup = false;
+  refreshJournalUI();
+  syncTradovateTrades();
+}
+
+// ─── Carica trade da Supabase ──────────────────────────────────
+async function loadTrades() {
+  journal.loading = true;
+  refreshJournalUI();
+  try {
+    var session = (await _sb.auth.getSession()).data.session;
+    if (!session) return;
+    var r = await fetch('/api/trades?limit=200', {
+      headers: {'Authorization': 'Bearer ' + session.access_token}
+    });
+    var d = await r.json();
+    if (d.trades) {
+      journal.trades = d.trades;
+    }
+  } catch(e) { console.error('loadTrades error:', e); }
+  journal.loading = false;
+
+  // Sync trade live dalle piattaforme connesse
+  if (ctrader.connected) syncCtraderTrades();
+  if (connections.tradovate.connected) syncTradovateTrades();
+
+  refreshJournalUI();
+}
+
+// ─── Sync da cTrader ───────────────────────────────────────────
+async function syncCtraderTrades() {
+  if (!ctrader.connected || !ctrader.accessToken) return;
+  try {
+    var r = await fetch('/api/ctrader-positions', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({access_token: ctrader.accessToken, account_id: ctrader.accountId, env: ctrader.env})
+    });
+    var d = await r.json();
+    if (!d.positions) return;
+
+    var tradesToSync = d.positions.map(function(p) {
+      return {
+        external_id:   String(p.positionId),
+        platform:      'ctrader',
+        account_id:    String(ctrader.accountId),
+        account_label: 'cTrader ' + (ctrader.env === 'live' ? 'Live' : 'Demo'),
+        symbol:        p.symbol,
+        direction:     p.tradeSide,
+        volume:        (p.volume||0) / 100,
+        entry_price:   p.entryPrice,
+        pnl_realized:  p.unrealizedGrossPnl || 0,
+        status:        'open',
+        opened_at:     new Date().toISOString()
+      };
+    });
+
+    if (tradesToSync.length > 0) await saveTradesToDB(tradesToSync);
+  } catch(e) { console.error('syncCtraderTrades error:', e); }
+}
+
+// ─── Sync da Tradovate ─────────────────────────────────────────
+async function syncTradovateTrades() {
+  if (!connections.tradovate.connected || !connections.tradovate.token) return;
+  try {
+    var r = await fetch('https://live.tradovateapi.com/v1/position/list', {
+      headers: {'Authorization': 'Bearer ' + connections.tradovate.token}
+    });
+    if (!r.ok) return;
+    var positions = await r.json();
+
+    var tradesToSync = (positions || []).map(function(p) {
+      return {
+        external_id:   String(p.id),
+        platform:      'tradovate',
+        account_id:    String(p.accountId),
+        account_label: connections.tradovate.label,
+        symbol:        p.contractId || '—',
+        direction:     p.netPos > 0 ? 'BUY' : 'SELL',
+        volume:        Math.abs(p.netPos || 0),
+        entry_price:   p.netPrice || 0,
+        pnl_realized:  p.openPL || 0,
+        status:        'open',
+        opened_at:     new Date().toISOString()
+      };
+    });
+
+    if (tradesToSync.length > 0) await saveTradesToDB(tradesToSync);
+  } catch(e) { console.error('syncTradovateTrades error:', e); }
+}
+
+// ─── Salva trade nel DB ────────────────────────────────────────
+async function saveTradesToDB(trades) {
+  try {
+    var session = (await _sb.auth.getSession()).data.session;
+    if (!session) return;
+    var r = await fetch('/api/trades', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + session.access_token},
+      body: JSON.stringify({action: 'sync', trades: trades})
+    });
+    var d = await r.json();
+    if (d.trades) {
+      // Aggiorna trade locali
+      d.trades.forEach(function(newT) {
+        var idx = journal.trades.findIndex(function(t){ return t.id === newT.id || (t.external_id === newT.external_id && t.platform === newT.platform); });
+        if (idx >= 0) journal.trades[idx] = newT;
+        else journal.trades.unshift(newT);
+      });
+      refreshJournalUI();
+    }
+  } catch(e) { console.error('saveTradesToDB error:', e); }
+}
+
+// ─── Salva trade manuale ───────────────────────────────────────
+async function saveManualTrade() {
+  var sym    = document.getElementById('mt-sym').value.trim().toUpperCase();
+  var dir    = document.getElementById('mt-dir').value;
+  var vol    = parseFloat(document.getElementById('mt-vol').value);
+  var entry  = parseFloat(document.getElementById('mt-entry').value);
+  var pnl    = parseFloat(document.getElementById('mt-pnl').value||'0');
+  var status = document.getElementById('mt-status').value;
+  var plat   = document.getElementById('mt-plat').value.trim() || 'manual';
+
+  if (!sym || isNaN(vol)) { alert('Inserisci simbolo e lotti.'); return; }
+
+  var trade = {
+    platform: 'manual', account_label: plat,
+    symbol: sym, direction: dir, volume: vol,
+    entry_price: entry, pnl_realized: pnl,
+    status: status, opened_at: new Date().toISOString()
+  };
+
+  try {
+    var session = (await _sb.auth.getSession()).data.session;
+    if (!session) return;
+    var r = await fetch('/api/trades', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'Authorization': 'Bearer ' + session.access_token},
+      body: JSON.stringify({trade: trade})
+    });
+    var d = await r.json();
+    if (d.trade) {
+      journal.trades.unshift(d.trade);
+      window._showManualTrade = false;
+      refreshJournalUI();
+    }
+  } catch(e) { alert('Errore salvataggio: ' + e.message); }
+}
+
 function renderGuide() {
   return '<div style="max-width:700px">'
     + '<div class="panel ai"><div class="ph"><h3>La logica in 30 secondi</h3></div><div class="pb">'
@@ -3309,6 +3721,7 @@ function render() {
   else if (currentTab==='brokerlist') ct.innerHTML = renderBrokerList();
   else if (currentTab==='account')   { /* gestito dal dropdown */ }
   else if (currentTab==='platform')  { renderPlatform(); return; }
+  else if (currentTab==='journal')   { renderJournal(); return; }
   else                               ct.innerHTML = renderGuide();
 }
 
@@ -3332,6 +3745,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
   loadAccountData();
   loadCtraderState();
+  loadJournalState();
   var urlParams = new URLSearchParams(window.location.search);
   var authCode = urlParams.get('code');
   var authState = urlParams.get('state');
