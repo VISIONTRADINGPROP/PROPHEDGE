@@ -1656,10 +1656,12 @@ function setMode(m) {
 function checkConsent() {
   try {
     if (!localStorage.getItem('ph_consent')) {
-      document.getElementById('ckOv').style.display = 'flex';
+      var ov = document.getElementById('ckOv');
+      if (ov) ov.style.display = 'flex';
     }
   } catch(e) {
-    document.getElementById('ckOv').style.display = 'flex';
+    var ov2 = document.getElementById('ckOv');
+    if (ov2) ov2.style.display = 'flex';
   }
 }
 function ckAccept() {
@@ -3065,6 +3067,11 @@ function renderJournal() {
   ct.style.maxWidth = 'none';
   jrnlInjectCSS();
 
+  if (jrnl.showNewForm) {
+    ct.innerHTML = '<div style="padding:0 20px">' + jrnlRenderNewForm() + '</div>';
+    return;
+  }
+
   if (jrnl.sessions.length === 0) {
     ct.innerHTML = jrnlRenderEmpty();
     return;
@@ -3252,10 +3259,7 @@ function jrnlSelect(i) {
 
 function jrnlShowNewForm() {
   jrnl.showNewForm = true;
-  var ct = document.getElementById('main');
-  var jm = document.getElementById('jmain');
-  if (jm) { jm.innerHTML = jrnlRenderNewForm(); }
-  else { renderJournal(); }
+  renderJournal();
 }
 
 function jrnlCancelNew() {
