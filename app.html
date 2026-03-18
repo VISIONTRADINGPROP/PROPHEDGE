@@ -2141,42 +2141,22 @@ function renderCtraderPanel() {
   var html = '<div class="sect" style="margin-top:16px">Connessione cTrader</div>';
 
   if (!ctrader.connected) {
-    // Fase 1: inserisci credenziali app
-    if (!ctrader.clientId) {
-      html += '<div class="note note-teal" style="margin-bottom:14px">'
-        + '<strong>Come ottenere le credenziali:</strong><br>'
-        + '1. Vai su <strong>connect.ctrader.com</strong><br>'
-        + '2. Crea un account sviluppatore gratuito<br>'
-        + '3. Clicca "Create Application" → nome: PropHedge<br>'
-        + '4. Tipo: Web Application<br>'
-        + '5. Redirect URI: <code style="background:rgba(0,229,204,.1);padding:2px 6px;border-radius:4px">' + window.location.origin + '/ctrader-callback</code><br>'
-        + '6. Copia Client ID e Client Secret qui sotto'
-        + '</div>';
-      html += '<div class="fr2">'
-        + '<div class="f"><label>Client ID</label><input type="text" id="ct-clientid" placeholder="12345" value="' + (ctrader.clientId||'') + '"></div>'
-        + '<div class="f"><label>Client Secret</label><input type="password" id="ct-secret" placeholder="••••••••" value="' + (ctrader.clientSecret||'') + '"></div>'
-        + '</div>';
-      html += '<div class="f"><label>Ambiente</label><select id="ct-env">'
-        + '<option value="demo"' + (ctrader.env==='demo'?' selected':'') + '>Demo (Paper trading)</option>'
-        + '<option value="live"' + (ctrader.env==='live'?' selected':'') + '>Live (Reale)</option>'
-        + '</select></div>';
-      html += '<button class="btn-p" onclick="saveCtraderCredentials()">Salva e connetti →</button>';
-    } else {
-      // Fase 2: autorizza con OAuth
-      html += '<div class="note note-teal" style="margin-bottom:14px">'
-        + 'Client ID salvato: <strong>' + ctrader.clientId + '</strong><br>'
-        + 'Clicca il pulsante per autorizzare PropHedge ad accedere al tuo conto cTrader.'
-        + '</div>';
-      html += '<button class="btn-p" onclick="startCtraderOAuth()">🔐 Autorizza cTrader →</button>';
-      html += '&nbsp;<button class="btn-g" onclick="ctrader.clientId=\'\';render()">Cambia credenziali</button>';
+    html += '<div class="note note-teal" style="margin-bottom:14px">'
+      + 'Collega il tuo conto cTrader (Axi, Pepperstone, IC Markets, TopFX ecc.)<br>'
+      + 'Verrai reindirizzato su cTrader per autorizzare l\'accesso in modo sicuro.'
+      + '</div>';
+    html += '<div class="f"><label>Ambiente</label><select id="ct-env">'
+      + '<option value="live"' + (ctrader.env==='live'?' selected':'') + '>Live (Reale)</option>'
+      + '<option value="demo"' + (ctrader.env==='demo'?' selected':'') + '>Demo (Paper trading)</option>'
+      + '</select></div>';
+    html += '<button class="btn-p" onclick="startCtraderOAuth()">🔐 Connetti cTrader →</button>';
 
-      // Controlla se abbiamo già un token (dal callback URL)
-      var urlParams = new URLSearchParams(window.location.search);
-      var authCode = urlParams.get('code');
-      if (authCode && !ctrader.accessToken) {
-        html += '<div class="conn-bar cb-wait" style="margin-top:10px"><div class="cd cd-wait"></div>Codice ricevuto, scambio token...</div>';
-        setTimeout(function(){ exchangeCtraderToken(authCode); }, 500);
-      }
+    // Controlla se abbiamo già un token (dal callback URL)
+    var urlParams = new URLSearchParams(window.location.search);
+    var authCode = urlParams.get('code');
+    if (authCode && !ctrader.accessToken) {
+      html += '<div class="conn-bar cb-wait" style="margin-top:10px"><div class="cd cd-wait"></div>Connessione in corso...</div>';
+      setTimeout(function(){ exchangeCtraderToken(authCode); }, 500);
     }
   } else {
     // Connesso — mostra conto e posizioni
@@ -2269,17 +2249,20 @@ function saveCtraderCredentials() {
 
 // ─── Avvia OAuth2 cTrader ──────────────────────────────────────────
 function startCtraderOAuth() {
-  var authBase = ctrader.env === 'live'
-    ? 'https://connect.ctrader.com/oauth/authorize'
-    : 'https://id.ctrader.com/oauth2/auth';
-  var params = new URLSearchParams({
-    response_type: 'code',
-    client_id:     ctrader.clientId,
-    redirect_uri:  window.location.origin + '/ctrader-callback',
-    scope:         'trading',
-    state:         'prophedge'
-  });
-  window.location.href = authBase + '?' + params.toString();
+  var env = document.getElementById('ct-env') ? document.getElementById('ct-env').value : (ctrader.env || 'live');
+  ctrader.env = env;
+  saveCtraderState();
+  // Le credenziali sono sul server — chiediamo il link di autorizzazione all'API
+  fetch('/api/ctrader-auth-url?env=' + env + '&redirect=' + encodeURIComponent(window.location.origin + '/ctrader-callback'))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.url) {
+        window.location.href = d.url;
+      } else {
+        alert('Errore: ' + (d.error || 'impossibile avviare connessione'));
+      }
+    })
+    .catch(function(e){ alert('Errore: ' + e.message); });
 }
 
 // ─── Scambia codice con token ──────────────────────────────────────
@@ -2290,10 +2273,8 @@ async function exchangeCtraderToken(code) {
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         code: code,
-        client_id:     ctrader.clientId,
-        client_secret: ctrader.clientSecret,
-        redirect_uri:  window.location.origin + '/ctrader-callback',
-        env:           ctrader.env
+        redirect_uri: window.location.origin + '/ctrader-callback',
+        env:          ctrader.env
       })
     });
     var d = await r.json();
@@ -3749,7 +3730,7 @@ window.addEventListener('DOMContentLoaded', function() {
   var urlParams = new URLSearchParams(window.location.search);
   var authCode = urlParams.get('code');
   var authState = urlParams.get('state');
-  if (authCode && authState === 'prophedge' && ctrader.clientId) {
+  if (authCode && authState === 'prophedge') {
     goTab('broker', document.getElementById('tabBroker'));
     broker.sel = 'ctrader';
     setTimeout(function(){ exchangeCtraderToken(authCode); }, 300);
