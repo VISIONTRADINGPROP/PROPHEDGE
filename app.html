@@ -2987,80 +2987,107 @@ function renderBrokerList() {
 // TRADE JOURNAL — Sistema indipendente dalla Dashboard
 // ═══════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════
+// TRADE JOURNAL v3 — Layout verticale, scroll sincronizzato
+// ═══════════════════════════════════════════════════════
+
 var jrnl = {
-  sessions: [],       // [{id, name, propConn, brokerConn, propTrades, brokerTrades, concluded, createdAt}]
+  sessions: [],
   activeIdx: 0,
   showNewForm: false
 };
 
 function jrnlLoad() {
   try {
-    var s = localStorage.getItem('ph_jrnl_v1');
+    var s = localStorage.getItem('ph_jrnl_v3');
     if (s) { var d = JSON.parse(s); jrnl.sessions = d.sessions||[]; jrnl.activeIdx = d.activeIdx||0; }
   } catch(e) {}
 }
 
 function jrnlSave() {
-  try { localStorage.setItem('ph_jrnl_v1', JSON.stringify({sessions: jrnl.sessions, activeIdx: jrnl.activeIdx})); } catch(e) {}
+  try { localStorage.setItem('ph_jrnl_v3', JSON.stringify({sessions:jrnl.sessions, activeIdx:jrnl.activeIdx})); } catch(e) {}
 }
 
+function jrnlGetActive() { return jrnl.sessions[jrnl.activeIdx]||null; }
+
 function jrnlNewSession(name) {
-  var id = 'j' + Date.now();
+  var num = jrnl.sessions.length + 1;
   jrnl.sessions.push({
-    id: id, name: name || ('Sfida ' + (jrnl.sessions.length+1)),
-    propConn:   {platform:'', label:'', token:'', accountId:'', env:'live', connected:false},
-    brokerConn: {platform:'', label:'', token:'', accountId:'', env:'live', connected:false},
-    propTrades: [], brokerTrades: [],
-    concluded: false, concludedAt: null, createdAt: new Date().toISOString()
+    id:'j'+Date.now(), name:name||('Sfida '+num),
+    propConn:{platform:'',label:'',token:'',accountId:'',env:'live',connected:false},
+    brokerConn:{platform:'',label:'',token:'',accountId:'',env:'live',connected:false},
+    propTrades:[], brokerTrades:[],
+    concluded:false, concludedAt:null
   });
   jrnl.activeIdx = jrnl.sessions.length - 1;
   jrnlSave();
 }
 
-function jrnlGetActive() {
-  return jrnl.sessions[jrnl.activeIdx] || null;
+function jrnlRenumber() {
+  // Rinumera le sfide dopo eliminazione
+  jrnl.sessions.forEach(function(s,i){ s.num = i+1; });
 }
 
-// ─── CSS ─────────────────────────────────────────────────────────
+// ─── CSS ────────────────────────────────────────────────────────
 function jrnlInjectCSS() {
   if (document.getElementById('jrnl-css')) return;
   var el = document.createElement('style');
   el.id = 'jrnl-css';
-  el.textContent = [
-    '.jw{display:flex;height:calc(100vh - 106px);overflow:hidden}',
-    '.jsb{width:170px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}',
-    '.jsb-hd{font-size:9px;font-weight:700;font-family:var(--fd);color:var(--t3);letter-spacing:.1em;text-transform:uppercase;padding:12px 12px 6px}',
-    '.jsb-item{padding:9px 12px;cursor:pointer;border-left:3px solid transparent;font-size:11px;font-weight:600;color:var(--t2);transition:all .15s;line-height:1.4}',
-    '.jsb-item:hover{background:var(--bg3);color:var(--t)}',
-    '.jsb-item.active{border-left-color:var(--teal);background:var(--teal-bg);color:var(--teal)}',
-    '.jsb-item.done{opacity:.5}',
-    '.jsb-add{margin-top:auto;padding:10px 12px;cursor:pointer;font-size:11px;color:var(--teal);display:flex;align-items:center;gap:6px;border-top:1px solid var(--border);transition:background .15s}',
-    '.jsb-add:hover{background:var(--teal-bg)}',
-    '.jmain{flex:1;display:flex;flex-direction:column;overflow:hidden}',
-    '.jhalf{flex:1;display:flex;flex-direction:column;overflow:hidden;border-bottom:2px solid var(--border2)}',
-    '.jhalf:last-child{border-bottom:none}',
-    '.jhdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}',
-    '.jhdr-title{font-size:10px;font-weight:700;font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em}',
-    '.jhdr-title.prop{color:var(--violet)}.jhdr-title.broker{color:var(--teal)}',
-    '.jstats{display:flex;gap:12px;margin-left:auto;flex-wrap:wrap}',
-    '.jstat{font-size:10px;font-family:var(--fd);color:var(--t3)}',
-    '.jstat b{font-weight:700}',
-    '.jconn{padding:6px 14px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0}',
-    '.jtbwrap{flex:1;overflow-y:auto}',
-    '.jtb{width:100%;border-collapse:collapse;font-size:11px}',
-    '.jtb th{background:var(--bg3);color:var(--t3);font-size:9px;font-family:var(--fd);letter-spacing:.08em;text-transform:uppercase;padding:7px 10px;position:sticky;top:0;z-index:1;white-space:nowrap;border-bottom:1px solid var(--border)}',
-    '.jtb td{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;color:var(--t2)}',
-    '.jtb tr:hover td{background:rgba(255,255,255,.03)}',
-    '.jempty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:8px;color:var(--t3);font-size:12px;padding:20px;text-align:center}',
-    '.jbanner{padding:7px 14px;font-size:11px;display:flex;align-items:center;gap:8px;flex-shrink:0}',
-    '.jbanner.concluded{background:rgba(255,64,96,.07);color:var(--red);border-bottom:1px solid rgba(255,64,96,.15)}',
-    '.jnew-form{padding:20px;max-width:500px;margin:0 auto}',
-    '@media(max-width:600px){.jw{flex-direction:column;height:auto}.jsb{width:100%;flex-direction:row;overflow-x:auto;height:auto;border-right:none;border-bottom:1px solid var(--border)}.jsb-hd{display:none}.jsb-item{white-space:nowrap;border-left:none;border-bottom:3px solid transparent;padding:8px 12px}.jsb-item.active{border-bottom-color:var(--teal);border-left:none}.jsb-add{border-top:none;margin-top:0;border-left:1px solid var(--border)}.jmain{min-height:500px}}'
-  ].join('');
+  el.textContent = ''
+    +'.jw{display:flex;height:calc(100vh - 106px);overflow:hidden}'
+    +'.jsb{width:180px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}'
+    +'.jsb-hd{padding:12px 14px 6px;display:flex;align-items:center;justify-content:space-between}'
+    +'.jsb-hd span{font-size:9px;font-weight:700;font-family:var(--fd);color:var(--t3);letter-spacing:.1em;text-transform:uppercase}'
+    +'.jsb-new{background:linear-gradient(135deg,var(--teal2),var(--violet2));border:none;color:#fff;border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--fm)}'
+    +'.jsb-item{padding:10px 14px;cursor:pointer;border-left:3px solid transparent;font-size:12px;font-weight:600;color:var(--t2);transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:6px}'
+    +'.jsb-item:hover{background:var(--bg3);color:var(--t)}'
+    +'.jsb-item.active{border-left-color:var(--teal);background:var(--teal-bg);color:var(--teal)}'
+    +'.jsb-item.done{opacity:.5}'
+    +'.jsb-del{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:0 2px;line-height:1;opacity:0;transition:opacity .15s}'
+    +'.jsb-item:hover .jsb-del{opacity:1}'
+    +'.jmain{flex:1;display:flex;flex-direction:column;overflow:hidden}'
+    +'.jmhdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}'
+    +'.jconn{padding:7px 16px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:11px;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}'
+    // Layout verticale: due colonne affiancate
+    +'.jcols-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column}'
+    +'.jcols-hdr{display:grid;grid-template-columns:1fr 1fr;gap:0;flex-shrink:0;border-bottom:2px solid var(--border2)}'
+    +'.jcol-hdr{padding:8px 14px;background:var(--bg2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}'
+    +'.jcol-hdr:first-child{border-right:1px solid var(--border2)}'
+    +'.jcol-title{font-size:10px;font-weight:700;font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em}'
+    +'.jcol-title.prop{color:var(--violet)}'
+    +'.jcol-title.broker{color:var(--teal)}'
+    +'.jstats{display:flex;gap:10px;flex-wrap:wrap}'
+    +'.jstat{font-size:10px;font-family:var(--fd);color:var(--t3)}'
+    +'.jstat b{font-weight:700}'
+    // Scroll sincronizzato
+    +'.jcols-scroll{flex:1;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:0}'
+    +'.jcols-scroll::-webkit-scrollbar{width:6px}'
+    +'.jcols-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}'
+    +'.jcol{overflow:hidden}'
+    +'.jcol:first-child{border-right:1px solid var(--border2)}'
+    // Tabella
+    +'.jtb{width:100%;border-collapse:collapse;font-size:11px}'
+    +'.jtb th{background:var(--bg3);color:var(--t3);font-size:9px;font-family:var(--fd);letter-spacing:.08em;text-transform:uppercase;padding:7px 10px;position:sticky;top:0;z-index:1;white-space:nowrap;border-bottom:1px solid var(--border)}'
+    +'.jtb td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;color:var(--t2)}'
+    +'.jtb tr:hover td{background:rgba(255,255,255,.03)}'
+    +'.jempty-col{padding:30px 16px;text-align:center;color:var(--t3);font-size:11px}'
+    +'.jbanner{padding:7px 16px;font-size:11px;display:flex;align-items:center;gap:8px;flex-shrink:0}'
+    +'.jbanner.concluded{background:rgba(255,64,96,.07);color:var(--red);border-bottom:1px solid rgba(255,64,96,.15)}'
+    +'.jnew-form{padding:30px 24px;max-width:480px}'
+    +'@media(max-width:700px){'
+    +'.jw{flex-direction:column;height:auto}'
+    +'.jsb{width:100%;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border)}'
+    +'.jsb-hd{flex-shrink:0}'
+    +'.jsb-item{white-space:nowrap;border-left:none;border-bottom:3px solid transparent;flex-direction:column;gap:2px}'
+    +'.jsb-item.active{border-bottom-color:var(--teal);border-left:none}'
+    +'.jsb-del{display:none}'
+    +'.jcols-hdr{grid-template-columns:1fr 1fr}'
+    +'.jcols-scroll{grid-template-columns:1fr 1fr;max-height:600px}'
+    +'}';
   document.head.appendChild(el);
 }
 
-// ─── Render principale ────────────────────────────────────────────
+// ─── Render principale ───────────────────────────────────────────
 function renderJournal() {
   var ct = document.getElementById('main');
   ct.style.padding = '0';
@@ -3068,36 +3095,50 @@ function renderJournal() {
   jrnlInjectCSS();
 
   if (jrnl.showNewForm) {
-    ct.innerHTML = '<div style="padding:0 20px">' + jrnlRenderNewForm() + '</div>';
+    ct.innerHTML = '<div style="padding:0">' + jrnlRenderNewForm() + '</div>';
     return;
   }
-
   if (jrnl.sessions.length === 0) {
     ct.innerHTML = jrnlRenderEmpty();
     return;
   }
+  // Assicura che activeIdx sia valido
+  if (jrnl.activeIdx >= jrnl.sessions.length) jrnl.activeIdx = jrnl.sessions.length - 1;
 
   ct.innerHTML = '<div class="jw">' + jrnlRenderSidebar() + '<div class="jmain" id="jmain">' + jrnlRenderMain() + '</div></div>';
+
+  // Bind scroll sincronizzato dopo render
+  setTimeout(jrnlBindScroll, 50);
 }
 
 function jrnlRenderEmpty() {
-  return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:16px;padding:20px;text-align:center">'
-    + '<div style="font-size:40px;opacity:.3">📊</div>'
+  return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:16px;text-align:center;padding:20px">'
+    + '<div style="font-size:40px;opacity:.25">&#128202;</div>'
     + '<div style="font-size:16px;font-weight:700">Nessuna sfida nel Journal</div>'
-    + '<div style="color:var(--t3);font-size:13px">Crea la tua prima sfida per iniziare a tracciare i trade</div>'
+    + '<div style="color:var(--t3);font-size:12px">Crea la tua prima sfida per iniziare a tracciare i trade</div>'
     + '<button class="btn-p" onclick="jrnlShowNewForm()">+ Nuova sfida Journal</button>'
     + '</div>';
 }
 
 function jrnlRenderSidebar() {
-  var html = '<div class="jsb"><div class="jsb-hd">Sfide</div>';
+  var html = '<div class="jsb">'
+    + '<div class="jsb-hd">'
+    + '<span>Sfide</span>'
+    + '<button class="jsb-new" onclick="jrnlShowNewForm()">+ Nuova</button>'
+    + '</div>';
+
   jrnl.sessions.forEach(function(s, i) {
     var active = jrnl.activeIdx === i;
     html += '<div class="jsb-item' + (active?' active':'') + (s.concluded?' done':'') + '" onclick="jrnlSelect(' + i + ')">'
-      + (s.concluded ? '&#10003; ' : '') + s.name
+      + '<div style="line-height:1.4">'
+      + (s.concluded?'<span style="font-size:9px;color:var(--teal)">&#10003; </span>':'')
+      + 'Sfida ' + (i+1)
+      + '<div style="font-size:10px;font-weight:400;opacity:.65;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + s.name + '</div>'
+      + '</div>'
+      + '<button class="jsb-del" onclick="event.stopPropagation();jrnlDelete(' + i + ')" title="Elimina">&#10005;</button>'
       + '</div>';
   });
-  html += '<div class="jsb-add" onclick="jrnlShowNewForm()">&#43; Nuova sfida</div>';
+
   html += '</div>';
   return html;
 }
@@ -3105,109 +3146,119 @@ function jrnlRenderSidebar() {
 function jrnlRenderMain() {
   if (jrnl.showNewForm) return jrnlRenderNewForm();
   var sess = jrnlGetActive();
-  if (!sess) return '<div class="jempty">Seleziona una sfida</div>';
+  if (!sess) return '<div style="padding:30px;color:var(--t3)">Seleziona una sfida</div>';
   var i = jrnl.activeIdx;
   var html = '';
 
+  // Banner conclusa
   if (sess.concluded) {
-    html += '<div class="jbanner concluded">&#9873; Sfida conclusa il ' + (sess.concludedAt ? new Date(sess.concludedAt).toLocaleDateString('it-IT') : '') + ' &mdash; <a href="#" onclick="jrnlReset(' + i + ');return false" style="color:var(--teal);text-decoration:none">&#8635; Reimposta</a></div>';
+    html += '<div class="jbanner concluded">&#9873; Sfida conclusa il ' + (sess.concludedAt ? new Date(sess.concludedAt).toLocaleDateString('it-IT') : '') + ' &nbsp;&mdash;&nbsp; <a href="#" onclick="jrnlReset(' + i + ');return false" style="color:var(--teal);text-decoration:none">&#8635; Reimposta</a></div>';
   }
 
-  // ── TOP: Prop ─────────────────────────────────────────
-  var pt = sess.propTrades || [];
+  // Stats e connessioni prop
+  var pt = (sess.propTrades||[]).slice().sort(function(a,b){ return new Date(b.opened_at||0)-new Date(a.opened_at||0); });
+  var bt = (sess.brokerTrades||[]).slice().sort(function(a,b){ return new Date(b.opened_at||0)-new Date(a.opened_at||0); });
   var ptOpen = pt.filter(function(t){ return t.status==='open'; });
-  var ptPnl  = pt.reduce(function(s,t){ return s+parseFloat(t.pnl_realized||0); }, 0);
-  var ptLive = ptOpen.reduce(function(s,t){ return s+parseFloat(t.pnl_realized||0); }, 0);
-
-  html += '<div class="jhalf">';
-  html += '<div class="jhdr">'
-    + '<span class="jhdr-title prop">&#127942; Conto Prop &mdash; ' + sess.name + '</span>'
-    + '<div class="jstats">'
-    + '<div class="jstat">Aperti: <b style="color:var(--teal)">' + ptOpen.length + '</b></div>'
-    + '<div class="jstat">P/L chiusi: <b class="' + (ptPnl>=0?'v-green':'v-red') + '">' + (ptPnl>=0?'+':'') + ptPnl.toFixed(2) + '$</b></div>'
-    + '<div class="jstat">Live: <b class="' + (ptLive>=0?'v-green':'v-red') + '">' + (ptLive>=0?'+':'') + ptLive.toFixed(2) + '$</b></div>'
-    + '</div>';
-  if (!sess.concluded) {
-    html += '<div style="display:flex;gap:6px;margin-left:4px">'
-      + '<button class="btn-g" style="padding:3px 10px;font-size:10px" data-jconn-idx="' + i + '" data-jconn-side="prop">&#9889; Connetti</button>'
-      + '<button class="btn-g" style="padding:3px 10px;font-size:10px;color:var(--amber)" data-jconclude="' + i + '">&#10003; Sfida conclusa</button>'
-      + '</div>';
-  }
-  html += '</div>';
-
-  if (!sess.propConn.connected) {
-    html += '<div class="jconn"><span style="color:var(--t3)">Non connesso</span>'
-      + '<button class="btn-p" style="padding:3px 10px;font-size:10px" data-jconn-idx="' + i + '" data-jconn-side="prop">Connetti conto Prop</button></div>';
-  } else {
-    html += '<div class="jconn"><span style="color:var(--teal)">&#9679; ' + sess.propConn.label + '</span>'
-      + '<span style="color:var(--t3);margin-left:6px">' + (sess.propConn.platform||'').toUpperCase() + '</span>'
-      + '<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jsync-idx="' + i + '" data-jsync-side="prop">&#8635;</button></div>';
-  }
-  html += '<div class="jtbwrap">' + jrnlTable(pt) + '</div></div>';
-
-  // ── BOTTOM: Broker ────────────────────────────────────
-  var bt = sess.brokerTrades || [];
   var btOpen = bt.filter(function(t){ return t.status==='open'; });
+  var ptPnl  = pt.reduce(function(s,t){ return s+parseFloat(t.pnl_realized||0); }, 0);
   var btPnl  = bt.reduce(function(s,t){ return s+parseFloat(t.pnl_realized||0); }, 0);
+  var ptLive = ptOpen.reduce(function(s,t){ return s+parseFloat(t.pnl_realized||0); }, 0);
   var btLive = btOpen.reduce(function(s,t){ return s+parseFloat(t.pnl_realized||0); }, 0);
 
-  html += '<div class="jhalf">';
-  html += '<div class="jhdr">'
-    + '<span class="jhdr-title broker">&#128188; Conto Broker Personale</span>'
+  // ── Header connessioni ──────────────────────────────────────
+  if (!sess.propConn.connected || !sess.brokerConn.connected) {
+    html += '<div class="jconn">';
+    if (!sess.propConn.connected) {
+      html += '<span style="color:var(--t3);font-size:10px">Prop: non connesso</span>'
+        + '<button class="btn-p" style="padding:3px 10px;font-size:10px" data-jconn-idx="' + i + '" data-jconn-side="prop">&#9889; Connetti Prop</button>';
+    } else {
+      html += '<span style="color:var(--teal);font-size:10px">&#9679; Prop: ' + sess.propConn.label + '</span>'
+        + '<button class="btn-g" style="padding:2px 8px;font-size:10px" data-jsync-idx="' + i + '" data-jsync-side="prop">&#8635;</button>';
+    }
+    html += '<span style="color:var(--border2);margin:0 4px">|</span>';
+    if (!sess.brokerConn.connected) {
+      html += '<span style="color:var(--t3);font-size:10px">Broker: non connesso</span>'
+        + '<button class="btn-p" style="padding:3px 10px;font-size:10px" data-jconn-idx="' + i + '" data-jconn-side="broker">&#9889; Connetti Broker</button>';
+    } else {
+      html += '<span style="color:var(--teal);font-size:10px">&#9679; Broker: ' + sess.brokerConn.label + '</span>'
+        + '<button class="btn-g" style="padding:2px 8px;font-size:10px" data-jsync-idx="' + i + '" data-jsync-side="broker">&#8635;</button>';
+    }
+    if (!sess.concluded) {
+      html += '<span style="margin-left:auto"><button class="btn-g" style="padding:3px 10px;font-size:10px;color:var(--amber)" data-jconclude="' + i + '">&#10003; Sfida conclusa</button></span>';
+    }
+    html += '</div>';
+  } else {
+    // Entrambi connessi
+    html += '<div class="jconn">'
+      + '<span style="color:var(--teal);font-size:10px">&#9679; Prop: ' + sess.propConn.label + '</span>'
+      + '<button class="btn-g" style="padding:2px 8px;font-size:10px" data-jsync-idx="' + i + '" data-jsync-side="prop">&#8635;</button>'
+      + '<span style="color:var(--border2);margin:0 6px">|</span>'
+      + '<span style="color:var(--teal);font-size:10px">&#9679; Broker: ' + sess.brokerConn.label + '</span>'
+      + '<button class="btn-g" style="padding:2px 8px;font-size:10px" data-jsync-idx="' + i + '" data-jsync-side="broker">&#8635;</button>'
+      + (sess.concluded ? '' : '<span style="margin-left:auto"><button class="btn-g" style="padding:3px 10px;font-size:10px;color:var(--amber)" data-jconclude="' + i + '">&#10003; Sfida conclusa</button></span>')
+      + '</div>';
+  }
+
+  // ── Intestazioni colonne ────────────────────────────────────
+  html += '<div class="jcols-wrap"><div class="jcols-hdr">';
+  // Header Prop
+  html += '<div class="jcol-hdr">'
+    + '<span class="jcol-title prop">&#127942; Conto Prop</span>'
+    + '<div class="jstats">'
+    + '<div class="jstat">Aperti: <b style="color:var(--teal)">' + ptOpen.length + '</b></div>'
+    + '<div class="jstat">P/L: <b class="' + (ptPnl>=0?'v-green':'v-red') + '">' + (ptPnl>=0?'+':'') + ptPnl.toFixed(2) + '$</b></div>'
+    + '<div class="jstat">Live: <b class="' + (ptLive>=0?'v-green':'v-red') + '">' + (ptLive>=0?'+':'') + ptLive.toFixed(2) + '$</b></div>'
+    + '</div></div>';
+  // Header Broker
+  html += '<div class="jcol-hdr">'
+    + '<span class="jcol-title broker">&#128188; Conto Broker</span>'
     + '<div class="jstats">'
     + '<div class="jstat">Aperti: <b style="color:var(--teal)">' + btOpen.length + '</b></div>'
-    + '<div class="jstat">P/L chiusi: <b class="' + (btPnl>=0?'v-green':'v-red') + '">' + (btPnl>=0?'+':'') + btPnl.toFixed(2) + '$</b></div>'
+    + '<div class="jstat">P/L: <b class="' + (btPnl>=0?'v-green':'v-red') + '">' + (btPnl>=0?'+':'') + btPnl.toFixed(2) + '$</b></div>'
     + '<div class="jstat">Live: <b class="' + (btLive>=0?'v-green':'v-red') + '">' + (btLive>=0?'+':'') + btLive.toFixed(2) + '$</b></div>'
-    + '</div>';
-  if (!sess.concluded) {
-    html += '<button class="btn-g" style="padding:3px 10px;font-size:10px;margin-left:4px" data-jconn-idx="' + i + '" data-jconn-side="broker">&#9889; Connetti</button>';
-  }
-  html += '</div>';
+    + '</div></div>';
+  html += '</div>'; // fine jcols-hdr
 
-  if (!sess.brokerConn.connected) {
-    html += '<div class="jconn"><span style="color:var(--t3)">Non connesso</span>'
-      + '<button class="btn-p" style="padding:3px 10px;font-size:10px" data-jconn-idx="' + i + '" data-jconn-side="broker">Connetti conto Broker</button></div>';
-  } else {
-    html += '<div class="jconn"><span style="color:var(--teal)">&#9679; ' + sess.brokerConn.label + '</span>'
-      + '<span style="color:var(--t3);margin-left:6px">' + (sess.brokerConn.platform||'').toUpperCase() + '</span>'
-      + '<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jsync-idx="' + i + '" data-jsync-side="broker">&#8635;</button></div>';
-  }
-  html += '<div class="jtbwrap">' + jrnlTable(bt) + '</div></div>';
+  // ── Area scroll sincronizzata ───────────────────────────────
+  html += '<div class="jcols-scroll" id="jcols-scroll">';
+  // Colonna Prop
+  html += '<div class="jcol" id="jcol-prop">' + jrnlTable(pt, 'prop') + '</div>';
+  // Colonna Broker
+  html += '<div class="jcol" id="jcol-broker">' + jrnlTable(bt, 'broker') + '</div>';
+  html += '</div>'; // fine jcols-scroll
+  html += '</div>'; // fine jcols-wrap
+
+  // Modal connessione
   html += jrnlConnModal();
   return html;
 }
 
-// Event delegation per bottoni Journal con data attributes
-document.addEventListener('click', function(e) {
-  var el = e.target.closest('[data-jconn-idx]');
-  if (el) { jrnlOpenConn(parseInt(el.dataset.jconnIdx), el.dataset.jconnSide); return; }
-  var el2 = e.target.closest('[data-jconclude]');
-  if (el2) { jrnlConclude(parseInt(el2.dataset.jconclude)); return; }
-  var el3 = e.target.closest('[data-jsync-idx]');
-  if (el3) { jrnlSync(parseInt(el3.dataset.jsyncIdx), el3.dataset.jsyncSide); return; }
-});
+// Scroll sincronizzato: un solo contenitore .jcols-scroll
+function jrnlBindScroll() {
+  // Lo scroll è gestito dal contenitore grid — già sincronizzato nativamente
+  // perché entrambe le colonne sono nel SAME contenitore scrollabile
+  // Non serve nulla di aggiuntivo
+}
 
-function jrnlTable(trades) {
+function jrnlTable(trades, side) {
   if (!trades || trades.length === 0) {
-    return '<div class="jempty"><div style="font-size:22px;opacity:.3">&#128202;</div><div>Nessun trade — connetti il conto per sincronizzare</div></div>';
+    return '<div class="jempty-col"><div style="font-size:24px;opacity:.2;margin-bottom:8px">' + (side==='prop'?'&#127942;':'&#128188;') + '</div>'
+      + 'Nessun trade<br><span style="font-size:10px">Connetti il conto per sincronizzare</span></div>';
   }
   var html = '<table class="jtb"><thead><tr>'
-    + '<th>Data/ora</th><th>Simbolo</th><th>Dir.</th><th>Lotti</th>'
-    + '<th>Entrata</th><th>Chiusura</th><th>SL</th><th>TP</th><th>P/L</th><th>Stato</th>'
+    + '<th>#</th><th>Data</th><th>Simbolo</th><th>Dir.</th><th>Lotti</th>'
+    + '<th>Entrata</th><th>P/L</th><th>Stato</th>'
     + '</tr></thead><tbody>';
-  trades.slice().reverse().forEach(function(t) {
+  trades.forEach(function(t, idx) {
     var pnl = parseFloat(t.pnl_realized||0);
     var dt  = t.opened_at ? new Date(t.opened_at).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
-    var dtC = t.closed_at  ? new Date(t.closed_at).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}) : '—';
     html += '<tr>'
+      + '<td style="color:var(--t3);font-family:var(--fd);font-size:10px">' + (idx+1) + '</td>'
       + '<td style="font-family:var(--fd);font-size:10px;color:var(--t3)">' + dt + '</td>'
       + '<td><b>' + (t.symbol||'—') + '</b></td>'
       + '<td><b class="' + (t.direction==='BUY'?'v-green':'v-red') + '">' + (t.direction||'—') + '</b></td>'
       + '<td>' + parseFloat(t.volume||0).toFixed(2) + '</td>'
       + '<td style="font-family:var(--fd)">' + (t.entry_price ? parseFloat(t.entry_price).toFixed(5) : '—') + '</td>'
-      + '<td style="font-family:var(--fd)">' + (t.close_price ? parseFloat(t.close_price).toFixed(5) : dtC) + '</td>'
-      + '<td style="font-family:var(--fd);color:var(--red)">' + (t.stop_loss ? parseFloat(t.stop_loss).toFixed(5) : '—') + '</td>'
-      + '<td style="font-family:var(--fd);color:var(--teal)">' + (t.take_profit ? parseFloat(t.take_profit).toFixed(5) : '—') + '</td>'
       + '<td style="font-family:var(--fd);font-weight:700" class="' + (pnl>=0?'v-green':'v-red') + '">' + (pnl>=0?'+':'') + pnl.toFixed(2) + '$</td>'
       + '<td>' + (t.status==='open'
         ? '<span style="background:rgba(0,229,204,.1);color:var(--teal);padding:2px 7px;border-radius:8px;font-size:9px;font-weight:700">APERTO</span>'
@@ -3219,10 +3270,10 @@ function jrnlTable(trades) {
 
 function jrnlRenderNewForm() {
   return '<div class="jnew-form">'
-    + '<div style="font-size:16px;font-weight:700;margin-bottom:18px">&#43; Nuova sfida Journal</div>'
-    + '<div class="f"><label>Nome sfida</label><input type="text" id="jnf-name" placeholder="Es. FTMO $100k Marzo 2026" autofocus></div>'
-    + '<div style="color:var(--t3);font-size:11px;margin-bottom:16px">Dopo la creazione potrai connettere i conti Prop e Broker.</div>'
-    + '<div style="display:flex;gap:8px">'
+    + '<div style="font-size:16px;font-weight:700;margin-bottom:6px">+ Nuova sfida Journal</div>'
+    + '<div style="color:var(--t3);font-size:12px;margin-bottom:20px">Ogni sfida ha il suo storico trade indipendente.</div>'
+    + '<div class="f"><label>Nome sfida</label><input type="text" id="jnf-name" placeholder="Es. FTMO $100k Marzo 2026" style="font-size:14px"></div>'
+    + '<div style="display:flex;gap:8px;margin-top:4px">'
     + '<button class="btn-p" onclick="jrnlCreateNew()">Crea sfida</button>'
     + '<button class="btn-g" onclick="jrnlCancelNew()">Annulla</button>'
     + '</div></div>';
@@ -3230,8 +3281,8 @@ function jrnlRenderNewForm() {
 
 function jrnlConnModal() {
   return '<div id="jConnMod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)jrnlCloseConn()">'
-    + '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:420px;padding:22px" onclick="event.stopPropagation()">'
-    + '<div style="font-size:14px;font-weight:700;margin-bottom:16px" id="jConnMod-title">Connetti conto</div>'
+    + '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:400px;padding:22px" onclick="event.stopPropagation()">'
+    + '<div style="font-size:14px;font-weight:700;margin-bottom:14px" id="jConnMod-title">Connetti conto</div>'
     + '<div class="f"><label>Piattaforma</label><select id="jConnMod-plat" onchange="jrnlConnPlatChange()">'
     + '<option value="ctrader">cTrader</option>'
     + '<option value="mt4">MetaTrader 4</option>'
@@ -3246,7 +3297,7 @@ function jrnlConnModal() {
     + '</div></div></div>';
 }
 
-// ─── Controlli ────────────────────────────────────────────────────
+// ─── Controlli ───────────────────────────────────────────────────
 var _jConnSide = 'prop';
 var _jConnIdx  = 0;
 
@@ -3276,6 +3327,14 @@ function jrnlCreateNew() {
   renderJournal();
 }
 
+function jrnlDelete(i) {
+  if (!confirm('Eliminare la sfida "' + jrnl.sessions[i].name + '"?\nTutti i trade verranno cancellati.')) return;
+  jrnl.sessions.splice(i, 1);
+  if (jrnl.activeIdx >= jrnl.sessions.length) jrnl.activeIdx = Math.max(0, jrnl.sessions.length-1);
+  jrnlSave();
+  renderJournal();
+}
+
 function jrnlConclude(i) {
   if (!confirm('Segna questa sfida come conclusa?')) return;
   jrnl.sessions[i].concluded = true;
@@ -3286,14 +3345,11 @@ function jrnlConclude(i) {
 
 function jrnlReset(i) {
   if (!confirm('Reimposta la sfida? I trade e le connessioni verranno cancellati.')) return;
-  var name = jrnl.sessions[i].name;
-  jrnl.sessions[i] = {
-    id: jrnl.sessions[i].id, name: name,
-    propConn:   {platform:'', label:'', token:'', accountId:'', env:'live', connected:false},
-    brokerConn: {platform:'', label:'', token:'', accountId:'', env:'live', connected:false},
-    propTrades: [], brokerTrades: [],
-    concluded: false, concludedAt: null, createdAt: new Date().toISOString()
-  };
+  var s = jrnl.sessions[i];
+  s.propConn   = {platform:'',label:'',token:'',accountId:'',env:'live',connected:false};
+  s.brokerConn = {platform:'',label:'',token:'',accountId:'',env:'live',connected:false};
+  s.propTrades = []; s.brokerTrades = [];
+  s.concluded = false; s.concludedAt = null;
   jrnlSave();
   renderJournal();
 }
@@ -3302,10 +3358,10 @@ function jrnlOpenConn(i, side) {
   _jConnIdx  = i;
   _jConnSide = side;
   var sess = jrnl.sessions[i];
-  var conn = side === 'prop' ? sess.propConn : sess.brokerConn;
-  var mod = document.getElementById('jConnMod');
+  var conn = side==='prop' ? sess.propConn : sess.brokerConn;
+  var mod  = document.getElementById('jConnMod');
   if (!mod) return;
-  document.getElementById('jConnMod-title').textContent = side === 'prop' ? '&#127942; Connetti conto Prop' : '&#128188; Connetti conto Broker';
+  document.getElementById('jConnMod-title').innerHTML = side==='prop' ? '&#127942; Connetti conto Prop &mdash; '+sess.name : '&#128188; Connetti conto Broker &mdash; '+sess.name;
   var sel = document.getElementById('jConnMod-plat');
   if (sel && conn.platform) sel.value = conn.platform;
   mod.style.display = 'flex';
@@ -3318,31 +3374,31 @@ function jrnlCloseConn() {
 }
 
 function jrnlConnPlatChange() {
-  var plat = (document.getElementById('jConnMod-plat')||{value:'ctrader'}).value;
-  var sess = jrnl.sessions[_jConnIdx];
-  var conn = _jConnSide === 'prop' ? sess.propConn : sess.brokerConn;
+  var plat   = (document.getElementById('jConnMod-plat')||{value:'ctrader'}).value;
+  var sess   = jrnl.sessions[_jConnIdx];
+  var conn   = _jConnSide==='prop' ? sess.propConn : sess.brokerConn;
   var fields = document.getElementById('jConnMod-fields');
   if (!fields) return;
 
-  if (plat === 'ctrader') {
+  if (plat==='ctrader') {
     fields.innerHTML = '<div class="note note-teal" style="margin-top:10px;font-size:11px">'
       + 'Verrai reindirizzato su cTrader per autorizzare l\'accesso. Nessuna password da inserire qui.'
       + '</div>'
       + '<div class="f" style="margin-top:10px"><label>Ambiente</label><select id="jConn-env">'
-      + '<option value="live"' + (conn.env==='live'?' selected':'') + '>Live (Reale)</option>'
-      + '<option value="demo"' + (conn.env==='demo'?' selected':'') + '>Demo</option>'
+      + '<option value="live"'+(conn.env==='live'?' selected':'')+'>Live (Reale)</option>'
+      + '<option value="demo"'+(conn.env==='demo'?' selected':'')+'>Demo</option>'
       + '</select></div>'
-      + '<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="' + (conn.label||'') + '" placeholder="Es. TopFX Live cTrader"></div>';
-  } else if (plat === 'mt4' || plat === 'mt5') {
+      + '<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. TopFX Live"></div>';
+  } else if (plat==='mt4'||plat==='mt5') {
     fields.innerHTML = '<div class="note note-amber" style="margin-top:10px;font-size:11px">'
       + 'Scarica e installa l\'EA PropHedgeBridge dalla tab Broker. I trade appariranno automaticamente.'
       + '</div>'
-      + '<div class="f" style="margin-top:10px"><label>Nome conto</label><input type="text" id="jConn-label" value="' + (conn.label||'') + '" placeholder="Es. FTMO MT5 $100k"></div>';
-  } else if (plat === 'tradovate') {
-    fields.innerHTML = '<div class="f" style="margin-top:10px"><label>API Token</label><input type="password" id="jConn-token" value="' + (conn.token||'') + '" placeholder="Tradovate API token"></div>'
-      + '<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="' + (conn.label||'') + '" placeholder="Es. Tradovate Live"></div>';
+      + '<div class="f" style="margin-top:10px"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. FTMO MT5 $100k"></div>';
+  } else if (plat==='tradovate') {
+    fields.innerHTML = '<div class="f" style="margin-top:10px"><label>API Token</label><input type="password" id="jConn-token" value="'+(conn.token||'')+'" placeholder="Tradovate API token"></div>'
+      + '<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. Tradovate Live"></div>';
   } else {
-    fields.innerHTML = '<div class="f" style="margin-top:10px"><label>Nome conto</label><input type="text" id="jConn-label" value="' + (conn.label||'') + '" placeholder="Inserimento manuale"></div>';
+    fields.innerHTML = '<div class="f" style="margin-top:10px"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Inserimento manuale"></div>';
   }
 }
 
@@ -3351,100 +3407,89 @@ async function jrnlSaveConn() {
   var label = (document.getElementById('jConn-label')||{value:''}).value.trim() || plat.toUpperCase();
   var token = (document.getElementById('jConn-token')||{value:''}).value.trim();
   var env   = (document.getElementById('jConn-env')||{value:'live'}).value;
+  var sess  = jrnl.sessions[_jConnIdx];
+  var key   = _jConnSide==='prop' ? 'propConn' : 'brokerConn';
 
-  var sess    = jrnl.sessions[_jConnIdx];
-  var connKey = _jConnSide === 'prop' ? 'propConn' : 'brokerConn';
-
-  if (plat === 'ctrader') {
-    sess[connKey] = {platform:'ctrader', label:label, env:env, connected:false, token:'', accountId:''};
-    localStorage.setItem('ph_jconn_pending', JSON.stringify({idx:_jConnIdx, side:_jConnSide, label:label, env:env}));
+  if (plat==='ctrader') {
+    sess[key] = {platform:'ctrader',label:label,env:env,connected:false,token:'',accountId:''};
+    localStorage.setItem('ph_jconn_pending', JSON.stringify({idx:_jConnIdx,side:_jConnSide,label:label,env:env}));
     jrnlSave();
     try {
-      var r = await fetch('/api/ctrader-auth-url?env=' + env + '&redirect=' + encodeURIComponent(window.location.origin + '/ctrader-callback'));
+      var r = await fetch('/api/ctrader-auth-url?env='+env+'&redirect='+encodeURIComponent(window.location.origin+'/ctrader-callback'));
       var d = await r.json();
-      if (d.url) { window.location.href = d.url; return; }
-      alert('Errore: ' + (d.error||'impossibile ottenere URL'));
-    } catch(e) { alert('Errore: ' + e.message); }
+      if (d.url) { window.location.href=d.url; return; }
+      alert('Errore: '+(d.error||'URL non ricevuto'));
+    } catch(e) { alert('Errore: '+e.message); }
     return;
   }
 
-  sess[connKey] = {platform:plat, label:label, token:token, env:env, connected:true, accountId:''};
+  sess[key] = {platform:plat,label:label,token:token,env:env,connected:true,accountId:''};
   jrnlSave();
   jrnlCloseConn();
   renderJournal();
 }
 
-// ─── Callback OAuth cTrader per Journal ─────────────────────────
+// ─── OAuth cTrader callback ──────────────────────────────────────
 async function jrnlHandleCtraderCallback(code) {
   var pending = null;
   try { pending = JSON.parse(localStorage.getItem('ph_jconn_pending')||'null'); } catch(e){}
   if (!pending) return false;
-
   try {
-    var r = await fetch('/api/ctrader-token', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({code:code, redirect_uri:window.location.origin+'/ctrader-callback', env:pending.env})
-    });
+    var r = await fetch('/api/ctrader-token',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code:code,redirect_uri:window.location.origin+'/ctrader-callback',env:pending.env})});
     var d = await r.json();
-    if (!d.access_token) { alert('Errore cTrader: ' + (d.error||'sconosciuto')); return true; }
-
-    var r2 = await fetch('/api/ctrader-accounts', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({access_token:d.access_token, env:pending.env})
-    });
+    if (!d.access_token) { alert('Errore cTrader: '+(d.error||'sconosciuto')); return true; }
+    var r2 = await fetch('/api/ctrader-accounts',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({access_token:d.access_token,env:pending.env})});
     var d2 = await r2.json();
-    var acc = d2.accounts && d2.accounts[0];
-
+    var acc = d2.accounts&&d2.accounts[0];
     var sess = jrnl.sessions[pending.idx];
-    var connKey = pending.side === 'prop' ? 'propConn' : 'brokerConn';
-    sess[connKey] = {
-      platform:'ctrader', label:pending.label||'cTrader',
-      token:d.access_token, accountId: acc ? acc.ctidTraderAccountId : '',
-      env:pending.env, connected:true,
-      balance: acc ? (acc.balance/100) : 0
-    };
+    var key  = pending.side==='prop'?'propConn':'brokerConn';
+    sess[key] = {platform:'ctrader',label:pending.label||'cTrader',token:d.access_token,
+      accountId:acc?acc.ctidTraderAccountId:'',env:pending.env,connected:true,
+      balance:acc?(acc.balance/100):0};
     localStorage.removeItem('ph_jconn_pending');
     jrnlSave();
-    window.history.replaceState({}, '', window.location.pathname);
-    await jrnlSync(pending.idx, pending.side);
-    goTab('journal', document.getElementById('tabJournal'));
-  } catch(e) { alert('Errore connessione: ' + e.message); }
+    window.history.replaceState({},'',window.location.pathname);
+    await jrnlSync(pending.idx,pending.side);
+    goTab('journal',document.getElementById('tabJournal'));
+  } catch(e) { alert('Errore connessione: '+e.message); }
   return true;
 }
 
-// ─── Sync trade da cTrader ────────────────────────────────────────
+// ─── Sync trade ──────────────────────────────────────────────────
 async function jrnlSync(i, side) {
   var sess = jrnl.sessions[i];
-  var conn = side === 'prop' ? sess.propConn : sess.brokerConn;
-  if (!conn.connected || conn.platform !== 'ctrader') return;
-
+  var conn = side==='prop' ? sess.propConn : sess.brokerConn;
+  if (!conn.connected || conn.platform!=='ctrader') return;
   try {
-    var r = await fetch('/api/ctrader-positions', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({access_token:conn.token, account_id:conn.accountId, env:conn.env})
-    });
+    var r = await fetch('/api/ctrader-positions',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({access_token:conn.token,account_id:conn.accountId,env:conn.env})});
     var d = await r.json();
     if (!d.positions) return;
-
-    var existing = side === 'prop' ? sess.propTrades : sess.brokerTrades;
+    var existing = side==='prop' ? sess.propTrades : sess.brokerTrades;
     var closed = existing.filter(function(t){ return t.status==='closed'; });
     var live = d.positions.map(function(p){
-      return {
-        external_id:String(p.positionId), platform:'ctrader',
-        symbol:p.symbol, direction:p.tradeSide,
-        volume:(p.volume||0)/100, entry_price:p.entryPrice,
-        stop_loss:p.stopLoss||0, take_profit:p.takeProfit||0,
-        pnl_realized:p.unrealizedGrossPnl||0, status:'open',
-        opened_at:new Date().toISOString()
-      };
+      return {external_id:String(p.positionId),platform:'ctrader',symbol:p.symbol,
+        direction:p.tradeSide,volume:(p.volume||0)/100,entry_price:p.entryPrice,
+        pnl_realized:p.unrealizedGrossPnl||0,status:'open',opened_at:new Date().toISOString()};
     });
-
-    if (side === 'prop') sess.propTrades = closed.concat(live);
-    else sess.brokerTrades = closed.concat(live);
+    if (side==='prop') sess.propTrades=closed.concat(live);
+    else sess.brokerTrades=closed.concat(live);
     jrnlSave();
     renderJournal();
-  } catch(e) { console.error('jrnlSync error:', e); }
+  } catch(e) { console.error('jrnlSync:',e); }
 }
+
+// Event delegation per data attributes
+document.addEventListener('click', function(e) {
+  var el = e.target.closest('[data-jconn-idx]');
+  if (el) { jrnlOpenConn(parseInt(el.dataset.jconnIdx),el.dataset.jconnSide); return; }
+  var el2 = e.target.closest('[data-jconclude]');
+  if (el2) { jrnlConclude(parseInt(el2.dataset.jconclude)); return; }
+  var el3 = e.target.closest('[data-jsync-idx]');
+  if (el3) { jrnlSync(parseInt(el3.dataset.jsyncIdx),el3.dataset.jsyncSide); return; }
+});
 
 function renderGuide() {
   return '<div style="max-width:700px">'
