@@ -3010,10 +3010,11 @@ function jrnlSave() {
 
 function jrnlGetActive() { return jrnl.sessions[jrnl.activeIdx]||null; }
 
-function jrnlNewSession(name) {
+function jrnlNewSession(name, linkedPropId) {
   var num = jrnl.sessions.length + 1;
   jrnl.sessions.push({
     id:'j'+Date.now(), name:name||('Sfida '+num),
+    linkedPropId: linkedPropId||null,
     propConn:{platform:'',label:'',token:'',accountId:'',env:'live',connected:false},
     brokerConn:{platform:'',label:'',token:'',accountId:'',env:'live',connected:false},
     propTrades:[], brokerTrades:[],
@@ -3030,8 +3031,9 @@ function jrnlRenumber() {
 
 // ─── CSS ────────────────────────────────────────────────────────
 function jrnlInjectCSS() {
-  if (document.getElementById('jrnl-css')) return;
-  var el = document.createElement('style');
+  var el = document.getElementById('jrnl-css');
+  if (el) el.remove();
+  el = document.createElement('style');
   el.id = 'jrnl-css';
   el.textContent = ''
     +'.jw{display:flex;height:calc(100vh - 106px);overflow:hidden}'
@@ -3046,46 +3048,50 @@ function jrnlInjectCSS() {
     +'.jsb-del{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:0 2px;line-height:1;opacity:0;transition:opacity .15s}'
     +'.jsb-item:hover .jsb-del{opacity:1}'
     +'.jmain{flex:1;display:flex;flex-direction:column;overflow:hidden}'
-    +'.jmhdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap}'
-    +'.jconn{padding:7px 16px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:11px;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}'
-    // Layout verticale: due colonne affiancate
-    +'.jcols-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column}'
-    +'.jcols-hdr{display:grid;grid-template-columns:1fr 1fr;gap:0;flex-shrink:0;border-bottom:2px solid var(--border2)}'
-    +'.jcol-hdr{padding:8px 14px;background:var(--bg2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}'
-    +'.jcol-hdr:first-child{border-right:1px solid var(--border2)}'
-    +'.jcol-title{font-size:10px;font-weight:700;font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em}'
-    +'.jcol-title.prop{color:var(--violet)}'
-    +'.jcol-title.broker{color:var(--teal)}'
-    +'.jstats{display:flex;gap:10px;flex-wrap:wrap}'
-    +'.jstat{font-size:10px;font-family:var(--fd);color:var(--t3)}'
-    +'.jstat b{font-weight:700}'
-    // Scroll sincronizzato
-    +'.jcols-scroll{flex:1;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:0}'
-    +'.jcols-scroll::-webkit-scrollbar{width:6px}'
-    +'.jcols-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}'
-    +'.jcol{overflow:hidden}'
-    +'.jcol:first-child{border-right:1px solid var(--border2)}'
-    // Tabella
-    +'.jtb{width:100%;border-collapse:collapse;font-size:11px}'
-    +'.jtb th{background:var(--bg3);color:var(--t3);font-size:9px;font-family:var(--fd);letter-spacing:.08em;text-transform:uppercase;padding:7px 10px;position:sticky;top:0;z-index:1;white-space:nowrap;border-bottom:1px solid var(--border)}'
-    +'.jtb td{padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;color:var(--t2)}'
-    +'.jtb tr:hover td{background:rgba(255,255,255,.03)}'
-    +'.jempty-col{padding:30px 16px;text-align:center;color:var(--t3);font-size:11px}'
     +'.jbanner{padding:7px 16px;font-size:11px;display:flex;align-items:center;gap:8px;flex-shrink:0}'
     +'.jbanner.concluded{background:rgba(255,64,96,.07);color:var(--red);border-bottom:1px solid rgba(255,64,96,.15)}'
+    +'.jpnl-chart{height:60px;background:var(--bg3);border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;flex-shrink:0}'
+    +'.jpnl-half{position:relative;overflow:hidden;padding:6px 14px 4px}'
+    +'.jpnl-half:first-child{border-right:1px solid var(--border2)}'
+    +'.jpnl-label{font-size:9px;font-family:var(--fd);color:var(--t3);text-transform:uppercase;letter-spacing:.08em}'
+    +'.jpnl-val{font-size:14px;font-weight:800;font-family:var(--fd);line-height:1.2}'
+    +'.jpnl-svg{position:absolute;bottom:0;left:0;right:0;height:28px;opacity:.55}'
+    +'.jcols-hdr{display:grid;grid-template-columns:1fr 1fr;flex-shrink:0;border-bottom:2px solid var(--border2)}'
+    +'.jcol-hdr{padding:8px 14px;background:var(--bg2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}'
+    +'.jcol-hdr:first-child{border-right:1px solid var(--border2)}'
+    +'.jcol-title{font-size:10px;font-weight:700;font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em}'
+    +'.jcol-title.prop{color:var(--violet)}.jcol-title.broker{color:var(--teal)}'
+    +'.jstats{display:flex;gap:8px;flex-wrap:wrap}'
+    +'.jstat{font-size:10px;font-family:var(--fd);color:var(--t3)}'
+    +'.jstat b{font-weight:700}'
+    +'.jcols-outer{flex:1;display:flex;flex-direction:column;overflow:hidden}'
+    +'.jscroll{flex:1;overflow-y:auto;overflow-x:hidden}'
+    +'.jscroll::-webkit-scrollbar{width:8px;background:var(--bg3)}'
+    +'.jscroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}'
+    +'.jrow-hdr{display:grid;grid-template-columns:1fr 1fr;position:sticky;top:0;z-index:2;background:var(--bg3);border-bottom:1px solid var(--border)}'
+    +'.jcell-hdr{padding:7px 12px;font-size:9px;font-family:var(--fd);color:var(--t3);text-transform:uppercase;letter-spacing:.08em;display:flex;gap:10px}'
+    +'.jcell-hdr:first-child{border-right:1px solid var(--border2)}'
+    +'.jrow{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(255,255,255,.04);min-height:36px}'
+    +'.jrow:hover{background:rgba(255,255,255,.025)}'
+    +'.jrow.mismatch{background:rgba(255,190,0,.045)}'
+    +'.jcell{padding:7px 12px;font-size:11px;color:var(--t2);display:flex;align-items:center}'
+    +'.jcell:first-child{border-right:1px solid rgba(255,255,255,.06)}'
+    +'.jwarn{display:inline-flex;align-items:center;gap:3px;background:rgba(255,190,0,.15);color:#ffbe00;border-radius:5px;padding:1px 5px;font-size:9px;font-weight:700;margin-left:3px}'
+    +'.jconn-inline{padding:20px 14px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}'
     +'.jnew-form{padding:30px 24px;max-width:480px}'
     +'@media(max-width:700px){'
     +'.jw{flex-direction:column;height:auto}'
-    +'.jsb{width:100%;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border)}'
-    +'.jsb-hd{flex-shrink:0}'
-    +'.jsb-item{white-space:nowrap;border-left:none;border-bottom:3px solid transparent;flex-direction:column;gap:2px}'
+    +'.jsb{width:100%;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border);height:auto}'
+    +'.jsb-hd{flex-shrink:0;border-right:1px solid var(--border)}'
+    +'.jsb-item{white-space:nowrap;border-left:none;border-bottom:3px solid transparent}'
     +'.jsb-item.active{border-bottom-color:var(--teal);border-left:none}'
     +'.jsb-del{display:none}'
-    +'.jcols-hdr{grid-template-columns:1fr 1fr}'
-    +'.jcols-scroll{grid-template-columns:1fr 1fr;max-height:600px}'
+    +'.jmain{min-height:500px}'
+    +'.jrow,.jrow-hdr,.jcols-hdr,.jpnl-chart{grid-template-columns:1fr 1fr}'
     +'}';
   document.head.appendChild(el);
 }
+
 
 // ─── Render principale ───────────────────────────────────────────
 function renderJournal() {
@@ -3152,10 +3158,10 @@ function jrnlRenderMain() {
 
   // Banner conclusa
   if (sess.concluded) {
-    html += '<div class="jbanner concluded">&#9873; Sfida conclusa il ' + (sess.concludedAt ? new Date(sess.concludedAt).toLocaleDateString('it-IT') : '') + ' &nbsp;&mdash;&nbsp; <a href="#" onclick="jrnlReset(' + i + ');return false" style="color:var(--teal);text-decoration:none">&#8635; Reimposta</a></div>';
+    html += '<div class="jbanner concluded">&#9873; Sfida conclusa il '+(sess.concludedAt?new Date(sess.concludedAt).toLocaleDateString('it-IT'):'')+' &mdash; <a href="#" onclick="jrnlReset('+i+');return false" style="color:var(--teal);text-decoration:none">&#8635; Reimposta</a></div>';
   }
 
-  // Stats e connessioni prop
+  // Trade ordinati per data — più recenti in cima
   var pt = (sess.propTrades||[]).slice().sort(function(a,b){ return new Date(b.opened_at||0)-new Date(a.opened_at||0); });
   var bt = (sess.brokerTrades||[]).slice().sort(function(a,b){ return new Date(b.opened_at||0)-new Date(a.opened_at||0); });
   var ptOpen = pt.filter(function(t){ return t.status==='open'; });
@@ -3165,114 +3171,190 @@ function jrnlRenderMain() {
   var ptLive = ptOpen.reduce(function(s,t){ return s+parseFloat(t.pnl_realized||0); }, 0);
   var btLive = btOpen.reduce(function(s,t){ return s+parseFloat(t.pnl_realized||0); }, 0);
 
-  // ── Header connessioni ──────────────────────────────────────
-  if (!sess.propConn.connected || !sess.brokerConn.connected) {
-    html += '<div class="jconn">';
-    if (!sess.propConn.connected) {
-      html += '<span style="color:var(--t3);font-size:10px">Prop: non connesso</span>'
-        + '<button class="btn-p" style="padding:3px 10px;font-size:10px" data-jconn-idx="' + i + '" data-jconn-side="prop">&#9889; Connetti Prop</button>';
-    } else {
-      html += '<span style="color:var(--teal);font-size:10px">&#9679; Prop: ' + sess.propConn.label + '</span>'
-        + '<button class="btn-g" style="padding:2px 8px;font-size:10px" data-jsync-idx="' + i + '" data-jsync-side="prop">&#8635;</button>';
-    }
-    html += '<span style="color:var(--border2);margin:0 4px">|</span>';
-    if (!sess.brokerConn.connected) {
-      html += '<span style="color:var(--t3);font-size:10px">Broker: non connesso</span>'
-        + '<button class="btn-p" style="padding:3px 10px;font-size:10px" data-jconn-idx="' + i + '" data-jconn-side="broker">&#9889; Connetti Broker</button>';
-    } else {
-      html += '<span style="color:var(--teal);font-size:10px">&#9679; Broker: ' + sess.brokerConn.label + '</span>'
-        + '<button class="btn-g" style="padding:2px 8px;font-size:10px" data-jsync-idx="' + i + '" data-jsync-side="broker">&#8635;</button>';
-    }
-    if (!sess.concluded) {
-      html += '<span style="margin-left:auto"><button class="btn-g" style="padding:3px 10px;font-size:10px;color:var(--amber)" data-jconclude="' + i + '">&#10003; Sfida conclusa</button></span>';
-    }
-    html += '</div>';
-  } else {
-    // Entrambi connessi
-    html += '<div class="jconn">'
-      + '<span style="color:var(--teal);font-size:10px">&#9679; Prop: ' + sess.propConn.label + '</span>'
-      + '<button class="btn-g" style="padding:2px 8px;font-size:10px" data-jsync-idx="' + i + '" data-jsync-side="prop">&#8635;</button>'
-      + '<span style="color:var(--border2);margin:0 6px">|</span>'
-      + '<span style="color:var(--teal);font-size:10px">&#9679; Broker: ' + sess.brokerConn.label + '</span>'
-      + '<button class="btn-g" style="padding:2px 8px;font-size:10px" data-jsync-idx="' + i + '" data-jsync-side="broker">&#8635;</button>'
-      + (sess.concluded ? '' : '<span style="margin-left:auto"><button class="btn-g" style="padding:3px 10px;font-size:10px;color:var(--amber)" data-jconclude="' + i + '">&#10003; Sfida conclusa</button></span>')
-      + '</div>';
+  // Lotti target dalla sfida collegata in Dashboard
+  var propTarget  = 0;
+  var brokerTarget = 0;
+  if (sess.linkedPropId) {
+    var lp = props.find(function(p){ return p.id === sess.linkedPropId; });
+    if (lp) { var lc = calcChallenge(lp); propTarget = lc.propLots||0; brokerTarget = lc.hedgeLots||0; }
   }
 
-  // ── Intestazioni colonne ────────────────────────────────────
-  html += '<div class="jcols-wrap"><div class="jcols-hdr">';
+  // ── Grafico P/L mini ─────────────────────────────────────────
+  html += '<div class="jpnl-chart">';
+  html += '<div class="jpnl-half">'
+    + '<div class="jpnl-label">P/L Prop</div>'
+    + '<div class="jpnl-val '+(ptPnl>=0?'v-green':'v-red')+'">'+(ptPnl>=0?'+':'')+ptPnl.toFixed(2)+'$</div>'
+    + jrnlMiniChart(pt, 'prop')
+    + '</div>';
+  html += '<div class="jpnl-half">'
+    + '<div class="jpnl-label">P/L Broker</div>'
+    + '<div class="jpnl-val '+(btPnl>=0?'v-green':'v-red')+'">'+(btPnl>=0?'+':'')+btPnl.toFixed(2)+'$</div>'
+    + jrnlMiniChart(bt, 'broker')
+    + '</div>';
+  html += '</div>';
+
+  // ── Header colonne ────────────────────────────────────────────
+  html += '<div class="jcols-outer"><div class="jcols-hdr">';
+
   // Header Prop
   html += '<div class="jcol-hdr">'
-    + '<span class="jcol-title prop">&#127942; Conto Prop</span>'
+    + '<span class="jcol-title prop">&#127942; Prop</span>'
     + '<div class="jstats">'
-    + '<div class="jstat">Aperti: <b style="color:var(--teal)">' + ptOpen.length + '</b></div>'
-    + '<div class="jstat">P/L: <b class="' + (ptPnl>=0?'v-green':'v-red') + '">' + (ptPnl>=0?'+':'') + ptPnl.toFixed(2) + '$</b></div>'
-    + '<div class="jstat">Live: <b class="' + (ptLive>=0?'v-green':'v-red') + '">' + (ptLive>=0?'+':'') + ptLive.toFixed(2) + '$</b></div>'
-    + '</div></div>';
+    + '<div class="jstat">Aperti: <b style="color:var(--teal)">'+ptOpen.length+'</b></div>'
+    + '<div class="jstat">Live: <b class="'+(ptLive>=0?'v-green':'v-red')+'">'+(ptLive>=0?'+':'')+ptLive.toFixed(2)+'$</b></div>'
+    + (propTarget>0?'<div class="jstat">Target: <b style="color:var(--t2)">'+propTarget.toFixed(2)+' lot</b></div>':'')
+    + '</div>'
+    + (sess.concluded?'':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="prop">'+(sess.propConn.connected?'&#9679; '+sess.propConn.label:'&#9889; Connetti Prop')+'</button>')
+    + (sess.propConn.connected&&!sess.concluded?'<button class="btn-g" style="padding:2px 6px;font-size:10px" data-jsync-idx="'+i+'" data-jsync-side="prop">&#8635;</button>':'')
+    + '</div>';
+
   // Header Broker
   html += '<div class="jcol-hdr">'
-    + '<span class="jcol-title broker">&#128188; Conto Broker</span>'
+    + '<span class="jcol-title broker">&#128188; Broker</span>'
     + '<div class="jstats">'
-    + '<div class="jstat">Aperti: <b style="color:var(--teal)">' + btOpen.length + '</b></div>'
-    + '<div class="jstat">P/L: <b class="' + (btPnl>=0?'v-green':'v-red') + '">' + (btPnl>=0?'+':'') + btPnl.toFixed(2) + '$</b></div>'
-    + '<div class="jstat">Live: <b class="' + (btLive>=0?'v-green':'v-red') + '">' + (btLive>=0?'+':'') + btLive.toFixed(2) + '$</b></div>'
-    + '</div></div>';
+    + '<div class="jstat">Aperti: <b style="color:var(--teal)">'+btOpen.length+'</b></div>'
+    + '<div class="jstat">Live: <b class="'+(btLive>=0?'v-green':'v-red')+'">'+(btLive>=0?'+':'')+btLive.toFixed(2)+'$</b></div>'
+    + (brokerTarget>0?'<div class="jstat">Target: <b style="color:var(--t2)">'+brokerTarget.toFixed(2)+' lot</b></div>':'')
+    + '</div>'
+    + (sess.concluded?'':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="broker">'+(sess.brokerConn.connected?'&#9679; '+sess.brokerConn.label:'&#9889; Connetti Broker')+'</button>')
+    + (sess.brokerConn.connected&&!sess.concluded?'<button class="btn-g" style="padding:2px 6px;font-size:10px" data-jsync-idx="'+i+'" data-jsync-side="broker">&#8635;</button>':'')
+    + (sess.concluded?'':'<button class="btn-g" style="padding:2px 8px;font-size:10px;color:var(--amber)" data-jconclude="'+i+'">&#10003; Conclusa</button>')
+    + '</div>';
+
   html += '</div>'; // fine jcols-hdr
 
-  // ── Area scroll sincronizzata ───────────────────────────────
-  html += '<div class="jcols-scroll" id="jcols-scroll">';
-  // Colonna Prop
-  html += '<div class="jcol" id="jcol-prop">' + jrnlTable(pt, 'prop') + '</div>';
-  // Colonna Broker
-  html += '<div class="jcol" id="jcol-broker">' + jrnlTable(bt, 'broker') + '</div>';
-  html += '</div>'; // fine jcols-scroll
-  html += '</div>'; // fine jcols-wrap
+  // ── Scroll unico con righe affiancate ─────────────────────────
+  html += '<div class="jscroll"><div class="jrow-hdr">';
+  html += '<div class="jcell-hdr"><span style="color:var(--t3)">#</span><span>Simbolo</span><span>Dir.</span><span>Lotti</span><span>P/L</span><span>Stato</span></div>';
+  html += '<div class="jcell-hdr"><span style="color:var(--t3)">#</span><span>Simbolo</span><span>Dir.</span><span>Lotti</span><span>P/L</span><span>Stato</span></div>';
+  html += '</div>';
 
-  // Modal connessione
+  // Righe allineate — il numero di righe è il max tra pt e bt
+  var maxLen = Math.max(pt.length, bt.length);
+  if (maxLen === 0) {
+    html += '<div class="jrow">';
+    html += '<div class="jcell">' + jrnlEmptyCol('prop', sess, i) + '</div>';
+    html += '<div class="jcell">' + jrnlEmptyCol('broker', sess, i) + '</div>';
+    html += '</div>';
+  } else {
+    for (var r = 0; r < maxLen; r++) {
+      var tP = pt[r] || null;
+      var tB = bt[r] || null;
+      // Determina mismatch
+      var mismatch = false;
+      if (tP && tB) {
+        // Alert 1: stessa direzione (dovrebbero essere opposte)
+        if (tP.direction === tB.direction) mismatch = true;
+        // Alert 2: lotti Prop fuori tolleranza 5%
+        if (propTarget > 0) {
+          var diffP = Math.abs(parseFloat(tP.volume||0) - propTarget) / propTarget;
+          if (diffP > 0.05) mismatch = true;
+        }
+        // Alert 3: lotti Broker fuori tolleranza 5%
+        if (brokerTarget > 0) {
+          var diffB = Math.abs(parseFloat(tB.volume||0) - brokerTarget) / brokerTarget;
+          if (diffB > 0.05) mismatch = true;
+        }
+      }
+      html += '<div class="jrow'+(mismatch?' mismatch':'')+'">';
+      html += '<div class="jcell">'+jrnlCell(tP, r, mismatch&&tP?true:false, propTarget)+'</div>';
+      html += '<div class="jcell">'+jrnlCell(tB, r, mismatch&&tB?true:false, brokerTarget)+'</div>';
+      html += '</div>';
+    }
+  }
+
+  html += '</div></div></div>'; // fine jscroll, jcols-outer
   html += jrnlConnModal();
   return html;
 }
 
-// Scroll sincronizzato: un solo contenitore .jcols-scroll
-function jrnlBindScroll() {
-  // Lo scroll è gestito dal contenitore grid — già sincronizzato nativamente
-  // perché entrambe le colonne sono nel SAME contenitore scrollabile
-  // Non serve nulla di aggiuntivo
+function jrnlMiniChart(trades, side) {
+  if (!trades || trades.length < 2) return '<svg class="jpnl-svg"></svg>';
+  // Calcola cumulative P/L
+  var cum = 0;
+  var pts = trades.slice().reverse().map(function(t){
+    cum += parseFloat(t.pnl_realized||0);
+    return cum;
+  });
+  var min = Math.min.apply(null, pts);
+  var max = Math.max.apply(null, pts);
+  var range = max - min || 1;
+  var w = 100; var h = 30;
+  var color = cum >= 0 ? 'var(--teal)' : 'var(--red)';
+  var svgPts = pts.map(function(v, i) {
+    var x = (i / (pts.length-1)) * w;
+    var y = h - ((v - min) / range) * (h-4) - 2;
+    return x.toFixed(1)+','+y.toFixed(1);
+  }).join(' ');
+  return '<svg class="jpnl-svg" viewBox="0 0 100 30" preserveAspectRatio="none">'
+    + '<polyline points="'+svgPts+'" fill="none" stroke="'+color+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '</svg>';
 }
 
-function jrnlTable(trades, side) {
-  if (!trades || trades.length === 0) {
-    return '<div class="jempty-col"><div style="font-size:24px;opacity:.2;margin-bottom:8px">' + (side==='prop'?'&#127942;':'&#128188;') + '</div>'
-      + 'Nessun trade<br><span style="font-size:10px">Connetti il conto per sincronizzare</span></div>';
-  }
-  var html = '<table class="jtb"><thead><tr>'
-    + '<th>#</th><th>Data</th><th>Simbolo</th><th>Dir.</th><th>Lotti</th>'
-    + '<th>Entrata</th><th>P/L</th><th>Stato</th>'
-    + '</tr></thead><tbody>';
-  trades.forEach(function(t, idx) {
-    var pnl = parseFloat(t.pnl_realized||0);
-    var dt  = t.opened_at ? new Date(t.opened_at).toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
-    html += '<tr>'
-      + '<td style="color:var(--t3);font-family:var(--fd);font-size:10px">' + (idx+1) + '</td>'
-      + '<td style="font-family:var(--fd);font-size:10px;color:var(--t3)">' + dt + '</td>'
-      + '<td><b>' + (t.symbol||'—') + '</b></td>'
-      + '<td><b class="' + (t.direction==='BUY'?'v-green':'v-red') + '">' + (t.direction||'—') + '</b></td>'
-      + '<td>' + parseFloat(t.volume||0).toFixed(2) + '</td>'
-      + '<td style="font-family:var(--fd)">' + (t.entry_price ? parseFloat(t.entry_price).toFixed(5) : '—') + '</td>'
-      + '<td style="font-family:var(--fd);font-weight:700" class="' + (pnl>=0?'v-green':'v-red') + '">' + (pnl>=0?'+':'') + pnl.toFixed(2) + '$</td>'
-      + '<td>' + (t.status==='open'
-        ? '<span style="background:rgba(0,229,204,.1);color:var(--teal);padding:2px 7px;border-radius:8px;font-size:9px;font-weight:700">APERTO</span>'
-        : '<span style="background:rgba(255,255,255,.06);color:var(--t3);padding:2px 7px;border-radius:8px;font-size:9px">CHIUSO</span>')
-      + '</td></tr>';
-  });
-  return html + '</tbody></table>';
+function jrnlCell(t, rowIdx, warn, target) {
+  if (!t) return '<span style="color:var(--border2);font-size:10px">—</span>';
+  var pnl = parseFloat(t.pnl_realized||0);
+  var lots = parseFloat(t.volume||0);
+  var lotWarn = target > 0 && Math.abs(lots - target) / target > 0.05;
+  var dirWarn = warn;
+
+  var html = '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+  html += '<span style="color:var(--t3);font-family:var(--fd);font-size:10px;min-width:18px">'+(rowIdx+1)+'</span>';
+  html += '<b style="font-size:11px">'+(t.symbol||'—')+'</b>';
+
+  // Direzione con eventuale warning
+  html += '<b class="'+(t.direction==='BUY'?'v-green':'v-red')+'">'+(t.direction||'—')+'</b>';
+  if (dirWarn && t.direction) html += '<span class="jwarn">&#9651; dir.</span>';
+
+  // Lotti con eventuale warning
+  html += '<span style="font-family:var(--fd)">'+lots.toFixed(2)+'</span>';
+  if (lotWarn) html += '<span class="jwarn">&#9651; lot</span>';
+
+  // P/L
+  html += '<span class="'+(pnl>=0?'v-green':'v-red')+'" style="font-family:var(--fd);font-weight:700">'+(pnl>=0?'+':'')+pnl.toFixed(2)+'$</span>';
+
+  // Stato
+  html += t.status==='open'
+    ? '<span style="background:rgba(0,229,204,.1);color:var(--teal);padding:1px 6px;border-radius:6px;font-size:9px;font-weight:700">APE</span>'
+    : '<span style="background:rgba(255,255,255,.06);color:var(--t3);padding:1px 6px;border-radius:6px;font-size:9px">CHI</span>';
+
+  html += '</div>';
+  return html;
 }
+
+function jrnlEmptyCol(side, sess, i) {
+  var connected = side==='prop' ? sess.propConn.connected : sess.brokerConn.connected;
+  if (connected) return '<div class="jempty-col">Nessun trade</div>';
+  return '<div class="jconn-inline">'
+    + '<div style="font-size:11px;color:var(--t3)">'+(side==='prop'?'&#127942; Prop non connesso':'&#128188; Broker non connesso')+'</div>'
+    + (sess.concluded?'':'<button class="btn-p" style="padding:4px 14px;font-size:11px" data-jconn-idx="'+i+'" data-jconn-side="'+side+'">&#9889; Connetti</button>')
+    + '</div>';
+}
+
+function jrnlBindScroll() { /* scroll unico — nativo */ }
 
 function jrnlRenderNewForm() {
+  // Mostra sfide dalla dashboard con i lotti calcolati
+  var sfideHtml = '';
+  if (props.length > 0) {
+    sfideHtml = '<div style="margin-bottom:16px">'
+      + '<div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Collega a sfida Dashboard (opzionale)</div>'
+      + '<select id="jnf-prop" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fm)">'
+      + '<option value="">-- Nessun collegamento --</option>';
+    props.forEach(function(p) {
+      var c2 = calcChallenge(p);
+      sfideHtml += '<option value="'+p.id+'">'+p.name+' — Prop: '+c2.propLots.toFixed(2)+' lot | Hedge: '+c2.hedgeLots.toFixed(2)+' lot</option>';
+    });
+    sfideHtml += '</select>'
+      + '<div id="jnf-calc" style="margin-top:8px;font-size:11px;color:var(--teal);font-family:var(--fd)"></div>'
+      + '</div>';
+  }
+
   return '<div class="jnew-form">'
     + '<div style="font-size:16px;font-weight:700;margin-bottom:6px">+ Nuova sfida Journal</div>'
-    + '<div style="color:var(--t3);font-size:12px;margin-bottom:20px">Ogni sfida ha il suo storico trade indipendente.</div>'
+    + '<div style="color:var(--t3);font-size:12px;margin-bottom:20px">Collega una sfida dalla Dashboard per avere i lotti target calcolati automaticamente.</div>'
     + '<div class="f"><label>Nome sfida</label><input type="text" id="jnf-name" placeholder="Es. FTMO $100k Marzo 2026" style="font-size:14px"></div>'
+    + sfideHtml
     + '<div style="display:flex;gap:8px;margin-top:4px">'
     + '<button class="btn-p" onclick="jrnlCreateNew()">Crea sfida</button>'
     + '<button class="btn-g" onclick="jrnlCancelNew()">Annulla</button>'
@@ -3320,8 +3402,9 @@ function jrnlCancelNew() {
 
 function jrnlCreateNew() {
   var name = (document.getElementById('jnf-name')||{value:''}).value.trim();
+  var linkedPropId = (document.getElementById('jnf-prop')||{value:''}).value;
   if (!name) { alert('Inserisci un nome per la sfida.'); return; }
-  jrnlNewSession(name);
+  jrnlNewSession(name, linkedPropId);
   jrnl.showNewForm = false;
   jrnlSave();
   renderJournal();
