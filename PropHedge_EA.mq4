@@ -2,61 +2,36 @@
 //|                                           PropHedge_EA.mq4       |
 //|                              PropHedge - VISIONTRADING           |
 //|                                                                   |
-//| SETUP INIZIALE (una volta sola):                                  |
-//|                                                                   |
-//| STEP 1 — Copia il file                                           |
-//|   MT4: File → Open Data Folder → MQL4 → Experts                 |
-//|   MT5: File → Open Data Folder → MQL5 → Experts                 |
-//|   Incolla PropHedge_EA.mq4 nella cartella e riavvia MT4/MT5      |
-//|                                                                   |
-//| STEP 2 — Abilita WebRequest                                       |
-//|   Strumenti → Opzioni → Expert Advisor                           |
-//|   Spunta: "Consenti WebRequest per i seguenti URL"               |
-//|   Aggiungi: https://prophedge-iota.vercel.app                   |
-//|   Clicca OK                                                       |
-//|                                                                   |
-//| STEP 3 — Prima configurazione                                     |
-//|   Loggati sul conto che vuoi collegare                            |
-//|   Apri un grafico EURUSD M1 (o qualsiasi simbolo)               |
-//|   Trascina PropHedge_EA sul grafico                              |
-//|   Inserisci Token e Journal ID dal software PropHedge            |
-//|   (Journal → Connetti → MT4/MT5)                                |
-//|   Clicca OK                                                       |
-//|                                                                   |
-//| STEP 4 — Salva template (avvio automatico)                       |
-//|   Tasto destro sul grafico → Template → Salva template           |
-//|   Nome: "PropHedge" → Salva                                      |
-//|   Poi: Strumenti → Opzioni → Grafici                             |
-//|   Spunta: "Salva grafici alla chiusura"                          |
-//|   Da ora in poi MT4/MT5 avvia l'EA automaticamente!              |
-//|                                                                   |
-//| NOTA: Ripeti STEP 3 e 4 per ogni conto (prop e broker)           |
-//|       usando lo stesso Journal ID ma AccountType diverso         |
+//| INSTALLAZIONE:                                                    |
+//| 1. File → Open Data Folder → MQL4 → Experts → incolla il file    |
+//| 2. Riavvia MT4                                                    |
+//| 3. Strumenti → Opzioni → Expert Advisor → aggiungi URL:          |
+//|    https://prophedge-iota.vercel.app                             |
+//| 4. Trascina PropHedge_EA su un grafico                           |
+//| 5. Inserisci Email, API Key, Journal ID, AccountType             |
 //+------------------------------------------------------------------+
 
 #property copyright "PropHedge - VISIONTRADING"
 #property link      "https://prophedge-iota.vercel.app"
-#property version   "3.0"
+#property version   "3.1"
 #property strict
 #property description "Sincronizza i trade con il Journal PropHedge"
 
 //+------------------------------------------------------------------+
-//| PARAMETRI — copia dal software PropHedge                         |
-//| Journal → clicca sfida → Connetti → MT4/MT5                     |
+//| PARAMETRI — inserisci questi valori dal software PropHedge       |
 //+------------------------------------------------------------------+
-input string UserToken   = ""; // Token utente (copia dal Journal)
-input string JournalID   = ""; // Journal ID (copia dal Journal)
-input string AccountType = "prop"; // Tipo: 'prop' oppure 'broker'
-input int    SyncInterval = 30;    // Secondi tra sync (minimo 10)
-input bool   SyncHistory  = true;  // Includi storico chiusi
-input int    HistoryDays  = 90;    // Giorni storico da inviare
+input string UserEmail   = "";         // La tua email di accesso PropHedge
+input string ApiKey      = "";         // API Key (dal Journal → Connetti → MT4)
+input string JournalID   = "";         // Journal ID (dal Journal → Connetti → MT4)
+input string AccountType = "prop";     // Tipo conto: 'prop' oppure 'broker'
+input int    SyncInterval = 30;        // Secondi tra ogni sync (min 10)
+input bool   SyncHistory  = true;      // Includi storico trade chiusi
+input int    HistoryDays  = 90;        // Giorni di storico da inviare
 
 //+------------------------------------------------------------------+
-//| Variabili interne — non modificare                               |
-//+------------------------------------------------------------------+
-string   SERVER    = "https://prophedge-iota.vercel.app";
-string   ENDPOINT  = "";
-datetime lastSync  = 0;
+string   SERVER   = "https://prophedge-iota.vercel.app";
+string   ENDPOINT = "";
+datetime lastSync = 0;
 int      syncCount = 0;
 int      errCount  = 0;
 bool     ready     = false;
@@ -65,89 +40,72 @@ bool     ready     = false;
 int OnInit() {
    ENDPOINT = SERVER + "/api/mt-sync";
 
-   if (StringLen(StringTrimLeft(StringTrimRight(UserToken))) < 10) {
-      Alert("PropHedge EA — Token mancante!\n\n"
-          + "Vai in PropHedge → Journal → Connetti → MT4/MT5\n"
-          + "Copia il Token e incollalo nei parametri dell'EA.");
+   if (StringLen(StringTrimLeft(StringTrimRight(UserEmail))) < 5) {
+      Alert("PropHedge EA\n\nEmail mancante!\nInserisci la tua email di accesso PropHedge.");
+      return INIT_FAILED;
+   }
+   if (StringLen(StringTrimLeft(StringTrimRight(ApiKey))) < 5) {
+      Alert("PropHedge EA\n\nAPI Key mancante!\nVai in PropHedge → Journal → Connetti → MT4\nCopia la API Key.");
       return INIT_FAILED;
    }
    if (StringLen(StringTrimLeft(StringTrimRight(JournalID))) < 5) {
-      Alert("PropHedge EA — Journal ID mancante!\n\n"
-          + "Vai in PropHedge → Journal → Connetti → MT4/MT5\n"
-          + "Copia il Journal ID e incollalo nei parametri dell'EA.");
+      Alert("PropHedge EA\n\nJournal ID mancante!\nVai in PropHedge → Journal → Connetti → MT4\nCopia il Journal ID.");
       return INIT_FAILED;
    }
    if (AccountType != "prop" && AccountType != "broker") {
-      Alert("PropHedge EA — AccountType non valido!\n\n"
-          + "Inserisci 'prop' oppure 'broker' nel campo AccountType.");
+      Alert("PropHedge EA\nAccountType deve essere 'prop' o 'broker'");
       return INIT_FAILED;
    }
 
    ready = true;
 
    Print("══════════════════════════════════════");
-   Print("  PropHedge EA v3.0 — VISIONTRADING  ");
+   Print("  PropHedge EA v3.1 — VISIONTRADING  ");
    Print("══════════════════════════════════════");
    Print("  Broker:     ", AccountCompany());
    Print("  Conto:      #", AccountNumber());
    Print("  Server:     ", AccountServer());
-   Print("  Valuta:     ", AccountCurrency());
    Print("  Tipo:       ", AccountType);
+   Print("  Email:      ", UserEmail);
    Print("  Journal:    ", JournalID);
-   Print("  Sync ogni:  ", MathMax(SyncInterval,10), " secondi");
-   Print("  Storico:    ", SyncHistory ? (string)HistoryDays+" giorni" : "disabilitato");
    Print("══════════════════════════════════════");
 
-   // Sync immediato all'avvio
    DoSync();
    return INIT_SUCCEEDED;
 }
 
-//+------------------------------------------------------------------+
 void OnDeinit(const int reason) {
-   if (ready) Print("PropHedge EA fermato | Sync totali: ", syncCount, " | Errori: ", errCount);
+   if (ready) Print("PropHedge EA fermato | Sync: ", syncCount, " | Errori: ", errCount);
 }
 
-//+------------------------------------------------------------------+
 void OnTick() {
    if (!ready) return;
    if (TimeCurrent() - lastSync >= MathMax(SyncInterval, 10)) DoSync();
 }
 
-//+------------------------------------------------------------------+
-// Timer di backup nel caso non arrivino tick (mercato chiuso)
-void OnTimer() {
-   if (!ready) return;
-   if (TimeCurrent() - lastSync >= MathMax(SyncInterval, 10)) DoSync();
-}
-
-//+------------------------------------------------------------------+
 void DoSync() {
    lastSync = TimeCurrent();
    string json = BuildJSON();
    if (SendToServer(json)) {
       syncCount++;
-      if (syncCount == 1) {
-         Print("PropHedge: Primo sync OK! I trade appaiono nel Journal.");
-         Comment("PropHedge EA attivo\nConto: #" + (string)AccountNumber() + " (" + AccountType + ")\nSync: " + (string)syncCount + " | Errori: " + (string)errCount);
-      } else {
-         Comment("PropHedge EA attivo\nConto: #" + (string)AccountNumber() + " (" + AccountType + ")\nSync: " + (string)syncCount + " | Errori: " + (string)errCount + "\nUltimo: " + TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
-      }
+      Comment("PropHedge EA attivo\n"
+            + "Conto: #" + (string)AccountNumber() + " (" + AccountType + ")\n"
+            + "Sync: " + (string)syncCount + " | Errori: " + (string)errCount + "\n"
+            + "Ultimo: " + TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
    } else {
       errCount++;
-      Comment("PropHedge EA — ERRORE #" + (string)errCount + "\nControllare log MT4 per dettagli");
+      Comment("PropHedge EA — ERRORE #" + (string)errCount + "\nControllare log MT4");
    }
 }
 
-//+------------------------------------------------------------------+
 string BuildJSON() {
    string trades = "";
-   int    count  = 0;
+   int count = 0;
 
    // Trade aperti
    for (int i = 0; i < OrdersTotal(); i++) {
       if (!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
-      if (OrderType() > 1) continue; // Solo BUY e SELL
+      if (OrderType() > 1) continue;
       if (count > 0) trades += ",";
       trades += OrderToJSON();
       count++;
@@ -168,47 +126,44 @@ string BuildJSON() {
       }
    }
 
-   // Costruisce JSON completo
-   string plat = "MT4";
    string json = "{";
-   json += "\"token\":\""       + CleanStr(UserToken)              + "\",";
-   json += "\"journal_id\":\""  + CleanStr(JournalID)              + "\",";
-   json += "\"account_type\":\"" + AccountType                      + "\",";
-   json += "\"account_id\":\""  + (string)AccountNumber()          + "\",";
-   json += "\"platform\":\""    + plat                             + "\",";
-   json += "\"server\":\""      + CleanStr(AccountServer())        + "\",";
-   json += "\"broker\":\""      + CleanStr(AccountCompany())       + "\",";
-   json += "\"currency\":\""    + AccountCurrency()                + "\",";
-   json += "\"balance\":"       + DoubleToStr(AccountBalance(),2)  + ",";
-   json += "\"equity\":"        + DoubleToStr(AccountEquity(),2)   + ",";
-   json += "\"trades\":["       + trades                           + "]";
+   json += "\"api_key\":\""     + CleanStr(ApiKey)              + "\",";
+   json += "\"email\":\""       + CleanStr(UserEmail)           + "\",";
+   json += "\"journal_id\":\""  + CleanStr(JournalID)           + "\",";
+   json += "\"account_type\":\"" + AccountType                   + "\",";
+   json += "\"account_id\":\""  + (string)AccountNumber()       + "\",";
+   json += "\"platform\":\"MT4\",";
+   json += "\"server\":\""      + CleanStr(AccountServer())     + "\",";
+   json += "\"broker\":\""      + CleanStr(AccountCompany())    + "\",";
+   json += "\"currency\":\""    + AccountCurrency()             + "\",";
+   json += "\"balance\":"       + DoubleToStr(AccountBalance(),2) + ",";
+   json += "\"equity\":"        + DoubleToStr(AccountEquity(),2)  + ",";
+   json += "\"trades\":["       + trades                         + "]";
    json += "}";
    return json;
 }
 
-//+------------------------------------------------------------------+
 string OrderToJSON() {
    string t = "{";
-   t += "\"ticket\":"      + (string)OrderTicket()              + ",";
-   t += "\"symbol\":\""   + CleanStr(OrderSymbol())            + "\",";
-   t += "\"type\":"        + (string)OrderType()                + ",";
-   t += "\"lots\":"        + DoubleToStr(OrderLots(),2)         + ",";
-   t += "\"open_price\":"  + DoubleToStr(OrderOpenPrice(),8)    + ",";
-   t += "\"close_price\":" + DoubleToStr(OrderClosePrice(),8)   + ",";
-   t += "\"sl\":"          + DoubleToStr(OrderStopLoss(),8)     + ",";
-   t += "\"tp\":"          + DoubleToStr(OrderTakeProfit(),8)   + ",";
-   t += "\"profit\":"      + DoubleToStr(OrderProfit(),2)       + ",";
-   t += "\"swap\":"        + DoubleToStr(OrderSwap(),2)         + ",";
-   t += "\"commission\":"  + DoubleToStr(OrderCommission(),2)   + ",";
-   t += "\"open_time\":"   + (string)(int)OrderOpenTime()       + ",";
-   t += "\"close_time\":"  + (string)(int)OrderCloseTime()      + ",";
-   t += "\"comment\":\""  + CleanStr(OrderComment())           + "\",";
+   t += "\"ticket\":"      + (string)OrderTicket()             + ",";
+   t += "\"symbol\":\""   + CleanStr(OrderSymbol())           + "\",";
+   t += "\"type\":"        + (string)OrderType()               + ",";
+   t += "\"lots\":"        + DoubleToStr(OrderLots(),2)        + ",";
+   t += "\"open_price\":"  + DoubleToStr(OrderOpenPrice(),8)   + ",";
+   t += "\"close_price\":" + DoubleToStr(OrderClosePrice(),8)  + ",";
+   t += "\"sl\":"          + DoubleToStr(OrderStopLoss(),8)    + ",";
+   t += "\"tp\":"          + DoubleToStr(OrderTakeProfit(),8)  + ",";
+   t += "\"profit\":"      + DoubleToStr(OrderProfit(),2)      + ",";
+   t += "\"swap\":"        + DoubleToStr(OrderSwap(),2)        + ",";
+   t += "\"commission\":"  + DoubleToStr(OrderCommission(),2)  + ",";
+   t += "\"open_time\":"   + (string)(int)OrderOpenTime()      + ",";
+   t += "\"close_time\":"  + (string)(int)OrderCloseTime()     + ",";
+   t += "\"comment\":\""  + CleanStr(OrderComment())          + "\",";
    t += "\"magic\":"       + (string)OrderMagicNumber();
    t += "}";
    return t;
 }
 
-//+------------------------------------------------------------------+
 string CleanStr(string s) {
    StringReplace(s, "\"", "'");
    StringReplace(s, "\\", "/");
@@ -217,12 +172,10 @@ string CleanStr(string s) {
    return s;
 }
 
-//+------------------------------------------------------------------+
 bool SendToServer(string json) {
    string headers = "Content-Type: application/json\r\n";
-   char   post[], result[];
+   char post[], result[];
    string resHeaders;
-
    StringToCharArray(json, post, 0, StringLen(json));
    ResetLastError();
 
@@ -233,9 +186,7 @@ bool SendToServer(string json) {
       if (err == 4060) {
          Print("PropHedge ERRORE: URL non autorizzato!");
          Print("→ Strumenti → Opzioni → Expert Advisor → aggiungi: ", SERVER);
-         Alert("PropHedge EA: devi aggiungere l'URL del server!\n\n"
-             + "Strumenti → Opzioni → Expert Advisor\n"
-             + "Aggiungi URL: " + SERVER);
+         Alert("PropHedge EA\n\nAggiungi l'URL:\nStrumenti → Opzioni → Expert Advisor\n" + SERVER);
       } else {
          Print("PropHedge ERRORE WebRequest #", err);
       }
@@ -243,15 +194,12 @@ bool SendToServer(string json) {
    }
 
    if (code == 200) {
+      Print("PropHedge Sync #", syncCount+1, " OK");
       return true;
-   } else if (code == 401) {
-      Print("PropHedge ERRORE 401: Token non valido. Ricontrolla il Token nel Journal.");
-      return false;
-   } else if (code == 400) {
-      Print("PropHedge ERRORE 400: Parametri errati. Controlla Journal ID e AccountType.");
-      return false;
-   } else {
-      Print("PropHedge ERRORE HTTP ", code);
-      return false;
    }
+   string resp = CharArrayToString(result);
+   if (code == 401) Print("PropHedge ERRORE 401: API Key o email non valida. Ricontrolla i parametri.");
+   else if (code == 400) Print("PropHedge ERRORE 400: Parametri mancanti.");
+   else Print("PropHedge ERRORE HTTP ", code, ": ", StringSubstr(resp,0,200));
+   return false;
 }
