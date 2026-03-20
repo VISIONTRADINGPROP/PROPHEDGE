@@ -3220,42 +3220,113 @@ function jrnlRenderMain() {
 
   // Banner conclusa
   if (sess.concluded) {
-    html += '<div class="jbanner concluded">&#9873; Sfida conclusa il '+(sess.concludedAt?new Date(sess.concludedAt).toLocaleDateString('it-IT'):'')+' &mdash; <a href="#" onclick="jrnlReset('+i+');return false" style="color:var(--teal);text-decoration:none">&#8635; Reimposta</a></div>';
+    html += '<div class="jbanner concluded">🏁 Sfida conclusa il '+(sess.concludedAt?new Date(sess.concludedAt).toLocaleDateString('it-IT'):'')+' — <a href="#" onclick="jrnlReset('+i+');return false" style="color:var(--teal);text-decoration:none">↺ Reimposta</a></div>';
   }
 
-  // Trade ordinati per data — più recenti in cima
-  var pt = (sess.propTrades||[]).slice().sort(function(a,b){ return new Date(b.opened_at||0)-new Date(a.opened_at||0); });
-  var bt = (sess.brokerTrades||[]).slice().sort(function(a,b){ return new Date(b.opened_at||0)-new Date(a.opened_at||0); });
-  var ptOpen = pt.filter(function(t){ return t.status==='open'; });
-  var btOpen = bt.filter(function(t){ return t.status==='open'; });
-  var ptPnl  = pt.reduce(function(s,t){ return s+parseFloat(t.pnl_realized||0); }, 0);
-  var btPnl  = bt.reduce(function(s,t){ return s+parseFloat(t.pnl_realized||0); }, 0);
-  var ptLive = ptOpen.reduce(function(s,t){ return s+parseFloat(t.pnl_realized||0); }, 0);
-  var btLive = btOpen.reduce(function(s,t){ return s+parseFloat(t.pnl_realized||0); }, 0);
-
-  // Lotti target dalla sfida collegata in Dashboard
-  var propTarget  = 0;
-  var brokerTarget = 0;
+  // Lotti target dalla sfida Dashboard
+  var propTarget = 0, brokerTarget = 0;
   if (sess.linkedPropId) {
     var lp = props.find(function(p){ return p.id === sess.linkedPropId; });
     if (lp) { var lc = calcChallenge(lp); propTarget = lc.propLots||0; brokerTarget = lc.hedgeLots||0; }
   }
 
-  // ── Grafico P/L mini ─────────────────────────────────────────
+  // Tutti i trade
+  var pt = (sess.propTrades||[]).slice().sort(function(a,b){
+    return new Date(b.open_time||b.opened_at||0) - new Date(a.open_time||a.opened_at||0);
+  });
+  var bt = (sess.brokerTrades||[]).slice().sort(function(a,b){
+    return new Date(b.open_time||b.opened_at||0) - new Date(a.open_time||a.opened_at||0);
+  });
+
+  var ptOpen   = pt.filter(function(t){ return t.status==='open'; });
+  var btOpen   = bt.filter(function(t){ return t.status==='open'; });
+  var ptPnl    = pt.reduce(function(s,t){ return s+parseFloat(t.profit||t.pnl_realized||0); }, 0);
+  var btPnl    = bt.reduce(function(s,t){ return s+parseFloat(t.profit||t.pnl_realized||0); }, 0);
+  var ptLive   = ptOpen.reduce(function(s,t){ return s+parseFloat(t.profit||t.pnl_realized||0); }, 0);
+  var btLive   = btOpen.reduce(function(s,t){ return s+parseFloat(t.profit||t.pnl_realized||0); }, 0);
+
+  // ── FILTRI IN CIMA ────────────────────────────────────────────
+  var filterId   = 'jf_'+i;
+  var filterMode = (sess._filterMode || 'all');    // 'open','closed','all'
+  var filterFrom = sess._filterFrom || '';
+  var filterTo   = sess._filterTo   || '';
+  var filterSym  = sess._filterSym  || '';
+
+  html += '<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0">';
+
+  // Toggle Aperti/Chiusi/Tutti
+  html += '<div style="display:flex;gap:2px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:2px">';
+  ['all','open','closed'].forEach(function(m){
+    var labels = {all:'Tutti', open:'Aperti', closed:'Chiusi'};
+    var active = filterMode === m;
+    html += '<button onclick="jrnlSetFilter('+i+',\'mode\',\''+m+'\')" style="padding:4px 12px;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--fm);transition:all .15s;background:'+(active?'var(--teal)':'transparent')+';color:'+(active?'#000':'var(--t3)')+'">' + labels[m] + '</button>';
+  });
+  html += '</div>';
+
+  // Date da/a
+  html += '<div style="display:flex;align-items:center;gap:6px">';
+  html += '<span style="font-size:10px;color:var(--t3);font-family:var(--fd)">Dal</span>';
+  html += '<input type="date" value="'+filterFrom+'" onchange="jrnlSetFilter('+i+',\'from\',this.value)" style="background:var(--bg2);border:1px solid var(--border);color:var(--t);border-radius:6px;padding:4px 8px;font-size:11px;font-family:var(--fd)">';
+  html += '<span style="font-size:10px;color:var(--t3);font-family:var(--fd)">Al</span>';
+  html += '<input type="date" value="'+filterTo+'" onchange="jrnlSetFilter('+i+',\'to\',this.value)" style="background:var(--bg2);border:1px solid var(--border);color:var(--t);border-radius:6px;padding:4px 8px;font-size:11px;font-family:var(--fd)">';
+  html += '</div>';
+
+  // Filtro simbolo
+  html += '<input type="text" value="'+filterSym+'" placeholder="Simbolo..." oninput="jrnlSetFilter('+i+',\'sym\',this.value)" style="background:var(--bg2);border:1px solid var(--border);color:var(--t);border-radius:6px;padding:4px 10px;font-size:11px;font-family:var(--fd);width:100px">';
+
+  // Reset filtri
+  html += '<button onclick="jrnlResetFilters('+i+')" class="btn-g" style="padding:4px 10px;font-size:10px">↺ Reset</button>';
+
+  // Pulsanti sync
+  if (sess.propConn.connected && !sess.concluded)
+    html += '<button class="btn-g" style="padding:4px 8px;font-size:10px;margin-left:auto" data-jsync-idx="'+i+'" data-jsync-side="prop">🔄 Prop</button>';
+  if (sess.brokerConn.connected && !sess.concluded)
+    html += '<button class="btn-g" style="padding:4px 8px;font-size:10px" data-jsync-idx="'+i+'" data-jsync-side="broker">🔄 Broker</button>';
+  if (!sess.concluded)
+    html += '<button class="btn-g" style="padding:4px 8px;font-size:10px;color:var(--amber)" data-jconclude="'+i+'">🏁 Conclusa</button>';
+
+  html += '</div>';
+
+  // ── P/L SUMMARY BAR ──────────────────────────────────────────
   html += '<div class="jpnl-chart">';
   html += '<div class="jpnl-half">'
-    + '<div class="jpnl-label">P/L Prop</div>'
+    + '<div class="jpnl-label">🎯 Prop — P/L Totale</div>'
     + '<div class="jpnl-val '+(ptPnl>=0?'v-green':'v-red')+'">'+(ptPnl>=0?'+':'')+ptPnl.toFixed(2)+'$</div>'
     + jrnlMiniChart(pt, 'prop')
     + '</div>';
   html += '<div class="jpnl-half">'
-    + '<div class="jpnl-label">P/L Broker</div>'
+    + '<div class="jpnl-label">💹 Broker — P/L Totale</div>'
     + '<div class="jpnl-val '+(btPnl>=0?'v-green':'v-red')+'">'+(btPnl>=0?'+':'')+btPnl.toFixed(2)+'$</div>'
     + jrnlMiniChart(bt, 'broker')
     + '</div>';
   html += '</div>';
 
-  // ── Header colonne ────────────────────────────────────────────
+  // ── APPLICA FILTRI ────────────────────────────────────────────
+  function applyFilters(trades) {
+    return trades.filter(function(t) {
+      // Filtro aperti/chiusi
+      if (filterMode === 'open'   && t.status !== 'open')   return false;
+      if (filterMode === 'closed' && t.status !== 'closed') return false;
+      // Filtro data
+      var openTime = t.open_time || t.opened_at;
+      if (filterFrom && openTime) {
+        if (new Date(openTime) < new Date(filterFrom)) return false;
+      }
+      if (filterTo && openTime) {
+        if (new Date(openTime) > new Date(filterTo + 'T23:59:59')) return false;
+      }
+      // Filtro simbolo
+      if (filterSym && t.symbol) {
+        if (t.symbol.toUpperCase().indexOf(filterSym.toUpperCase()) === -1) return false;
+      }
+      return true;
+    });
+  }
+
+  var ptFiltered = applyFilters(pt);
+  var btFiltered = applyFilters(bt);
+
+  // ── HEADER COLONNE ────────────────────────────────────────────
   html += '<div class="jcols-outer"><div class="jcols-hdr">';
 
   // Header Prop
@@ -3266,8 +3337,7 @@ function jrnlRenderMain() {
     + '<div class="jstat">Live: <b class="'+(ptLive>=0?'v-green':'v-red')+'">'+(ptLive>=0?'+':'')+ptLive.toFixed(2)+'$</b></div>'
     + (propTarget>0?'<div class="jstat">Target: <b style="color:var(--t2)">'+propTarget.toFixed(2)+' lot</b></div>':'')
     + '</div>'
-    + (sess.propConn.connected&&!sess.concluded?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">&#9679; '+sess.propConn.label+'</span>':'')
-    + (sess.propConn.connected&&!sess.concluded?'<button class="btn-g" style="padding:2px 6px;font-size:10px;margin-left:4px" data-jsync-idx="'+i+'" data-jsync-side="prop">🔄</button>':'')
+    + (sess.propConn.connected?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">● '+sess.propConn.label+'</span>':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="prop">🔗 Connetti</button>')
     + '</div>';
 
   // Header Broker
@@ -3278,21 +3348,20 @@ function jrnlRenderMain() {
     + '<div class="jstat">Live: <b class="'+(btLive>=0?'v-green':'v-red')+'">'+(btLive>=0?'+':'')+btLive.toFixed(2)+'$</b></div>'
     + (brokerTarget>0?'<div class="jstat">Target: <b style="color:var(--t2)">'+brokerTarget.toFixed(2)+' lot</b></div>':'')
     + '</div>'
-    + (sess.brokerConn.connected&&!sess.concluded?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">&#9679; '+sess.brokerConn.label+'</span>':'')
-    + (sess.brokerConn.connected&&!sess.concluded?'<button class="btn-g" style="padding:2px 6px;font-size:10px;margin-left:4px" data-jsync-idx="'+i+'" data-jsync-side="broker">🔄</button>':'')
-    + (sess.concluded?'':'<button class="btn-g" style="padding:2px 8px;font-size:10px;color:var(--amber);margin-left:auto" data-jconclude="'+i+'">🏁 Conclusa</button>')
+    + (sess.brokerConn.connected?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">● '+sess.brokerConn.label+'</span>':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="broker">🔗 Connetti</button>')
     + '</div>';
 
   html += '</div>'; // fine jcols-hdr
 
-  // ── Scroll unico con righe affiancate ─────────────────────────
+  // ── HEADER TABELLA ────────────────────────────────────────────
   html += '<div class="jscroll"><div class="jrow-hdr">';
-  html += '<div class="jcell-hdr"><span style="color:var(--t3)">#</span><span>Simbolo</span><span>Dir.</span><span>Lotti</span><span>P/L</span><span>Stato</span></div>';
-  html += '<div class="jcell-hdr"><span style="color:var(--t3)">#</span><span>Simbolo</span><span>Dir.</span><span>Lotti</span><span>P/L</span><span>Stato</span></div>';
+  var colHdr = '<div style="display:flex;gap:8px;flex:1"><span style="color:var(--t3);min-width:18px">#</span><span style="min-width:60px">Simbolo</span><span style="min-width:36px">Dir.</span><span style="min-width:40px">Lotti</span><span style="min-width:55px">Apertura</span><span style="min-width:55px">Chiusura</span><span style="min-width:55px">P/L</span><span>Stato</span></div>';
+  html += '<div class="jcell-hdr">'+colHdr+'</div>';
+  html += '<div class="jcell-hdr">'+colHdr+'</div>';
   html += '</div>';
 
-  // Righe allineate — il numero di righe è il max tra pt e bt
-  var maxLen = Math.max(pt.length, bt.length);
+  // ── RIGHE TRADE ───────────────────────────────────────────────
+  var maxLen = Math.max(ptFiltered.length, btFiltered.length);
   if (maxLen === 0) {
     html += '<div class="jrow">';
     html += '<div class="jcell">' + jrnlEmptyCol('prop', sess, i) + '</div>';
@@ -3300,35 +3369,124 @@ function jrnlRenderMain() {
     html += '</div>';
   } else {
     for (var r = 0; r < maxLen; r++) {
-      var tP = pt[r] || null;
-      var tB = bt[r] || null;
-      // Determina mismatch
-      var mismatch = false;
+      var tP = ptFiltered[r] || null;
+      var tB = btFiltered[r] || null;
+
+      // Calcola alert mismatch
+      var alerts = [];
       if (tP && tB) {
-        // Alert 1: stessa direzione (dovrebbero essere opposte)
-        if (tP.direction === tB.direction) mismatch = true;
-        // Alert 2: lotti Prop fuori tolleranza 5%
+        // Stessa direzione (errore — dovrebbero essere opposte)
+        if (tP.direction === tB.direction)
+          alerts.push('⚠️ Stessa direzione!');
+        // Lotti Prop sbagliati
         if (propTarget > 0) {
-          var diffP = Math.abs(parseFloat(tP.volume||0) - propTarget) / propTarget;
-          if (diffP > 0.05) mismatch = true;
+          var diffP = Math.abs(parseFloat(tP.volume||tP.lots||0) - propTarget) / propTarget;
+          if (diffP > 0.05) alerts.push('⚠️ Lotti Prop: '+parseFloat(tP.volume||tP.lots||0).toFixed(2)+' (target '+propTarget.toFixed(2)+')');
         }
-        // Alert 3: lotti Broker fuori tolleranza 5%
+        // Lotti Broker sbagliati
         if (brokerTarget > 0) {
-          var diffB = Math.abs(parseFloat(tB.volume||0) - brokerTarget) / brokerTarget;
-          if (diffB > 0.05) mismatch = true;
+          var diffB = Math.abs(parseFloat(tB.volume||tB.lots||0) - brokerTarget) / brokerTarget;
+          if (diffB > 0.05) alerts.push('⚠️ Lotti Broker: '+parseFloat(tB.volume||tB.lots||0).toFixed(2)+' (target '+brokerTarget.toFixed(2)+')');
         }
       }
-      html += '<div class="jrow'+(mismatch?' mismatch':'')+'">';
-      html += '<div class="jcell">'+jrnlCell(tP, r, mismatch&&tP?true:false, propTarget)+'</div>';
-      html += '<div class="jcell">'+jrnlCell(tB, r, mismatch&&tB?true:false, brokerTarget)+'</div>';
+      // Trade aperto solo su un lato
+      if (tP && !tB && tP.status==='open') alerts.push('⚠️ Manca hedge su Broker!');
+      if (!tP && tB && tB.status==='open') alerts.push('⚠️ Manca trade su Prop!');
+
+      var hasMismatch = alerts.length > 0;
+
+      html += '<div class="jrow'+(hasMismatch?' mismatch':'')+'">';
+      html += '<div class="jcell">'+jrnlCellFull(tP, r, propTarget, hasMismatch)+'</div>';
+      html += '<div class="jcell">'+jrnlCellFull(tB, r, brokerTarget, hasMismatch)+'</div>';
       html += '</div>';
+
+      // Riga alert gialla
+      if (hasMismatch) {
+        html += '<div style="grid-column:1/-1;background:rgba(255,190,11,.08);border-bottom:1px solid rgba(255,190,11,.15);padding:4px 12px;font-size:10px;color:var(--amber);font-family:var(--fd)">'
+          + alerts.join(' &nbsp;|&nbsp; ')
+          + '</div>';
+      }
     }
   }
 
-  html += '</div></div></div>'; // fine jscroll, jcols-outer
+  html += '</div></div></div>';
   html += jrnlConnModal();
   return html;
 }
+
+// ── Funzioni filtro ───────────────────────────────────────────────
+function jrnlSetFilter(idx, key, val) {
+  var sess = jrnl.sessions[idx];
+  if (!sess) return;
+  if (key==='mode') sess._filterMode = val;
+  if (key==='from') sess._filterFrom = val;
+  if (key==='to')   sess._filterTo   = val;
+  if (key==='sym')  sess._filterSym  = val;
+  // Re-render solo il main
+  var jmain = document.getElementById('jmain');
+  if (jmain) jmain.innerHTML = jrnlRenderMain();
+}
+
+function jrnlResetFilters(idx) {
+  var sess = jrnl.sessions[idx];
+  if (!sess) return;
+  sess._filterMode = 'all';
+  sess._filterFrom = '';
+  sess._filterTo   = '';
+  sess._filterSym  = '';
+  var jmain = document.getElementById('jmain');
+  if (jmain) jmain.innerHTML = jrnlRenderMain();
+}
+
+// ── Cella trade dettagliata ───────────────────────────────────────
+function jrnlCellFull(t, rowIdx, target, hasMismatch) {
+  if (!t) return '<span style="color:var(--border2);font-size:11px;padding:4px">—</span>';
+
+  var pnl   = parseFloat(t.profit||t.pnl_realized||0);
+  var lots  = parseFloat(t.volume||t.lots||0);
+  var lotWarn = target > 0 && Math.abs(lots - target) / target > 0.05;
+  var isOpen  = t.status === 'open';
+
+  // Date formattate
+  var openTime  = t.open_time  || t.opened_at  || '';
+  var closeTime = t.close_time || t.closed_at  || '';
+  var openStr   = openTime  ? new Date(openTime).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+  var closeStr  = closeTime ? new Date(closeTime).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+
+  // Durata
+  var durStr = '';
+  if (openTime && closeTime) {
+    var dur = Math.round((new Date(closeTime) - new Date(openTime)) / 60000);
+    durStr = dur < 60 ? dur+'m' : Math.round(dur/60)+'h';
+  }
+
+  var html = '<div style="display:flex;align-items:center;gap:6px;padding:2px 0;flex-wrap:wrap">';
+  html += '<span style="color:var(--t3);font-family:var(--fd);font-size:10px;min-width:18px">'+(rowIdx+1)+'</span>';
+  html += '<b style="font-size:12px;min-width:60px">'+(t.symbol||'—')+'</b>';
+  html += '<b class="'+(t.direction==='BUY'?'v-green':'v-red')+'" style="min-width:36px">'+(t.direction||'—')+'</b>';
+
+  // Lotti con warning
+  html += '<span style="font-family:var(--fd);font-size:11px;min-width:40px'+(lotWarn?';color:var(--amber)':'')+'">'
+    + lots.toFixed(2)
+    + (lotWarn?' ⚠️':'')
+    + '</span>';
+
+  // Date apertura/chiusura
+  html += '<span style="font-size:10px;color:var(--t3);font-family:var(--fd);min-width:55px">'+openStr+'</span>';
+  html += '<span style="font-size:10px;color:var(--t3);font-family:var(--fd);min-width:55px">'+(isOpen?'—':closeStr+(durStr?' ('+durStr+')':''))+'</span>';
+
+  // P/L
+  html += '<span class="'+(pnl>=0?'v-green':'v-red')+'" style="font-family:var(--fd);font-weight:700;min-width:55px">'+(pnl>=0?'+':'')+pnl.toFixed(2)+'$</span>';
+
+  // Stato
+  html += isOpen
+    ? '<span style="background:rgba(0,229,204,.1);color:var(--teal);padding:1px 6px;border-radius:6px;font-size:9px;font-weight:700">APERTO</span>'
+    : '<span style="background:rgba(255,255,255,.06);color:var(--t3);padding:1px 6px;border-radius:6px;font-size:9px">CHIUSO</span>';
+
+  html += '</div>';
+  return html;
+}
+
 
 function jrnlMiniChart(trades, side) {
   if (!trades || trades.length < 2) return '<svg class="jpnl-svg"></svg>';
