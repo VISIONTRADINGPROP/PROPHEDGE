@@ -32,8 +32,6 @@ module.exports = async function handler(req, res) {
     if (!user_id) return res.status(200).json({ received: true });
 
     const now = new Date();
-    const end = new Date(now);
-    end.setFullYear(end.getFullYear() + 1);
 
     const sbAdmin = createClient(
       process.env.SUPABASE_URL,
@@ -43,7 +41,8 @@ module.exports = async function handler(req, res) {
     await sbAdmin.auth.admin.updateUserById(user_id, {
       user_metadata: {
         license_start: now.toISOString(),
-        license_end: end.toISOString(),
+        license_end: null,
+        license_type: 'lifetime',
         stripe_session: session.id,
       }
     });
