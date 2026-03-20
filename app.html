@@ -1164,6 +1164,7 @@ function doRegister(){
   <div class="tab mrow" onclick="goTab('proplist',this)" id="tabProp">Prop</div>
   <div class="tab mrow" onclick="goTab('brokerlist',this)" id="tabBroker">Broker</div>
   <div class="tab mrow" onclick="goTab('journal',this)" id="tabJournal">Journal</div>
+  <div class="tab mrow" onclick="goTab('stats',this)" id="tabStats">📊 Statistiche</div>
   <div class="tab mrow" onclick="goTab('guide',this)" id="tabGuide">Guida</div>
   <div class="tab mrow" onclick="toggleAccDrop(event)" id="tabAccount" style="margin-left:auto;display:flex;align-items:center;gap:7px;padding:6px 12px;position:relative"><span id="tabAccountFlag" style="line-height:1;flex-shrink:0"></span><div id="tabAccountPhoto" style="width:26px;height:26px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--t3)"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="4" fill="var(--teal)" opacity=".5"/><path d="M3 19c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="var(--teal)" stroke-width="1.5" fill="none" opacity=".4"/></svg></div><span id="tabAccountName" style="font-size:11px">Account</span></div>
 </div>
@@ -3733,6 +3734,227 @@ document.addEventListener('click', function(e) {
   }
 });
 
+
+// ===== RENDER STATISTICHE =====
+function renderStats() {
+  // Raccoglie tutti i trade da tutte le sessioni Journal
+  var allTrades = [];
+  jrnl.sessions.forEach(function(sess) {
+    (sess.propTrades||[]).forEach(function(t){ allTrades.push(Object.assign({}, t, {sessName: sess.name, side:'prop'})); });
+    (sess.brokerTrades||[]).forEach(function(t){ allTrades.push(Object.assign({}, t, {sessName: sess.name, side:'broker'})); });
+  });
+
+  // Se non ci sono trade mostra stato vuoto
+  if (allTrades.length === 0) {
+    return '<div class="empty ai">'
+      + '<div style="font-size:44px;margin-bottom:14px;opacity:.3">📊</div>'
+      + '<p>Nessun trade nel Journal.<br>Connetti un conto dalla tab Journal per vedere le statistiche.</p>'
+      + '<button class="btn-p" onclick="goTab(&quot;journal&quot;,document.getElementById(&quot;tabJournal&quot;))">Vai al Journal</button>'
+      + '</div>';
+  }
+
+  // Calcola statistiche per ogni sessione
+  var sessStats = jrnl.sessions.map(function(sess, idx) {
+    var pt = sess.propTrades || [];
+    var bt = sess.brokerTrades || [];
+    var trades = pt.concat(bt).filter(function(t){ return t.status === 'closed'; });
+    return calcTradeStats(trades, sess.name, idx);
+  }).filter(function(s){ return s.totalTrades > 0; });
+
+  // Statistiche globali
+  var closedAll = allTrades.filter(function(t){ return t.status === 'closed'; });
+  var globalStats = calcTradeStats(closedAll, 'Tutte le sfide', -1);
+
+  var html = '<div style="max-width:1200px">';
+
+  // ── STAT CARDS GLOBALI ────────────────────────────────────────
+  html += '<div style="margin-bottom:22px">'
+    + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--t3);font-family:var(--fd);margin-bottom:14px">📊 Riepilogo Globale</div>'
+    + '<div class="sg">'
+    + statCard('🎯', 'Trade Totali', globalStats.totalTrades, 'chiusi')
+    + statCard('✅', 'Win Rate', globalStats.winRate.toFixed(1) + '%', globalStats.wins + 'W / ' + globalStats.losses + 'L', globalStats.winRate >= 50 ? 'var(--green)' : 'var(--red)')
+    + statCard('💰', 'P/L Totale', (globalStats.totalPnl >= 0 ? '+' : '') + globalStats.totalPnl.toFixed(2) + '$', 'profitto netto', globalStats.totalPnl >= 0 ? 'var(--green)' : 'var(--red)')
+    + statCard('⚡', 'Profit Factor', globalStats.profitFactor === Infinity ? '∞' : globalStats.profitFactor.toFixed(2), 'guadagni / perdite', globalStats.profitFactor >= 1 ? 'var(--green)' : 'var(--red)')
+    + '</div></div>';
+
+  // ── STAT CARDS DETTAGLIO ──────────────────────────────────────
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:22px">'
+    + detailCard('📈 Avg Profit', '+' + globalStats.avgWin.toFixed(2) + '$', 'per trade vincente', 'var(--green)')
+    + detailCard('📉 Avg Loss', '-' + globalStats.avgLoss.toFixed(2) + '$', 'per trade perdente', 'var(--red)')
+    + detailCard('🏆 Miglior Trade', (globalStats.bestTrade >= 0 ? '+' : '') + globalStats.bestTrade.toFixed(2) + '$', globalStats.bestSymbol || '—', 'var(--teal)')
+    + detailCard('💔 Peggior Trade', globalStats.worstTrade.toFixed(2) + '$', globalStats.worstSymbol || '—', 'var(--red)')
+    + detailCard('📊 Avg Trade', (globalStats.avgTrade >= 0 ? '+' : '') + globalStats.avgTrade.toFixed(2) + '$', 'media per trade', globalStats.avgTrade >= 0 ? 'var(--green)' : 'var(--red)')
+    + detailCard('🔥 Streak Vincente', globalStats.maxWinStreak + ' trade', 'consecutivi', 'var(--teal)')
+    + '</div>';
+
+  // ── EQUITY CURVE ──────────────────────────────────────────────
+  if (closedAll.length >= 2) {
+    html += '<div class="panel ai" style="margin-bottom:22px">'
+      + '<div class="ph"><h3>Equity Curve — Andamento P/L</h3>'
+      + '<div style="display:flex;gap:8px">';
+    jrnl.sessions.forEach(function(s, i) {
+      if ((s.propTrades||[]).concat(s.brokerTrades||[]).filter(function(t){return t.status==='closed';}).length > 0) {
+        html += '<span style="font-size:10px;font-family:var(--fd);color:var(--t3);padding:2px 8px;background:var(--bg3);border-radius:5px">' + s.name + '</span>';
+      }
+    });
+    html += '</div></div>'
+      + '<div class="pb" style="padding:10px 18px 18px">'
+      + renderEquityCurve(closedAll)
+      + '</div></div>';
+  }
+
+  // ── STATS PER SFIDA ───────────────────────────────────────────
+  if (sessStats.length > 1) {
+    html += '<div class="panel ai" style="margin-bottom:22px">'
+      + '<div class="ph"><h3>Statistiche per Sfida</h3></div>'
+      + '<div class="pb"><table class="pt"><thead><tr>'
+      + '<th>Sfida</th><th>Trade</th><th>Win Rate</th><th>P/L</th><th>Avg Win</th><th>Avg Loss</th><th>Profit Factor</th>'
+      + '</tr></thead><tbody>';
+    sessStats.forEach(function(s) {
+      var pnlCol = s.totalPnl >= 0 ? 'v-green' : 'v-red';
+      var wrCol  = s.winRate >= 50 ? 'v-green' : 'v-red';
+      html += '<tr>'
+        + '<td><strong>' + s.name + '</strong></td>'
+        + '<td>' + s.totalTrades + '</td>'
+        + '<td class="' + wrCol + '">' + s.winRate.toFixed(1) + '%</td>'
+        + '<td class="' + pnlCol + '">' + (s.totalPnl >= 0 ? '+' : '') + s.totalPnl.toFixed(2) + '$</td>'
+        + '<td class="v-green">+' + s.avgWin.toFixed(2) + '$</td>'
+        + '<td class="v-red">-' + s.avgLoss.toFixed(2) + '$</td>'
+        + '<td class="' + (s.profitFactor >= 1 ? 'v-green' : 'v-red') + '">' + (s.profitFactor === Infinity ? '∞' : s.profitFactor.toFixed(2)) + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// ── Helper: calcola statistiche da array di trade ────────────────
+function calcTradeStats(trades, name, idx) {
+  var closed = trades.filter(function(t){ return t.status === 'closed'; });
+  var wins   = closed.filter(function(t){ return parseFloat(t.pnl_realized||0) > 0; });
+  var losses = closed.filter(function(t){ return parseFloat(t.pnl_realized||0) <= 0; });
+  var totalPnl   = closed.reduce(function(s,t){ return s + parseFloat(t.pnl_realized||0); }, 0);
+  var totalWins  = wins.reduce(function(s,t){ return s + parseFloat(t.pnl_realized||0); }, 0);
+  var totalLoss  = Math.abs(losses.reduce(function(s,t){ return s + parseFloat(t.pnl_realized||0); }, 0));
+  var pnls = closed.map(function(t){ return parseFloat(t.pnl_realized||0); });
+  var best  = pnls.length ? Math.max.apply(null, pnls) : 0;
+  var worst = pnls.length ? Math.min.apply(null, pnls) : 0;
+  var bestT  = closed.find(function(t){ return parseFloat(t.pnl_realized||0) === best; });
+  var worstT = closed.find(function(t){ return parseFloat(t.pnl_realized||0) === worst; });
+
+  // Max win streak
+  var maxStreak = 0, curStreak = 0;
+  closed.forEach(function(t){
+    if (parseFloat(t.pnl_realized||0) > 0) { curStreak++; maxStreak = Math.max(maxStreak, curStreak); }
+    else curStreak = 0;
+  });
+
+  return {
+    name:         name,
+    totalTrades:  closed.length,
+    wins:         wins.length,
+    losses:       losses.length,
+    winRate:      closed.length ? (wins.length / closed.length * 100) : 0,
+    totalPnl:     totalPnl,
+    avgWin:       wins.length ? totalWins / wins.length : 0,
+    avgLoss:      losses.length ? totalLoss / losses.length : 0,
+    avgTrade:     closed.length ? totalPnl / closed.length : 0,
+    profitFactor: totalLoss > 0 ? totalWins / totalLoss : (totalWins > 0 ? Infinity : 0),
+    bestTrade:    best,
+    worstTrade:   worst,
+    bestSymbol:   bestT ? (bestT.symbol || '—') : '—',
+    worstSymbol:  worstT ? (worstT.symbol || '—') : '—',
+    maxWinStreak: maxStreak
+  };
+}
+
+// ── Helper: stat card grande ─────────────────────────────────────
+function statCard(icon, label, value, sub, color) {
+  return '<div class="sc-s ai">'
+    + '<div class="sc-s-ic">' + icon + '</div>'
+    + '<div class="sc-s-lb">' + label + '</div>'
+    + '<div class="sc-s-v" style="color:' + (color||'var(--t)') + '">' + value + '</div>'
+    + '<div class="sc-s-s">' + sub + '</div>'
+    + '</div>';
+}
+
+// ── Helper: detail card piccola ──────────────────────────────────
+function detailCard(label, value, sub, color) {
+  return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;transition:border-color .2s">'
+    + '<div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">' + label + '</div>'
+    + '<div style="font-size:20px;font-weight:700;font-family:var(--fd);color:' + (color||'var(--t)') + ';margin-bottom:4px">' + value + '</div>'
+    + '<div style="font-size:10px;color:var(--t3);font-family:var(--fd)">' + sub + '</div>'
+    + '</div>';
+}
+
+// ── Helper: equity curve SVG ─────────────────────────────────────
+function renderEquityCurve(trades) {
+  // Ordina per data apertura
+  var sorted = trades.slice().sort(function(a,b){
+    return new Date(a.opened_at||a.closed_at||0) - new Date(b.opened_at||b.closed_at||0);
+  });
+
+  // Calcola P/L cumulativo
+  var cum = 0;
+  var points = [{x:0, y:0}];
+  sorted.forEach(function(t, i) {
+    cum += parseFloat(t.pnl_realized||0);
+    points.push({x: i+1, y: cum});
+  });
+
+  var W = 800, H = 200;
+  var minY = Math.min.apply(null, points.map(function(p){return p.y;}));
+  var maxY = Math.max.apply(null, points.map(function(p){return p.y;}));
+  var rangeY = maxY - minY || 1;
+  var pad = 20;
+
+  function px(p) { return pad + (p.x / (points.length-1)) * (W - pad*2); }
+  function py(p) { return H - pad - ((p.y - minY) / rangeY) * (H - pad*2); }
+
+  var polyline = points.map(function(p){ return px(p).toFixed(1)+','+py(p).toFixed(1); }).join(' ');
+  var isPos = cum >= 0;
+  var color = isPos ? 'var(--teal)' : 'var(--red)';
+
+  // Area fill
+  var areaPoints = polyline + ' ' + px(points[points.length-1]).toFixed(1)+','+(H-pad) + ' ' + px(points[0]).toFixed(1)+','+(H-pad);
+
+  // Zero line
+  var zeroY = py({y:0}).toFixed(1);
+
+  var html = '<div style="position:relative;width:100%;overflow:hidden">'
+    + '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:180px" preserveAspectRatio="xMidYMid meet">'
+    // Grid orizzontale
+    + '<line x1="'+pad+'" y1="'+zeroY+'" x2="'+(W-pad)+'" y2="'+zeroY+'" stroke="var(--border2)" stroke-width="1" stroke-dasharray="4,4"/>'
+    // Area
+    + '<polygon points="'+areaPoints+'" fill="'+color+'" opacity="0.08"/>'
+    // Linea equity
+    + '<polyline points="'+polyline+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+    // Punto finale
+    + '<circle cx="'+px(points[points.length-1]).toFixed(1)+'" cy="'+py(points[points.length-1]).toFixed(1)+'" r="5" fill="'+color+'" opacity="0.9"/>'
+    // Label P/L finale
+    + '<text x="'+(W-pad-8)+'" y="'+(parseFloat(py(points[points.length-1]))-10)+'" text-anchor="end" font-size="11" font-family="JetBrains Mono,monospace" fill="'+color+'" font-weight="700">'
+    + (cum>=0?'+':'')+cum.toFixed(2)+'$'
+    + '</text>'
+    + '</svg>'
+    // Labels asse Y
+    + '<div style="position:absolute;left:0;top:'+pad+'px;font-size:9px;font-family:var(--fd);color:var(--t3)">' + maxY.toFixed(0) + '$</div>'
+    + '<div style="position:absolute;left:0;bottom:'+pad+'px;font-size:9px;font-family:var(--fd);color:var(--t3)">' + minY.toFixed(0) + '$</div>'
+    + '</div>';
+
+  // Trade count label
+  html += '<div style="text-align:center;font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:4px">'
+    + sorted.length + ' trade chiusi · dal '
+    + (sorted[0] ? new Date(sorted[0].opened_at||sorted[0].closed_at||0).toLocaleDateString('it-IT') : '—')
+    + ' al '
+    + (sorted[sorted.length-1] ? new Date(sorted[sorted.length-1].opened_at||sorted[sorted.length-1].closed_at||0).toLocaleDateString('it-IT') : '—')
+    + '</div>';
+
+  return html;
+}
+
+
 function renderGuide() {
   return '<div style="max-width:700px">'
     + '<div class="panel ai"><div class="ph"><h3>La logica in 30 secondi</h3></div><div class="pb">'
@@ -4049,6 +4271,7 @@ function render() {
   else if (currentTab==='account')   { /* gestito dal dropdown */ }
   else if (currentTab==='platform')  { renderPlatform(); return; }
   else if (currentTab==='journal')   { renderJournal(); return; }
+  else if (currentTab==='stats')     ct.innerHTML = renderStats();
   else                               ct.innerHTML = renderGuide();
 }
 
