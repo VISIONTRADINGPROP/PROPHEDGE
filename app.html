@@ -909,126 +909,7 @@ function doLogout(){
 }
 
 function doRegister(){
-  // Mostra il form di registrazione nella purchasePage
-  showRegisterForm();
-}
-
-function showRegisterForm(){
-  var box = document.getElementById('purchaseBox');
-  if(!box) return;
-  box.innerHTML = ''
-    + '<div style="text-align:center;margin-bottom:20px">'
-    + '<div style="font-size:15px;font-weight:700;color:#eef0f8;margin-bottom:6px">Crea il tuo account</div>'
-    + '<div style="font-size:11px;color:#8090b8;font-family:\'JetBrains Mono\',monospace">Poi verrai reindirizzato al pagamento sicuro Stripe</div>'
-    + '</div>'
-    + '<div style="margin-bottom:14px">'
-    + '<label style="display:block;font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Nome</label>'
-    + '<input id="regFirst" type="text" placeholder="Mario" style="width:100%;background:#111628;border:1px solid #1e2840;color:#eef0f8;border-radius:10px;padding:11px 14px;font-size:13px;font-family:\'JetBrains Mono\',monospace;outline:none;transition:border .2s" onfocus="this.style.borderColor=\'#00e5cc\'" onblur="this.style.borderColor=\'#1e2840\'">'
-    + '</div>'
-    + '<div style="margin-bottom:14px">'
-    + '<label style="display:block;font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Cognome</label>'
-    + '<input id="regLast" type="text" placeholder="Rossi" style="width:100%;background:#111628;border:1px solid #1e2840;color:#eef0f8;border-radius:10px;padding:11px 14px;font-size:13px;font-family:\'JetBrains Mono\',monospace;outline:none;transition:border .2s" onfocus="this.style.borderColor=\'#00e5cc\'" onblur="this.style.borderColor=\'#1e2840\'">'
-    + '</div>'
-    + '<div style="margin-bottom:14px">'
-    + '<label style="display:block;font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Email</label>'
-    + '<input id="regEmail" type="email" placeholder="trader@email.com" style="width:100%;background:#111628;border:1px solid #1e2840;color:#eef0f8;border-radius:10px;padding:11px 14px;font-size:13px;font-family:\'JetBrains Mono\',monospace;outline:none;transition:border .2s" onfocus="this.style.borderColor=\'#00e5cc\'" onblur="this.style.borderColor=\'#1e2840\'">'
-    + '</div>'
-    + '<div style="margin-bottom:20px">'
-    + '<label style="display:block;font-family:\'JetBrains Mono\',monospace;font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Password</label>'
-    + '<input id="regPass" type="password" placeholder="Minimo 8 caratteri" style="width:100%;background:#111628;border:1px solid #1e2840;color:#eef0f8;border-radius:10px;padding:11px 14px;font-size:13px;font-family:\'JetBrains Mono\',monospace;outline:none;transition:border .2s" onfocus="this.style.borderColor=\'#00e5cc\'" onblur="this.style.borderColor=\'#1e2840\'" onkeydown="if(event.key===\'Enter\')doRegisterAndCheckout()">'
-    + '</div>'
-    + '<div id="regErr" style="display:none;background:rgba(255,64,96,.08);border:1px solid rgba(255,64,96,.2);border-radius:8px;padding:10px 13px;font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#ff4060;margin-bottom:14px"></div>'
-    + '<button id="regBtn" onclick="doRegisterAndCheckout()" style="width:100%;background:linear-gradient(135deg,#00b8a4,#7a40cc);border:none;color:#fff;border-radius:12px;padding:15px;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Plus Jakarta Sans\',\'Inter\',sans-serif;letter-spacing:.08em;text-transform:uppercase;transition:all .2s;margin-bottom:12px">&#9658;&nbsp; Registrati e paga — &euro;1.200</button>'
-    + '<button onclick="showPurchasePricing()" style="width:100%;background:none;border:1px solid #1e2840;color:#3d4d78;border-radius:10px;padding:10px;font-size:11px;cursor:pointer;font-family:\'JetBrains Mono\',monospace;transition:all .2s" onmouseover="this.style.color=\'#8090b8\'" onmouseout="this.style.color=\'#3d4d78\'">&#8592; Torna</button>';
-}
-
-function showPurchasePricing(){
-  var box = document.getElementById('purchaseBox');
-  if(!box) return;
-  box.innerHTML = ''
-    + '<div style="background:linear-gradient(160deg,rgba(0,229,204,.06),rgba(155,93,229,.1));border:2px solid #00e5cc;border-radius:20px;padding:32px 28px;text-align:center;position:relative;transition:all .2s;box-shadow:0 0 40px rgba(0,229,204,.07)" onmouseover="this.style.boxShadow=\'0 12px 48px rgba(0,229,204,.15)\'" onmouseout="this.style.boxShadow=\'0 0 40px rgba(0,229,204,.07)\'">'
-    + '<div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#00b8a4,#7a40cc);border-radius:20px;padding:4px 18px;font-family:\'JetBrains Mono\',monospace;font-size:10px;font-weight:700;color:#fff;white-space:nowrap;box-shadow:0 4px 16px rgba(0,184,164,.3)">&#11088; LICENZA A VITA — PAGAMENTO UNICO</div>'
-    + '<div style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#00e5cc;text-transform:uppercase;letter-spacing:.16em;margin-bottom:16px;margin-top:8px">Accesso completo &middot; Per sempre</div>'
-    + '<div style="font-family:\'Plus Jakarta Sans\',\'Inter\',sans-serif;font-size:56px;color:#eef0f8;line-height:1;margin-bottom:6px">&euro;1.200</div>'
-    + '<div style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#8090b8;margin-bottom:8px">Una tantum &middot; Licenza personale non trasferibile</div>'
-    + '<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,229,204,.08);border:1px solid rgba(0,229,204,.2);border-radius:20px;padding:4px 14px;font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#00e5cc;margin-bottom:24px">&#9889; Zero rinnovi &middot; Zero sorprese</div>'
-    + '<button onclick="doRegister()" style="width:100%;background:linear-gradient(135deg,#00b8a4,#7a40cc);border:none;color:#fff;border-radius:12px;padding:16px;font-size:14px;font-weight:700;cursor:pointer;font-family:\'Plus Jakarta Sans\',\'Inter\',sans-serif;letter-spacing:.1em;text-transform:uppercase;transition:all .2s;box-shadow:0 6px 24px rgba(0,184,164,.25)" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 12px 32px rgba(0,184,164,.35)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 6px 24px rgba(0,184,164,.25)\'">&#9658;&nbsp; Acquista la licenza — &euro;1.200</button>'
-    + '</div>';
-}
-
-async function doRegisterAndCheckout(){
-  var first = document.getElementById('regFirst').value.trim();
-  var last  = document.getElementById('regLast').value.trim();
-  var email = document.getElementById('regEmail').value.trim();
-  var pass  = document.getElementById('regPass').value;
-  var err   = document.getElementById('regErr');
-  var btn   = document.getElementById('regBtn');
-
-  if(!first || !last || !email || !pass){
-    err.textContent = 'Compila tutti i campi.';
-    err.style.display = 'block'; return;
-  }
-  if(pass.length < 8){
-    err.textContent = 'La password deve avere almeno 8 caratteri.';
-    err.style.display = 'block'; return;
-  }
-  err.style.display = 'none';
-  btn.disabled = true;
-  btn.textContent = 'Creazione account...';
-
-  try {
-    // 1. Registra su Supabase
-    var res = await _sb.auth.signUp({
-      email: email,
-      password: pass,
-      options: { data: { first_name: first, last_name: last } }
-    });
-
-    if(res.error){
-      var msg = res.error.message || '';
-      if(msg.indexOf('already registered') !== -1 || msg.indexOf('already exists') !== -1){
-        msg = '❌ Email già registrata. Accedi dalla pagina di login.';
-      }
-      err.textContent = msg;
-      err.style.display = 'block';
-      btn.disabled = false;
-      btn.textContent = '▶ Registrati e paga — €1.200';
-      return;
-    }
-
-    var user_id = res.data.user && res.data.user.id;
-    if(!user_id){
-      err.textContent = '⚠️ Errore nella creazione account. Riprova.';
-      err.style.display = 'block';
-      btn.disabled = false;
-      btn.textContent = '▶ Registrati e paga — €1.200';
-      return;
-    }
-
-    btn.textContent = 'Reindirizzamento a Stripe...';
-
-    // 2. Crea sessione Stripe Checkout
-    var r = await fetch('/api/create-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email, user_id: user_id })
-    });
-    var d = await r.json();
-
-    if(d.url){
-      window.location.href = d.url;
-    } else {
-      err.textContent = '⚠️ Errore Stripe: ' + (d.error || 'Riprova.');
-      err.style.display = 'block';
-      btn.disabled = false;
-      btn.textContent = '▶ Registrati e paga — €1.200';
-    }
-  } catch(e) {
-    err.textContent = '⚠️ Errore di connessione. Verifica internet e riprova.';
-    err.style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = '▶ Registrati e paga — €1.200';
-  }
+  window.open('https://visiontrading.it','_blank');
 }
 </script>
 <!-- ===== END SPLASH ===== -->
@@ -1190,34 +1071,31 @@ async function doRegisterAndCheckout(){
           <span style="color:#00e5cc">P</span><span style="color:#eef0f8">rop</span><span style="color:#9b5de5">H</span><span style="color:#eef0f8">edge Pro</span>
         </div>
       </div>
-      <h2 style="font-family:'Plus Jakarta Sans','Inter',sans-serif;font-size:20px;font-weight:700;color:#eef0f8;margin-bottom:6px">Licenza a vita</h2>
-      <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8090b8">Pagamento unico &middot; Nessun abbonamento &middot; Accesso permanente</p>
+      <h2 style="font-family:'Plus Jakarta Sans','Inter',sans-serif;font-size:20px;font-weight:700;color:#eef0f8;margin-bottom:6px">Scegli il tuo piano</h2>
+      <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8090b8">Accesso immediato dopo il pagamento &middot; Licenza personale</p>
     </div>
 
-    <div id="purchaseBox">
     <div style="margin-bottom:16px">
       <div style="background:linear-gradient(160deg,rgba(0,229,204,.06),rgba(155,93,229,.1));border:2px solid #00e5cc;border-radius:20px;padding:32px 28px;text-align:center;position:relative;transition:all .2s;box-shadow:0 0 40px rgba(0,229,204,.07)"
         onmouseover="this.style.boxShadow='0 12px 48px rgba(0,229,204,.15)'"
         onmouseout="this.style.boxShadow='0 0 40px rgba(0,229,204,.07)'">
-        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#00b8a4,#7a40cc);border-radius:20px;padding:4px 18px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#fff;white-space:nowrap;box-shadow:0 4px 16px rgba(0,184,164,.3)">&#11088; LICENZA A VITA — PAGAMENTO UNICO</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#00e5cc;text-transform:uppercase;letter-spacing:.16em;margin-bottom:16px;margin-top:8px">Accesso completo &middot; Per sempre</div>
+        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#00b8a4,#7a40cc);border-radius:20px;padding:4px 18px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#fff;white-space:nowrap;box-shadow:0 4px 16px rgba(0,184,164,.3)">&#11088; LICENZA PROFESSIONALE</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#00e5cc;text-transform:uppercase;letter-spacing:.16em;margin-bottom:16px;margin-top:8px">Accesso Annuale Completo</div>
         <div style="display:flex;align-items:flex-end;justify-content:center;gap:6px;margin-bottom:6px">
-          <div style="font-family:'Plus Jakarta Sans','Inter',sans-serif;font-size:56px;color:#eef0f8;line-height:1">&euro;1.200</div>
+          <div style="font-family:'Plus Jakarta Sans','Inter',sans-serif;font-size:56px;color:#eef0f8;line-height:1">&euro;500</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#3d4d78;margin-bottom:10px">/ anno</div>
         </div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8090b8;margin-bottom:6px">Una tantum &middot; Licenza personale non trasferibile</div>
-        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,229,204,.08);border:1px solid rgba(0,229,204,.2);border-radius:20px;padding:4px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#00e5cc;margin-bottom:24px">
-          &#9889; Zero rinnovi &middot; Zero sorprese
-        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8090b8;margin-bottom:28px">Rinnovo annuale &middot; Licenza personale non trasferibile</div>
         <button onclick="doRegister()" style="width:100%;background:linear-gradient(135deg,#00b8a4,#7a40cc);border:none;color:#fff;border-radius:12px;padding:16px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans','Inter',sans-serif;letter-spacing:.1em;text-transform:uppercase;transition:all .2s;box-shadow:0 6px 24px rgba(0,184,164,.25)"
           onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(0,184,164,.35)'"
           onmouseout="this.style.transform='none';this.style.boxShadow='0 6px 24px rgba(0,184,164,.25)'">
-          &#9658;&nbsp; Acquista la licenza — &euro;1.200
+          &#9658;&nbsp; Acquista ora
         </button>
       </div>
     </div>
 
     <div style="background:#0c0f1a;border:1px solid #1e2840;border-radius:14px;padding:18px 20px;margin-bottom:16px">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Cosa &egrave; incluso nella licenza</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px">Cosa &egrave; incluso in ogni piano</div>
       <div style="display:grid;gap:10px">
         <div style="display:flex;align-items:center;gap:10px;font-family:'Plus Jakarta Sans','Inter',sans-serif;font-size:12px;color:#8090b8"><span style="color:#00e5cc;font-size:14px">&#10003;</span> Calcolo lotti hedge automatico</div>
         <div style="display:flex;align-items:center;gap:10px;font-family:'Plus Jakarta Sans','Inter',sans-serif;font-size:12px;color:#8090b8"><span style="color:#00e5cc;font-size:14px">&#10003;</span> Dashboard multi prop firm</div>
@@ -1225,13 +1103,11 @@ async function doRegisterAndCheckout(){
         <div style="display:flex;align-items:center;gap:10px;font-family:'Plus Jakarta Sans','Inter',sans-serif;font-size:12px;color:#8090b8"><span style="color:#00e5cc;font-size:14px">&#10003;</span> Gestione drawdown e profit target</div>
         <div style="display:flex;align-items:center;gap:10px;font-family:'Plus Jakarta Sans','Inter',sans-serif;font-size:12px;color:#8090b8"><span style="color:#00e5cc;font-size:14px">&#10003;</span> Aggiornamenti software inclusi</div>
         <div style="display:flex;align-items:center;gap:10px;font-family:'Plus Jakarta Sans','Inter',sans-serif;font-size:12px;color:#8090b8"><span style="color:#9b5de5;font-size:14px">&#10003;</span> Supporto via email VISIONTRADING</div>
-        <div style="display:flex;align-items:center;gap:10px;font-family:'Plus Jakarta Sans','Inter',sans-serif;font-size:12px;color:#8090b8"><span style="color:#ffbe0b;font-size:14px">&#10003;</span> <strong style="color:#eef0f8">Nessun abbonamento — paghi una volta, usi per sempre</strong></div>
       </div>
     </div>
 
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#3d4d78;margin-bottom:24px">
-      &#128274; Pagamento sicuro via Stripe &middot; Attivazione automatica dopo il pagamento
-    </div>
+      &#128274; Pagamento sicuro via Stripe &middot; Nessun rinnovo automatico senza consenso
     </div>
   </div>
 </div>
@@ -2930,7 +2806,7 @@ function renderAccount() {
       + _acRow('Cognome',          accountData.lastName  || '—',                     false, false)
       + _acRow('Email',            accountData.email     || '—',                     false, false)
       + _acRow('Attivazione licenza', fmtDate(accountData.licenseStart), false, true, 'var(--teal)')
-      + _acRow('Tipo licenza', '🔓 A vita — pagamento unico', false, true, 'var(--green)')
+      + _acRow('Scadenza licenza',    fmtDate(accountData.licenseEnd),   true,  true, 'var(--amber)')
       + '</div>'
       // reset password row
       + '<div onclick="toggleAc(\'resetPwd\')" style="display:flex;justify-content:space-between;align-items:center;padding:13px 14px;background:' + (acState.resetPwd ? 'var(--teal-bg)' : 'var(--bg3)') + ';border:1px solid ' + (acState.resetPwd ? 'rgba(0,229,204,.35)' : 'var(--border)') + ';border-radius:10px;cursor:pointer;transition:all .2s">'
@@ -3597,13 +3473,84 @@ function jrnlConnPlatChange() {
       + '</select></div>'
       + '<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. TopFX Live"></div>';
   } else if (plat==='mt4'||plat==='mt5') {
-    fields.innerHTML = '<div class="note note-amber" style="margin-top:10px;font-size:11px">'
-      + 'Scarica e installa l\'EA PropHedgeBridge dalla tab Broker. I trade appariranno automaticamente.'
+    // Ottieni il token utente Supabase
+    var jrnlId = (jrnl.sessions[_jConnIdx]||{id:'—'}).id;
+    var userTok = '';
+    try {
+      var ss = _sb.auth.getSession();
+      if (ss && ss.then) ss.then(function(r){
+        var tk = r&&r.data&&r.data.session&&r.data.session.access_token||'';
+        var el = document.getElementById('jConn-usertoken');
+        if(el && tk){ el.value=tk; }
+      });
+    } catch(e2){}
+
+    fields.innerHTML = ''
+      // Istruzioni
+      + '<div class="note note-teal" style="margin-top:10px;font-size:11px;line-height:1.8">'
+      + '<strong>Come collegare MT4/MT5:</strong><br>'
+      + '1. Scarica l\'EA PropHedge dalla tab <strong>Broker</strong><br>'
+      + '2. Installalo: MT4 → File → Open Data Folder → MQL4/Experts<br>'
+      + '3. Riavvia MT4/MT5 e trascina l\'EA su un grafico<br>'
+      + '4. Incolla il <strong>Journal ID</strong> e il <strong>Token</strong> nei parametri dell\'EA<br>'
+      + '5. I trade appariranno automaticamente ogni 30 secondi'
       + '</div>'
-      + '<div class="f" style="margin-top:10px"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. FTMO MT5 $100k"></div>';
+
+      // Journal ID copiabile
+      + '<div class="f" style="margin-top:12px">'
+      + '<label>Journal ID <span style="color:var(--teal);font-size:9px;text-transform:none;letter-spacing:0">— copia e incolla nell\'EA</span></label>'
+      + '<div style="display:flex;gap:6px">'
+      + '<input type="text" id="jConn-jrnlid" value="'+jrnlId+'" readonly '
+      + 'style="flex:1;font-family:var(--fd);font-size:11px;cursor:pointer;letter-spacing:.04em;background:var(--bg);border-color:var(--teal)" '
+      + 'onclick="this.select()">'
+      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-jrnlid\').value).then(function(){var b=document.getElementById(\'jConn-copyjid\');b.textContent=\'✓ Copiato\';setTimeout(function(){b.textContent=\'Copia\'},2000)})" '
+      + 'id="jConn-copyjid" class="btn-g" style="padding:5px 12px;font-size:10px;white-space:nowrap">Copia</button>'
+      + '</div>'
+      + '</div>'
+
+      // Token utente copiabile
+      + '<div class="f">'
+      + '<label>Token Utente <span style="color:var(--teal);font-size:9px;text-transform:none;letter-spacing:0">— copia e incolla nell\'EA</span></label>'
+      + '<div style="display:flex;gap:6px">'
+      + '<input type="password" id="jConn-usertoken" value="" readonly '
+      + 'style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" '
+      + 'placeholder="Caricamento token...">'
+      + '<button onclick="var i=document.getElementById(\'jConn-usertoken\');i.type=i.type===\'password\'?\'text\':\'password\'" '
+      + 'class="btn-g" style="padding:5px 10px;font-size:12px">👁</button>'
+      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-usertoken\').value).then(function(){var b=document.getElementById(\'jConn-copytok\');b.textContent=\'✓ Copiato\';setTimeout(function(){b.textContent=\'Copia\'},2000)})" '
+      + 'id="jConn-copytok" class="btn-g" style="padding:5px 12px;font-size:10px;white-space:nowrap">Copia</button>'
+      + '</div>'
+      + '<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">⚠️ Non condividere mai questo token con nessuno</div>'
+      + '</div>'
+
+      // Account type
+      + '<div class="f">'
+      + '<label>Tipo conto nell\'EA</label>'
+      + '<select id="jConn-actype" style="background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fd);width:100%">'
+      + '<option value="prop"'+(_jConnSide==='prop'?' selected':'')+'>prop — conto prop firm</option>'
+      + '<option value="broker"'+(_jConnSide==='broker'?' selected':'')+'>broker — conto personale/hedge</option>'
+      + '</select>'
+      + '</div>'
+
+      // Nome conto
+      + '<div class="f"><label>Nome conto</label>'
+      + '<input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. FTMO MT5 $100k"></div>';
+
   } else if (plat==='tradovate') {
-    fields.innerHTML = '<div class="f" style="margin-top:10px"><label>API Token</label><input type="password" id="jConn-token" value="'+(conn.token||'')+'" placeholder="Tradovate API token"></div>'
-      + '<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. Tradovate Live"></div>';
+    fields.innerHTML = ''
+      + '<div class="note note-teal" style="margin-top:10px;font-size:11px;line-height:1.7">'
+      + 'Inserisci le tue credenziali Tradovate. Il software si collegherà in sola lettura per vedere i trade aperti e lo storico.'
+      + '</div>'
+      + '<div class="f" style="margin-top:10px"><label>Username</label>'
+      + '<input type="text" id="jConn-tvuser" value="'+(conn.tvuser||'')+'" placeholder="Il tuo username Tradovate"></div>'
+      + '<div class="f"><label>Password</label>'
+      + '<input type="password" id="jConn-tvpass" value="'+(conn.tvpass||'')+'" placeholder="La tua password Tradovate"></div>'
+      + '<div class="f"><label>Ambiente</label><select id="jConn-env">'
+      + '<option value="live"'+(conn.env==='live'?' selected':'')+'>Live (Reale)</option>'
+      + '<option value="demo"'+(conn.env==='demo'?' selected':'')+'>Demo (Simulato)</option>'
+      + '</select></div>'
+      + '<div class="f"><label>Nome conto</label>'
+      + '<input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. Tradovate Live"></div>';
   } else {
     fields.innerHTML = '<div class="f" style="margin-top:10px"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Inserimento manuale"></div>';
   }
@@ -3630,10 +3577,34 @@ async function jrnlSaveConn() {
     return;
   }
 
-  sess[key] = {platform:plat,label:label,token:token,env:env,connected:true,accountId:''};
+  if (plat==='mt4'||plat==='mt5') {
+    var actype = (document.getElementById('jConn-actype')||{value:_jConnSide}).value;
+    sess[key] = {platform:plat, label:label, env:'live', connected:true, accountId:'', actype:actype};
+    jrnlSave();
+    jrnlCloseConn();
+    jrnlSyncMT(_jConnIdx, _jConnSide);
+    return;
+  }
+
+  if (plat==='tradovate') {
+    var tvuser = (document.getElementById('jConn-tvuser')||{value:''}).value.trim();
+    var tvpass = (document.getElementById('jConn-tvpass')||{value:''}).value.trim();
+    if (!tvuser || !tvpass) { alert('Inserisci username e password Tradovate.'); return; }
+    sess[key] = {platform:'tradovate', label:label, tvuser:tvuser, tvpass:tvpass, env:env, connected:true, accountId:''};
+    jrnlSave();
+    jrnlCloseConn();
+    jrnlSyncTradovate(_jConnIdx, _jConnSide);
+    return;
+  }
+
+  sess[key] = {platform:plat, label:label, token:token, env:env, connected:true, accountId:''};
   jrnlSave();
   jrnlCloseConn();
   renderJournal();
+}
+
+
+
 }
 
 // ─── OAuth cTrader callback ──────────────────────────────────────
@@ -3688,6 +3659,65 @@ async function jrnlSync(i, side) {
   } catch(e) { console.error('jrnlSync:',e); }
 }
 
+
+// ─── Sync MT4/MT5 da Supabase ────────────────────────────────────
+async function jrnlSyncMT(i, side) {
+  var sess = jrnl.sessions[i];
+  var conn = side==='prop' ? sess.propConn : sess.brokerConn;
+  if (!conn.connected || (conn.platform!=='mt4' && conn.platform!=='mt5')) return;
+  try {
+    var res = await _sb.auth.getSession();
+    var user = res&&res.data&&res.data.session&&res.data.session.user;
+    if (!user) return;
+    // account_type per Supabase: usa il campo actype salvato
+    var actype = conn.actype || side;
+    var q = await _sb.from('trades')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('journal_id', sess.id)
+      .eq('account_type', actype)
+      .order('open_time', {ascending: false})
+      .limit(200);
+    if (q.error) { console.error('jrnlSyncMT error:', q.error.message); return; }
+    var trades = (q.data||[]).map(function(t){
+      return {
+        external_id:  String(t.ticket),
+        platform:     t.platform||conn.platform,
+        symbol:       t.symbol,
+        direction:    t.direction,
+        volume:       parseFloat(t.volume||0),
+        entry_price:  t.open_price,
+        close_price:  t.close_price,
+        stop_loss:    t.stop_loss,
+        take_profit:  t.take_profit,
+        pnl_realized: parseFloat(t.profit||0),
+        swap:         parseFloat(t.swap||0),
+        commission:   parseFloat(t.commission||0),
+        status:       t.status||'open',
+        opened_at:    t.open_time,
+        closed_at:    t.close_time,
+        comment:      t.comment||''
+      };
+    });
+    if (side==='prop') sess.propTrades = trades;
+    else               sess.brokerTrades = trades;
+    jrnlSave();
+    renderJournal();
+    console.log('jrnlSyncMT: caricate', trades.length, 'trade per', side);
+  } catch(e) { console.error('jrnlSyncMT:', e); }
+}
+
+// ─── Sync Tradovate ───────────────────────────────────────────────
+async function jrnlSyncTradovate(i, side) {
+  var sess = jrnl.sessions[i];
+  var conn = side==='prop' ? sess.propConn : sess.brokerConn;
+  if (!conn.connected || conn.platform!=='tradovate') return;
+  // Nota: Tradovate richiede autenticazione OAuth2 lato server
+  // Per ora mostriamo un messaggio informativo
+  console.log('Tradovate sync: da implementare con API server');
+  renderJournal();
+}
+
 // Event delegation per data attributes
 document.addEventListener('click', function(e) {
   var el = e.target.closest('[data-jconn-idx]');
@@ -3695,7 +3725,16 @@ document.addEventListener('click', function(e) {
   var el2 = e.target.closest('[data-jconclude]');
   if (el2) { jrnlConclude(parseInt(el2.dataset.jconclude)); return; }
   var el3 = e.target.closest('[data-jsync-idx]');
-  if (el3) { jrnlSync(parseInt(el3.dataset.jsyncIdx),el3.dataset.jsyncSide); return; }
+  if (el3) {
+    var idx = parseInt(el3.dataset.jsyncIdx);
+    var side = el3.dataset.jsyncSide;
+    var sess = jrnl.sessions[idx];
+    var conn = side==='prop' ? sess.propConn : sess.brokerConn;
+    if (conn.platform==='mt4'||conn.platform==='mt5') jrnlSyncMT(idx, side);
+    else if (conn.platform==='tradovate') jrnlSyncTradovate(idx, side);
+    else jrnlSync(idx, side);
+    return;
+  }
 });
 
 function renderGuide() {
