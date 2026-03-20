@@ -3535,70 +3535,63 @@ function jrnlConnPlatChange() {
       + '</select></div>'
       + '<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. TopFX Live"></div>';
   } else if (plat==='mt4'||plat==='mt5') {
-    // Ottieni il token utente Supabase
     var jrnlId = (jrnl.sessions[_jConnIdx]||{id:'—'}).id;
-    var userTok = '';
-    try {
-      var ss = _sb.auth.getSession();
-      if (ss && ss.then) ss.then(function(r){
-        var tk = r&&r.data&&r.data.session&&r.data.session.access_token||'';
-        var el = document.getElementById('jConn-usertoken');
-        if(el && tk){ el.value=tk; }
-      });
-    } catch(e2){}
+    var apiKey = 'PH_2026_AXI_SECRET_KEY_VISIONTRADING';
 
     fields.innerHTML = ''
-      // Istruzioni
+      // ── Istruzioni ─────────────────────────────────────────────
       + '<div class="note note-teal" style="margin-top:10px;font-size:11px;line-height:1.8">'
       + '<strong>Come collegare MT4/MT5:</strong><br>'
-      + '1. Scarica l\'EA PropHedge dalla tab <strong>Broker</strong><br>'
-      + '2. Installalo: MT4 → File → Open Data Folder → MQL4/Experts<br>'
-      + '3. Riavvia MT4/MT5 e trascina l\'EA su un grafico<br>'
-      + '4. Incolla il <strong>Journal ID</strong> e il <strong>Token</strong> nei parametri dell\'EA<br>'
-      + '5. I trade appariranno automaticamente ogni 30 secondi'
+      + '1. Scarica l\'EA dalla tab <strong>⬇ EA Download</strong><br>'
+      + '2. Installa e trascina l\'EA sul grafico<br>'
+      + '3. Inserisci <strong>Email</strong>, <strong>API Key</strong> e <strong>Journal ID</strong> nei parametri<br>'
+      + '4. I trade appariranno automaticamente ogni 30 secondi'
       + '</div>'
 
-      // Journal ID copiabile
+      // ── Email ──────────────────────────────────────────────────
       + '<div class="f" style="margin-top:12px">'
-      + '<label>Journal ID <span style="color:var(--teal);font-size:9px;text-transform:none;letter-spacing:0">— copia e incolla nell\'EA</span></label>'
+      + '<label>La tua Email PropHedge <span style="color:var(--teal);font-size:9px;text-transform:none">— inseriscila nell\'EA</span></label>'
       + '<div style="display:flex;gap:6px">'
-      + '<input type="text" id="jConn-jrnlid" value="'+jrnlId+'" readonly '
-      + 'style="flex:1;font-family:var(--fd);font-size:11px;cursor:pointer;letter-spacing:.04em;background:var(--bg);border-color:var(--teal)" '
-      + 'onclick="this.select()">'
-      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-jrnlid\').value).then(function(){var b=document.getElementById(\'jConn-copyjid\');b.textContent=\'✓ Copiato\';setTimeout(function(){b.textContent=\'Copia\'},2000)})" '
-      + 'id="jConn-copyjid" class="btn-g" style="padding:5px 12px;font-size:10px;white-space:nowrap">Copia</button>'
+      + '<input type="text" id="jConn-email" value="' + (accountData.email||'') + '" readonly '
+      + 'style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
+      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-email\').value).then(function(){var b=document.getElementById(\'jConn-copyemail\');b.textContent=\'✓\';setTimeout(function(){b.textContent=\'Copia\'},1500)})" '
+      + 'id="jConn-copyemail" class="btn-g" style="padding:5px 12px;font-size:10px">Copia</button>'
+      + '</div></div>'
+
+      // ── API Key ─────────────────────────────────────────────────
+      + '<div class="f">'
+      + '<label>API Key <span style="color:var(--teal);font-size:9px;text-transform:none">— inseriscila nell\'EA (non scade mai)</span></label>'
+      + '<div style="display:flex;gap:6px">'
+      + '<input type="text" id="jConn-apikey" value="' + apiKey + '" readonly '
+      + 'style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
+      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-apikey\').value).then(function(){var b=document.getElementById(\'jConn-copykey\');b.textContent=\'✓\';setTimeout(function(){b.textContent=\'Copia\'},1500)})" '
+      + 'id="jConn-copykey" class="btn-g" style="padding:5px 12px;font-size:10px">Copia</button>'
       + '</div>'
+      + '<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">✅ Questa chiave non scade — puoi usarla sempre</div>'
       + '</div>'
 
-      // Token utente copiabile
+      // ── Journal ID ─────────────────────────────────────────────
       + '<div class="f">'
-      + '<label>Token Utente <span style="color:var(--teal);font-size:9px;text-transform:none;letter-spacing:0">— copia e incolla nell\'EA</span></label>'
+      + '<label>Journal ID <span style="color:var(--teal);font-size:9px;text-transform:none">— inseriscilo nell\'EA</span></label>'
       + '<div style="display:flex;gap:6px">'
-      + '<input type="password" id="jConn-usertoken" value="" readonly '
-      + 'style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" '
-      + 'placeholder="Caricamento token...">'
-      + '<button onclick="var i=document.getElementById(\'jConn-usertoken\');i.type=i.type===\'password\'?\'text\':\'password\'" '
-      + 'class="btn-g" style="padding:5px 10px;font-size:12px">👁</button>'
-      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-usertoken\').value).then(function(){var b=document.getElementById(\'jConn-copytok\');b.textContent=\'✓ Copiato\';setTimeout(function(){b.textContent=\'Copia\'},2000)})" '
-      + 'id="jConn-copytok" class="btn-g" style="padding:5px 12px;font-size:10px;white-space:nowrap">Copia</button>'
-      + '</div>'
-      + '<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">⚠️ Non condividere mai questo token con nessuno</div>'
-      + '</div>'
+      + '<input type="text" id="jConn-jrnlid" value="' + jrnlId + '" readonly '
+      + 'style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
+      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-jrnlid\').value).then(function(){var b=document.getElementById(\'jConn-copyjid\');b.textContent=\'✓\';setTimeout(function(){b.textContent=\'Copia\'},1500)})" '
+      + 'id="jConn-copyjid" class="btn-g" style="padding:5px 12px;font-size:10px">Copia</button>'
+      + '</div></div>'
 
-      // Account type
-      + '<div class="f">'
-      + '<label>Tipo conto nell\'EA</label>'
+      // ── Tipo conto ─────────────────────────────────────────────
+      + '<div class="f"><label>Tipo conto nell\'EA</label>'
       + '<select id="jConn-actype" style="background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fd);width:100%">'
       + '<option value="prop"'+(_jConnSide==='prop'?' selected':'')+'>prop — conto prop firm</option>'
       + '<option value="broker"'+(_jConnSide==='broker'?' selected':'')+'>broker — conto personale/hedge</option>'
-      + '</select>'
-      + '</div>'
+      + '</select></div>'
 
-      // Nome conto
+      // ── Nome conto ─────────────────────────────────────────────
       + '<div class="f"><label>Nome conto</label>'
       + '<input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. FTMO MT5 $100k"></div>';
 
-  } else if (plat==='tradovate') {
+    } else if (plat==='tradovate') {
     fields.innerHTML = ''
       + '<div class="note note-teal" style="margin-top:10px;font-size:11px;line-height:1.7">'
       + 'Inserisci le tue credenziali Tradovate. Il software si collegherà in sola lettura per vedere i trade aperti e lo storico.'
