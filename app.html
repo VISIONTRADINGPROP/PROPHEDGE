@@ -3137,7 +3137,7 @@ function jrnlRenderSidebar() {
     var active = jrnl.activeIdx === i;
     html += '<div class="jsb-item' + (active?' active':'') + (s.concluded?' done':'') + '" onclick="jrnlSelect(' + i + ')">'
       + '<div style="line-height:1.4">'
-      + (s.concluded?'<span style="font-size:9px;color:var(--teal)">&#10003; </span>':'')
+      + (s.concluded?'<span style="font-size:9px;color:var(--teal)">✅ </span>':'')
       + 'Sfida ' + (i+1)
       + '<div style="font-size:10px;font-weight:400;opacity:.65;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + s.name + '</div>'
       + '</div>'
@@ -3198,27 +3198,27 @@ function jrnlRenderMain() {
 
   // Header Prop
   html += '<div class="jcol-hdr">'
-    + '<span class="jcol-title prop">&#127942; Prop</span>'
+    + '<span class="jcol-title prop">🎯 Prop</span>'
     + '<div class="jstats">'
     + '<div class="jstat">Aperti: <b style="color:var(--teal)">'+ptOpen.length+'</b></div>'
     + '<div class="jstat">Live: <b class="'+(ptLive>=0?'v-green':'v-red')+'">'+(ptLive>=0?'+':'')+ptLive.toFixed(2)+'$</b></div>'
     + (propTarget>0?'<div class="jstat">Target: <b style="color:var(--t2)">'+propTarget.toFixed(2)+' lot</b></div>':'')
     + '</div>'
-    + (sess.concluded?'':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="prop">'+(sess.propConn.connected?'&#9679; '+sess.propConn.label:'&#9889; Connetti Prop')+'</button>')
-    + (sess.propConn.connected&&!sess.concluded?'<button class="btn-g" style="padding:2px 6px;font-size:10px" data-jsync-idx="'+i+'" data-jsync-side="prop">&#8635;</button>':'')
+    + (sess.propConn.connected&&!sess.concluded?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">&#9679; '+sess.propConn.label+'</span>':'')
+    + (sess.propConn.connected&&!sess.concluded?'<button class="btn-g" style="padding:2px 6px;font-size:10px;margin-left:4px" data-jsync-idx="'+i+'" data-jsync-side="prop">🔄</button>':'')
     + '</div>';
 
   // Header Broker
   html += '<div class="jcol-hdr">'
-    + '<span class="jcol-title broker">&#128188; Broker</span>'
+    + '<span class="jcol-title broker">💹 Broker</span>'
     + '<div class="jstats">'
     + '<div class="jstat">Aperti: <b style="color:var(--teal)">'+btOpen.length+'</b></div>'
     + '<div class="jstat">Live: <b class="'+(btLive>=0?'v-green':'v-red')+'">'+(btLive>=0?'+':'')+btLive.toFixed(2)+'$</b></div>'
     + (brokerTarget>0?'<div class="jstat">Target: <b style="color:var(--t2)">'+brokerTarget.toFixed(2)+' lot</b></div>':'')
     + '</div>'
-    + (sess.concluded?'':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="broker">'+(sess.brokerConn.connected?'&#9679; '+sess.brokerConn.label:'&#9889; Connetti Broker')+'</button>')
-    + (sess.brokerConn.connected&&!sess.concluded?'<button class="btn-g" style="padding:2px 6px;font-size:10px" data-jsync-idx="'+i+'" data-jsync-side="broker">&#8635;</button>':'')
-    + (sess.concluded?'':'<button class="btn-g" style="padding:2px 8px;font-size:10px;color:var(--amber)" data-jconclude="'+i+'">&#10003; Conclusa</button>')
+    + (sess.brokerConn.connected&&!sess.concluded?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">&#9679; '+sess.brokerConn.label+'</span>':'')
+    + (sess.brokerConn.connected&&!sess.concluded?'<button class="btn-g" style="padding:2px 6px;font-size:10px;margin-left:4px" data-jsync-idx="'+i+'" data-jsync-side="broker">🔄</button>':'')
+    + (sess.concluded?'':'<button class="btn-g" style="padding:2px 8px;font-size:10px;color:var(--amber);margin-left:auto" data-jconclude="'+i+'">🏁 Conclusa</button>')
     + '</div>';
 
   html += '</div>'; // fine jcols-hdr
@@ -3326,8 +3326,8 @@ function jrnlEmptyCol(side, sess, i) {
   var connected = side==='prop' ? sess.propConn.connected : sess.brokerConn.connected;
   if (connected) return '<div class="jempty-col">Nessun trade</div>';
   return '<div class="jconn-inline">'
-    + '<div style="font-size:11px;color:var(--t3)">'+(side==='prop'?'&#127942; Prop non connesso':'&#128188; Broker non connesso')+'</div>'
-    + (sess.concluded?'':'<button class="btn-p" style="padding:4px 14px;font-size:11px" data-jconn-idx="'+i+'" data-jconn-side="'+side+'">&#9889; Connetti</button>')
+    + '<div style="font-size:11px;color:var(--t3)">'+(side==='prop'?'🎯 Prop non connesso':'💹 Broker non connesso')+'</div>'
+    + (sess.concluded?'':'<button class="btn-p" style="padding:4px 14px;font-size:11px" data-jconn-idx="'+i+'" data-jconn-side="'+side+'">🔗 Connetti</button>')
     + '</div>';
 }
 
