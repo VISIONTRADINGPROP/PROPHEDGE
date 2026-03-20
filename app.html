@@ -2222,39 +2222,80 @@ function renderCtraderPanel() {
 }
 
 function renderMT4Panel() {
-  return '<div class="sect" style="margin-top:16px">MetaTrader 4/5 — Expert Advisor</div>'
-
-    // Download EA
-    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:14px;background:var(--teal-bg);border:1px solid rgba(0,229,204,.25);border-radius:12px">'
-    + '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:3px">PropHedge EA v3.0</div>'
-    + '<div style="font-size:11px;color:var(--t3);font-family:var(--fd)">Funziona su MT4 e MT5 · Si avvia automaticamente</div></div>'
-    + '<a href="https://prophedge-iota.vercel.app/PropHedge_EA.mq4" download class="btn-p" style="text-decoration:none;padding:8px 16px;font-size:11px">⬇ Scarica EA</a>'
+  return ''
+    // ── HEADER ────────────────────────────────────────────────────
+    + '<div style="text-align:center;padding:20px 0 16px">'
+    + '<div style="font-size:28px;margin-bottom:8px">📥</div>'
+    + '<div style="font-size:16px;font-weight:700;color:var(--t);margin-bottom:4px">Scarica Expert Advisor PropHedge</div>'
+    + '<div style="font-size:12px;color:var(--t3);font-family:var(--fd)">Scegli la versione per la tua piattaforma</div>'
     + '</div>'
 
-    // Setup steps
-    + '<div class="note note-teal" style="margin-bottom:12px">'
-    + '<strong>⚡ Setup iniziale (una volta sola):</strong><br><br>'
-    + '<strong>1.</strong> Scarica l\'EA qui sopra<br>'
-    + '<strong>2.</strong> MT4/MT5 → File → Open Data Folder → MQL4/Experts<br>'
-    + '&nbsp;&nbsp;&nbsp;&nbsp;Incolla PropHedge_EA.mq4 e riavvia MT4/MT5<br>'
-    + '<strong>3.</strong> Strumenti → Opzioni → Expert Advisor<br>'
-    + '&nbsp;&nbsp;&nbsp;&nbsp;Spunta "Consenti WebRequest" e aggiungi:<br>'
-    + '&nbsp;&nbsp;&nbsp;&nbsp;<code style="background:var(--bg);padding:1px 6px;border-radius:4px;font-size:10px">https://prophedge-iota.vercel.app</code><br>'
-    + '<strong>4.</strong> Loggati sul conto da collegare (prop o broker)<br>'
-    + '<strong>5.</strong> Apri un grafico EURUSD M1 → trascina PropHedge_EA<br>'
-    + '<strong>6.</strong> Inserisci Token e Journal ID dal Journal → Connetti → MT4/MT5<br>'
-    + '<strong>7.</strong> Tasto destro sul grafico → Template → Salva → "PropHedge"<br>'
-    + '&nbsp;&nbsp;&nbsp;&nbsp;Strumenti → Opzioni → Grafici → spunta "Salva grafici"<br>'
-    + '&nbsp;&nbsp;&nbsp;&nbsp;✅ Da ora MT4/MT5 avvia l\'EA automaticamente ad ogni apertura!'
+    // ── DUE CARD DOWNLOAD ─────────────────────────────────────────
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">'
+
+    // Card MT4
+    + '<div style="background:var(--bg3);border:2px solid var(--border2);border-radius:16px;padding:24px;text-align:center;position:relative;overflow:hidden;transition:all .2s">'
+    + '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(to right,#00b8a4,#7a40cc)"></div>'
+    + '<div style="font-size:36px;margin-bottom:12px">📊</div>'
+    + '<div style="font-size:18px;font-weight:800;color:var(--t);margin-bottom:4px">MetaTrader 4</div>'
+    + '<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-bottom:6px">File: PropHedge_EA.mq4</div>'
+    + '<div style="font-size:10px;color:var(--t2);margin-bottom:16px;line-height:1.6">Compatibile con tutte le<br>prop firm su MT4</div>'
+    + '<a href="https://prophedge-iota.vercel.app/PropHedge_EA.mq4" download style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--teal2),var(--violet2));color:#fff;border-radius:10px;padding:10px 20px;font-size:12px;font-weight:700;text-decoration:none;letter-spacing:.06em;text-transform:uppercase;transition:all .2s">⬇ Scarica MT4</a>'
     + '</div>'
 
-    // Nota multi-conto
-    + '<div class="note note-amber" style="margin-bottom:0">'
-    + '<strong>💡 Hai più conti?</strong> Ripeti i passi 4-7 per ogni conto.<br>'
-    + 'Usa lo stesso <strong>Journal ID</strong> ma cambia <strong>AccountType</strong>: "prop" o "broker".<br>'
-    + 'MT4/MT5 salva i parametri separatamente per ogni conto — non si sovrascrivono!'
-    + '</div>';
+    // Card MT5
+    + '<div style="background:var(--bg3);border:2px solid var(--border2);border-radius:16px;padding:24px;text-align:center;position:relative;overflow:hidden;transition:all .2s">'
+    + '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(to right,var(--violet),var(--teal))"></div>'
+    + '<div style="font-size:36px;margin-bottom:12px">📈</div>'
+    + '<div style="font-size:18px;font-weight:800;color:var(--t);margin-bottom:4px">MetaTrader 5</div>'
+    + '<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-bottom:6px">File: PropHedge_EA.mq5</div>'
+    + '<div style="font-size:10px;color:var(--t2);margin-bottom:16px;line-height:1.6">Compatibile con Axi, Pepperstone,<br>IC Markets su MT5</div>'
+    + '<a href="https://prophedge-iota.vercel.app/PropHedge_EA.mq5" download style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--violet2),var(--teal2));color:#fff;border-radius:10px;padding:10px 20px;font-size:12px;font-weight:700;text-decoration:none;letter-spacing:.06em;text-transform:uppercase;transition:all .2s">⬇ Scarica MT5</a>'
+    + '</div>'
+    + '</div>'
+
+    // ── ISTRUZIONI ────────────────────────────────────────────────
+    + '<div class="panel" style="margin-bottom:0">'
+    + '<div class="ph"><h3>⚡ Guida installazione — una volta sola</h3></div>'
+    + '<div class="pb">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'
+
+    // Colonna sinistra: Installazione
+    + '<div>'
+    + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);font-family:var(--fd);margin-bottom:10px">📁 Installazione</div>'
+    + stepRow("1","Scarica l\'EA per la tua piattaforma (MT4 o MT5)")
+    + stepRow("2","MT4/MT5 → File → Open Data Folder")
+    + stepRow("3","Copia il file in <strong>MQL4/Experts</strong> (o MQL5/Experts per MT5)")
+    + stepRow("4","Riavvia MT4/MT5")
+    + stepRow("5","Strumenti → Opzioni → Expert Advisor<br>Spunta <em>Consenti WebRequest</em> e aggiungi:<br><code style=\"font-size:10px;background:var(--bg);padding:2px 6px;border-radius:4px\">https://prophedge-iota.vercel.app</code>")
+    + "</div>"
+
+    // Colonna destra: Configurazione
+    + "<div>"
+    + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--violet);font-family:var(--fd);margin-bottom:10px">⚙️ Configurazione</div>'
+    + stepRow("6","Loggati sul conto da collegare (prop o broker)")
+    + stepRow("7","Apri un grafico EURUSD M1 → trascina PropHedge_EA")
+    + stepRow("8","Incolla <strong>Token</strong> e <strong>Journal ID</strong><br>(dal Journal → Connetti → MT4/MT5)")
+    + stepRow("9","Tasto destro sul grafico → Template → Salva → <em>PropHedge</em><br>Strumenti → Opzioni → Grafici → spunta <em>Salva grafici</em>")
+    + "</div>"
+    + "</div>"
+
+    // Nota avvio automatico
+    + '<div style="margin-top:14px;padding:12px 14px;background:rgba(0,229,204,.06);border:1px solid rgba(0,229,204,.15);border-radius:10px;font-size:12px;color:rgba(0,229,204,.9)">'
+    + '✅ <strong>Da ora MT4/MT5 avvia l\'EA automaticamente</strong> ad ogni apertura — nessuna azione richiesta!<br>'
+    + '<span style="color:var(--t3);font-size:11px">Ripeti i passi 6-8 per ogni conto (prop e broker) usando lo stesso Journal ID ma AccountType diverso.</span>'
+    + "</div>"
+    + "</div></div>";
 }
+
+function stepRow(num, text) {
+  return '<div style="display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">'
+    + '<div style="width:20px;height:20px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--teal);flex-shrink:0;font-family:var(--fd)">' + num + '</div>'
+    + '<div style="font-size:11px;color:var(--t2);line-height:1.6">' + text + '</div>'
+    + "</div>";
+}
+
+    + '</div>';
 
 // ─── Salva credenziali cTrader ─────────────────────────────────────
 function saveCtraderCredentials() {
