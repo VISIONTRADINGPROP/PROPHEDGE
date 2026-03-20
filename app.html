@@ -2223,18 +2223,37 @@ function renderCtraderPanel() {
 
 function renderMT4Panel() {
   return '<div class="sect" style="margin-top:16px">MetaTrader 4/5 — Expert Advisor</div>'
-    + '<div class="note note-teal" style="margin-bottom:14px">'
-    + '<strong>Come funziona:</strong><br>'
-    + '1. Scarica l\'EA PropHedge qui sotto<br>'
-    + '2. Installalo su MT4/MT5: File → Open Data Folder → MQL4/Experts<br>'
-    + '3. Riavvia MT4/MT5 e trascina l\'EA sul grafico<br>'
-    + '4. L\'EA si connette automaticamente a PropHedge<br>'
-    + '5. Clicca "Apri hedge" dal software → l\'EA esegue l\'ordine'
+
+    // Download EA
+    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:14px;background:var(--teal-bg);border:1px solid rgba(0,229,204,.25);border-radius:12px">'
+    + '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--teal);margin-bottom:3px">PropHedge EA v3.0</div>'
+    + '<div style="font-size:11px;color:var(--t3);font-family:var(--fd)">Funziona su MT4 e MT5 · Si avvia automaticamente</div></div>'
+    + '<a href="https://prophedge-iota.vercel.app/PropHedge_EA.mq4" download class="btn-p" style="text-decoration:none;padding:8px 16px;font-size:11px">⬇ Scarica EA</a>'
     + '</div>'
-    + '<div class="note note-amber" style="margin-bottom:14px">'
-    + '⚠️ L\'EA è in fase di sviluppo. Disponibile nella prossima versione.'
+
+    // Setup steps
+    + '<div class="note note-teal" style="margin-bottom:12px">'
+    + '<strong>⚡ Setup iniziale (una volta sola):</strong><br><br>'
+    + '<strong>1.</strong> Scarica l\'EA qui sopra<br>'
+    + '<strong>2.</strong> MT4/MT5 → File → Open Data Folder → MQL4/Experts<br>'
+    + '&nbsp;&nbsp;&nbsp;&nbsp;Incolla PropHedge_EA.mq4 e riavvia MT4/MT5<br>'
+    + '<strong>3.</strong> Strumenti → Opzioni → Expert Advisor<br>'
+    + '&nbsp;&nbsp;&nbsp;&nbsp;Spunta "Consenti WebRequest" e aggiungi:<br>'
+    + '&nbsp;&nbsp;&nbsp;&nbsp;<code style="background:var(--bg);padding:1px 6px;border-radius:4px;font-size:10px">https://prophedge-iota.vercel.app</code><br>'
+    + '<strong>4.</strong> Loggati sul conto da collegare (prop o broker)<br>'
+    + '<strong>5.</strong> Apri un grafico EURUSD M1 → trascina PropHedge_EA<br>'
+    + '<strong>6.</strong> Inserisci Token e Journal ID dal Journal → Connetti → MT4/MT5<br>'
+    + '<strong>7.</strong> Tasto destro sul grafico → Template → Salva → "PropHedge"<br>'
+    + '&nbsp;&nbsp;&nbsp;&nbsp;Strumenti → Opzioni → Grafici → spunta "Salva grafici"<br>'
+    + '&nbsp;&nbsp;&nbsp;&nbsp;✅ Da ora MT4/MT5 avvia l\'EA automaticamente ad ogni apertura!'
     + '</div>'
-    + '<button class="btn-g" disabled>⬇ Scarica EA PropHedge (prossimamente)</button>';
+
+    // Nota multi-conto
+    + '<div class="note note-amber" style="margin-bottom:0">'
+    + '<strong>💡 Hai più conti?</strong> Ripeti i passi 4-7 per ogni conto.<br>'
+    + 'Usa lo stesso <strong>Journal ID</strong> ma cambia <strong>AccountType</strong>: "prop" o "broker".<br>'
+    + 'MT4/MT5 salva i parametri separatamente per ogni conto — non si sovrascrivono!'
+    + '</div>';
 }
 
 // ─── Salva credenziali cTrader ─────────────────────────────────────
