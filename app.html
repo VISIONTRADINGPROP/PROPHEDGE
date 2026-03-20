@@ -1164,6 +1164,7 @@ function doRegister(){
   <div class="tab mrow" onclick="goTab('proplist',this)" id="tabProp">Prop</div>
   <div class="tab mrow" onclick="goTab('brokerlist',this)" id="tabBroker">Broker</div>
   <div class="tab mrow" onclick="goTab('journal',this)" id="tabJournal">Journal</div>
+  <div class="tab mrow" onclick="goTab('eadownload',this)" id="tabEA" style="display:flex;align-items:center;gap:6px">⬇ EA Download</div>
   <div class="tab mrow" onclick="goTab('stats',this)" id="tabStats">📊 Statistiche</div>
   <div class="tab mrow" onclick="goTab('guide',this)" id="tabGuide">Guida</div>
   <div class="tab mrow" onclick="toggleAccDrop(event)" id="tabAccount" style="margin-left:auto;display:flex;align-items:center;gap:7px;padding:6px 12px;position:relative"><span id="tabAccountFlag" style="line-height:1;flex-shrink:0"></span><div id="tabAccountPhoto" style="width:26px;height:26px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--t3)"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="4" fill="var(--teal)" opacity=".5"/><path d="M3 19c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="var(--teal)" stroke-width="1.5" fill="none" opacity=".4"/></svg></div><span id="tabAccountName" style="font-size:11px">Account</span></div>
@@ -4015,6 +4016,85 @@ function renderEquityCurve(trades) {
 }
 
 
+// ===== RENDER EA DOWNLOAD =====
+function renderEADownload() {
+  return '<div style="max-width:700px;margin:0 auto">'
+
+    // Header
+    + '<div style="text-align:center;padding:30px 0 24px">'
+    + '<div style="font-size:48px;margin-bottom:12px">⬇</div>'
+    + '<div style="font-size:22px;font-weight:800;color:var(--t);margin-bottom:6px">Expert Advisor PropHedge</div>'
+    + '<div style="font-size:13px;color:var(--t3)">Scarica l\'EA per collegare MT4 o MT5 al Journal</div>'
+    + '</div>'
+
+    // Due card download
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px">'
+
+    // Card MT4
+    + '<div style="background:var(--bg2);border:2px solid var(--border2);border-radius:18px;padding:28px;text-align:center;position:relative;overflow:hidden;transition:all .2s">'
+    + '<div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(to right,var(--teal),var(--teal2))"></div>'
+    + '<div style="font-size:48px;margin-bottom:14px">📊</div>'
+    + '<div style="font-size:20px;font-weight:800;color:var(--t);margin-bottom:4px">MetaTrader 4</div>'
+    + '<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-bottom:4px">PropHedge_EA.mq4</div>'
+    + '<div style="font-size:11px;color:var(--t2);line-height:1.7;margin-bottom:20px">Compatibile con FTMO,<br>FundedElite, FTUK e tutte<br>le prop firm su MT4</div>'
+    + '<a href="https://prophedge-iota.vercel.app/PropHedge_EA.mq4" download style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--teal2),var(--violet2));color:#fff;border-radius:12px;padding:12px 24px;font-size:12px;font-weight:700;text-decoration:none;letter-spacing:.06em;text-transform:uppercase">⬇ Scarica per MT4</a>'
+    + '</div>'
+
+    // Card MT5
+    + '<div style="background:var(--bg2);border:2px solid var(--border2);border-radius:18px;padding:28px;text-align:center;position:relative;overflow:hidden;transition:all .2s">'
+    + '<div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(to right,var(--violet),var(--violet2))"></div>'
+    + '<div style="font-size:48px;margin-bottom:14px">📈</div>'
+    + '<div style="font-size:20px;font-weight:800;color:var(--t);margin-bottom:4px">MetaTrader 5</div>'
+    + '<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-bottom:4px">PropHedge_EA.mq5</div>'
+    + '<div style="font-size:11px;color:var(--t2);line-height:1.7;margin-bottom:20px">Compatibile con Axi,<br>Pepperstone, IC Markets<br>e tutte le prop su MT5</div>'
+    + '<a href="https://prophedge-iota.vercel.app/PropHedge_EA.mq5" download style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--violet2),var(--teal2));color:#fff;border-radius:12px;padding:12px 24px;font-size:12px;font-weight:700;text-decoration:none;letter-spacing:.06em;text-transform:uppercase">⬇ Scarica per MT5</a>'
+    + '</div>'
+    + '</div>'
+
+    // Istruzioni
+    + '<div class="panel">'
+    + '<div class="ph"><h3>⚡ Installazione — una volta sola</h3></div>'
+    + '<div class="pb">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'
+
+    // Col 1: Installazione
+    + '<div>'
+    + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);font-family:var(--fd);margin-bottom:12px">📁 Installazione</div>'
+    + eaStep("1","Scarica l\'EA per la tua piattaforma (MT4 o MT5)")
+    + eaStep("2","Apri MT4/MT5 → File → Open Data Folder")
+    + eaStep("3","Copia il file in <strong>MQL4/Experts</strong> oppure <strong>MQL5/Experts</strong>")
+    + eaStep("4","Riavvia MT4/MT5")
+    + eaStep("5","Strumenti → Opzioni → Expert Advisor<br>Spunta <em>Consenti WebRequest</em> e aggiungi:<br><code style=\"background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:10px\">https://prophedge-iota.vercel.app</code>")
+    + '</div>'
+
+    // Col 2: Configurazione
+    + '<div>'
+    + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--violet);font-family:var(--fd);margin-bottom:12px">⚙️ Configurazione</div>'
+    + eaStep("6","Loggati sul conto da collegare (prop o broker)")
+    + eaStep("7","Apri grafico EURUSD M1 → trascina PropHedge_EA")
+    + eaStep("8","Vai in Journal → clicca sfida → Connetti → MT4/MT5<br>Copia <strong>Token</strong> e <strong>Journal ID</strong> e incollali nell\'EA")
+    + eaStep("9","Tasto destro grafico → Template → Salva → <em>PropHedge</em><br>Strumenti → Opzioni → Grafici → spunta <em>Salva grafici</em>")
+    + '</div>'
+    + '</div>'
+
+    // Nota finale
+    + '<div style="margin-top:16px;padding:12px 16px;background:rgba(0,229,204,.06);border:1px solid rgba(0,229,204,.15);border-radius:10px;font-size:12px;color:rgba(0,229,204,.9);line-height:1.7">'
+    + '✅ <strong>Da ora MT4/MT5 avvia l\'EA automaticamente</strong> ad ogni apertura.<br>'
+    + '<span style="color:var(--t3);font-size:11px">Ripeti i passi 6-8 per ogni conto usando lo stesso Journal ID ma AccountType diverso (prop / broker).</span>'
+    + '</div>'
+    + '</div></div>'
+
+    + '</div>';
+}
+
+function eaStep(num, text) {
+  return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'
+    + '<div style="width:22px;height:22px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--teal);flex-shrink:0;font-family:var(--fd);margin-top:1px">' + num + '</div>'
+    + '<div style="font-size:12px;color:var(--t2);line-height:1.6">' + text + '</div>'
+    + '</div>';
+}
+
+
 function renderGuide() {
   return '<div style="max-width:700px">'
     + '<div class="panel ai"><div class="ph"><h3>La logica in 30 secondi</h3></div><div class="pb">'
@@ -4332,6 +4412,7 @@ function render() {
   else if (currentTab==='platform')  { renderPlatform(); return; }
   else if (currentTab==='journal')   { renderJournal(); return; }
   else if (currentTab==='stats')     ct.innerHTML = renderStats();
+  else if (currentTab==='eadownload') ct.innerHTML = renderEADownload();
   else                               ct.innerHTML = renderGuide();
 }
 
