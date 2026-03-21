@@ -4666,64 +4666,47 @@ var MK_SYMBOLS = {
 };
 
 function openMarketsPanel() {
-  // Crea il pannello dinamicamente se non esiste
-  if (!document.getElementById('marketsPanelOverlay')) {
-    var ov = document.createElement('div');
-    ov.id = 'marketsPanelOverlay';
-    ov.onclick = function(e){ if(e.target===ov) closeMarketsPanel(); };
-    ov.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99998;backdrop-filter:blur(6px)';
-    document.body.appendChild(ov);
-
-    var panel = document.createElement('div');
-    panel.id = 'marketsPanel';
-    var isDark = !document.body.classList.contains('light-theme');
-    panel.className = 'mk-panel-root'; panel.style.cssText = 'display:none;position:fixed;inset:0;z-index:99999;flex-direction:column;font-family:sans-serif';
-    panel.innerHTML = ''
-      + '<div style="display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--bg3);flex-shrink:0">'
-      + '<div style="font-size:17px;font-weight:800;color:var(--t)">📊 Mercati in Tempo Reale</div>'
-      + '<div id="mkLastUpdate" style="font-size:10px;color:var(--t3);font-family:var(--fd)"></div>'
-      + '<div id="mkRiskBadge" style="padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;font-family:var(--fd);margin-left:8px"></div>'
-      + '<button onclick="loadMarketsData()" style="margin-left:auto;background:var(--bg2);border:1px solid var(--border2);color:var(--t2);border-radius:8px;padding:5px 14px;font-size:11px;cursor:pointer;font-family:var(--fd)">🔄 Aggiorna</button>'
-      + '<button onclick="closeMarketsPanel()" style="background:none;border:1px solid var(--border2);color:var(--t2);border-radius:8px;width:32px;height:32px;font-size:16px;cursor:pointer">✕</button>'
-      + '</div>'
-      + '<div style="display:flex;gap:4px;padding:8px 24px;border-bottom:1px solid var(--border);background:var(--bg3);flex-shrink:0">'
-      + '<button onclick="mkSetCat(&quot;forex&quot;)"   id="mkTab-forex"   class="mkTab mkTabActive">💱 Forex</button>'
-      + '<button onclick="mkSetCat(&quot;indices&quot;)" id="mkTab-indices" class="mkTab">📈 Indici</button>'
-      + '<button onclick="mkSetCat(&quot;commod&quot;)"  id="mkTab-commod"  class="mkTab">🛢️ Materie Prime</button>'
-      + '<button onclick="mkSetCat(&quot;crypto&quot;)"  id="mkTab-crypto"  class="mkTab">₿ Crypto</button>'
-      + '</div>'
-      + '<div style="display:grid;grid-template-columns:160px 130px 110px 110px 110px 130px;padding:8px 24px;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0">'
-      + '<div style="font-size:9px;font-weight:700;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Simbolo</div>'
-      + '<div style="font-size:9px;font-weight:700;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Prezzo</div>'
-      + '<div style="font-size:9px;font-weight:700;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Giornaliero</div>'
-      + '<div style="font-size:9px;font-weight:700;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Settimanale</div>'
-      + '<div style="font-size:9px;font-weight:700;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Mensile</div>'
-      + '<div style="font-size:9px;font-weight:700;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Sentiment</div>'
-      + '</div>'
-      + '<div id="mkRows" style="flex:1;overflow-y:auto;padding:0 24px"><div style="text-align:center;padding:60px;color:var(--t3);font-family:var(--fd)">⏳ Caricamento...</div></div>';
-    document.body.appendChild(panel);
-  }
-  document.getElementById('marketsPanelOverlay').style.display = 'block';
-  document.getElementById('marketsPanel').style.display = 'flex';
-  if (Object.keys(_mkData).length === 0) loadMarketsData();
-  else renderMarketsRows();
+  var panel = document.getElementById('mkPanelFull');
+  if (!panel) return;
+  panel.style.display = 'flex';
+  if (!panel._loaded) { panel._loaded = true; loadMarketsData(); }
 }
 
 function closeMarketsPanel() {
-  document.getElementById('marketsPanelOverlay').style.display = 'none';
-  document.getElementById('marketsPanel').style.display = 'none';
+  var panel = document.getElementById('mkPanelFull');
+  if (panel) panel.style.display = 'none';
 }
 
-function mkSetCat(cat) {
+
+function openMarketsPanel() {
+  document.getElementById('mkPanel').classList.add('mk-open');
+  document.getElementById('mkOverlay').classList.add('mk-open');
+  if (!window._mkLoaded) { loadMk(); window._mkLoaded = true; }
+  else mkRender();
+}
+
+function closeMk() {
+  document.getElementById('mkPanel').classList.remove('mk-open');
+  document.getElementById('mkOverlay').classList.remove('mk-open');
+}
+
+function closeMarketsPanel() { closeMk(); }
+
+function mkCat(cat) {
   _mkCat = cat;
   ['forex','indices','commod','crypto'].forEach(function(c) {
-    var btn = document.getElementById('mkTab-'+c);
-    if (btn) btn.className = 'mkTab' + (c===cat?' mkTabActive':'');
+    var btn = document.getElementById('mkT-'+c);
+    if (!btn) return;
+    if (c===cat) {
+      btn.style.background = '#00e5cc'; btn.style.color = '#000'; btn.style.border = 'none'; btn.style.fontWeight = '700';
+    } else {
+      btn.style.background = 'rgba(255,255,255,.07)'; btn.style.color = 'inherit'; btn.style.border = '1px solid rgba(255,255,255,.1)'; btn.style.fontWeight = '600';
+    }
   });
-  renderMarketsRows();
+  mkRender();
 }
 
-async function loadMarketsData() {
+async function loadMk() {
   var rows = document.getElementById('mkRows');
   if (rows) rows.innerHTML = '<div style="text-align:center;padding:60px;color:#8090b8;font-family:monospace">⏳ Caricamento dati...</div>';
 
@@ -4735,9 +4718,9 @@ async function loadMarketsData() {
 
   calcRiskSentiment();
   var now = new Date();
-  var upEl = document.getElementById('mkLastUpdate');
+  var upEl = document.getElementById('mkUpdated');
   if (upEl) upEl.textContent = 'Aggiornato: ' + now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-  renderMarketsRows();
+  mkRender();
 }
 
 async function loadMkForex() {
@@ -4834,7 +4817,7 @@ function calcRiskSentiment() {
   var vix = _mkData['^VIX'];
   var spx = _mkData['^GSPC'];
   var gold = _mkData['GC=F'];
-  var badge = document.getElementById('mkRiskBadge');
+  var badge = document.getElementById('mkRisk');
   if (!badge) return;
 
   var isRiskOff = false;
@@ -4864,8 +4847,8 @@ function calcRiskSentiment() {
   }
 }
 
-function renderMarketsRows() {
-  var container = document.getElementById('mkRows');
+function mkRender() {
+  var container = document.getElementById('mkBody');
   if (!container) return;
   var syms = MK_SYMBOLS[_mkCat] || [];
   if (syms.length === 0) { container.innerHTML = '<div style="padding:40px;color:var(--t3);text-align:center">Nessun simbolo</div>'; return; }
@@ -4882,7 +4865,8 @@ function renderMarketsRows() {
     // Sentiment per simbolo
     var sentiment = mkSymbolSentiment(s.yid, d);
 
-    html += '<div class="mkRow">';
+    var rowBg = idx%2===0?'rgba(255,255,255,.025)':'rgba(0,0,0,0)';
+    html += '<div style="display:grid;grid-template-columns:170px 140px 110px 110px 110px 140px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06);align-items:center;background:'+rowBg+'">';
     // Simbolo
     html += '<div><div class="mkSym">'+s.sym+'</div><div class="mkName">'+s.name+'</div></div>';
     // Prezzo
@@ -4902,10 +4886,11 @@ function renderMarketsRows() {
 }
 
 function mkPctBadge(pct) {
-  if (pct == null) return '<span class="mkPct na">—</span>';
-  var cls = pct >= 0 ? 'up' : 'dn';
-  var sign = pct >= 0 ? '+' : '';
-  return '<span class="mkPct '+cls+'">' + sign + pct.toFixed(2) + '%</span>';
+  if (pct == null) return '<span style="color:#3d4d78;font-family:monospace;font-size:12px">—</span>';
+  var color = pct >= 0 ? '#00d68f' : '#ff4060';
+  var bg    = pct >= 0 ? 'rgba(0,214,143,.1)' : 'rgba(255,64,96,.1)';
+  var sign  = pct >= 0 ? '+' : '';
+  return '<span style="color:'+color+';background:'+bg+';padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;font-family:monospace">' + sign + pct.toFixed(2) + '%</span>';
 }
 
 function formatMkPrice(price, sym) {
@@ -5166,32 +5151,64 @@ function applyPolicyLang(lang) {
     <h2 data-sec="s8" style="font-size:14px;font-weight:700;color:#00e5cc;margin:20px 0 10px;padding-bottom:8px;border-bottom:1px solid #1e2840">8. Contatti</h2>
     <p style="font-size:13px;color:#8090b8;line-height:1.8"><strong style="color:#eef0f8">VISIONTRADING - Russo Antonino Christian</strong><br>Email: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="25534c564c4a4b515740414c4b421714654248444c490b464a48">[email&#160;protected]</a><br>Oggetto: "Richiesta Privacy - PropHedge Pro"<br>Risposta entro 30 giorni dalla ricezione.</p>
     <p style="font-size:12px;color:#3d4d78;margin-top:20px;text-align:center;font-family:var(--fd)">Documento redatto in conformita al Rego
-<!-- ═══════════════════════════════════════ PANNELLO MERCATI -->
-<div id="marketsPanelOverlay" onclick="if(event.target===this)closeMarketsPanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:99998;backdrop-filter:blur(6px)"></div>
-<div id="marketsPanel" style="display:none;position:fixed;inset:0;z-index:99999;background:var(--bg2);flex-direction:column">
-  <div style="display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--bg3);flex-shrink:0">
-    <div style="font-size:17px;font-weight:800;color:var(--t)">📊 Mercati in Tempo Reale</div>
-    <div id="mkLastUpdate" style="font-size:10px;color:var(--t3);font-family:var(--fd)"></div>
-    <div id="mkRiskBadge" style="padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;font-family:var(--fd);margin-left:8px"></div>
-    <button onclick="loadMarketsData()" style="margin-left:auto;background:var(--bg2);border:1px solid var(--border2);color:var(--t2);border-radius:8px;padding:5px 14px;font-size:11px;cursor:pointer;font-family:var(--fd)">🔄 Aggiorna</button>
-    <button onclick="closeMarketsPanel()" style="background:none;border:1px solid var(--border2);color:var(--t2);border-radius:8px;width:32px;height:32px;font-size:16px;cursor:pointer">✕</button>
+
+<!-- PANNELLO MERCATI -->
+<style>
+#mkOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:99998}
+#mkPanel{display:none;position:fixed;inset:0;z-index:99999;flex-direction:column;overflow:hidden}
+#mkPanel.mk-open,#mkOverlay.mk-open{display:flex}
+#mkPanel{background:#0e1628}
+body.light-theme #mkPanel{background:#ffffff}
+</style>
+
+<div id="mkOverlay" onclick="closeMk()"></div>
+<div id="mkPanel">
+  <div style="display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0">
+    <div style="font-size:17px;font-weight:800">📊 Mercati in Tempo Reale</div>
+    <div id="mkUpdated" style="font-size:10px;opacity:.5;margin-left:4px"></div>
+    <div id="mkRisk" style="padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;margin-left:8px"></div>
+    <button onclick="loadMk()" style="margin-left:auto;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:inherit;border-radius:8px;padding:5px 14px;font-size:11px;cursor:pointer">🔄 Aggiorna</button>
+    <button onclick="closeMk()" style="background:none;border:1px solid rgba(255,255,255,.2);color:inherit;border-radius:8px;width:32px;height:32px;font-size:18px;cursor:pointer;line-height:1">✕</button>
   </div>
-  <div style="display:flex;gap:4px;padding:8px 24px;border-bottom:1px solid var(--border);background:var(--bg3);flex-shrink:0">
-    <button onclick="mkSetCat('forex')"   id="mkTab-forex"   class="mkTab mkTabActive">💱 Forex</button>
-    <button onclick="mkSetCat('indices')" id="mkTab-indices" class="mkTab">📈 Indici</button>
-    <button onclick="mkSetCat('commod')"  id="mkTab-commod"  class="mkTab">🛢️ Materie Prime</button>
-    <button onclick="mkSetCat('crypto')"  id="mkTab-crypto"  class="mkTab">₿ Crypto</button>
+  <div style="display:flex;gap:4px;padding:8px 24px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0">
+    <button onclick="mkCat('forex')"   id="mkT-forex"   style="background:#00e5cc;border:none;color:#000;border-radius:8px;padding:6px 18px;font-size:11px;font-weight:700;cursor:pointer">💱 Forex</button>
+    <button onclick="mkCat('indices')" id="mkT-indices" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:inherit;border-radius:8px;padding:6px 18px;font-size:11px;font-weight:600;cursor:pointer">📈 Indici</button>
+    <button onclick="mkCat('commod')"  id="mkT-commod"  style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:inherit;border-radius:8px;padding:6px 18px;font-size:11px;font-weight:600;cursor:pointer">🛢️ Materie Prime</button>
+    <button onclick="mkCat('crypto')"  id="mkT-crypto"  style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:inherit;border-radius:8px;padding:6px 18px;font-size:11px;font-weight:600;cursor:pointer">₿ Crypto</button>
   </div>
-  <div style="display:grid;grid-template-columns:160px 130px 110px 110px 110px 130px;padding:8px 24px;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0">
-    <div style="font-size:9px;font-weight:700;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Simbolo</div>
-    <div style="font-size:9px;font-weight:700;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Prezzo</div>
-    <div style="font-size:9px;font-weight:700;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Giornaliero</div>
-    <div style="font-size:9px;font-weight:700;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Settimanale</div>
-    <div style="font-size:9px;font-weight:700;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Mensile</div>
-    <div style="font-size:9px;font-weight:700;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Sentiment</div>
+  <div style="display:grid;grid-template-columns:170px 140px 110px 110px 110px 1fr;padding:8px 24px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0;opacity:.5;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase">
+    <span>Simbolo</span><span>Prezzo</span><span>Giornaliero</span><span>Settimanale</span><span>Mensile</span><span>Sentiment</span>
+  </div>
+  <div id="mkBody" style="flex:1;overflow-y:auto;padding:0 8px">
+    <div style="text-align:center;padding:80px;opacity:.4">⏳ Caricamento...</div>
+  </div>
+</div>
+
+<!-- PANNELLO MERCATI STATICO -->
+<div id="mkPanelFull" style="display:none;position:fixed;inset:0;z-index:99999;flex-direction:column;background:#0e1628" class="mk-panel-root">
+  <div style="display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);flex-shrink:0">
+    <div style="font-size:17px;font-weight:800;color:#eef0f8">📊 Mercati in Tempo Reale</div>
+    <div id="mkLastUpdate" style="font-size:10px;color:#3d4d78;font-family:monospace"></div>
+    <div id="mkRiskBadge" style="padding:4px 14px;border-radius:20px;font-size:11px;font-weight:700;margin-left:8px"></div>
+    <button onclick="loadMarketsData()" style="margin-left:auto;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:#8090b8;border-radius:8px;padding:6px 16px;font-size:11px;cursor:pointer">🔄 Aggiorna</button>
+    <button onclick="closeMarketsPanel()" style="background:rgba(255,64,96,.1);border:1px solid rgba(255,64,96,.3);color:#ff4060;border-radius:8px;width:36px;height:36px;font-size:18px;cursor:pointer;font-weight:700">✕</button>
+  </div>
+  <div style="display:flex;gap:6px;padding:10px 24px;border-bottom:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.02);flex-shrink:0">
+    <button onclick="mkSetCat('forex')"   id="mkTab-forex"   style="background:#00e5cc;border:none;color:#000;border-radius:8px;padding:7px 18px;font-size:11px;font-weight:700;cursor:pointer">💱 Forex</button>
+    <button onclick="mkSetCat('indices')" id="mkTab-indices" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#8090b8;border-radius:8px;padding:7px 18px;font-size:11px;font-weight:700;cursor:pointer">📈 Indici</button>
+    <button onclick="mkSetCat('commod')"  id="mkTab-commod"  style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#8090b8;border-radius:8px;padding:7px 18px;font-size:11px;font-weight:700;cursor:pointer">🛢️ Materie Prime</button>
+    <button onclick="mkSetCat('crypto')"  id="mkTab-crypto"  style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#8090b8;border-radius:8px;padding:7px 18px;font-size:11px;font-weight:700;cursor:pointer">₿ Crypto</button>
+  </div>
+  <div style="display:grid;grid-template-columns:170px 140px 110px 110px 110px 140px;padding:8px 24px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0">
+    <div style="font-size:9px;font-weight:700;color:#3d4d78;font-family:monospace;text-transform:uppercase;letter-spacing:.1em">Simbolo</div>
+    <div style="font-size:9px;font-weight:700;color:#3d4d78;font-family:monospace;text-transform:uppercase;letter-spacing:.1em">Prezzo</div>
+    <div style="font-size:9px;font-weight:700;color:#3d4d78;font-family:monospace;text-transform:uppercase;letter-spacing:.1em">Giornaliero</div>
+    <div style="font-size:9px;font-weight:700;color:#3d4d78;font-family:monospace;text-transform:uppercase;letter-spacing:.1em">Settimanale</div>
+    <div style="font-size:9px;font-weight:700;color:#3d4d78;font-family:monospace;text-transform:uppercase;letter-spacing:.1em">Mensile</div>
+    <div style="font-size:9px;font-weight:700;color:#3d4d78;font-family:monospace;text-transform:uppercase;letter-spacing:.1em">Sentiment</div>
   </div>
   <div id="mkRows" style="flex:1;overflow-y:auto;padding:0 24px">
-    <div style="text-align:center;padding:60px;color:var(--t3);font-family:var(--fd)">⏳ Caricamento...</div>
+    <div style="text-align:center;padding:60px;color:#3d4d78;font-family:monospace">⏳ Clicca Aggiorna per caricare i dati...</div>
   </div>
 </div>
 
