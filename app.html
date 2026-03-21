@@ -3719,30 +3719,103 @@ var CAL_IMP_LABEL = {
 };
 
 async function calLoad() {
-  // ForexFactory JSON feed (settimana corrente)
-  var FF_URL = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json?version='+Date.now();
-  var PROXY1 = 'https://api.allorigins.win/raw?url='+encodeURIComponent(FF_URL);
-  var PROXY2 = 'https://corsproxy.io/?'+encodeURIComponent(FF_URL);
+  // Fonti in ordine: FF diretto → 4 proxy diversi → dati demo embedded
+  var FF_URL  = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json';
+  var NOW     = Date.now();
 
-  var sources = [PROXY1, PROXY2];
-  for(var i=0;i<sources.length;i++){
-    try{
-      var r = await fetch(sources[i],{cache:'no-store'});
-      if(!r.ok) continue;
-      var data = await r.json();
-      if(!Array.isArray(data)||!data.length) continue;
-      _calData = data;
-      _calLoaded = true;
-      calRender();
-      return;
-    }catch(e){continue;}
+  // Tutte le varianti URL + proxy avviate in parallelo → vince la prima
+  var attempts = [
+    // 1. FF diretto (a volte funziona)
+    fetch(FF_URL+'?version='+NOW,{cache:'no-store',mode:'cors'}),
+    // 2. allorigins
+    fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(FF_URL+'?version='+NOW),{cache:'no-store'}),
+    // 3. corsproxy.io
+    fetch('https://corsproxy.io/?'+encodeURIComponent(FF_URL),{cache:'no-store'}),
+    // 4. codetabs
+    fetch('https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(FF_URL),{cache:'no-store'}),
+    // 5. thingproxy
+    fetch('https://thingproxy.freeboard.io/fetch/'+FF_URL,{cache:'no-store'})
+  ];
+
+  // Promise.any: usa il primo che risponde con successo
+  var winner = null;
+  try {
+    var responses = await Promise.any(
+      attempts.map(function(p){
+        return p.then(function(r){
+          if(!r.ok) throw new Error('HTTP '+r.status);
+          return r;
+        });
+      })
+    );
+    winner = responses;
+  } catch(e) { winner = null; }
+
+  if(winner) {
+    try {
+      var data = await winner.json();
+      if(Array.isArray(data) && data.length > 0) {
+        _calData   = data;
+        _calLoaded = true;
+        calRender();
+        return;
+      }
+    } catch(e) {}
   }
-  // Nessuna fonte disponibile
-  var ct=document.getElementById('main');
-  if(ct) ct.innerHTML='<div class="cal-wrap"><div style="text-align:center;padding:60px;color:var(--t3);font-size:13px">'
-    +'<div style="font-size:32px;margin-bottom:12px">📅</div>'
-    +'Impossibile caricare il calendario.<br><small>Controlla la connessione e riprova.</small><br><br>'
-    +'<button class="btn-p" onclick="calLoad()">🔄 Riprova</button></div></div>';
+
+  // ── FALLBACK: genera dati demo per la settimana corrente ─────────
+  // Così il calendario è sempre funzionante anche offline
+  _calData   = calGenerateDemo();
+  _calLoaded = true;
+  _calDemoMode = true;
+  calRender();
+}
+
+var _calDemoMode = false;
+
+// Genera eventi demo realistici per la settimana corrente
+function calGenerateDemo(){
+  var now = new Date();
+  var mon = new Date(now);
+  mon.setDate(now.getDate() - now.getDay() + 1); // Lunedì
+  mon.setHours(0,0,0,0);
+
+  function dayEvs(d, evs){
+    var dd = new Date(mon); dd.setDate(mon.getDate()+d);
+    var dateStr = (dd.getMonth()+1).toString().padStart(2,'0')+'-'
+      +dd.getDate().toString().padStart(2,'0')+'-'+dd.getFullYear();
+    return evs.map(function(e){return Object.assign({date:dateStr},e);});
+  }
+
+  return [].concat(
+    dayEvs(0,[
+      {time:'8:30am', currency:'USD', impact:'High',   title:'S&P Global Manufacturing PMI'},
+      {time:'10:00am',currency:'USD', impact:'Medium', title:'ISM Manufacturing PMI'},
+      {time:'3:00pm', currency:'EUR', impact:'High',   title:'ECB President Lagarde Speaks'},
+    ]),
+    dayEvs(1,[
+      {time:'All Day',currency:'EUR', impact:'Holiday',title:'German Bank Holiday'},
+      {time:'8:30am', currency:'USD', impact:'High',   title:'JOLTS Job Openings'},
+      {time:'10:00am',currency:'USD', impact:'Medium', title:'Factory Orders m/m'},
+    ]),
+    dayEvs(2,[
+      {time:'8:15am', currency:'USD', impact:'High',   title:'ADP Non-Farm Employment'},
+      {time:'8:30am', currency:'CAD', impact:'Medium', title:'Trade Balance'},
+      {time:'10:00am',currency:'USD', impact:'High',   title:'ISM Services PMI'},
+      {time:'2:00pm', currency:'USD', impact:'High',   title:'FOMC Meeting Minutes'},
+    ]),
+    dayEvs(3,[
+      {time:'8:30am', currency:'USD', impact:'High',   title:'Unemployment Claims'},
+      {time:'8:30am', currency:'USD', impact:'High',   title:'Trade Balance'},
+      {time:'11:00am',currency:'GBP', impact:'Medium', title:'BOE Credit Conditions Survey'},
+    ]),
+    dayEvs(4,[
+      {time:'8:30am', currency:'USD', impact:'High',   title:'Non-Farm Payrolls',    forecast:'180K', previous:'151K'},
+      {time:'8:30am', currency:'USD', impact:'High',   title:'Unemployment Rate',     forecast:'4.1%', previous:'4.1%'},
+      {time:'8:30am', currency:'USD', impact:'High',   title:'Average Hourly Earnings m/m', forecast:'0.3%', previous:'0.3%'},
+      {time:'10:00am',currency:'USD', impact:'Medium', title:'Prelim UoM Consumer Sentiment'},
+    ])
+  );
 }
 
 function calSetFilter(f){
@@ -3842,8 +3915,11 @@ function calRender(){
   html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
     +'<div style="font-size:17px;font-weight:800;font-family:var(--fh)">📅 Calendario Economico</div>'
     +'<div style="display:flex;gap:8px;align-items:center">'
-    +'<span style="font-size:10px;font-family:var(--fd);color:var(--t3)">Fonte: ForexFactory • Orari ET</span>'
-    +'<button class="btn-g" style="padding:4px 12px;font-size:10px" onclick="calLoad()">🔄</button>'
+    +(_calDemoMode
+      ? '<span style="font-size:10px;font-family:var(--fd);background:rgba(255,190,11,.15);color:#ffbe0b;padding:3px 10px;border-radius:5px;border:1px solid rgba(255,190,11,.3)">⚠ Dati demo — ForexFactory non raggiungibile</span>'
+      : '<span style="font-size:10px;font-family:var(--fd);color:var(--t3)">Fonte: ForexFactory • Orari ET</span>'
+    )
+    +'<button class="btn-g" style="padding:4px 12px;font-size:10px" onclick="_calLoaded=false;_calDemoMode=false;_calData=[];renderCalendar()">🔄 Aggiorna</button>'
     +'</div></div>';
 
   // Alert notizie rosse imminenti
