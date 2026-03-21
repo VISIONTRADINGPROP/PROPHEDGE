@@ -3,40 +3,33 @@
 //|                              PropHedge - VISIONTRADING           |
 //|                                                                   |
 //| INSTALLAZIONE MT5:                                                |
-//| 1. MT5 → File → Open Data Folder                                 |
-//| 2. Vai in MQL5 → Experts                                         |
-//| 3. Copia PropHedge_EA.mq5 nella cartella e riavvia MT5           |
-//| 4. Loggati sul conto da collegare                                 |
-//| 5. Apri un grafico EURUSD M1                                     |
-//| 6. Trascina PropHedge_EA sul grafico                             |
-//| 7. Strumenti → Opzioni → Expert Advisor                          |
-//|    Spunta "Consenti WebRequest" e aggiungi:                      |
+//| 1. MT5 → File → Open Data Folder → MQL5 → Experts               |
+//| 2. Copia PropHedge_EA.mq5 e riavvia MT5                          |
+//| 3. Strumenti → Opzioni → Expert Advisor → aggiungi URL:          |
 //|    https://prophedge-iota.vercel.app                             |
-//| 8. Inserisci Token e Journal ID dal Journal → Connetti → MT5     |
-//| 9. Tasto destro grafico → Template → Salva → "PropHedge"        |
+//| 4. Loggati sul conto da collegare                                 |
+//| 5. Trascina PropHedge_EA su un grafico EURUSD M1                 |
+//| 6. Inserisci Email, ApiKey, JournalID, AccountType               |
+//| 7. Tasto destro → Template → Salva → "PropHedge"                |
 //|    Strumenti → Opzioni → Grafici → spunta "Salva grafici"        |
-//|    ✅ Da ora MT5 avvia l'EA automaticamente!                     |
 //+------------------------------------------------------------------+
 
 #property copyright "PropHedge - VISIONTRADING"
 #property link      "https://prophedge-iota.vercel.app"
-#property version   "3.00"
+#property version   "3.10"
 #property description "Sincronizza i trade con il Journal PropHedge"
 
 #include <Trade\Trade.mqh>
 
 //+------------------------------------------------------------------+
-//| PARAMETRI                                                         |
-//+------------------------------------------------------------------+
-input string UserToken   = "";      // Token utente (copia dal Journal)
-input string JournalID   = "";      // Journal ID (copia dal Journal)
-input string AccountType = "prop";  // Tipo conto: 'prop' oppure 'broker'
-input int    SyncInterval = 30;     // Secondi tra sync (minimo 10)
+input string UserEmail   = "";      // La tua email PropHedge
+input string ApiKey      = "";      // API Key (dal Journal → Connetti → MT5)
+input string JournalID   = "";      // Journal ID (dal Journal → Connetti → MT5)
+input string AccountType = "prop";  // Tipo: 'prop' oppure 'broker'
+input int    SyncInterval = 30;     // Secondi tra sync (min 10)
 input bool   SyncHistory  = true;   // Includi storico chiusi
 input int    HistoryDays  = 90;     // Giorni storico
 
-//+------------------------------------------------------------------+
-//| Variabili interne                                                 |
 //+------------------------------------------------------------------+
 string   SERVER   = "https://prophedge-iota.vercel.app";
 string   ENDPOINT = "";
@@ -49,204 +42,174 @@ bool     ready     = false;
 int OnInit() {
    ENDPOINT = SERVER + "/api/mt-sync";
 
-   if(StringLen(StringTrimRight(StringTrimLeft(UserToken))) < 10) {
-      Alert("PropHedge EA\n\nToken mancante!\nJournal → Connetti → MT5\nCopia il Token e incollalo qui.");
+   string trimEmail = UserEmail;
+   string trimKey   = ApiKey;
+   string trimJID   = JournalID;
+   StringTrimLeft(trimEmail);  StringTrimRight(trimEmail);
+   StringTrimLeft(trimKey);    StringTrimRight(trimKey);
+   StringTrimLeft(trimJID);    StringTrimRight(trimJID);
+
+   if(StringLen(trimEmail) < 5) {
+      Alert("PropHedge EA MT5\n\nEmail mancante!\nJournal → Connetti → MT5 → copia Email");
       return INIT_FAILED;
    }
-   if(StringLen(StringTrimRight(StringTrimLeft(JournalID))) < 5) {
-      Alert("PropHedge EA\n\nJournal ID mancante!\nJournal → Connetti → MT5\nCopia il Journal ID e incollalo qui.");
+   if(StringLen(trimKey) < 5) {
+      Alert("PropHedge EA MT5\n\nAPI Key mancante!\nJournal → Connetti → MT5 → copia API Key");
+      return INIT_FAILED;
+   }
+   if(StringLen(trimJID) < 5) {
+      Alert("PropHedge EA MT5\n\nJournal ID mancante!\nJournal → Connetti → MT5 → copia Journal ID");
       return INIT_FAILED;
    }
    if(AccountType != "prop" && AccountType != "broker") {
-      Alert("PropHedge EA\nAccountType deve essere 'prop' o 'broker'");
+      Alert("PropHedge EA MT5\nAccountType deve essere 'prop' o 'broker'");
       return INIT_FAILED;
    }
 
    ready = true;
-
-   // Timer per sync periodico (funziona anche a mercato chiuso)
    EventSetTimer(MathMax(SyncInterval, 10));
 
    Print("══════════════════════════════════════");
-   Print("  PropHedge EA v3.0 MT5 — VISIONTRADING");
+   Print("  PropHedge EA v3.1 MT5 — VISIONTRADING");
    Print("══════════════════════════════════════");
-   Print("  Broker:     ", AccountInfoString(ACCOUNT_COMPANY));
-   Print("  Conto:      #", AccountInfoInteger(ACCOUNT_LOGIN));
-   Print("  Server:     ", AccountInfoString(ACCOUNT_SERVER));
-   Print("  Valuta:     ", AccountInfoString(ACCOUNT_CURRENCY));
-   Print("  Tipo:       ", AccountType);
-   Print("  Journal:    ", JournalID);
-   Print("  Sync ogni:  ", MathMax(SyncInterval,10), " secondi");
+   Print("  Broker:  ", AccountInfoString(ACCOUNT_COMPANY));
+   Print("  Conto:   #", IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN)));
+   Print("  Tipo:    ", AccountType);
+   Print("  Email:   ", UserEmail);
+   Print("  Journal: ", JournalID);
    Print("══════════════════════════════════════");
 
    DoSync();
    return INIT_SUCCEEDED;
 }
 
-//+------------------------------------------------------------------+
 void OnDeinit(const int reason) {
    EventKillTimer();
    if(ready) Print("PropHedge EA MT5 fermato | Sync: ", syncCount, " | Errori: ", errCount);
 }
 
-//+------------------------------------------------------------------+
-void OnTick() {
-   if(!ready) return;
-   if(TimeCurrent() - lastSync >= MathMax(SyncInterval, 10)) DoSync();
-}
+void OnTick()  { if(!ready) return; if(TimeCurrent()-lastSync >= MathMax(SyncInterval,10)) DoSync(); }
+void OnTimer() { if(!ready) return; DoSync(); }
 
-//+------------------------------------------------------------------+
-void OnTimer() {
-   if(!ready) return;
-   DoSync();
-}
-
-//+------------------------------------------------------------------+
 void DoSync() {
    lastSync = TimeCurrent();
    string json = BuildJSON();
    if(SendToServer(json)) {
       syncCount++;
-      string msg = "PropHedge EA MT5 attivo\n"
-                 + "Conto: #" + IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN))
-                 + " (" + AccountType + ")\n"
-                 + "Sync: " + IntegerToString(syncCount)
-                 + " | Errori: " + IntegerToString(errCount) + "\n"
-                 + "Ultimo: " + TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES);
-      Comment(msg);
+      Comment("PropHedge EA MT5 attivo\n"
+            + "Conto: #" + IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN)) + " (" + AccountType + ")\n"
+            + "Sync: " + IntegerToString(syncCount) + " | Errori: " + IntegerToString(errCount) + "\n"
+            + "Ultimo: " + TimeToString(TimeCurrent(), TIME_DATE|TIME_MINUTES));
    } else {
       errCount++;
-      Comment("PropHedge EA MT5 — ERRORE #" + IntegerToString(errCount) + "\nVerifica log MT5");
+      Comment("PropHedge EA MT5 — ERRORE #" + IntegerToString(errCount));
    }
 }
 
-//+------------------------------------------------------------------+
 string BuildJSON() {
    string trades = "";
    int count = 0;
 
-   // ── POSIZIONI APERTE (MT5 usa PositionGet) ────────────────────
+   // Posizioni aperte
    for(int i = 0; i < PositionsTotal(); i++) {
       if(count >= 300) break;
       ulong ticket = PositionGetTicket(i);
       if(ticket == 0) continue;
-
-      string sym    = PositionGetString(POSITION_SYMBOL);
-      int    type   = (int)PositionGetInteger(POSITION_TYPE); // 0=BUY 1=SELL
-      double lots   = PositionGetDouble(POSITION_VOLUME);
-      double open_p = PositionGetDouble(POSITION_PRICE_OPEN);
-      double cur_p  = PositionGetDouble(POSITION_PRICE_CURRENT);
-      double sl     = PositionGetDouble(POSITION_SL);
-      double tp     = PositionGetDouble(POSITION_TP);
-      double profit = PositionGetDouble(POSITION_PROFIT);
-      double swap   = PositionGetDouble(POSITION_SWAP);
-      datetime open_t = (datetime)PositionGetInteger(POSITION_TIME);
-      string comment  = CleanStr(PositionGetString(POSITION_COMMENT));
-      long   magic    = PositionGetInteger(POSITION_MAGIC);
-
       if(count > 0) trades += ",";
-      trades += "{";
-      trades += "\"ticket\":"      + IntegerToString(ticket)  + ",";
-      trades += "\"symbol\":\""   + CleanStr(sym)             + "\",";
-      trades += "\"type\":"        + IntegerToString(type)     + ",";
-      trades += "\"lots\":"        + DoubleToString(lots,2)    + ",";
-      trades += "\"open_price\":"  + DoubleToString(open_p,8)  + ",";
-      trades += "\"close_price\":" + DoubleToString(cur_p,8)   + ",";
-      trades += "\"sl\":"          + DoubleToString(sl,8)      + ",";
-      trades += "\"tp\":"          + DoubleToString(tp,8)      + ",";
-      trades += "\"profit\":"      + DoubleToString(profit,2)  + ",";
-      trades += "\"swap\":"        + DoubleToString(swap,2)    + ",";
-      trades += "\"commission\":0,";
-      trades += "\"open_time\":"   + IntegerToString((int)open_t) + ",";
-      trades += "\"close_time\":0,";
-      trades += "\"comment\":\""  + comment                   + "\",";
-      trades += "\"magic\":"       + IntegerToString(magic);
-      trades += "}";
+      trades += PositionToJSON(ticket);
       count++;
    }
 
-   // ── STORICO CHIUSI (MT5 usa HistoryDeal) ─────────────────────
+   // Storico chiusi
    if(SyncHistory && count < 300) {
       datetime fromDate = TimeCurrent() - (datetime)(HistoryDays * 86400);
       HistorySelect(fromDate, TimeCurrent());
-
-      // Raggruppa deal per positionID per ricostruire i trade
-      for(int i = HistoryDealsTotal() - 1; i >= 0; i--) {
+      for(int i = HistoryDealsTotal()-1; i >= 0; i--) {
          if(count >= 300) break;
-         ulong dealTicket = HistoryDealGetTicket(i);
-         if(dealTicket == 0) continue;
-
-         // Solo deal di chiusura (DEAL_ENTRY_OUT)
-         long entry = HistoryDealGetInteger(dealTicket, DEAL_ENTRY);
+         ulong deal = HistoryDealGetTicket(i);
+         if(deal == 0) continue;
+         long entry = HistoryDealGetInteger(deal, DEAL_ENTRY);
          if(entry != DEAL_ENTRY_OUT) continue;
-
-         long   type    = HistoryDealGetInteger(dealTicket, DEAL_TYPE);
+         long type = HistoryDealGetInteger(deal, DEAL_TYPE);
          if(type != DEAL_TYPE_BUY && type != DEAL_TYPE_SELL) continue;
-
-         string sym     = HistoryDealGetString(dealTicket, DEAL_SYMBOL);
-         double lots    = HistoryDealGetDouble(dealTicket, DEAL_VOLUME);
-         double price   = HistoryDealGetDouble(dealTicket, DEAL_PRICE);
-         double profit  = HistoryDealGetDouble(dealTicket, DEAL_PROFIT);
-         double swap    = HistoryDealGetDouble(dealTicket, DEAL_SWAP);
-         double comm    = HistoryDealGetDouble(dealTicket, DEAL_COMMISSION);
-         datetime close_t = (datetime)HistoryDealGetInteger(dealTicket, DEAL_TIME);
-         ulong posId    = HistoryDealGetInteger(dealTicket, DEAL_POSITION_ID);
-         string comment = CleanStr(HistoryDealGetString(dealTicket, DEAL_COMMENT));
-         long   magic   = HistoryDealGetInteger(dealTicket, DEAL_MAGIC);
-
-         // Cerca il deal di apertura per avere open_price e open_time
-         double open_p  = price;
-         datetime open_t = close_t;
-         for(int j = 0; j < HistoryDealsTotal(); j++) {
-            ulong d2 = HistoryDealGetTicket(j);
-            if(d2 == 0) continue;
-            if((ulong)HistoryDealGetInteger(d2, DEAL_POSITION_ID) != posId) continue;
-            long e2 = HistoryDealGetInteger(d2, DEAL_ENTRY);
-            if(e2 == DEAL_ENTRY_IN) {
-               open_p = HistoryDealGetDouble(d2, DEAL_PRICE);
-               open_t = (datetime)HistoryDealGetInteger(d2, DEAL_TIME);
-               break;
-            }
-         }
-
          if(count > 0) trades += ",";
-         trades += "{";
-         trades += "\"ticket\":"      + IntegerToString(dealTicket) + ",";
-         trades += "\"symbol\":\""   + CleanStr(sym)                + "\",";
-         trades += "\"type\":"        + IntegerToString((int)type)   + ",";
-         trades += "\"lots\":"        + DoubleToString(lots,2)       + ",";
-         trades += "\"open_price\":"  + DoubleToString(open_p,8)     + ",";
-         trades += "\"close_price\":" + DoubleToString(price,8)      + ",";
-         trades += "\"sl\":0,\"tp\":0,";
-         trades += "\"profit\":"      + DoubleToString(profit,2)     + ",";
-         trades += "\"swap\":"        + DoubleToString(swap,2)       + ",";
-         trades += "\"commission\":"  + DoubleToString(comm,2)       + ",";
-         trades += "\"open_time\":"   + IntegerToString((int)open_t) + ",";
-         trades += "\"close_time\":"  + IntegerToString((int)close_t)+ ",";
-         trades += "\"comment\":\""  + comment                      + "\",";
-         trades += "\"magic\":"       + IntegerToString(magic);
-         trades += "}";
+         trades += DealToJSON(deal);
          count++;
       }
    }
 
    string json = "{";
-   json += "\"token\":\""        + CleanStr(UserToken)                                   + "\",";
-   json += "\"journal_id\":\""   + CleanStr(JournalID)                                   + "\",";
-   json += "\"account_type\":\"" + AccountType                                            + "\",";
-   json += "\"account_id\":\""   + IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN))     + "\",";
+   json += "\"api_key\":\""      + CleanStr(ApiKey)                                           + "\",";
+   json += "\"email\":\""        + CleanStr(UserEmail)                                        + "\",";
+   json += "\"journal_id\":\""   + CleanStr(JournalID)                                        + "\",";
+   json += "\"account_type\":\"" + AccountType                                                 + "\",";
+   json += "\"account_id\":\""   + IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN))          + "\",";
    json += "\"platform\":\"MT5\",";
-   json += "\"server\":\""       + CleanStr(AccountInfoString(ACCOUNT_SERVER))            + "\",";
-   json += "\"broker\":\""       + CleanStr(AccountInfoString(ACCOUNT_COMPANY))           + "\",";
-   json += "\"currency\":\""     + AccountInfoString(ACCOUNT_CURRENCY)                    + "\",";
-   json += "\"balance\":"        + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE),2)   + ",";
-   json += "\"equity\":"         + DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY),2)    + ",";
-   json += "\"trades\":["        + trades                                                  + "]";
+   json += "\"server\":\""       + CleanStr(AccountInfoString(ACCOUNT_SERVER))                 + "\",";
+   json += "\"broker\":\""       + CleanStr(AccountInfoString(ACCOUNT_COMPANY))                + "\",";
+   json += "\"currency\":\""     + AccountInfoString(ACCOUNT_CURRENCY)                         + "\",";
+   json += "\"balance\":"        + DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE),2)        + ",";
+   json += "\"equity\":"         + DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY),2)         + ",";
+   json += "\"trades\":["        + trades                                                       + "]";
    json += "}";
    return json;
 }
 
-//+------------------------------------------------------------------+
+string PositionToJSON(ulong ticket) {
+   string t = "{";
+   t += "\"ticket\":"      + IntegerToString(ticket)                                      + ",";
+   t += "\"symbol\":\""   + CleanStr(PositionGetString(POSITION_SYMBOL))                 + "\",";
+   t += "\"type\":"        + IntegerToString((int)PositionGetInteger(POSITION_TYPE))      + ",";
+   t += "\"lots\":"        + DoubleToString(PositionGetDouble(POSITION_VOLUME),2)         + ",";
+   t += "\"open_price\":"  + DoubleToString(PositionGetDouble(POSITION_PRICE_OPEN),8)     + ",";
+   t += "\"close_price\":" + DoubleToString(PositionGetDouble(POSITION_PRICE_CURRENT),8)  + ",";
+   t += "\"sl\":"          + DoubleToString(PositionGetDouble(POSITION_SL),8)             + ",";
+   t += "\"tp\":"          + DoubleToString(PositionGetDouble(POSITION_TP),8)             + ",";
+   t += "\"profit\":"      + DoubleToString(PositionGetDouble(POSITION_PROFIT),2)         + ",";
+   t += "\"swap\":"        + DoubleToString(PositionGetDouble(POSITION_SWAP),2)           + ",";
+   t += "\"commission\":0,";
+   t += "\"open_time\":"   + IntegerToString((int)PositionGetInteger(POSITION_TIME))      + ",";
+   t += "\"close_time\":0,";
+   t += "\"comment\":\""  + CleanStr(PositionGetString(POSITION_COMMENT))               + "\",";
+   t += "\"magic\":"       + IntegerToString(PositionGetInteger(POSITION_MAGIC));
+   t += "}";
+   return t;
+}
+
+string DealToJSON(ulong deal) {
+   // Cerca open_price e open_time dal deal di apertura
+   ulong posId   = HistoryDealGetInteger(deal, DEAL_POSITION_ID);
+   double open_p = HistoryDealGetDouble(deal, DEAL_PRICE);
+   datetime open_t = (datetime)HistoryDealGetInteger(deal, DEAL_TIME);
+   for(int j = 0; j < HistoryDealsTotal(); j++) {
+      ulong d2 = HistoryDealGetTicket(j);
+      if(d2 == 0) continue;
+      if((ulong)HistoryDealGetInteger(d2, DEAL_POSITION_ID) != posId) continue;
+      if(HistoryDealGetInteger(d2, DEAL_ENTRY) == DEAL_ENTRY_IN) {
+         open_p  = HistoryDealGetDouble(d2, DEAL_PRICE);
+         open_t  = (datetime)HistoryDealGetInteger(d2, DEAL_TIME);
+         break;
+      }
+   }
+   string t = "{";
+   t += "\"ticket\":"      + IntegerToString(deal)                                              + ",";
+   t += "\"symbol\":\""   + CleanStr(HistoryDealGetString(deal, DEAL_SYMBOL))                  + "\",";
+   t += "\"type\":"        + IntegerToString((int)HistoryDealGetInteger(deal, DEAL_TYPE))       + ",";
+   t += "\"lots\":"        + DoubleToString(HistoryDealGetDouble(deal, DEAL_VOLUME),2)          + ",";
+   t += "\"open_price\":"  + DoubleToString(open_p,8)                                           + ",";
+   t += "\"close_price\":" + DoubleToString(HistoryDealGetDouble(deal, DEAL_PRICE),8)           + ",";
+   t += "\"sl\":0,\"tp\":0,";
+   t += "\"profit\":"      + DoubleToString(HistoryDealGetDouble(deal, DEAL_PROFIT),2)          + ",";
+   t += "\"swap\":"        + DoubleToString(HistoryDealGetDouble(deal, DEAL_SWAP),2)            + ",";
+   t += "\"commission\":"  + DoubleToString(HistoryDealGetDouble(deal, DEAL_COMMISSION),2)      + ",";
+   t += "\"open_time\":"   + IntegerToString((int)open_t)                                       + ",";
+   t += "\"close_time\":"  + IntegerToString((int)HistoryDealGetInteger(deal, DEAL_TIME))       + ",";
+   t += "\"comment\":\""  + CleanStr(HistoryDealGetString(deal, DEAL_COMMENT))                 + "\",";
+   t += "\"magic\":"       + IntegerToString(HistoryDealGetInteger(deal, DEAL_MAGIC));
+   t += "}";
+   return t;
+}
+
 string CleanStr(string s) {
    StringReplace(s, "\"", "'");
    StringReplace(s, "\\", "/");
@@ -255,34 +218,26 @@ string CleanStr(string s) {
    return s;
 }
 
-//+------------------------------------------------------------------+
 bool SendToServer(string json) {
    char post[], result[];
    string headers = "Content-Type: application/json\r\n";
    string resHeaders;
-
    StringToCharArray(json, post, 0, StringLen(json));
    ResetLastError();
-
    int code = WebRequest("POST", ENDPOINT, headers, 8000, post, result, resHeaders);
-
    if(code == -1) {
       int err = GetLastError();
       if(err == 4014) {
          Print("PropHedge ERRORE: URL non autorizzato!");
          Print("→ Strumenti → Opzioni → Expert Advisor → aggiungi: ", SERVER);
-         Alert("PropHedge EA MT5\n\nAggiungi l'URL nelle impostazioni:\nStrumenti → Opzioni → Expert Advisor\nURL: " + SERVER);
-      } else {
-         Print("PropHedge ERRORE WebRequest #", err);
-      }
+         Alert("PropHedge EA MT5\n\nAggiungi URL:\nStrumenti → Opzioni → Expert Advisor\n" + SERVER);
+      } else Print("PropHedge ERRORE WebRequest #", err);
       return false;
    }
-
-   if(code == 200) return true;
-
+   if(code == 200) { Print("PropHedge Sync #", syncCount+1, " OK"); return true; }
    string resp = CharArrayToString(result);
-   if(code == 401) Print("PropHedge ERRORE 401: Token non valido");
-   else if(code == 400) Print("PropHedge ERRORE 400: Parametri errati");
-   else Print("PropHedge ERRORE HTTP ", code, ": ", StringSubstr(resp,0,100));
+   if(code == 401) Print("PropHedge ERRORE 401: Email o API Key non valida");
+   else if(code == 400) Print("PropHedge ERRORE 400: Parametri mancanti");
+   else Print("PropHedge ERRORE HTTP ", code, ": ", StringSubstr(resp,0,200));
    return false;
 }
