@@ -417,6 +417,55 @@ body.light-theme .mk-col-hdr > *:not(:first-child){
   .mk-col-hdr span:nth-child(4),.mk-col-hdr span:nth-child(5){display:none}
   .mk-row .mk-period:nth-child(4),.mk-row .mk-period:nth-child(5){display:none}
 }
+
+/* ── ECONOMIC CALENDAR ─────────────────────────────── */
+.cal-wrap{max-width:1100px;margin:0 auto}
+.cal-day-hdr{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  font-family:var(--fh);color:var(--t3);padding:18px 0 8px;border-bottom:2px solid var(--border2);margin-bottom:4px}
+.cal-row{display:grid;grid-template-columns:80px 36px 36px 1fr 120px 90px 90px 90px;
+  align-items:center;gap:0;padding:10px 12px;border-bottom:1px solid rgba(128,128,128,.06);
+  border-radius:6px;transition:background .12s;cursor:default}
+.cal-row:hover{background:rgba(255,255,255,.03)}
+.cal-time{font-family:var(--fd);font-size:12px;font-weight:600;color:var(--t2)}
+.cal-time.past{opacity:.35}
+.cal-time.soon{color:#ffbe0b;animation:calPulse 1.5s infinite}
+@keyframes calPulse{0%,100%{opacity:1}50%{opacity:.5}}
+.cal-flag{font-size:18px;line-height:1}
+.cal-imp{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+.cal-imp.red{background:#ff4060;box-shadow:0 0 6px rgba(255,64,96,.5)}
+.cal-imp.orange{background:#ff8c00;box-shadow:0 0 4px rgba(255,140,0,.4)}
+.cal-imp.yellow{background:#ffbe0b;box-shadow:0 0 4px rgba(255,190,11,.3)}
+.cal-imp.gray{background:rgba(128,128,128,.25)}
+.cal-event{font-size:13px;font-weight:500;color:var(--t);padding:0 8px}
+.cal-event .cal-cur{font-size:10px;font-family:var(--fd);color:var(--t3);margin-left:4px}
+.cal-val{font-family:var(--fd);font-size:12px;text-align:right;padding:0 8px}
+.cal-val.actual{color:#00d68f;font-weight:700}
+.cal-val.worse{color:#ff4060;font-weight:700}
+.cal-val.na{color:var(--t3)}
+.cal-countdown{font-family:var(--fd);font-size:11px;font-weight:700;text-align:right;
+  padding:2px 8px;border-radius:5px}
+.cal-countdown.red{color:#ff4060;background:rgba(255,64,96,.1)}
+.cal-countdown.orange{color:#ffbe0b;background:rgba(255,190,11,.1)}
+.cal-countdown.past{color:var(--t3);opacity:.4}
+.cal-filter-bar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.cal-filter-btn{padding:5px 14px;border-radius:7px;border:1px solid var(--border);
+  background:transparent;color:var(--t2);font-size:10px;font-weight:700;
+  cursor:pointer;font-family:var(--fh);letter-spacing:.08em;transition:all .15s}
+.cal-filter-btn.active{background:var(--teal);border-color:var(--teal);color:#000}
+.cal-filter-btn.red-f.active{background:#ff4060;border-color:#ff4060;color:#fff}
+.cal-filter-btn.orange-f.active{background:#ff8c00;border-color:#ff8c00;color:#fff}
+.cal-filter-btn.all-f.active{background:var(--teal);border-color:var(--teal);color:#000}
+.cal-hdr-col{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);
+  font-family:var(--fh);text-align:right;padding:0 8px}
+.cal-hdr-col:nth-child(4){text-align:left;padding:0 8px}
+.cal-alert-box{background:rgba(255,64,96,.08);border:1px solid rgba(255,64,96,.3);
+  border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;
+  font-size:12px;color:var(--t2);display:none}
+.cal-alert-box.show{display:flex}
+@media(max-width:800px){
+  .cal-row{grid-template-columns:70px 28px 28px 1fr 90px}
+  .cal-val,.cal-hdr-col:nth-child(n+6){display:none}
+}
 </style>
 <script>window._sbLoadError=false;</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
@@ -846,6 +895,7 @@ function doForgotSubmit(){
   <div class="tab" onclick="goTab('brokerlist',this)" id="tabBroker">Broker</div>
   <div class="tab" onclick="goTab('journal',this)" id="tabJournal">Journal</div>
   <div class="tab" onclick="goTab('eadownload',this)" id="tabEA">⬇ EA Download</div>
+  <div class="tab" onclick="goTab('calendar',this)" id="tabCal">📅 Calendario</div>
   <div class="tab" onclick="goTab('stats',this)" id="tabStats">📊 Statistiche</div>
   <div class="tab" onclick="goTab('guide',this)" id="tabGuide">Guida</div>
   <div class="tab" onclick="toggleAccDrop(event)" id="tabAccount" style="margin-left:auto;display:flex;align-items:center;gap:7px;padding:6px 12px;position:relative">
@@ -1089,59 +1139,182 @@ function mkSetCat(cat) {
 // ═══════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════
-// MARKET DATA ENGINE — DEFINITIVO
-// 3 proxy in gara simultanea (Promise.any) — vince il più veloce
-// ═══════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// MARKET DATA ENGINE — LIVE STREAMING
+//
+// CRYPTO:  Binance WebSocket — tick by tick, ogni millisecondo
+// FOREX:   Frankfurter polling ogni 5s
+// INDICI:  Yahoo polling ogni 30s (no WebSocket gratis)
+// ═══════════════════════════════════════════════════════════════
 var _mkLastLoad = 0;
+var _mkWS       = null;   // Binance WebSocket
+var _mkPollers  = [];     // intervalli polling attivi
+var _mkPrev     = {};     // prezzi precedenti per flash animazione
 
-var MK_PROXIES = [
-  function(u){ return 'https://api.allorigins.win/raw?url='    + encodeURIComponent(u); },
-  function(u){ return 'https://corsproxy.io/?'                 + encodeURIComponent(u); },
-  function(u){ return 'https://api.codetabs.com/v1/proxy?quest='+ encodeURIComponent(u); }
-];
+// Mappa Binance stream → nome pannello
+var BN_STREAMS = {
+  'btcusdt':'BTC/USD','ethusdt':'ETH/USD','solusdt':'SOL/USD',
+  'bnbusdt':'BNB/USD','xrpusdt':'XRP/USD','adausdt':'ADA/USD',
+  'dogeusdt':'DOGE/USD','avaxusdt':'AVAX/USD','dotusdt':'DOT/USD',
+  'linkusdt':'LINK/USD','maticusdt':'MATIC/USD','ltcusdt':'LTC/USD'
+};
 
-// Fetch JSON: tutti e 3 i proxy partono insieme, risponde il primo
-function mkJSON(url, ms) {
-  ms = ms || 12000;
-  var attempts = MK_PROXIES.map(function(pfn) {
-    return new Promise(function(resolve, reject) {
-      var timer = setTimeout(function(){ reject(new Error('timeout')); }, ms);
-      fetch(pfn(url), {cache:'no-store'})
-        .then(function(r){ clearTimeout(timer); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-        .then(resolve)
-        .catch(function(){ clearTimeout(timer); reject(new Error('fail')); });
-    });
-  });
-  // Promise.any: risolve col primo successo
-  if(typeof Promise.any === 'function') return Promise.any(attempts);
-  // Fallback per browser vecchi
-  return new Promise(function(resolve, reject) {
-    var done = false, failed = 0;
-    attempts.forEach(function(p) {
-      p.then(function(v){ if(!done){done=true;resolve(v);} })
-       .catch(function(){ if(++failed===attempts.length) reject(new Error('all failed')); });
-    });
+// Flash animazione prezzo (verde/rosso)
+function mkFlash(sym, newPrice) {
+  var prev = _mkPrev[sym];
+  _mkPrev[sym] = newPrice;
+  if(prev == null) return;
+  var dir = newPrice > prev ? 'up' : newPrice < prev ? 'dn' : null;
+  if(!dir) return;
+  // Trova tutte le celle prezzo con questo simbolo
+  document.querySelectorAll('[data-mksym="'+sym+'"]').forEach(function(el){
+    el.style.transition = 'none';
+    el.style.color = dir==='up' ? '#00d68f' : '#ff4060';
+    el.style.textShadow = dir==='up' ? '0 0 8px rgba(0,214,143,.8)' : '0 0 8px rgba(255,64,96,.8)';
+    setTimeout(function(){
+      el.style.transition = 'color 1.2s, text-shadow 1.2s';
+      el.style.color = '';
+      el.style.textShadow = '';
+    }, 600);
   });
 }
 
+// Aggiorna prezzo singolo e ri-renderizza solo la riga
+function mkUpdatePrice(sym, price, pct1d) {
+  mkFlash(sym, price);
+  if(!_mkData[sym]) _mkData[sym] = {price:price, pct1d:pct1d||null, pct1w:null, pct1m:null};
+  else {
+    _mkData[sym].price = price;
+    if(pct1d != null) _mkData[sym].pct1d = pct1d;
+  }
+  // Aggiorna solo la riga specifica (no full re-render per performance)
+  mkUpdateRow(sym);
+  mkUpdateTicker(sym);
+}
+
+// Aggiorna singola riga della tabella mercati
+function mkUpdateRow(sym) {
+  var row = document.querySelector('[data-mkrow="'+sym+'"]');
+  if(!row) return; // pannello chiuso
+  var d = _mkData[sym];
+  if(!d || d.price == null) return;
+  // Aggiorna prezzo
+  var priceEl = row.querySelector('.mk-price-val');
+  if(priceEl) {
+    var newPriceStr = mkFmtPrice(d.price, sym);
+    if(priceEl.textContent !== newPriceStr) {
+      mkFlash(sym, d.price);
+      priceEl.setAttribute('data-mksym', sym);
+      priceEl.textContent = newPriceStr;
+    }
+  }
+  // Aggiorna giornaliero
+  var periodi = row.querySelectorAll('.mk-period');
+  if(periodi.length >= 1) periodi[0].innerHTML =
+    mkPctHtml(sym, d.pct1d) + mkSent(sym, d.pct1d);
+  if(periodi.length >= 2) periodi[1].innerHTML =
+    mkPctHtml(sym, d.pct1w) + mkSent(sym, d.pct1w);
+  if(periodi.length >= 3) periodi[2].innerHTML =
+    mkPctHtml(sym, d.pct1m) + mkSent(sym, d.pct1m);
+}
+
+function mkPctHtml(sym, pct) {
+  if(pct == null) return '<span class="mkp mkp-na">—</span>';
+  var sign = pct>=0?'+':'';
+  return '<span class="mkp '+(pct>=0?'mkp-pos':'mkp-neg')+'">'+sign+pct.toFixed(2)+'%</span>';
+}
+
+// Aggiorna solo il ticker scorrevole per un simbolo
+function mkUpdateTicker(sym) {
+  var d = _mkData[sym];
+  if(!d || d.price == null) return;
+  var items = document.querySelectorAll('.tk-item');
+  items.forEach(function(item) {
+    var symEl = item.querySelector('.tk-sym');
+    if(symEl && symEl.textContent === sym) {
+      var priceEl = item.querySelector('.tk-price');
+      if(priceEl) priceEl.textContent = mkFmtPrice(d.price, sym);
+      var chgEl = item.querySelector('.tk-chg');
+      if(chgEl && d.pct1d != null) {
+        chgEl.textContent = (d.pct1d>=0?'+':'')+d.pct1d.toFixed(2)+'%';
+        chgEl.className = 'tk-chg '+(d.pct1d>=0?'tk-up':'tk-dn');
+      }
+    }
+  });
+}
+
+// ── BINANCE WebSocket — CRYPTO TICK BY TICK ─────────────────────
+function mkStartCryptoWS() {
+  if(_mkWS) { try{_mkWS.close();}catch(e){} }
+
+  var streams = Object.keys(BN_STREAMS).map(function(s){ return s+'@miniTicker'; }).join('/');
+  var url = 'wss://stream.binance.com:9443/stream?streams=' + streams;
+
+  _mkWS = new WebSocket(url);
+
+  _mkWS.onmessage = function(event) {
+    try {
+      var msg = JSON.parse(event.data);
+      var data = msg.data || msg;
+      var sym = data.s ? data.s.toLowerCase() : null;
+      var name = sym ? BN_STREAMS[sym] : null;
+      if(!name || !data.c) return;
+      var price  = parseFloat(data.c);
+      var open24 = parseFloat(data.o);
+      var pct1d  = open24 > 0 ? ((price - open24) / open24) * 100 : null;
+      mkUpdatePrice(name, price, pct1d);
+    } catch(e){}
+  };
+
+  _mkWS.onerror = function() {
+    // Fallback polling se WebSocket fallisce
+    setTimeout(mkCryptoFallback, 2000);
+  };
+
+  _mkWS.onclose = function() {
+    // Riconnetti dopo 5s se chiude
+    setTimeout(mkStartCryptoWS, 5000);
+  };
+}
+
+async function mkCryptoFallback() {
+  var ids='bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,avalanche-2,polkadot,chainlink,matic-network,litecoin';
+  var nm={'bitcoin':'BTC/USD','ethereum':'ETH/USD','solana':'SOL/USD',
+    'binancecoin':'BNB/USD','ripple':'XRP/USD','cardano':'ADA/USD',
+    'dogecoin':'DOGE/USD','avalanche-2':'AVAX/USD','polkadot':'DOT/USD',
+    'chainlink':'LINK/USD','matic-network':'MATIC/USD','litecoin':'LTC/USD'};
+  try {
+    var r = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='+ids+'&price_change_percentage=7d,30d&sparkline=false',{cache:'no-store'});
+    var d = await r.json();
+    if(!Array.isArray(d)) return;
+    d.forEach(function(c){
+      var s=nm[c.id]; if(!s||c.current_price==null)return;
+      if(!_mkData[s]) _mkData[s]={price:0,pct1d:null,pct1w:null,pct1m:null};
+      mkUpdatePrice(s, c.current_price, c.price_change_percentage_24h||null);
+      _mkData[s].pct1w = c.price_change_percentage_7d_in_currency||null;
+      _mkData[s].pct1m = c.price_change_percentage_30d_in_currency||null;
+    });
+  } catch(e) {}
+}
+
+// ── FOREX — Polling ogni 5 secondi ──────────────────────────────
 function mkBizDate(n){
   var d=new Date(),c=0;
   while(c<n){d.setDate(d.getDate()-1);if(d.getDay()>0&&d.getDay()<6)c++;}
   return d.toISOString().split('T')[0];
 }
 
-// ── FOREX — Frankfurter (CORS nativo, no proxy) ─────────────────
-async function mkLoadForex(){
-  try{
-    function ff(url){ return fetch(url,{cache:'no-store'}).then(function(r){return r.json();}); }
+async function mkPollForex() {
+  try {
     var res = await Promise.allSettled([
-      ff('https://api.frankfurter.app/latest?from=USD'),
-      ff('https://api.frankfurter.app/'+mkBizDate(1)+'?from=USD'),
-      ff('https://api.frankfurter.app/'+mkBizDate(5)+'?from=USD'),
-      ff('https://api.frankfurter.app/'+mkBizDate(22)+'?from=USD')
+      fetch('https://api.frankfurter.app/latest?from=USD',{cache:'no-store'}).then(function(r){return r.json();}),
+      fetch('https://api.frankfurter.app/'+mkBizDate(1)+'?from=USD',{cache:'no-store'}).then(function(r){return r.json();}),
+      fetch('https://api.frankfurter.app/'+mkBizDate(5)+'?from=USD',{cache:'no-store'}).then(function(r){return r.json();}),
+      fetch('https://api.frankfurter.app/'+mkBizDate(22)+'?from=USD',{cache:'no-store'}).then(function(r){return r.json();})
     ]);
     var t0=res[0].status==='fulfilled'&&res[0].value.rates?res[0].value.rates:null;
-    if(!t0)return;
+    if(!t0) return;
     var tY=res[1].status==='fulfilled'&&res[1].value.rates?res[1].value.rates:null;
     var tW=res[2].status==='fulfilled'&&res[2].value.rates?res[2].value.rates:null;
     var tM=res[3].status==='fulfilled'&&res[3].value.rates?res[3].value.rates:null;
@@ -1154,52 +1327,28 @@ async function mkLoadForex(){
      ['NZD','CAD'],['NZD','CHF'],['NZD','JPY'],['NZD','USD'],
      ['USD','CAD'],['USD','CHF'],['USD','JPY']
     ].forEach(function(p){
-      var price=px(p[0],p[1],t0);if(!price)return;
+      var price=px(p[0],p[1],t0); if(!price)return;
       var pY=px(p[0],p[1],tY),pW=px(p[0],p[1],tW),pM=px(p[0],p[1],tM);
-      _mkData[p[0]+'/'+p[1]]={price:price,
+      var sym=p[0]+'/'+p[1];
+      var newData={price:price,
         pct1d:pY?((price-pY)/pY)*100:null,
         pct1w:pW?((price-pW)/pW)*100:null,
         pct1m:pM?((price-pM)/pM)*100:null};
+      mkFlash(sym, price);
+      _mkData[sym]=newData;
+      mkUpdateRow(sym);
+      mkUpdateTicker(sym);
     });
   }catch(e){}
 }
 
-// ── CRYPTO — CoinGecko (CORS nativo) con fallback CryptoCompare ─
-async function mkLoadCrypto(){
-  var ids='bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,avalanche-2,polkadot,chainlink,matic-network,litecoin';
-  var nm={'bitcoin':'BTC/USD','ethereum':'ETH/USD','solana':'SOL/USD',
-    'binancecoin':'BNB/USD','ripple':'XRP/USD','cardano':'ADA/USD',
-    'dogecoin':'DOGE/USD','avalanche-2':'AVAX/USD','polkadot':'DOT/USD',
-    'chainlink':'LINK/USD','matic-network':'MATIC/USD','litecoin':'LTC/USD'};
-  try{
-    var r=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='+ids+'&price_change_percentage=7d,30d&sparkline=false',{cache:'no-store'});
-    var d=await r.json();
-    if(!Array.isArray(d))throw new Error('bad');
-    d.forEach(function(c){
-      var s=nm[c.id];if(!s||c.current_price==null)return;
-      _mkData[s]={price:c.current_price,
-        pct1d:c.price_change_percentage_24h||null,
-        pct1w:c.price_change_percentage_7d_in_currency||null,
-        pct1m:c.price_change_percentage_30d_in_currency||null};
-    });
-    return;
-  }catch(e){}
-  try{
-    var r2=await fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,SOL,BNB,XRP,ADA,DOGE,AVAX,DOT,LINK,MATIC,LTC&tsyms=USD',{cache:'no-store'});
-    var d2=await r2.json();if(!d2||!d2.RAW)return;
-    var m={'BTC':'BTC/USD','ETH':'ETH/USD','SOL':'SOL/USD','BNB':'BNB/USD',
-      'XRP':'XRP/USD','ADA':'ADA/USD','DOGE':'DOGE/USD','AVAX':'AVAX/USD',
-      'DOT':'DOT/USD','LINK':'LINK/USD','MATIC':'MATIC/USD','LTC':'LTC/USD'};
-    Object.keys(m).forEach(function(c){
-      var raw=d2.RAW[c]&&d2.RAW[c].USD;if(!raw)return;
-      _mkData[m[c]]={price:raw.PRICE,pct1d:raw.CHANGEPCT24HOUR||null,pct1w:null,pct1m:null};
-    });
-  }catch(e){}
-}
+// ── INDICI + MATERIE PRIME — Polling ogni 30s ────────────────────
+var MK_PROXIES = [
+  function(u){ return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u); },
+  function(u){ return 'https://corsproxy.io/?'+encodeURIComponent(u); },
+  function(u){ return 'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u); }
+];
 
-// ── INDICI + MATERIE PRIME ──────────────────────────────────────
-// Fase 1: UN'UNICA chiamata Yahoo quote per tutti i simboli (prezzi + 1d%)
-// Fase 2: storico chart IN PARALLELO per tutti — ogni sym usa 3 proxy in gara
 var YQ_SYMS = [
   ['^GSPC','S&P 500'],['^NDX','Nasdaq'],['^DJI','Dow Jones'],['^RUT','Russell 2000'],
   ['^GDAXI','DAX 40'],['^FTSE','FTSE 100'],['^FCHI','CAC 40'],['^N225','Nikkei 225'],
@@ -1209,72 +1358,126 @@ var YQ_SYMS = [
   ['ZW=F','Wheat'],['ZC=F','Corn'],['KC=F','Coffee'],['SB=F','Sugar']
 ];
 
-async function mkLoadIndicesCommod(){
-  // FASE 1 — UN'UNICA chiamata bulk per prezzi + 1d%
+function mkRaceProxy(url, ms) {
+  var attempts = MK_PROXIES.map(function(pfn){
+    return new Promise(function(resolve,reject){
+      var t=setTimeout(function(){reject(new Error('to'));},ms||12000);
+      fetch(pfn(url),{cache:'no-store'})
+        .then(function(r){clearTimeout(t);if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+        .then(resolve).catch(function(){clearTimeout(t);reject();});
+    });
+  });
+  if(typeof Promise.any==='function') return Promise.any(attempts);
+  return new Promise(function(resolve,reject){
+    var done=false,failed=0;
+    attempts.forEach(function(p){
+      p.then(function(v){if(!done){done=true;resolve(v);}}).catch(function(){if(++failed===attempts.length)reject();});
+    });
+  });
+}
+
+async function mkPollIndices() {
+  // Fetch quote bulk (prezzi + 1d%)
   var allSyms = YQ_SYMS.map(function(p){return p[0];}).join(',');
   var quoteUrl = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols='
     + encodeURIComponent(allSyms)
     + '&fields=regularMarketPrice,regularMarketChangePercent';
-  try{
-    var qj = await mkJSON(quoteUrl, 15000);
+  try {
+    var qj = await mkRaceProxy(quoteUrl, 15000);
     var results = qj && qj.quoteResponse && qj.quoteResponse.result;
-    if(results && results.length){
-      var nameMap = {};
-      YQ_SYMS.forEach(function(p){nameMap[p[0]]=p[1];});
+    if(results && results.length) {
+      var nm={};YQ_SYMS.forEach(function(p){nm[p[0]]=p[1];});
       results.forEach(function(q){
-        var name=nameMap[q.symbol];
+        var name=nm[q.symbol];
         if(!name||q.regularMarketPrice==null)return;
-        _mkData[name]={price:q.regularMarketPrice,
-          pct1d:q.regularMarketChangePercent!=null?q.regularMarketChangePercent:null,
-          pct1w:null,pct1m:null};
+        mkFlash(name, q.regularMarketPrice);
+        if(!_mkData[name])_mkData[name]={price:0,pct1d:null,pct1w:null,pct1m:null};
+        _mkData[name].price=q.regularMarketPrice;
+        if(q.regularMarketChangePercent!=null)_mkData[name].pct1d=q.regularMarketChangePercent;
+        mkUpdateRow(name);
+        mkUpdateTicker(name);
       });
-      mkRender();mkUpdateMainTicker();
     }
-  }catch(e){}
+  } catch(e){}
 
-  // FASE 2 — storico in PARALLELO per tutti i simboli (3 proxy in gara per ognuno)
-  var nameMap2={};YQ_SYMS.forEach(function(p){nameMap2[p[0]]=p[1];});
-  await Promise.allSettled(YQ_SYMS.map(async function(pair){
-    var sym=pair[0],name=pair[1];
+  // Storico (solo al primo caricamento se mancano dati sett/mese)
+  var needHistory = YQ_SYMS.filter(function(p){
+    var d=_mkData[p[1]];return !d||d.pct1w==null;
+  });
+  for(var i=0;i<needHistory.length;i++){
+    var sym=needHistory[i][0],name=needHistory[i][1];
     var chartUrl='https://query1.finance.yahoo.com/v8/finance/chart/'
       +encodeURIComponent(sym)+'?interval=1d&range=35d&includePrePost=false';
     try{
-      var j=await mkJSON(chartUrl,14000);
+      var j=await mkRaceProxy(chartUrl,14000);
       var res=j&&j.chart&&j.chart.result&&j.chart.result[0];
-      if(!res)return;
+      if(!res)continue;
       var c=(res.indicators.quote[0].close||[]).filter(function(v){return v!=null;});
-      if(c.length<2)return;
+      if(c.length<2)continue;
       var nowP=res.meta&&res.meta.regularMarketPrice?res.meta.regularMarketPrice:c[c.length-1];
       if(!_mkData[name])_mkData[name]={price:nowP,pct1d:null,pct1w:null,pct1m:null};
-      else _mkData[name].price=nowP;
       _mkData[name].pct1w=c.length>=6?((nowP-c[c.length-6])/c[c.length-6])*100:null;
       _mkData[name].pct1m=c.length>=22?((nowP-c[c.length-22])/c[c.length-22])*100:null;
-      mkRender();
+      mkUpdateRow(name);
     }catch(e){}
-  }));
+    await new Promise(function(r){setTimeout(r,200);});
+  }
 }
 
-// ── ORCHESTRATORE ───────────────────────────────────────────────
-async function mkLoadAll(){
-  var now=Date.now();
-  if(_mkLoading||(now-_mkLastLoad<5*60*1000&&Object.keys(_mkData).length>5)){mkRender();return;}
-  _mkLoading=true;
+// ── AVVIA TUTTO ──────────────────────────────────────────────────
+function mkStartLive() {
+  // Ferma tutto il vecchio
+  _mkPollers.forEach(function(id){clearInterval(id);});
+  _mkPollers=[];
+  if(_mkWS){try{_mkWS.close();}catch(e){}_mkWS=null;}
+
+  // Crypto: WebSocket Binance (tick reale)
+  mkStartCryptoWS();
+  // Fallback CoinGecko ogni 30s per dati storici crypto (7d/30d)
+  _mkPollers.push(setInterval(mkCryptoFallback, 30000));
+
+  // Forex: polling ogni 5 secondi
+  mkPollForex();
+  _mkPollers.push(setInterval(mkPollForex, 5000));
+
+  // Indici/Materie prime: polling ogni 30 secondi
+  mkPollIndices();
+  _mkPollers.push(setInterval(mkPollIndices, 30000));
+}
+
+// ── ORCHESTRATORE (chiamato all'apertura pannello) ────────────────
+var _mkLiveStarted = false;
+async function mkLoadAll() {
   var body=document.getElementById('mkBody');
-  if(body)body.innerHTML='<div style="text-align:center;padding:60px;font-family:var(--fd);font-size:12px;color:#3d4d78">&#x23F3; Caricamento...</div>';
-  await Promise.allSettled([mkLoadForex(),mkLoadCrypto()]);
-  mkRender();mkUpdateMainTicker();
-  var upd=document.getElementById('mkUpdTime');
-  if(upd)upd.textContent='Aggiornato: '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-  mkUpdateRiskBadge();
-  await mkLoadIndicesCommod();
-  _mkLoading=false;_mkLastLoad=Date.now();
-  mkUpdateMainTicker();
-  if(upd)upd.textContent='Aggiornato: '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-  mkUpdateRiskBadge();mkRender();
+  if(body&&!_mkLiveStarted)
+    body.innerHTML='<div style="text-align:center;padding:60px;font-family:var(--fd);font-size:12px;color:#3d4d78">&#x23F3; Connessione live...</div>';
+
+  if(!_mkLiveStarted) {
+    _mkLiveStarted=true;
+    mkStartLive();
+    // Prima render dopo 1s per mostrare i primi dati
+    setTimeout(function(){
+      mkRender();mkUpdateMainTicker();
+      var upd=document.getElementById('mkUpdTime');
+      if(upd)upd.textContent='LIVE ● in aggiornamento continuo';
+      mkUpdateRiskBadge();
+    },1500);
+  } else {
+    mkRender();
+  }
 }
 
-async function mkForceReload(){
-  _mkData={};_mkLastLoad=0;await mkLoadAll();
+async function mkForceReload() {
+  _mkData={};_mkLiveStarted=false;
+  mkStartLive();
+  setTimeout(function(){mkRender();mkUpdateMainTicker();mkUpdateRiskBadge();},1500);
+}
+
+// Ferma tutto quando il pannello si chiude (risparmia banda)
+function mkStopLive() {
+  _mkPollers.forEach(function(id){clearInterval(id);});
+  _mkPollers=[];
+  // NON chiudere WebSocket — è leggero e mantiene i dati freschi
 }
 
 function mkUpdateRiskBadge(){
@@ -1368,10 +1571,10 @@ function mkRender(){
     var d=_mkData[sym]||{};
     var hasData=d.price!=null;
     var price=hasData?mkFmtPrice(d.price,sym):'—';
-    html+='<div class="mk-row mk-grid">'
+    html+='<div class="mk-row mk-grid" data-mkrow="'+sym+'">'
       +'<div><div class="mk-sym-name">'+sym+'</div>'
       +'<div class="mk-sym-sub">'+(MK_NAMES[sym]||'')+'</div></div>'
-      +'<div class="mk-price-cell"><span class="mk-price-val">'+(hasData?price:'<span style="color:#3d4d78">—</span>')+'</span></div>'
+      +'<div class="mk-price-cell"><span class="mk-price-val" data-mksym="'+sym+'">'+(hasData?price:'<span style="color:#3d4d78">—</span>')+'</span></div>'
       +mkPeriodCell(sym, hasData&&d.pct1d!=null?d.pct1d:null)
       +mkPeriodCell(sym, hasData&&d.pct1w!=null?d.pct1w:null)
       +mkPeriodCell(sym, hasData&&d.pct1m!=null?d.pct1m:null)
@@ -1810,18 +2013,22 @@ function calcRealPnL(propId) {
   var sess = jrnl.sessions.find(function(s){ return s.linkedPropId === propId; });
   if(!sess) return {prop:0,broker:0,net:0,hasData:false,propTrades:[],brokerTrades:[]};
 
-  var createdAt = sess.createdAt ? new Date(sess.createdAt).getTime() : 0;
+  // Usa il timestamp più recente tra creazione sfida e connessione broker/prop
+  var propConnAt   = sess.propConn   && sess.propConn.connectedAt   ? new Date(sess.propConn.connectedAt).getTime()   : 0;
+  var brokerConnAt = sess.brokerConn && sess.brokerConn.connectedAt ? new Date(sess.brokerConn.connectedAt).getTime() : 0;
+  var createdAt    = sess.createdAt  ? new Date(sess.createdAt).getTime() : 0;
 
-  function filterTrades(trades) {
+  function filterTrades(trades, connAt) {
+    // Filtra dal momento della connessione (o creazione sfida se non connesso)
+    var cutoff = connAt || createdAt || 0;
     return (trades||[]).filter(function(t){
-      // Solo trade da dopo la creazione della sfida
       var openTime = new Date(t.open_time||t.opened_at||0).getTime();
-      return openTime >= createdAt;
+      return openTime >= cutoff;
     });
   }
 
-  var propTrades   = filterTrades(sess.propTrades);
-  var brokerTrades = filterTrades(sess.brokerTrades);
+  var propTrades   = filterTrades(sess.propTrades,   propConnAt);
+  var brokerTrades = filterTrades(sess.brokerTrades, brokerConnAt);
 
   var propPnl   = propTrades.reduce(function(s,t){ return s+parseFloat(t.profit||t.pnl_realized||0); },0);
   var brokerPnl = brokerTrades.reduce(function(s,t){ return s+parseFloat(t.profit||t.pnl_realized||0); },0);
@@ -2988,7 +3195,12 @@ async function jrnlSaveConn() {
 
   if (plat==='mt4'||plat==='mt5') {
     var actype = (document.getElementById('jConn-actype')||{value:_jConnSide}).value;
-    sess[key] = {platform:plat, label:label, env:'live', connected:true, accountId:'', actype:actype};
+    var connectedAt = new Date().toISOString();  // TIMESTAMP CONNESSIONE
+    sess[key] = {platform:plat, label:label, env:'live', connected:true,
+                 accountId:'', actype:actype, connectedAt:connectedAt};
+    // Svuota trade precedenti — nuova connessione, nuova storia
+    if(side==='prop')   sess.propTrades   = [];
+    if(side==='broker') sess.brokerTrades = [];
     jrnlSave();
     jrnlCloseConn();
     jrnlSyncMT(_jConnIdx, _jConnSide);
@@ -3076,38 +3288,55 @@ async function jrnlSyncMT(i, side) {
     if (!user) return;
     // account_type per Supabase: usa il campo actype salvato
     var actype = conn.actype || side;
-    var q = await _sb.from('trades')
+    // Filtra dal momento della connessione in poi
+    var connectedAt = conn.connectedAt || sess.createdAt || null;
+
+    var query = _sb.from('trades')
       .select('*')
       .eq('user_id', user.id)
       .eq('journal_id', sess.id)
       .eq('account_type', actype)
       .order('open_time', {ascending: false})
-      .limit(200);
+      .limit(500);
+
+    // Applica filtro data se disponibile
+    if(connectedAt) query = query.gte('open_time', connectedAt);
+
+    var q = await query;
     if (q.error) { console.error('jrnlSyncMT error:', q.error.message); return; }
-    var trades = (q.data||[]).map(function(t){
-      return {
-        external_id:  String(t.ticket),
-        platform:     t.platform||conn.platform,
-        symbol:       t.symbol,
-        direction:    t.direction,
-        volume:       parseFloat(t.volume||0),
-        lots:         parseFloat(t.volume||0),
-        open_price:   t.open_price,
-        close_price:  t.close_price,
-        stop_loss:    t.stop_loss,
-        take_profit:  t.take_profit,
-        profit:       parseFloat(t.profit||0),
-        pnl_realized: parseFloat(t.profit||0),
-        swap:         parseFloat(t.swap||0),
-        commission:   parseFloat(t.commission||0),
-        status:       t.status||'open',
-        open_time:    t.open_time,
-        close_time:   t.close_time,
-        opened_at:    t.open_time,
-        closed_at:    t.close_time,
-        comment:      t.comment||''
-      };
-    });
+
+    var trades = (q.data||[])
+      .filter(function(t){
+        // Doppio filtro client-side: solo trade aperti DOPO la connessione
+        if(!connectedAt) return true;
+        var tTime = t.open_time || t.opened_at;
+        if(!tTime) return false;
+        return new Date(tTime) >= new Date(connectedAt);
+      })
+      .map(function(t){
+        return {
+          external_id:  String(t.ticket),
+          platform:     t.platform||conn.platform,
+          symbol:       t.symbol,
+          direction:    t.direction,
+          volume:       parseFloat(t.volume||0),
+          lots:         parseFloat(t.volume||0),
+          open_price:   t.open_price,
+          close_price:  t.close_price,
+          stop_loss:    t.stop_loss,
+          take_profit:  t.take_profit,
+          profit:       parseFloat(t.profit||0),
+          pnl_realized: parseFloat(t.profit||0),
+          swap:         parseFloat(t.swap||0),
+          commission:   parseFloat(t.commission||0),
+          status:       t.status||'open',
+          open_time:    t.open_time,
+          close_time:   t.close_time,
+          opened_at:    t.open_time,
+          closed_at:    t.close_time,
+          comment:      t.comment||''
+        };
+      });
     if (side==='prop') sess.propTrades = trades;
     else               sess.brokerTrades = trades;
     jrnlSave();
@@ -3469,6 +3698,290 @@ function loadAccountData(){
 function showPolicy(){document.getElementById('policyModal').style.display='block';}
 function resetConsent(){try{localStorage.removeItem('ph_consent');}catch(e){}location.reload();}
 
+
+// ═══════════════════════════════════════════════════════
+// ECONOMIC CALENDAR — ForexFactory feed
+// ═══════════════════════════════════════════════════════
+var _calData     = [];
+var _calFilter   = 'high';   // 'all','high','medium'
+var _calLoaded   = false;
+var _calTimer    = null;
+
+var CAL_FLAGS = {
+  'USD':'🇺🇸','EUR':'🇪🇺','GBP':'🇬🇧','JPY':'🇯🇵','AUD':'🇦🇺',
+  'CAD':'🇨🇦','CHF':'🇨🇭','NZD':'🇳🇿','CNY':'🇨🇳','CNH':'🇨🇳',
+  'ALL':'🌍'
+};
+
+var CAL_IMP_LABEL = {
+  'High':'red','Medium':'orange','Low':'yellow','Holiday':'gray',
+  'high':'red','medium':'orange','low':'yellow'
+};
+
+async function calLoad() {
+  // ForexFactory JSON feed (settimana corrente)
+  var FF_URL = 'https://nfs.faireconomy.media/ff_calendar_thisweek.json?version='+Date.now();
+  var PROXY1 = 'https://api.allorigins.win/raw?url='+encodeURIComponent(FF_URL);
+  var PROXY2 = 'https://corsproxy.io/?'+encodeURIComponent(FF_URL);
+
+  var sources = [PROXY1, PROXY2];
+  for(var i=0;i<sources.length;i++){
+    try{
+      var r = await fetch(sources[i],{cache:'no-store'});
+      if(!r.ok) continue;
+      var data = await r.json();
+      if(!Array.isArray(data)||!data.length) continue;
+      _calData = data;
+      _calLoaded = true;
+      calRender();
+      return;
+    }catch(e){continue;}
+  }
+  // Nessuna fonte disponibile
+  var ct=document.getElementById('main');
+  if(ct) ct.innerHTML='<div class="cal-wrap"><div style="text-align:center;padding:60px;color:var(--t3);font-size:13px">'
+    +'<div style="font-size:32px;margin-bottom:12px">📅</div>'
+    +'Impossibile caricare il calendario.<br><small>Controlla la connessione e riprova.</small><br><br>'
+    +'<button class="btn-p" onclick="calLoad()">🔄 Riprova</button></div></div>';
+}
+
+function calSetFilter(f){
+  _calFilter=f;
+  calRender();
+}
+
+function calNow(){ return new Date(); }
+
+function calParseDate(dateStr, timeStr){
+  // FF format: "03-21-2025" time: "8:30am"
+  if(!dateStr) return null;
+  var parts = dateStr.split('-');
+  if(parts.length!==3) return null;
+  var base = new Date(parseInt(parts[2]),parseInt(parts[0])-1,parseInt(parts[1]),0,0,0);
+  if(timeStr && timeStr!=='All Day' && timeStr!=='Tentative'){
+    var m = timeStr.match(/(\d+):(\d+)(am|pm)/i);
+    if(m){
+      var h=parseInt(m[1]),min=parseInt(m[2]),ampm=m[3].toLowerCase();
+      if(ampm==='pm'&&h!==12)h+=12;
+      if(ampm==='am'&&h===12)h=0;
+      base.setHours(h,min,0,0);
+    }
+  }
+  return base;
+}
+
+function calCountdown(eventDate){
+  if(!eventDate) return {txt:'—',cls:'past'};
+  var now=calNow();
+  var diff=eventDate-now;
+  if(diff<0) return {txt:'Passato',cls:'past'};
+  var h=Math.floor(diff/3600000);
+  var m=Math.floor((diff%3600000)/60000);
+  var s=Math.floor((diff%60000)/1000);
+  if(h>0) return {txt:h+'h '+m+'m',cls:h<3?'orange':''};
+  if(m>15) return {txt:m+'m',cls:'orange'};
+  if(m>=0)  return {txt:m+'m '+s+'s',cls:'red'};
+  return {txt:'—',cls:'past'};
+}
+
+function calFmtVal(v){
+  if(!v||v===''||v==='—') return '<span class="cal-val na">—</span>';
+  return '<span class="cal-val">'+v+'</span>';
+}
+
+function calActualColor(actual, forecast, previous){
+  if(!actual||actual===''||actual==='—') return 'na';
+  // Confronta actual vs forecast (o previous se no forecast)
+  var ref = forecast||previous;
+  if(!ref||ref==='') return 'actual';
+  var a=parseFloat(actual.replace(/[^0-9\.\-]/g,'')||'0');
+  var b=parseFloat(ref.replace(/[^0-9\.\-]/g,'')||'0');
+  if(isNaN(a)||isNaN(b)) return 'actual';
+  // Se actual > forecast = meglio del previsto = verde, altrimenti rosso
+  return a>=b ? 'actual' : 'worse';
+}
+
+function calRender(){
+  var ct=document.getElementById('main');
+  if(!ct) return;
+  ct.style.padding='24px';ct.style.maxWidth='1400px';
+
+  var now=calNow();
+
+  // Filtra
+  var filtered=_calData.filter(function(ev){
+    var imp=ev.impact||ev.importance||'';
+    if(_calFilter==='high')   return imp==='High'||imp==='high';
+    if(_calFilter==='medium') return imp==='High'||imp==='high'||imp==='Medium'||imp==='medium';
+    return true;
+  });
+
+  // Raggruppa per giorno
+  var byDay={};
+  var dayOrder=[];
+  filtered.forEach(function(ev){
+    var dateKey=ev.date||'';
+    if(!byDay[dateKey]){byDay[dateKey]=[];dayOrder.push(dateKey);}
+    byDay[dateKey].push(ev);
+  });
+
+  // Conta notizie rosse nelle prossime 2 ore
+  var redSoon=0;
+  _calData.forEach(function(ev){
+    var imp=ev.impact||ev.importance||'';
+    if(imp!=='High'&&imp!=='high') return;
+    var eDate=calParseDate(ev.date,ev.time);
+    if(!eDate) return;
+    var diff=eDate-now;
+    if(diff>0&&diff<2*3600000) redSoon++;
+  });
+
+  var html='<div class="cal-wrap">';
+
+  // Header + alert
+  html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
+    +'<div style="font-size:17px;font-weight:800;font-family:var(--fh)">📅 Calendario Economico</div>'
+    +'<div style="display:flex;gap:8px;align-items:center">'
+    +'<span style="font-size:10px;font-family:var(--fd);color:var(--t3)">Fonte: ForexFactory • Orari ET</span>'
+    +'<button class="btn-g" style="padding:4px 12px;font-size:10px" onclick="calLoad()">🔄</button>'
+    +'</div></div>';
+
+  // Alert notizie rosse imminenti
+  if(redSoon>0){
+    html+='<div class="cal-alert-box show">'
+      +'<span style="font-size:20px">⚠️</span>'
+      +'<span><strong>Attenzione:</strong> '+redSoon+' notizia/e ad ALTO IMPATTO nelle prossime 2 ore. '
+      +'Evita di aprire trade 15 minuti prima e dopo.</span></div>';
+  }
+
+  // Filtri
+  html+='<div class="cal-filter-bar">'
+    +'<span style="font-size:10px;font-family:var(--fh);color:var(--t3);letter-spacing:.1em">FILTRO:</span>'
+    +'<button class="cal-filter-btn red-f'+(_calFilter==='high'?' active':'')+'" onclick="calSetFilter(\'high\')">🔴 Solo Alto Impatto</button>'
+    +'<button class="cal-filter-btn orange-f'+(_calFilter==='medium'?' active':'')+'" onclick="calSetFilter(\'medium\')">🟡 Alto + Medio</button>'
+    +'<button class="cal-filter-btn all-f'+(_calFilter==='all'?' active':'')+'" onclick="calSetFilter(\'all\')">Tutti</button>'
+    +'</div>';
+
+  if(!filtered.length){
+    html+='<div style="text-align:center;padding:40px;color:var(--t3);font-size:13px">Nessuna notizia con questo filtro.</div>';
+  } else {
+    // Header colonne
+    html+='<div class="cal-row" style="padding:6px 12px;opacity:.5">'
+      +'<div class="cal-hdr-col" style="text-align:left">Orario</div>'
+      +'<div class="cal-hdr-col"></div>'
+      +'<div class="cal-hdr-col"></div>'
+      +'<div class="cal-hdr-col" style="text-align:left">Evento</div>'
+      +'<div class="cal-hdr-col">Stima</div>'
+      +'<div class="cal-hdr-col">Precedente</div>'
+      +'<div class="cal-hdr-col">Effettivo</div>'
+      +'<div class="cal-hdr-col">Tra</div>'
+      +'</div>';
+
+    dayOrder.forEach(function(dateKey){
+      var evs=byDay[dateKey];
+      if(!evs||!evs.length) return;
+
+      // Header giorno
+      var d=calParseDate(dateKey,'');
+      var dayLabel=d?d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})
+        :dateKey;
+      // Conta rosse del giorno
+      var dayRed=evs.filter(function(e){return (e.impact||e.importance||'')==='High'||(e.impact||e.importance||'')==='high';}).length;
+      html+='<div class="cal-day-hdr">'+dayLabel.toUpperCase()
+        +(dayRed?' <span style="color:#ff4060;font-size:10px;margin-left:8px">● '+dayRed+' alto impatto</span>':'')
+        +'</div>';
+
+      evs.forEach(function(ev){
+        var imp      = ev.impact||ev.importance||'';
+        var impCls   = CAL_IMP_LABEL[imp]||'gray';
+        var currency = ev.currency||ev.country||'—';
+        var flag     = CAL_FLAGS[currency]||'🌐';
+        var eDate    = calParseDate(ev.date, ev.time);
+        var countdown= calCountdown(eDate);
+        var isPast   = eDate && eDate<now;
+        var isSoon   = eDate && !isPast && (eDate-now)<15*60*1000; // entro 15 min
+
+        var timeStr = ev.time||'—';
+        var timeCls = isPast?'past':isSoon?'soon':'';
+
+        var actual   = ev.actual||'';
+        var forecast = ev.forecast||'';
+        var previous = ev.previous||'';
+        var actCls   = calActualColor(actual,forecast,previous);
+
+        // Riga con sfondo speciale se notizia imminente (entro 15min)
+        var rowBg = isSoon&&impCls==='red'
+          ? 'background:rgba(255,64,96,.06);border-left:3px solid #ff4060;'
+          : impCls==='red'&&!isPast
+            ? 'border-left:3px solid rgba(255,64,96,.3);'
+            : 'border-left:3px solid transparent;';
+
+        html+='<div class="cal-row" style="'+rowBg+'">'
+          +'<div class="cal-time '+timeCls+'">'+timeStr+(isSoon?'<br><span style="font-size:8px;color:#ffbe0b">⚠ PRESTO</span>':'')+'</div>'
+          +'<div class="cal-flag">'+flag+'</div>'
+          +'<div><div class="cal-imp '+impCls+'" title="'+imp+' Impact"></div></div>'
+          +'<div class="cal-event">'+(ev.title||ev.event||'—')+'<span class="cal-cur">'+currency+'</span></div>'
+          +(forecast?'<div class="cal-val">'+forecast+'</div>':'<div class="cal-val na">—</div>')
+          +(previous?'<div class="cal-val">'+previous+'</div>':'<div class="cal-val na">—</div>')
+          +(actual?'<div class="cal-val '+actCls+'">'+actual+'</div>':'<div class="cal-val na">—</div>')
+          +'<div class="cal-countdown '+countdown.cls+'">'+countdown.txt+'</div>'
+          +'</div>';
+      });
+    });
+  }
+
+  html+='</div>';
+  ct.innerHTML=html;
+
+  // Aggiorna countdown ogni secondo
+  if(_calTimer) clearInterval(_calTimer);
+  _calTimer=setInterval(function(){
+    // Aggiorna solo i countdown senza re-render completo
+    document.querySelectorAll('.cal-countdown').forEach(function(el,idx){
+      var row=el.closest('.cal-row');
+      if(!row) return;
+      var timeEl=row.querySelector('.cal-time');
+      if(!timeEl) return;
+    });
+    // Re-render leggero ogni 30s, countdown ogni 1s aggiornato via DOM
+    calUpdateCountdowns();
+  },1000);
+}
+
+function calUpdateCountdowns(){
+  var now=calNow();
+  var rows=document.querySelectorAll('.cal-row[data-calev]');
+  // Fallback: re-render completo ogni 60s
+  // Per ora aggiorna il countdown direttamente
+  if(_calLoaded){
+    _calData.forEach(function(ev,idx){
+      var eDate=calParseDate(ev.date,ev.time);
+      var cd=calCountdown(eDate);
+      var el=document.querySelector('[data-calidx="'+idx+'"]');
+      if(el){el.textContent=cd.txt;el.className='cal-countdown '+cd.cls;}
+    });
+  }
+}
+
+function renderCalendar(){
+  var ct=document.getElementById('main');
+  if(!ct) return;
+  ct.style.padding='24px';ct.style.maxWidth='1400px';
+  if(!_calLoaded){
+    ct.innerHTML='<div class="cal-wrap"><div style="text-align:center;padding:60px;font-size:13px;color:var(--t3)">'
+      +'<div style="font-size:40px;margin-bottom:16px">📅</div>'
+      +'<div style="font-size:16px;font-weight:700;color:var(--t);margin-bottom:8px">Calendario Economico</div>'
+      +'Caricamento notizie da ForexFactory...<br><br>'
+      +'<div style="width:40px;height:4px;background:var(--teal);border-radius:2px;margin:0 auto;animation:tkLive 1s linear infinite"></div>'
+      +'</div></div>';
+    calLoad();
+  } else {
+    calRender();
+  }
+}
+
+// ── Fine Calendario ────────────────────────────────────────────
+
 // MAIN RENDER
 function render(){
   var ct=document.getElementById('main');if(!ct)return;
@@ -3480,6 +3993,7 @@ function render(){
   else if(currentTab==='brokerlist') ct.innerHTML=renderBrokerList();
   else if(currentTab==='guide')  ct.innerHTML=renderGuide();
   else if(currentTab==='eadownload') ct.innerHTML=renderEADownload();
+  else if(currentTab==='calendar'){ renderCalendar(); return; }
   else if(currentTab==='stats')  ct.innerHTML=renderStats();
   else if(currentTab==='broker') ct.innerHTML=renderBrokerList();
   else if(currentTab==='platform'){renderPlatform();return;}
