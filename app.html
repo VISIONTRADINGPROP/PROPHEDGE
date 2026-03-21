@@ -749,6 +749,22 @@ function doForgotSubmit(){
 <!-- PANNELLO MERCATI FULLSCREEN - NUOVO    -->
 <!-- ====================================== -->
 <div id="mkOverlay" onclick="closeMkPanel()"></div>
+<div id="jConnMod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)jrnlCloseConn()">
+  <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:420px;padding:22px" onclick="event.stopPropagation()">
+    <div style="font-size:14px;font-weight:700;margin-bottom:14px" id="jConnMod-title">Connetti conto</div>
+    <div class="f"><label>Piattaforma</label><select id="jConnMod-plat" onchange="jrnlConnPlatChange()">
+      <option value="ctrader">cTrader</option>
+      <option value="mt4">MetaTrader 4</option>
+      <option value="mt5">MetaTrader 5</option>
+      <option value="manual">Manuale</option>
+    </select></div>
+    <div id="jConnMod-fields"></div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn-p" onclick="jrnlSaveConn()">Salva</button>
+      <button class="btn-g" onclick="jrnlCloseConn()">Annulla</button>
+    </div>
+  </div>
+</div>
 <div id="mkPanel">
   <!-- Header -->
   <div class="mk-hdr">
@@ -1067,48 +1083,48 @@ function mkSetCat(cat) {
 // ═══════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════
-// MARKET DATA ENGINE — Fonti senza proxy, CORS nativo
+
+// ═══════════════════════════════════════════════════════════════
+// MARKET DATA ENGINE — VERSIONE DEFINITIVA
 //
-// FOREX        → Frankfurter (BCE, CORS ok)
-// CRYPTO       → CoinGecko /coins/markets (include 7d+30d)
-// INDICI+COMMOD → Stooq.com CSV (CORS nativo, no proxy)
+// FOREX:  Frankfurter (BCE, CORS nativo) — affidabile 100%
+// CRYPTO: CoinGecko /coins/markets — 24h+7d+30d ufficiali
+// INDICI+MATERIE PRIME: Stooq CSV diretto (CORS nativo confermato)
+//         + query2.finance.yahoo.com come alternativa
 // ═══════════════════════════════════════════════════════════════
 var _mkLastLoad = 0;
 
-function mkBizDate(n) {
-  var d = new Date(), c = 0;
-  while(c < n){ d.setDate(d.getDate()-1); if(d.getDay()>0&&d.getDay()<6) c++; }
+function mkBizDate(n){
+  var d=new Date(),c=0;
+  while(c<n){d.setDate(d.getDate()-1);if(d.getDay()>0&&d.getDay()<6)c++;}
   return d.toISOString().split('T')[0];
 }
 
-function mkFetchT(url, ms) {
+function mkFetchT(url,ms,mode){
   return Promise.race([
-    fetch(url, {cache:'no-store'}).then(function(r){
-      if(!r.ok) throw new Error('HTTP '+r.status);
+    fetch(url,{cache:'no-store',mode:mode||'cors'}).then(function(r){
+      if(!r.ok)throw new Error('HTTP '+r.status);
       return r;
     }),
-    new Promise(function(_,rej){ setTimeout(function(){rej(new Error('to'));},ms||8000); })
+    new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},ms||9000);})
   ]);
 }
 
-// ── FOREX — Frankfurter BCE (4 date in parallelo) ──────────────
-async function mkLoadForex() {
-  try {
-    var res = await Promise.allSettled([
+// ── FOREX ──────────────────────────────────────────────────────
+async function mkLoadForex(){
+  try{
+    var res=await Promise.allSettled([
       mkFetchT('https://api.frankfurter.app/latest?from=USD',7000).then(function(r){return r.json();}),
       mkFetchT('https://api.frankfurter.app/'+mkBizDate(1)+'?from=USD',7000).then(function(r){return r.json();}),
       mkFetchT('https://api.frankfurter.app/'+mkBizDate(5)+'?from=USD',7000).then(function(r){return r.json();}),
       mkFetchT('https://api.frankfurter.app/'+mkBizDate(22)+'?from=USD',7000).then(function(r){return r.json();})
     ]);
-
-    var t0 = res[0].status==='fulfilled' && res[0].value.rates ? res[0].value.rates : null;
-    if(!t0) return;
-    var tY = res[1].status==='fulfilled' && res[1].value.rates ? res[1].value.rates : null;
-    var tW = res[2].status==='fulfilled' && res[2].value.rates ? res[2].value.rates : null;
-    var tM = res[3].status==='fulfilled' && res[3].value.rates ? res[3].value.rates : null;
-
-    function px(b,q,r){ if(!r) return null; return b==='USD'?r[q]:q==='USD'?1/r[b]:r[q]/r[b]; }
-
+    var t0=res[0].status==='fulfilled'&&res[0].value.rates?res[0].value.rates:null;
+    if(!t0)return;
+    var tY=res[1].status==='fulfilled'&&res[1].value.rates?res[1].value.rates:null;
+    var tW=res[2].status==='fulfilled'&&res[2].value.rates?res[2].value.rates:null;
+    var tM=res[3].status==='fulfilled'&&res[3].value.rates?res[3].value.rates:null;
+    function px(b,q,r){if(!r)return null;return b==='USD'?r[q]:q==='USD'?1/r[b]:r[q]/r[b];}
     [['AUD','CAD'],['AUD','CHF'],['AUD','JPY'],['AUD','NZD'],['AUD','USD'],
      ['CAD','CHF'],['CAD','JPY'],['CHF','JPY'],
      ['EUR','AUD'],['EUR','CAD'],['EUR','CHF'],['EUR','GBP'],['EUR','JPY'],
@@ -1117,163 +1133,160 @@ async function mkLoadForex() {
      ['NZD','CAD'],['NZD','CHF'],['NZD','JPY'],['NZD','USD'],
      ['USD','CAD'],['USD','CHF'],['USD','JPY']
     ].forEach(function(p){
-      var price = px(p[0],p[1],t0); if(!price) return;
-      var pY=px(p[0],p[1],tY), pW=px(p[0],p[1],tW), pM=px(p[0],p[1],tM);
-      _mkData[p[0]+'/'+p[1]] = {
-        price:price,
+      var price=px(p[0],p[1],t0);if(!price)return;
+      var pY=px(p[0],p[1],tY),pW=px(p[0],p[1],tW),pM=px(p[0],p[1],tM);
+      _mkData[p[0]+'/'+p[1]]={price:price,
         pct1d:pY?((price-pY)/pY)*100:null,
         pct1w:pW?((price-pW)/pW)*100:null,
-        pct1m:pM?((price-pM)/pM)*100:null
-      };
+        pct1m:pM?((price-pM)/pM)*100:null};
     });
-  } catch(e){}
+  }catch(e){}
 }
 
-// ── CRYPTO — CoinGecko /coins/markets (24h + 7d + 30d ufficiali) ─
-async function mkLoadCrypto() {
-  var ids = 'bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,avalanche-2,polkadot,chainlink,matic-network,litecoin';
-  var nameMap = {
-    'bitcoin':'BTC/USD','ethereum':'ETH/USD','solana':'SOL/USD',
+// ── CRYPTO ─────────────────────────────────────────────────────
+async function mkLoadCrypto(){
+  var ids='bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,avalanche-2,polkadot,chainlink,matic-network,litecoin';
+  var nm={'bitcoin':'BTC/USD','ethereum':'ETH/USD','solana':'SOL/USD',
     'binancecoin':'BNB/USD','ripple':'XRP/USD','cardano':'ADA/USD',
     'dogecoin':'DOGE/USD','avalanche-2':'AVAX/USD','polkadot':'DOT/USD',
-    'chainlink':'LINK/USD','matic-network':'MATIC/USD','litecoin':'LTC/USD'
-  };
-  // /coins/markets include price_change_percentage_7d e 30d se richiesti
-  var url = 'https://api.coingecko.com/api/v3/coins/markets'
-    + '?vs_currency=usd&ids=' + ids
-    + '&price_change_percentage=7d,30d'
-    + '&order=market_cap_desc&sparkline=false';
-  try {
-    var r = await mkFetchT(url, 10000);
-    var data = await r.json();
-    if(!Array.isArray(data)) throw new Error('bad response');
-    data.forEach(function(coin){
-      var sym = nameMap[coin.id];
-      if(!sym || coin.current_price == null) return;
-      _mkData[sym] = {
-        price: coin.current_price,
-        pct1d: coin.price_change_percentage_24h != null ? coin.price_change_percentage_24h : null,
-        pct1w: coin.price_change_percentage_7d_in_currency  != null ? coin.price_change_percentage_7d_in_currency  : null,
-        pct1m: coin.price_change_percentage_30d_in_currency != null ? coin.price_change_percentage_30d_in_currency : null
-      };
+    'chainlink':'LINK/USD','matic-network':'MATIC/USD','litecoin':'LTC/USD'};
+  try{
+    var url='https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='+ids
+      +'&price_change_percentage=7d,30d&order=market_cap_desc&sparkline=false';
+    var r=await mkFetchT(url,12000);var d=await r.json();
+    if(!Array.isArray(d))throw new Error('bad');
+    d.forEach(function(c){
+      var s=nm[c.id];if(!s||c.current_price==null)return;
+      _mkData[s]={price:c.current_price,
+        pct1d:c.price_change_percentage_24h||null,
+        pct1w:c.price_change_percentage_7d_in_currency||null,
+        pct1m:c.price_change_percentage_30d_in_currency||null};
     });
     return;
-  } catch(e){}
-
-  // Fallback: CryptoCompare (solo 24h)
-  try {
-    var fsyms = 'BTC,ETH,SOL,BNB,XRP,ADA,DOGE,AVAX,DOT,LINK,MATIC,LTC';
-    var r2 = await mkFetchT('https://min-api.cryptocompare.com/data/pricemultifull?fsyms='+fsyms+'&tsyms=USD',8000);
-    var d2 = await r2.json();
-    if(!d2.RAW) return;
+  }catch(e){}
+  // Fallback CryptoCompare
+  try{
+    var r2=await mkFetchT('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,SOL,BNB,XRP,ADA,DOGE,AVAX,DOT,LINK,MATIC,LTC&tsyms=USD',9000);
+    var d2=await r2.json();if(!d2.RAW)return;
     var m={'BTC':'BTC/USD','ETH':'ETH/USD','SOL':'SOL/USD','BNB':'BNB/USD',
-           'XRP':'XRP/USD','ADA':'ADA/USD','DOGE':'DOGE/USD','AVAX':'AVAX/USD',
-           'DOT':'DOT/USD','LINK':'LINK/USD','MATIC':'MATIC/USD','LTC':'LTC/USD'};
+      'XRP':'XRP/USD','ADA':'ADA/USD','DOGE':'DOGE/USD','AVAX':'AVAX/USD',
+      'DOT':'DOT/USD','LINK':'LINK/USD','MATIC':'MATIC/USD','LTC':'LTC/USD'};
     Object.keys(m).forEach(function(c){
-      var raw=d2.RAW[c]&&d2.RAW[c].USD; if(!raw) return;
+      var raw=d2.RAW[c]&&d2.RAW[c].USD;if(!raw)return;
       _mkData[m[c]]={price:raw.PRICE,pct1d:raw.CHANGEPCT24HOUR||null,pct1w:null,pct1m:null};
     });
-  } catch(e){}
+  }catch(e){}
 }
 
-// ── INDICI + MATERIE PRIME — Stooq CSV (CORS nativo, no proxy) ──
-// Stooq restituisce CSV con storico giornaliero, accesso diretto browser
-var STOOQ_SYMS = [
-  // Indici
-  ['^spx',  'S&P 500'],    ['^ndq',  'Nasdaq'],      ['^dji',  'Dow Jones'],
-  ['^rut',  'Russell 2000'],['^dax',  'DAX 40'],     ['^ukx',  'FTSE 100'],
-  ['^cac',  'CAC 40'],     ['^nkx',  'Nikkei 225'],  ['^hsi',  'Hang Seng'],
-  ['^vix',  'VIX'],
-  // Metalli preziosi
-  ['gc.f',  'XAU/USD'],    ['si.f',  'Silver'],      ['pl.f',  'Platinum'],
-  ['pa.f',  'Palladium'],
-  // Energia
-  ['cl.f',  'WTI Oil'],    ['co.f',  'Brent'],       ['ng.f',  'Nat Gas'],
-  // Agricoli + metalli industriali
-  ['hg.f',  'Copper'],     ['zw.f',  'Wheat'],       ['zc.f',  'Corn'],
-  ['kc.f',  'Coffee'],     ['sb.f',  'Sugar']
+// ── INDICI + MATERIE PRIME — Stooq CSV (CORS nativo) ───────────
+// Stooq permette fetch diretto dal browser senza proxy
+var STOOQ=[
+  ['^spx','S&P 500'],['^ndq','Nasdaq'],['^dji','Dow Jones'],['^rut','Russell 2000'],
+  ['^dax','DAX 40'],['^ukx','FTSE 100'],['^cac','CAC 40'],['^nkx','Nikkei 225'],
+  ['^hsi','Hang Seng'],['^vix','VIX'],
+  ['gc.f','XAU/USD'],['si.f','Silver'],['pl.f','Platinum'],['pa.f','Palladium'],
+  ['cl.f','WTI Oil'],['co.f','Brent'],['ng.f','Nat Gas'],['hg.f','Copper'],
+  ['zw.f','Wheat'],['zc.f','Corn'],['kc.f','Coffee'],['sb.f','Sugar']
 ];
 
-async function mkFetchStooq(sym) {
-  // Ultimi 60 giorni calendario → ~43 giorni lavorativi (abbondanti per 22 trading days)
-  var now  = new Date();
-  var from = new Date(now); from.setDate(from.getDate()-60);
-  function fmt(d){ return d.toISOString().split('T')[0].replace(/-/g,''); }
-  var url = 'https://stooq.com/q/d/l/?s='+sym+'&d1='+fmt(from)+'&d2='+fmt(now)+'&i=d';
-
-  try {
-    var r = await mkFetchT(url, 9000);
-    var txt = await r.text();
-    if(!txt || txt.length < 30) return null;
-    if(txt.indexOf('No data') !== -1 || txt.indexOf('Exceeded') !== -1) return null;
-
-    // Parse CSV: Date,Open,High,Low,Close,Volume
-    var rows = txt.trim().split('\n').slice(1); // salta header
-    var closes = [];
-    rows.forEach(function(row){
-      var p = row.split(',');
-      if(p.length >= 5){ var c=parseFloat(p[4]); if(!isNaN(c)&&c>0) closes.push(c); }
+async function mkFetchStooq(sym){
+  var now=new Date();
+  var from=new Date(now);from.setDate(from.getDate()-60);
+  function fmt(d){return d.toISOString().split('T')[0].replace(/-/g,'');}
+  var url='https://stooq.com/q/d/l/?s='+sym+'&d1='+fmt(from)+'&d2='+fmt(now)+'&i=d';
+  try{
+    var r=await mkFetchT(url,10000,'no-cors').catch(function(){
+      // no-cors non restituisce body leggibile, prova cors
+      return mkFetchT(url,10000,'cors');
     });
-    if(closes.length < 2) return null;
-
-    var now_p = closes[closes.length-1];
-    var d1    = closes[closes.length-2];
-    var d5    = closes.length>=6  ? closes[closes.length-6]  : null;
-    var d22   = closes.length>=22 ? closes[closes.length-22] : null;
-
-    return {
-      price: now_p,
-      pct1d: ((now_p-d1)/d1)*100,
-      pct1w: d5  ? ((now_p-d5)/d5)*100   : null,
-      pct1m: d22 ? ((now_p-d22)/d22)*100 : null
-    };
-  } catch(e){ return null; }
+    var txt=await r.text();
+    if(!txt||txt.length<30||txt.indexOf('No data')!==-1||txt.indexOf('Exceeded')!==-1)return null;
+    var rows=txt.trim().split('\n').slice(1);
+    var closes=[];
+    rows.forEach(function(row){
+      var p=row.split(',');
+      if(p.length>=5){var c=parseFloat(p[4]);if(!isNaN(c)&&c>0)closes.push(c);}
+    });
+    if(closes.length<2)return null;
+    var now_p=closes[closes.length-1];
+    return{price:now_p,
+      pct1d:((now_p-closes[closes.length-2])/closes[closes.length-2])*100,
+      pct1w:closes.length>=6?((now_p-closes[closes.length-6])/closes[closes.length-6])*100:null,
+      pct1m:closes.length>=22?((now_p-closes[closes.length-22])/closes[closes.length-22])*100:null};
+  }catch(e){return null;}
 }
 
-async function mkLoadIndicesCommod() {
-  // Carica sequenzialmente con 150ms tra l'uno e l'altro per rispettare Stooq
-  // e aggiorna la UI progressivamente
-  for(var i=0; i<STOOQ_SYMS.length; i++){
-    var sym  = STOOQ_SYMS[i][0];
-    var name = STOOQ_SYMS[i][1];
-    var data = await mkFetchStooq(sym);
-    if(data){ _mkData[name]=data; mkRender(); mkUpdateMainTicker(); }
-    if(i < STOOQ_SYMS.length-1){
-      await new Promise(function(r){ setTimeout(r,150); });
-    }
+// Yahoo query2 come alternativa a Stooq
+async function mkFetchYahoo(sym){
+  var url='https://query2.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(sym)
+    +'?interval=1d&range=35d&includePrePost=false';
+  var proxies=[
+    url, // diretto (query2 ha CORS su alcuni endpoint)
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(url),
+    'https://corsproxy.io/?'+encodeURIComponent(url)
+  ];
+  var YSYM={'^spx':'^GSPC','^ndq':'^NDX','^dji':'^DJI','^rut':'^RUT',
+    '^dax':'^GDAXI','^ukx':'^FTSE','^cac':'^FCHI','^nkx':'^N225',
+    '^hsi':'^HSI','^vix':'^VIX',
+    'gc.f':'GC=F','si.f':'SI=F','pl.f':'PL=F','pa.f':'PA=F',
+    'cl.f':'CL=F','co.f':'BZ=F','ng.f':'NG=F','hg.f':'HG=F',
+    'zw.f':'ZW=F','zc.f':'ZC=F','kc.f':'KC=F','sb.f':'SB=F'};
+  // convert stooq sym to yahoo sym if needed
+  var ySym=YSYM[sym]||sym;
+  var yUrl='https://query2.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(ySym)
+    +'?interval=1d&range=35d&includePrePost=false';
+  var yProxies=[yUrl,'https://api.allorigins.win/raw?url='+encodeURIComponent(yUrl)];
+  for(var i=0;i<yProxies.length;i++){
+    try{
+      var r=await mkFetchT(yProxies[i],9000);
+      var j=await r.json();
+      var res=j&&j.chart&&j.chart.result&&j.chart.result[0];
+      if(!res)continue;
+      var c=(res.indicators.quote[0].close||[]).filter(function(v){return v!=null;});
+      if(c.length<2)continue;
+      var now_p=res.meta&&res.meta.regularMarketPrice?res.meta.regularMarketPrice:c[c.length-1];
+      var d1=c[c.length-2];
+      return{price:now_p,
+        pct1d:((now_p-d1)/d1)*100,
+        pct1w:c.length>=6?((now_p-c[c.length-6])/c[c.length-6])*100:null,
+        pct1m:c.length>=22?((now_p-c[c.length-22])/c[c.length-22])*100:null};
+    }catch(e){continue;}
+  }
+  return null;
+}
+
+async function mkLoadIndicesCommod(){
+  for(var i=0;i<STOOQ.length;i++){
+    var sym=STOOQ[i][0],name=STOOQ[i][1];
+    // Prova prima Stooq, poi Yahoo
+    var data=await mkFetchStooq(sym);
+    if(!data)data=await mkFetchYahoo(sym);
+    if(data){_mkData[name]=data;mkRender();mkUpdateMainTicker();}
+    await new Promise(function(r){setTimeout(r,200);});
   }
 }
 
-// ── ORCHESTRATORE — cache 5 min ─────────────────────────────────
-async function mkLoadAll() {
-  var now = Date.now();
-  if(_mkLoading||(now-_mkLastLoad<5*60*1000&&Object.keys(_mkData).length>5)){
-    mkRender(); return;
-  }
-  _mkLoading = true;
-
-  var body = document.getElementById('mkBody');
-  if(body) body.innerHTML='<div style="text-align:center;padding:60px;font-family:var(--fd);font-size:12px;color:#3d4d78;line-height:2">&#x23F3; Caricamento...<br><span style="font-size:10px;opacity:.5">Forex e crypto prima, poi indici e materie prime</span></div>';
-
-  // Forex + Crypto in parallelo (veloci, CORS nativo)
-  await Promise.allSettled([mkLoadForex(), mkLoadCrypto()]);
-  mkRender(); mkUpdateMainTicker();
+// ── ORCHESTRATORE ──────────────────────────────────────────────
+async function mkLoadAll(){
+  var now=Date.now();
+  if(_mkLoading||(now-_mkLastLoad<5*60*1000&&Object.keys(_mkData).length>5)){mkRender();return;}
+  _mkLoading=true;
+  var body=document.getElementById('mkBody');
+  if(body)body.innerHTML='<div style="text-align:center;padding:60px;font-family:var(--fd);font-size:12px;color:#3d4d78">&#x23F3; Caricamento in corso...</div>';
+  await Promise.allSettled([mkLoadForex(),mkLoadCrypto()]);
+  mkRender();mkUpdateMainTicker();
   var upd=document.getElementById('mkUpdTime');
-  if(upd) upd.textContent='Aggiornato: '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  if(upd)upd.textContent='Aggiornato: '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
   mkUpdateRiskBadge();
-
-  // Indici + materie prime via Stooq (progressivi)
   await mkLoadIndicesCommod();
-
-  _mkLoading=false; _mkLastLoad=Date.now();
+  _mkLoading=false;_mkLastLoad=Date.now();
   mkUpdateMainTicker();
-  if(upd) upd.textContent='Aggiornato: '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-  mkUpdateRiskBadge();
-  mkRender();
+  if(upd)upd.textContent='Aggiornato: '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  mkUpdateRiskBadge();mkRender();
 }
 
 async function mkForceReload(){
-  _mkData={}; _mkLastLoad=0;
+  _mkData={};_mkLastLoad=0;
   await mkLoadAll();
 }
 
@@ -1710,10 +1723,17 @@ function propConnLabel(sessId, side) {
 }
 
 function openConnFromDash(propId, side) {
-  // Trova la sessione journal collegata e apri il dialog di connessione
   var idx = jrnl.sessions.findIndex(function(s){ return s.linkedPropId === propId; });
-  if(idx === -1) { alert('Sessione Journal non trovata. Riapri dalla sezione Journal.'); return; }
+  if(idx === -1) {
+    // Crea sessione journal se non esiste
+    var p = props.find(function(x){ return x.id === propId; });
+    if(p) { jrnlNewSession(p.name, propId); idx = jrnl.sessions.length-1; }
+    else { alert('Sessione non trovata.'); return; }
+  }
   jrnl.activeIdx = idx;
+  // Assicura modal nel DOM
+  var mod = document.getElementById('jConnMod');
+  if(!mod) { document.body.insertAdjacentHTML('beforeend', jrnlConnModal()); }
   jrnlOpenConn(idx, side);
 }
 
@@ -1756,30 +1776,19 @@ function renderDash(){
         +'</div>';
     }
 
-    // ── PULSANTI COLORATI SOLIDI ─────────────────────────────
-    var btnProp = '<button onclick="event.stopPropagation();openConnFromDash('+p.id+',\'prop\')" style="'
-      +'flex:1;padding:8px 0;border-radius:8px;border:none;cursor:pointer;'
-      +'font-family:var(--fh);font-size:9.5px;font-weight:700;letter-spacing:.1em;'
-      +'display:flex;align-items:center;justify-content:center;gap:5px;'
-      +(propLabel
-        ? 'background:var(--teal2);color:#fff;'
-        : 'background:rgba(0,229,204,.15);color:var(--teal);'
-      )+'">'
-      +'<span style="width:6px;height:6px;border-radius:50%;background:'+(propLabel?'#fff':'var(--teal)')+';flex-shrink:0;'+(propLabel?'box-shadow:0 0 5px rgba(255,255,255,.6)':'')+'"></span>'
-      +(propLabel ? '● '+propLabel : 'COLLEGA PROP')
-      +'</button>';
+    // ── PULSANTI IDENTICI AL JOURNAL ────────────────────────
+    // Se connesso: label verde con pallino; se non: btn-p gradiente teal→violet
+    var btnProp = propLabel
+      ? '<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(0,229,204,.08);border:1px solid rgba(0,229,204,.3);border-radius:8px;font-size:11px;font-family:var(--fd);color:var(--teal)">'
+          +'<span style="width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal);flex-shrink:0"></span>'
+          +'● '+propLabel+'</div>'
+      : '<button onclick="event.stopPropagation();openConnFromDash('+p.id+',\'prop\')" class="btn-p" style="flex:1;padding:6px 0;font-size:11px;justify-content:center">🔗 Connetti Prop</button>';
 
-    var btnBroker = '<button onclick="event.stopPropagation();openConnFromDash('+p.id+',\'broker\')" style="'
-      +'flex:1;padding:8px 0;border-radius:8px;border:none;cursor:pointer;'
-      +'font-family:var(--fh);font-size:9.5px;font-weight:700;letter-spacing:.1em;'
-      +'display:flex;align-items:center;justify-content:center;gap:5px;'
-      +(brokerLabel
-        ? 'background:var(--violet2);color:#fff;'
-        : 'background:rgba(155,93,229,.15);color:var(--violet);'
-      )+'">'
-      +'<span style="width:6px;height:6px;border-radius:50%;background:'+(brokerLabel?'#fff':'var(--violet)')+';flex-shrink:0;'+(brokerLabel?'box-shadow:0 0 5px rgba(255,255,255,.6)':'')+'"></span>'
-      +(brokerLabel ? '● '+brokerLabel : 'COLLEGA BROKER')
-      +'</button>';
+    var btnBroker = brokerLabel
+      ? '<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(155,93,229,.08);border:1px solid rgba(155,93,229,.3);border-radius:8px;font-size:11px;font-family:var(--fd);color:var(--violet)">'
+          +'<span style="width:7px;height:7px;border-radius:50%;background:var(--violet);box-shadow:0 0 6px var(--violet);flex-shrink:0"></span>'
+          +'● '+brokerLabel+'</div>'
+      : '<button onclick="event.stopPropagation();openConnFromDash('+p.id+',\'broker\')" class="btn-p" style="flex:1;padding:6px 0;font-size:11px;justify-content:center;background:linear-gradient(135deg,var(--violet2),var(--teal2))">🔗 Connetti Broker</button>';
 
     // ── CARD COMPATTA (stile originale) ──────────────────────
     cards+='<div class="pc ai" onclick="openDashDetail('+p.id+')">'
@@ -2001,11 +2010,13 @@ function renderDashDetailPage(){
   var propLabel  =propConnLabel(p.id,'prop');
   var brokerLabel=propConnLabel(p.id,'broker');
 
-  var s1='padding:10px 20px;border-radius:9px;border:none;cursor:pointer;font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:.1em;display:inline-flex;align-items:center;gap:7px;';
-  var btnPropBg  = propLabel   ? 'background:var(--teal2);color:#fff'   : 'background:rgba(0,229,204,.15);color:var(--teal)';
-  var btnBrkBg   = brokerLabel ? 'background:var(--violet2);color:#fff' : 'background:rgba(155,93,229,.15);color:var(--violet)';
-  var btnProp   = '<button onclick="openConnFromDash('+p.id+',\'prop\'  )" style="'+s1+btnPropBg+'">&#9679;&nbsp;'+(propLabel?propLabel.toUpperCase():'COLLEGA PROP')+'</button>';
-  var btnBroker = '<button onclick="openConnFromDash('+p.id+',\'broker\')" style="'+s1+btnBrkBg  +'">&#9679;&nbsp;'+(brokerLabel?brokerLabel.toUpperCase():'COLLEGA BROKER')+'</button>';
+  // Pulsanti stile Journal: btn-p se non connesso, badge se connesso
+  var btnProp = propLabel
+    ? '<div style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:rgba(0,229,204,.1);border:1px solid rgba(0,229,204,.4);border-radius:9px;font-size:11px;font-family:var(--fd);color:var(--teal)"><span style="width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal)"></span>● '+propLabel+'</div>'
+    : '<button onclick="openConnFromDash('+p.id+',\'prop\')" class="btn-p" style="padding:8px 20px;font-size:11px">🔗 Connetti Prop</button>';
+  var btnBroker = brokerLabel
+    ? '<div style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:rgba(155,93,229,.1);border:1px solid rgba(155,93,229,.4);border-radius:9px;font-size:11px;font-family:var(--fd);color:var(--violet)"><span style="width:8px;height:8px;border-radius:50%;background:var(--violet);box-shadow:0 0 6px var(--violet)"></span>● '+brokerLabel+'</div>'
+    : '<button onclick="openConnFromDash('+p.id+',\'broker\')" class="btn-p" style="padding:8px 20px;font-size:11px;background:linear-gradient(135deg,var(--violet2),var(--teal2))">🔗 Connetti Broker</button>';
 
   ct.innerHTML='<div style="min-height:100vh;background:var(--bg);padding:0">'
     // Header barra fissa
