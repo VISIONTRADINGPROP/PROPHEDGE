@@ -825,7 +825,7 @@ function doForgotSubmit(){
 <div class="tabs">
   <div class="tab active" onclick="goTab('dash',this)" id="tabDash">Dashboard</div>
   <div class="tab" onclick="goTab('platform',this)" id="tabPlatform">Piattaforma</div>
-  <div class="tab" onclick="goTab('calc',this)" id="tabCalc">Nuova sfida</div>
+  <div class="tab" onclick="openNewSfidaTab(this)" id="tabCalc">Nuova sfida</div>
   <div class="tab" onclick="goTab('proplist',this)" id="tabProp">Prop</div>
   <div class="tab" onclick="goTab('brokerlist',this)" id="tabBroker">Broker</div>
   <div class="tab" onclick="goTab('journal',this)" id="tabJournal">Journal</div>
@@ -1662,8 +1662,43 @@ function goTab(tab,el){
 // Stato dettaglio sfida aperta in dashboard
 var dashDetailId = null;
 
+// Apri tab "Nuova sfida" aprendo il modal
+function openNewSfidaTab(el) {
+  // Marca tab come attiva visivamente
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  el.classList.add('active');
+  // Apri il modal
+  openModal();
+  // Quando il modal chiude, torna alla dashboard
+}
+
+// Apri dettaglio sfida a tutto schermo
 function openDashDetail(id) {
-  dashDetailId = (dashDetailId === id) ? null : id;
+  dashDetailId = id;
+  goTab('dashdetail', null);  // schermo dedicato
+}
+
+// Chiudi dettaglio e torna alla dashboard
+function closeDashDetail() {
+  dashDetailId = null;
+  goTab('dash', document.getElementById('tabDash'));
+}
+
+// Elimina sfida da dashboard E journal (sincronizzato)
+function delPropSync(id) {
+  if(!confirm('Eliminare questa sfida? Verrà rimossa anche dal Journal.')) return;
+  // Rimuovi da props
+  props = props.filter(function(p){ return p.id !== id; });
+  if(activeId === id) activeId = props.length ? props[0].id : null;
+  // Rimuovi sessione journal collegata
+  var jIdx = jrnl.sessions.findIndex(function(s){ return s.linkedPropId === id; });
+  if(jIdx !== -1) {
+    jrnl.sessions.splice(jIdx, 1);
+    if(jrnl.activeIdx >= jrnl.sessions.length)
+      jrnl.activeIdx = Math.max(0, jrnl.sessions.length - 1);
+    jrnlSave();
+  }
+  if(dashDetailId === id) dashDetailId = null;
   render();
 }
 
@@ -1683,7 +1718,7 @@ function openConnFromDash(propId, side) {
 }
 
 function renderDash(){
-  if(!props.length)return'<div class="empty ai"><div style="font-size:44px;margin-bottom:14px;opacity:.3">◇</div><p>Nessuna sfida configurata.<br>Inserisci i parametri della tua prop firm per iniziare.</p><button class="btn-p" onclick="openModal()">+ Nuova sfida</button></div>';
+  if(!props.length)return'<div class="empty ai"><div style="font-size:44px;margin-bottom:14px;opacity:.3">◇</div><p>Nessuna sfida configurata.<br>Clicca su <strong>Nuova Sfida</strong> nel menu per iniziare.</p><button class="btn-p" onclick="openNewSfidaTab(document.getElementById(\'tabCalc\'))">+ Nuova sfida</button></div>';
 
   var tC=0,tS=0;
   props.forEach(function(p){tC+=p.cost;tS+=p.size;});
@@ -1698,82 +1733,80 @@ function renderDash(){
     +'<div class="sc-s ai"><div class="sc-s-ic">⊕</div><div class="sc-s-lb">Costo tot.</div><div class="sc-s-v" style="color:var(--amber)">'+uF(tC)+'</div><div class="sc-s-s">'+eF(tC)+'</div></div>'
     +'</div>';
 
-  // Cards sfide
+  // Cards sfide — griglia stile originale
   var cards='';
   calcs.forEach(function(x){
     var p=x.p,c=x.c;
-    var isOpen = dashDetailId === p.id;
     var logo=p.domain?'<img src="'+logoUrl(p.domain)+'" data-try="1" onerror="logoErr(this,\''+p.domain+'\',\''+p.name+'\')" style="width:100%;height:100%;object-fit:cover;border-radius:8px" alt="">':p.name.slice(0,2).toUpperCase();
     var nc=c.sB_net>=0?'v-green':'v-red';
 
-    // Connessione prop/broker
+    // Stato connessione
     var propLabel  = propConnLabel(p.id,'prop');
     var brokerLabel= propConnLabel(p.id,'broker');
 
-    // P&L reale dai trade Journal
-    var realPnl    = calcRealPnL(p.id);
-    var propPnl    = realPnl.prop;
-    var brokerPnl  = realPnl.broker;
-    var netPnl     = realPnl.net;
-    var hasRealData= realPnl.hasData;
-
-    // Indicatore P&L reale nella card
-    var pnlBadge = '';
-    if(hasRealData){
-      var pnlCol = netPnl>=0 ? '#00d68f' : '#ff4060';
-      var pnlBg  = netPnl>=0 ? 'rgba(0,214,143,.1)' : 'rgba(255,64,96,.1)';
-      pnlBadge = '<div style="margin-top:10px;background:'+pnlBg+';border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center">'
-        +'<span style="font-size:10px;font-family:var(--fd);color:var(--t3)">P&L NETTO HEDGE ORA</span>'
-        +'<span style="font-size:16px;font-weight:700;font-family:var(--fd);color:'+pnlCol+'">'+(netPnl>=0?'+':'')+netPnl.toFixed(2)+'$</span>'
+    // P&L reale (badge solo se ha dati)
+    var realPnl = calcRealPnL(p.id);
+    var pnlBadge='';
+    if(realPnl.hasData){
+      var pnlCol=realPnl.net>=0?'var(--green)':'var(--red)';
+      var pnlBg =realPnl.net>=0?'rgba(0,214,143,.08)':'rgba(255,64,96,.08)';
+      pnlBadge='<div style="margin-top:8px;background:'+pnlBg+';border-radius:7px;padding:6px 10px;display:flex;justify-content:space-between">'
+        +'<span style="font-size:9px;font-family:var(--fh);color:var(--t3);letter-spacing:.1em">P&L NETTO HEDGE</span>'
+        +'<span style="font-size:14px;font-weight:700;font-family:var(--fd);color:'+pnlCol+'">'+(realPnl.net>=0?'+':'')+realPnl.net.toFixed(2)+'$</span>'
         +'</div>';
     }
 
-    // Bottoni collegamento
+    // ── PULSANTI COLORATI SOLIDI ─────────────────────────────
     var btnProp = '<button onclick="event.stopPropagation();openConnFromDash('+p.id+',\'prop\')" style="'
-      +'flex:1;padding:7px 10px;border-radius:7px;border:1px solid '+(propLabel?'rgba(0,229,204,.4)':'rgba(128,128,128,.3)')+';'
-      +'background:'+(propLabel?'rgba(0,229,204,.08)':'transparent')+';color:'+(propLabel?'var(--teal)':'var(--t3)')+';'
-      +'font-size:10px;font-weight:700;cursor:pointer;font-family:var(--fh);letter-spacing:.06em;display:flex;align-items:center;gap:5px;justify-content:center">'
-      +(propLabel?'🟢':'🔗')+' '+(propLabel?propLabel.toUpperCase():'COLLEGA PROP')+'</button>';
+      +'flex:1;padding:8px 0;border-radius:8px;border:none;cursor:pointer;'
+      +'font-family:var(--fh);font-size:9.5px;font-weight:700;letter-spacing:.1em;'
+      +'display:flex;align-items:center;justify-content:center;gap:5px;'
+      +(propLabel
+        ? 'background:var(--teal2);color:#fff;'
+        : 'background:rgba(0,229,204,.15);color:var(--teal);'
+      )+'">'
+      +'<span style="width:6px;height:6px;border-radius:50%;background:'+(propLabel?'#fff':'var(--teal)')+';flex-shrink:0;'+(propLabel?'box-shadow:0 0 5px rgba(255,255,255,.6)':'')+'"></span>'
+      +(propLabel ? '● '+propLabel : 'COLLEGA PROP')
+      +'</button>';
 
     var btnBroker = '<button onclick="event.stopPropagation();openConnFromDash('+p.id+',\'broker\')" style="'
-      +'flex:1;padding:7px 10px;border-radius:7px;border:1px solid '+(brokerLabel?'rgba(155,93,229,.4)':'rgba(128,128,128,.3)')+';'
-      +'background:'+(brokerLabel?'rgba(155,93,229,.08)':'transparent')+';color:'+(brokerLabel?'var(--violet)':'var(--t3)')+';'
-      +'font-size:10px;font-weight:700;cursor:pointer;font-family:var(--fh);letter-spacing:.06em;display:flex;align-items:center;gap:5px;justify-content:center">'
-      +(brokerLabel?'🟢':'🔗')+' '+(brokerLabel?brokerLabel.toUpperCase():'COLLEGA BROKER')+'</button>';
+      +'flex:1;padding:8px 0;border-radius:8px;border:none;cursor:pointer;'
+      +'font-family:var(--fh);font-size:9.5px;font-weight:700;letter-spacing:.1em;'
+      +'display:flex;align-items:center;justify-content:center;gap:5px;'
+      +(brokerLabel
+        ? 'background:var(--violet2);color:#fff;'
+        : 'background:rgba(155,93,229,.15);color:var(--violet);'
+      )+'">'
+      +'<span style="width:6px;height:6px;border-radius:50%;background:'+(brokerLabel?'#fff':'var(--violet)')+';flex-shrink:0;'+(brokerLabel?'box-shadow:0 0 5px rgba(255,255,255,.6)':'')+'"></span>'
+      +(brokerLabel ? '● '+brokerLabel : 'COLLEGA BROKER')
+      +'</button>';
 
-    cards+='<div style="background:var(--bg2);border:1px solid '+(isOpen?'var(--teal)':'var(--border)')+';border-radius:13px;overflow:hidden;margin-bottom:14px;transition:border-color .2s">'
-      // Header card (sempre visibile)
-      +'<div style="padding:16px;cursor:pointer;position:relative" onclick="openDashDetail('+p.id+')">'
+    // ── CARD COMPATTA (stile originale) ──────────────────────
+    cards+='<div class="pc ai" onclick="openDashDetail('+p.id+')">'
       +'<div class="pc-glow"></div>'
-      +'<button class="pc-del" onclick="event.stopPropagation();delProp('+p.id+')">✕</button>'
+      // X elimina (sync con journal)
+      +'<button class="pc-del" onclick="event.stopPropagation();delPropSync('+p.id+')">✕</button>'
+      // Logo + nome
       +'<div class="pc-top"><div class="pc-logo">'+logo+'</div>'
-      +'<div><div class="pc-nm">'+p.name+'</div><div class="pc-mt">'+uF(p.size)+' DD '+p.maxDD+'% '+p.days+'gg '+(p.asset||'EUR/USD')+'</div></div></div>'
-      // Mini stats
+      +'<div><div class="pc-nm">'+p.name+'</div>'
+      +'<div class="pc-mt">'+uF(p.size)+' DD '+p.maxDD+'% '+p.days+'gg '+(p.asset||'EUR/USD')+'</div>'
+      +'</div></div>'
+      // Mini stats 3 celle
       +'<div class="pc-st">'
       +'<div class="pst"><div class="pst-l">Lotti prop</div><div class="pst-v v-teal">'+c.propLots+'</div></div>'
       +'<div class="pst"><div class="pst-l">Conto pers.</div><div class="pst-v v-amber">'+uF(c.recAcc)+'</div></div>'
       +'<div class="pst"><div class="pst-l">Netto (B)</div><div class="pst-v '+nc+'">'+sgn(c.sB_net)+uF(c.sB_net)+'</div></div>'
       +'</div>'
-      // P&L reale
+      // P&L reale (solo se connesso)
       +pnlBadge
-      // Bottoni connessione
-      +'<div style="display:flex;gap:8px;margin-top:10px">'+btnProp+btnBroker+'</div>'
-      +'<div style="text-align:center;font-size:9px;color:var(--t3);margin-top:6px;font-family:var(--fd)">'+(isOpen?'▲ Chiudi dettagli':'▼ Apri dettagli e analisi')+'</div>'
+      // Bottoni colorati
+      +'<div style="display:flex;gap:6px;margin-top:10px">'+btnProp+btnBroker+'</div>'
       +'</div>';
-
-    // Dettaglio espandibile
-    if(isOpen){
-      cards += renderDashDetail(p, c, realPnl);
-    }
-
-    cards+='</div>';
   });
 
   return stats
-    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
-    +'<div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);font-family:var(--fd)">Sfide ('+props.length+')</div>'
-    +'<button class="btn-p" onclick="openModal()">+ Nuova sfida</button></div>'
-    +cards;
+    +'<div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);font-family:var(--fd);margin-bottom:14px">Sfide ('+props.length+')</div>'
+    +'<div class="pg">'+cards+'</div>';
 }
 
 // ── Calcola P&L reale dai trade Journal ─────────────────────────
@@ -1954,9 +1987,62 @@ function openJournalForProp(propId){
   if(idx>=0) jrnl.activeIdx=idx;
   goTab('journal',document.getElementById('tabJournal'));
 }
+
+// Pagina dettaglio sfida a tutto schermo
+function renderDashDetailPage(){
+  var ct=document.getElementById('main');if(!ct)return;
+  ct.style.padding='0';ct.style.maxWidth='none';
+
+  if(!dashDetailId){ closeDashDetail(); return; }
+  var p=props.find(function(x){return x.id===dashDetailId;});
+  if(!p){ closeDashDetail(); return; }
+  var c=calcChallenge(p);
+  var realPnl=calcRealPnL(p.id);
+  var propLabel  =propConnLabel(p.id,'prop');
+  var brokerLabel=propConnLabel(p.id,'broker');
+
+  var s1='padding:10px 20px;border-radius:9px;border:none;cursor:pointer;font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:.1em;display:inline-flex;align-items:center;gap:7px;';
+  var btnPropBg  = propLabel   ? 'background:var(--teal2);color:#fff'   : 'background:rgba(0,229,204,.15);color:var(--teal)';
+  var btnBrkBg   = brokerLabel ? 'background:var(--violet2);color:#fff' : 'background:rgba(155,93,229,.15);color:var(--violet)';
+  var btnProp   = '<button onclick="openConnFromDash('+p.id+',\'prop\'  )" style="'+s1+btnPropBg+'">&#9679;&nbsp;'+(propLabel?propLabel.toUpperCase():'COLLEGA PROP')+'</button>';
+  var btnBroker = '<button onclick="openConnFromDash('+p.id+',\'broker\')" style="'+s1+btnBrkBg  +'">&#9679;&nbsp;'+(brokerLabel?brokerLabel.toUpperCase():'COLLEGA BROKER')+'</button>';
+
+  ct.innerHTML='<div style="min-height:100vh;background:var(--bg);padding:0">'
+    // Header barra fissa
+    +'<div style="display:flex;align-items:center;gap:12px;padding:14px 28px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50">'
+    +'<button onclick="closeDashDetail()" style="background:none;border:1px solid var(--border2);color:var(--t2);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:12px;font-family:var(--fd)">← Dashboard</button>'
+    +'<div style="font-size:15px;font-weight:700;font-family:var(--fh)">'+p.name+'</div>'
+    +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd)">'+uF(p.size)+' · DD '+p.maxDD+'% · '+p.days+'gg · '+(p.asset||'EUR/USD')+'</div>'
+    +'<div style="margin-left:auto;display:flex;gap:8px">'+btnProp+btnBroker+'</div>'
+    +'</div>'
+    // Contenuto scrollabile
+    +'<div style="padding:24px;max-width:1400px;margin:0 auto">'
+    +renderDashDetail(p,c,realPnl)
+    +'<div style="margin-top:16px">'
+    +'<button class="btn-g" onclick="openJournalForProp('+p.id+')" style="margin-right:10px">📒 Journal questa sfida</button>'
+    +'<button class="btn-g" onclick="delPropSync('+p.id+')" style="color:var(--red);border-color:rgba(255,64,96,.3)">✕ Elimina sfida</button>'
+    +'</div>'
+    +'</div></div>';
+
+  // Assicura che il modal connessione sia disponibile
+  if(!document.getElementById('jConnMod')){
+    var tmp=document.createElement('div');
+    tmp.innerHTML=jrnlConnModal();
+    document.body.appendChild(tmp.firstChild);
+  }
+}
 // RENDER CALCULATOR
 function renderCalc(){
-  if(!props.length)return'<div class="empty ai"><div style="font-size:44px;margin-bottom:14px;opacity:.3">⊕</div><p>Aggiungi prima una sfida.</p><button class="btn-p" onclick="openModal()">+ Nuova sfida</button></div>';
+  // "Nuova Sfida" page: always show + button + form for existing/editing
+  // Open modal immediately via openNewSfidaTab, but also show sfide list
+  if(!props.length){
+    // No sfide yet — auto-open modal
+    setTimeout(function(){ openModal(); },100);
+    return'<div class="empty ai"><div style="font-size:44px;margin-bottom:14px;opacity:.3">⊕</div>'
+      +'<p style="margin-bottom:20px">Clicca il pulsante per aggiungere la tua prima sfida.</p>'
+      +'<button class="btn-p" style="font-size:14px;padding:14px 32px" onclick="openModal()">+ Aggiungi sfida</button>'
+      +'</div>';
+  }
   if(!activeId)activeId=props[0].id;
   var p=props.find(function(x){return x.id===activeId;});if(!p)return'';
   var c=calcChallenge(p);
@@ -1971,7 +2057,10 @@ function renderCalc(){
     {ok:c.sB_net>=0,t:'Scenario B profittevole',d:c.sB_net>=0?'Netto +'+uF(c.sB_net)+' ROI '+c.roiB+'%':'Rivedere i parametri'}
   ];
   var rh='';rules.forEach(function(r){rh+='<div class="rr '+(r.ok?'rr-ok':'rr-warn')+'"><div class="rr-ic">'+(r.ok?'✓':'⚠')+'</div><div><div class="rr-t">'+r.t+'</div><div class="rr-d">'+r.d+'</div></div></div>';});
-  return'<div class="c2"><div>'
+  return'<div style="display:flex;justify-content:flex-end;margin-bottom:18px">'
+    +'<button class="btn-p" style="font-size:13px;padding:10px 24px" onclick="openModal()">+ Aggiungi sfida</button>'
+    +'</div>'
+    +'<div class="c2"><div>'
     +'<div class="panel"><div class="ph"><h3>'+lh+p.name+' '+(p.asset||'EUR/USD')+'</h3><span class="badge b-teal">Prop+Personale</span></div><div class="pb">'
     +sel
     +'<div class="sect">Parametri prop</div>'
@@ -3387,6 +3476,7 @@ function render(){
   var ct=document.getElementById('main');if(!ct)return;
   ct.style.padding='24px';ct.style.maxWidth='1400px';
   if(currentTab==='dash')        ct.innerHTML=renderDash();
+  else if(currentTab==='dashdetail') { renderDashDetailPage(); return; }
   else if(currentTab==='calc')   ct.innerHTML=renderCalc();
   else if(currentTab==='proplist') ct.innerHTML=renderPropList();
   else if(currentTab==='brokerlist') ct.innerHTML=renderBrokerList();
