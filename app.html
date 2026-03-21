@@ -3707,11 +3707,27 @@ var _calFilter   = 'high';   // 'all','high','medium'
 var _calLoaded   = false;
 var _calTimer    = null;
 
+// Usa immagini flag da flagcdn.com (CDN pubblico gratuito, CORS OK)
 var CAL_FLAGS = {
-  'USD':'🇺🇸','EUR':'🇪🇺','GBP':'🇬🇧','JPY':'🇯🇵','AUD':'🇦🇺',
-  'CAD':'🇨🇦','CHF':'🇨🇭','NZD':'🇳🇿','CNY':'🇨🇳','CNH':'🇨🇳',
-  'ALL':'🌍'
+  'USD':'us','EUR':'eu','GBP':'gb','JPY':'jp','AUD':'au',
+  'CAD':'ca','CHF':'ch','NZD':'nz','CNY':'cn','CNH':'cn',
+  'NOK':'no','SEK':'se','DKK':'dk','SGD':'sg','HKD':'hk',
+  'KRW':'kr','MXN':'mx','BRL':'br','ZAR':'za','INR':'in',
+  'ALL':'un'
 };
+
+function calFlag(currency){
+  var code = CAL_FLAGS[currency];
+  if(!code) return '<span style="font-size:13px;opacity:.4">??</span>';
+  return '<img src="https://flagcdn.com/24x18/'+code+'.png" '
+    +'width="24" height="18" style="border-radius:2px;vertical-align:middle;object-fit:cover" '
+    +'alt="'+currency+'">';
+}
+
+function calOpenLink(ev, el) {
+  var url = el.getAttribute('data-ffurl');
+  if(url) window.open(url, '_blank');
+}
 
 var CAL_IMP_LABEL = {
   'High':'red','Medium':'orange','Low':'yellow','Holiday':'gray',
@@ -3992,11 +4008,15 @@ function calRender(){
             ? 'border-left:3px solid rgba(255,64,96,.3);'
             : 'border-left:3px solid transparent;';
 
-        html+='<div class="cal-row" style="'+rowBg+'">'
+        // Link ForexFactory
+        var ffDay = (ev.date||'').replace(/T.*/,'').replace(/-/g,'');
+        var ffUrl = ev.url || ('https://www.forexfactory.com/calendar?day='+ffDay);
+
+        html+='<div class="cal-row" data-ffurl="'+ffUrl+'" style="'+rowBg+'cursor:pointer" onclick="calOpenLink(event,this)">'
           +'<div class="cal-time '+timeCls+'">'+timeStr+(isSoon?'<br><span style="font-size:8px;color:#ffbe0b">⚠ PRESTO</span>':'')+'</div>'
-          +'<div class="cal-flag">'+flag+'</div>'
-          +'<div><div class="cal-imp '+impCls+'" title="'+imp+' Impact"></div></div>'
-          +'<div class="cal-event">'+(ev.title||ev.event||'—')+'<span class="cal-cur">'+currency+'</span></div>'
+          +'<div class="cal-flag">'+calFlag(currency)+'</div>'
+          +'<div><div class="cal-imp '+impCls+'" title="'+imp+'"></div></div>'
+          +'<div class="cal-event"><span style="color:var(--t)">'+(ev.title||ev.event||'—')+'</span><span class="cal-cur" style="margin-left:5px">'+currency+'</span><span style="font-size:9px;color:var(--t3);margin-left:auto">↗ FF</span></div>'
           +(forecast?'<div class="cal-val">'+forecast+'</div>':'<div class="cal-val na">—</div>')
           +(previous?'<div class="cal-val">'+previous+'</div>':'<div class="cal-val na">—</div>')
           +(actual?'<div class="cal-val '+actCls+'">'+actual+'</div>':'<div class="cal-val na">—</div>')
