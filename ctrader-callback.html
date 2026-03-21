@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PropHedge — Connessione cTrader</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:sans-serif;background:#060810;color:#eef0f8;
+    display:flex;align-items:center;justify-content:center;min-height:100vh}
+  .box{text-align:center;padding:48px 40px;background:#0c0f1a;
+    border:1px solid rgba(0,229,204,.2);border-radius:20px;max-width:420px;width:90%}
+  .logo{font-size:22px;font-weight:800;color:#00e5cc;margin-bottom:28px;letter-spacing:.04em}
+  .spin{width:40px;height:40px;border:3px solid rgba(0,229,204,.15);
+    border-top-color:#00e5cc;border-radius:50%;animation:s 1s linear infinite;margin:0 auto 20px}
+  @keyframes s{to{transform:rotate(360deg)}}
+  h2{font-size:18px;font-weight:700;margin-bottom:8px}
+  p{font-size:13px;color:#8090b8;line-height:1.6;margin-bottom:16px}
+  .icon{font-size:42px;margin-bottom:16px}
+  .btn{display:inline-block;margin-top:16px;padding:11px 26px;
+    background:linear-gradient(135deg,#00b8a4,#9b5de5);color:#fff;
+    border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;border:none}
+</style>
+</head>
+<body>
+<div class="box" id="box">
+  <div class="logo">PropHedge</div>
+  <div class="spin" id="spin"></div>
+  <h2 id="title">Connessione cTrader...</h2>
+  <p id="desc">Non chiudere questa finestra.</p>
+</div>
+<script>
+(async function(){
+  var spin  = document.getElementById('spin');
+  var title = document.getElementById('title');
+  var desc  = document.getElementById('desc');
+  var box   = document.getElementById('box');
+
+  function done(ok, head, body) {
+    spin.style.display = 'none';
+    box.insertAdjacentHTML('afterbegin','<div class="icon">'+(ok?'\u2705':'\u274c')+'</div>');
+    title.textContent = head;
+    desc.innerHTML    = body;
+    if(!ok) box.insertAdjacentHTML('beforeend','<button class="btn" onclick="window.close()">Chiudi</button>');
+  }
+
+  var p     = new URLSearchParams(window.location.search);
+  var code  = p.get('code');
+  var error = p.get('error');
+
+  if(error){ done(false,'Autorizzazione negata', p.get('error_description')||error); return; }
+  if(!code){ done(false,'Codice mancante','Riprova dalla pagina principale.'); return; }
+
+  var pending = null;
+  try{ pending = JSON.parse(localStorage.getItem('ph_jconn_pending')||'null'); }catch(e){}
+
+  // Scambia codice con token via API server
+  try{
+    var r = await fetch('/api/ctrader-token',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        code:         code,
+        redirect_uri: window.location.origin+'/ctrader-callback',
+        env:          (pending&&pending.env)||'live'
+      })
+    });
+    var d = await r.json();
+    if(!d.access_token){ done(false,'Token non ricevuto', d.error||'Errore sconosciuto'); return; }
+
+    // Aggiorna pending con il token
+    if(pending){
+      pending.access_token  = d.access_token;
+      pending.refresh_token = d.refresh_token||null;
+      localStorage.setItem('ph_jconn_pending', JSON.stringify(pending));
+    }
+
+    // Notifica finestra parent (app.html) tramite postMessage
+    if(window.opener && !window.opener.closed){
+      window.opener.postMessage({
+        type:         'ctrader_callback',
+        access_token: d.access_token,
+        refresh_token:d.refresh_token||null,
+        pending:      pending
+      }, window.location.origin);
+      done(true,'Connesso!','Conto '+(pending&&pending.label||'cTrader')+' collegato con successo.');
+      setTimeout(function(){ window.close(); }, 2000);
+    } else {
+      // Apertura nella stessa finestra — torna all'app con flag
+      window.location.href = '/?ctrader_connected=1';
+    }
+  }catch(err){
+    done(false,'Errore di rete', err.message);
+  }
+})();
+</script>
+</body>
+</html>
