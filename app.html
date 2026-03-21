@@ -309,6 +309,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .mkSentBadge.ron{background:rgba(0,214,143,.15);color:var(--green)}
 .mkSentBadge.roff{background:rgba(255,64,96,.15);color:var(--red)}
 .mkSentBadge.neu{background:rgba(255,255,255,.07);color:var(--t3)}
+.mk-panel-root{background:var(--bg2)!important;color:var(--t)!important}
 
 </style>
 <script>
@@ -4676,7 +4677,7 @@ function openMarketsPanel() {
     var panel = document.createElement('div');
     panel.id = 'marketsPanel';
     var isDark = !document.body.classList.contains('light-theme');
-    panel.style.cssText = 'display:none;position:fixed;inset:0;z-index:99999;flex-direction:column;font-family:sans-serif;' + (isDark ? 'background:#0e1628;color:#eef0f8' : 'background:#ffffff;color:#0c1428');
+    panel.className = 'mk-panel-root'; panel.style.cssText = 'display:none;position:fixed;inset:0;z-index:99999;flex-direction:column;font-family:sans-serif';
     panel.innerHTML = ''
       + '<div style="display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--bg3);flex-shrink:0">'
       + '<div style="font-size:17px;font-weight:800;color:var(--t)">📊 Mercati in Tempo Reale</div>'
@@ -4766,7 +4767,7 @@ async function loadMkForex() {
 async function loadMkCrypto() {
   try {
     var ids = 'bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,avalanche-2';
-    var r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+ids+'&vs_currencies=usd&include_24hr_change=true&include_7d_change=true&include_30d_change=true').then(x=>x.json());
+    var r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+ids+'&vs_currencies=usd&include_24hr_change=true', {headers:{'Accept':'application/json'}}).then(x=>x.json());
     var map = {'bitcoin':'BTC-USD','ethereum':'ETH-USD','solana':'SOL-USD','binancecoin':'BNB-USD','ripple':'XRP-USD','cardano':'ADA-USD','dogecoin':'DOGE-USD','avalanche-2':'AVAX-USD'};
     Object.keys(map).forEach(function(id) {
       if (!r[id]) return;
