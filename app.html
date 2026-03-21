@@ -1243,124 +1243,190 @@ async function mkLoadCrypto() {
 // ═══════════════════════════════════════════════════════════════
 
 // Mappa Yahoo Finance symbol → nome pannello
-var YF_MAP = {
-  '^GSPC':'S&P 500',    '^NDX':'Nasdaq',       '^DJI':'Dow Jones',
-  '^RUT':'Russell 2000','^GDAXI':'DAX 40',     '^FTSE':'FTSE 100',
-  '^FCHI':'CAC 40',     '^N225':'Nikkei 225',  '^HSI':'Hang Seng',
-  '^VIX':'VIX',
-  'GC=F':'XAU/USD',     'SI=F':'Silver',       'PL=F':'Platinum',
-  'PA=F':'Palladium',   'CL=F':'WTI Oil',      'BZ=F':'Brent',
-  'NG=F':'Nat Gas',     'HG=F':'Copper',
-  'ZW=F':'Wheat',       'ZC=F':'Corn',         'KC=F':'Coffee',  'SB=F':'Sugar'
-};
 
-var YF_SYMS = Object.keys(YF_MAP);
+// ═══════════════════════════════════════════════════════════════
+// INDICI + MATERIE PRIME — strategia multi-fonte senza proxy
+//
+// FONTE 1: Yahoo Finance /v7/quote via corsproxy.io (1 chiamata per tutti)
+// FONTE 2: Financial Modeling Prep API free (nessuna chiave, CORS ok)
+// FONTE 3: Stooq CSV diretto (nessun proxy, CORS ok)
+// ═══════════════════════════════════════════════════════════════
 
-// Pool di proxy CORS da ruotare
-var PROXY_POOL = [
-  function(u){ return 'https://corsproxy.io/?'                + encodeURIComponent(u); },
-  function(u){ return 'https://api.allorigins.win/raw?url='   + encodeURIComponent(u); },
-  function(u){ return 'https://api.codetabs.com/v1/proxy?quest='+ encodeURIComponent(u); }
+// Simboli Yahoo → nome pannello
+
+// ═══════════════════════════════════════════════════════════════
+// MARKET DATA — TradingView Scanner API
+// Stesso dominio della piattaforma integrata → CORS nativo
+// Una sola chiamata POST per categoria → tutti i prezzi + %
+// Colonne: close | change(1d%) | Perf.W(1w%) | Perf.1M(1m%)
+// ═══════════════════════════════════════════════════════════════
+
+// Mappa: simbolo TradingView → nome pannello
+var TV_FOREX = [
+  ['FX:AUDCAD','AUD/CAD'], ['FX:AUDCHF','AUD/CHF'], ['FX:AUDJPY','AUD/JPY'],
+  ['FX:AUDNZD','AUD/NZD'], ['FX:AUDUSD','AUD/USD'], ['FX:CADCHF','CAD/CHF'],
+  ['FX:CADJPY','CAD/JPY'], ['FX:CHFJPY','CHF/JPY'], ['FX:EURAUD','EUR/AUD'],
+  ['FX:EURCAD','EUR/CAD'], ['FX:EURCHF','EUR/CHF'], ['FX:EURGBP','EUR/GBP'],
+  ['FX:EURJPY','EUR/JPY'], ['FX:EURNZD','EUR/NZD'], ['FX:EURUSD','EUR/USD'],
+  ['FX:GBPAUD','GBP/AUD'], ['FX:GBPCAD','GBP/CAD'], ['FX:GBPCHF','GBP/CHF'],
+  ['FX:GBPJPY','GBP/JPY'], ['FX:GBPNZD','GBP/NZD'], ['FX:GBPUSD','GBP/USD'],
+  ['FX:NZDCAD','NZD/CAD'], ['FX:NZDCHF','NZD/CHF'], ['FX:NZDJPY','NZD/JPY'],
+  ['FX:NZDUSD','NZD/USD'], ['FX:USDCAD','USD/CAD'], ['FX:USDCHF','USD/CHF'],
+  ['FX:USDJPY','USD/JPY']
 ];
-var _proxyIdx = 0;
-function nextProxy(url) {
-  var fn = PROXY_POOL[_proxyIdx % PROXY_POOL.length];
-  _proxyIdx++;
-  return fn(url);
-}
 
-// Fetch con timeout e rotazione proxy automatica
-async function proxiedFetch(targetUrl, ms) {
-  ms = ms || 9000;
-  for(var attempt = 0; attempt < PROXY_POOL.length; attempt++) {
-    var proxyUrl = PROXY_POOL[attempt](targetUrl);
-    try {
-      var r = await Promise.race([
-        fetch(proxyUrl, {cache:'no-store'}),
-        new Promise(function(_,rej){ setTimeout(function(){rej(new Error('to'));}, ms); })
-      ]);
-      if(!r.ok) continue;
-      var json = await r.json();
-      if(json) return json;
-    } catch(e) { /* prova prossimo proxy */ }
+var TV_INDICES = [
+  ['SP:SPX',     'S&P 500'],    ['NASDAQ:NDX', 'Nasdaq'],
+  ['DJ:DJI',     'Dow Jones'],  ['CBOE:RUT',   'Russell 2000'],
+  ['XETRA:DAX',  'DAX 40'],     ['SPREADEX:UK100','FTSE 100'],
+  ['EURONEXT:PX1','CAC 40'],    ['TVC:NI225',  'Nikkei 225'],
+  ['TVC:HSI',    'Hang Seng'],  ['TVC:VIX',    'VIX']
+];
+
+var TV_COMMOD = [
+  ['TVC:GOLD',    'XAU/USD'],  ['TVC:SILVER', 'Silver'],
+  ['NYMEX:PL1!',  'Platinum'], ['NYMEX:PA1!', 'Palladium'],
+  ['TVC:USOIL',   'WTI Oil'],  ['TVC:UKOIL',  'Brent'],
+  ['NYMEX:NG1!',  'Nat Gas'],  ['COMEX:HG1!', 'Copper'],
+  ['CBOT:ZW1!',   'Wheat'],    ['CBOT:ZC1!',  'Corn'],
+  ['ICEUS:KC1!',  'Coffee'],   ['ICEUS:SB1!', 'Sugar']
+];
+
+var TV_CRYPTO = [
+  ['BINANCE:BTCUSDT','BTC/USD'],  ['BINANCE:ETHUSDT','ETH/USD'],
+  ['BINANCE:SOLUSDT','SOL/USD'],  ['BINANCE:BNBUSDT','BNB/USD'],
+  ['BINANCE:XRPUSDT','XRP/USD'],  ['BINANCE:ADAUSDT','ADA/USD'],
+  ['BINANCE:DOGEUSDT','DOGE/USD'],['BINANCE:AVAXUSDT','AVAX/USD'],
+  ['BINANCE:DOTUSDT','DOT/USD'],  ['BINANCE:LINKUSDT','LINK/USD'],
+  ['BINANCE:MATICUSDT','MATIC/USD'],['BINANCE:LTCUSDT','LTC/USD']
+];
+
+// ── Chiamata TradingView Scanner ──────────────────────────────
+// Una POST con tutti i simboli → ritorna close + % giornaliero + settimanale + mensile
+async function tvScan(pairs) {
+  var tickers = pairs.map(function(p){ return p[0]; });
+  var nameMap = {};
+  pairs.forEach(function(p){ nameMap[p[0]] = p[1]; });
+
+  try {
+    var r = await Promise.race([
+      fetch('https://scanner.tradingview.com/global/scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbols: { tickers: tickers },
+          columns: ['close', 'change', 'Perf.W', 'Perf.1M']
+        })
+      }),
+      new Promise(function(_,rej){ setTimeout(function(){rej(new Error('timeout'));}, 12000); })
+    ]);
+
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    var data = await r.json();
+    if(!data || !data.data) return 0;
+
+    var got = 0;
+    data.data.forEach(function(item) {
+      var name = nameMap[item.s];
+      if(!name || !item.d) return;
+      var close  = item.d[0];
+      var pct1d  = item.d[1];
+      var pct1w  = item.d[2];
+      var pct1m  = item.d[3];
+      if(close == null) return;
+      _mkData[name] = {
+        price: close,
+        pct1d: pct1d != null ? pct1d : null,
+        pct1w: pct1w != null ? pct1w : null,
+        pct1m: pct1m != null ? pct1m : null
+      };
+      got++;
+    });
+    return got;
+  } catch(e) {
+    return 0;
   }
-  return null;
 }
 
-// ── FASE 1: prezzi live + % giornaliera in UN'UNICA chiamata ───
-async function mkLoadQuotes() {
-  var allSyms = YF_SYMS.join(',');
-  var url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols='
-    + encodeURIComponent(allSyms)
-    + '&fields=regularMarketPrice,regularMarketChangePercent,currency';
+// ── Carica forex ──────────────────────────────────────────────
+async function mkLoadForex() {
+  // Prima prova TradingView Scanner
+  var got = await tvScan(TV_FOREX);
+  if(got > 0) return;
 
-  var data = await proxiedFetch(url, 12000);
-  if(!data) return false;
-
-  var results = data.quoteResponse && data.quoteResponse.result;
-  if(!results || !results.length) return false;
-
-  results.forEach(function(q){
-    var name = YF_MAP[q.symbol];
-    if(!name) return;
-    if(q.regularMarketPrice == null) return;
-    // Inizializza con prezzo e % giornaliera — settimana/mese verranno dopo
-    if(!_mkData[name]) _mkData[name] = {};
-    _mkData[name].price = q.regularMarketPrice;
-    _mkData[name].pct1d = q.regularMarketChangePercent != null
-      ? q.regularMarketChangePercent : null;
-    if(_mkData[name].pct1w === undefined) _mkData[name].pct1w = null;
-    if(_mkData[name].pct1m === undefined) _mkData[name].pct1m = null;
-  });
-
-  return true;
-}
-
-// ── FASE 2: storico per settimana/mese — sequenziale con delay ──
-async function mkLoadHistory(sym, name) {
-  var url = 'https://query1.finance.yahoo.com/v8/finance/chart/'
-    + encodeURIComponent(sym)
-    + '?interval=1d&range=35d&includePrePost=false';
-
-  var data = await proxiedFetch(url, 10000);
-  if(!data) return;
-
-  var res = data.chart && data.chart.result && data.chart.result[0];
-  if(!res) return;
-
-  var closes = (res.indicators.quote[0].close || []).filter(function(v){return v!=null;});
-  if(closes.length < 6) return;
-
-  var now  = closes[closes.length - 1];
-  var d5   = closes.length >= 6  ? closes[closes.length - 6]  : null;
-  var d22  = closes.length >= 22 ? closes[closes.length - 22] : closes[0];
-
-  if(!_mkData[name]) _mkData[name] = {};
-  // Aggiorna prezzo con dato intraday più fresco se disponibile
-  if(res.meta && res.meta.regularMarketPrice)
-    _mkData[name].price = res.meta.regularMarketPrice;
-  _mkData[name].pct1w = d5  ? ((now - d5)  / d5)  * 100 : null;
-  _mkData[name].pct1m = d22 ? ((now - d22) / d22) * 100 : null;
-}
-
-// ── Orchestratore indici/materie prime ──────────────────────────
-async function mkLoadYahoo() {
-  // FASE 1 — una sola chiamata, tutti i prezzi e % giornaliere
-  var ok = await mkLoadQuotes();
-  if(ok) {
-    mkRender();          // mostra subito prezzi + giornaliero
-    mkUpdateMainTicker();
-  }
-
-  // FASE 2 — storico settimana/mese, uno alla volta con pausa 400ms
-  for(var i = 0; i < YF_SYMS.length; i++) {
-    var sym  = YF_SYMS[i];
-    var name = YF_MAP[sym];
-    await mkLoadHistory(sym, name);
-    mkRender();          // aggiorna riga per riga man mano
-    if(i < YF_SYMS.length - 1) {
-      await new Promise(function(r){ setTimeout(r, 350); });
+  // Fallback: Frankfurter (BCE) per forex
+  try {
+    var results = await Promise.allSettled([
+      fetch('https://api.frankfurter.app/latest?from=USD', {cache:'no-store'}).then(function(r){return r.json();}),
+      fetch('https://api.frankfurter.app/'+mkBizDate(1)+'?from=USD', {cache:'no-store'}).then(function(r){return r.json();}),
+      fetch('https://api.frankfurter.app/'+mkBizDate(5)+'?from=USD', {cache:'no-store'}).then(function(r){return r.json();}),
+      fetch('https://api.frankfurter.app/'+mkBizDate(22)+'?from=USD', {cache:'no-store'}).then(function(r){return r.json();})
+    ]);
+    var t0 = results[0].status==='fulfilled' ? results[0].value.rates : null;
+    if(!t0) return;
+    var tY = results[1].status==='fulfilled' ? results[1].value.rates : null;
+    var tW = results[2].status==='fulfilled' ? results[2].value.rates : null;
+    var tM = results[3].status==='fulfilled' ? results[3].value.rates : null;
+    function xp(base,quote,rates){
+      if(!rates) return null;
+      if(base==='USD') return rates[quote];
+      if(quote==='USD') return rates[base]?1/rates[base]:null;
+      return (rates[base]&&rates[quote])?rates[quote]/rates[base]:null;
     }
+    TV_FOREX.forEach(function(p){
+      var parts = p[1].split('/');
+      var base = parts[0], quote = parts[1];
+      var price = xp(base,quote,t0);
+      if(!price) return;
+      var pY=xp(base,quote,tY), pW=xp(base,quote,tW), pM=xp(base,quote,tM);
+      _mkData[p[1]] = {
+        price: price,
+        pct1d: pY?((price-pY)/pY)*100:null,
+        pct1w: pW?((price-pW)/pW)*100:null,
+        pct1m: pM?((price-pM)/pM)*100:null
+      };
+    });
+  } catch(e) { /* silenzioso */ }
+}
+
+// ── Carica crypto ─────────────────────────────────────────────
+async function mkLoadCrypto() {
+  // Prima prova TradingView Scanner
+  var got = await tvScan(TV_CRYPTO);
+  if(got > 0) return;
+
+  // Fallback: CoinGecko
+  try {
+    var ids = 'bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,avalanche-2,polkadot,chainlink,matic-network,litecoin';
+    var r = await Promise.race([
+      fetch('https://api.coingecko.com/api/v3/simple/price?ids='+ids+'&vs_currencies=usd&include_24hr_change=true&include_7d_change=true&include_30d_change=true'),
+      new Promise(function(_,rej){setTimeout(function(){rej();},9000);})
+    ]);
+    var d = await r.json();
+    var cgMap = {'bitcoin':'BTC/USD','ethereum':'ETH/USD','solana':'SOL/USD',
+      'binancecoin':'BNB/USD','ripple':'XRP/USD','cardano':'ADA/USD',
+      'dogecoin':'DOGE/USD','avalanche-2':'AVAX/USD','polkadot':'DOT/USD',
+      'chainlink':'LINK/USD','matic-network':'MATIC/USD','litecoin':'LTC/USD'};
+    Object.keys(cgMap).forEach(function(id){
+      var q=d[id]; if(!q||!q.usd) return;
+      _mkData[cgMap[id]]={price:q.usd,pct1d:q.usd_24h_change||null,pct1w:q.usd_7d_change||null,pct1m:q.usd_30d_change||null};
+    });
+  } catch(e) { /* silenzioso */ }
+}
+
+// ── Carica indici + materie prime ─────────────────────────────
+async function mkLoadYahoo() {
+  // TradingView Scanner per indici
+  var gotIdx = await tvScan(TV_INDICES);
+  mkRender(); mkUpdateMainTicker();
+
+  // TradingView Scanner per materie prime
+  var gotCmd = await tvScan(TV_COMMOD);
+  mkRender(); mkUpdateMainTicker();
+
+  // Se entrambi hanno fallito → avvisa
+  if(gotIdx === 0 && gotCmd === 0) {
+    console.warn('TradingView Scanner non disponibile per indici/materie prime');
   }
 }
 
@@ -1373,25 +1439,18 @@ async function mkLoadAll() {
     mkRender(); return;
   }
   _mkLoading = true;
-  _proxyIdx  = 0; // reset rotazione proxy
 
   var body = document.getElementById('mkBody');
-  if(body) body.innerHTML = '<div style="text-align:center;padding:60px;font-family:var(--fd);font-size:12px;color:#3d4d78">⏳ Caricamento... i dati compaiono progressivamente</div>';
+  if(body) body.innerHTML = '<div style="text-align:center;padding:60px;font-family:var(--fd);font-size:12px;color:#3d4d78;line-height:2">&#x23F3; Caricamento via TradingView...<br><span style="opacity:.5;font-size:10px">Stessa fonte della piattaforma integrata</span></div>';
 
-  // Forex + Crypto in parallelo (veloci, nessun proxy)
-  await Promise.allSettled([mkLoadForex(), mkLoadCrypto()]);
-  mkRender();
+  // Tutto in parallelo — TradingView Scanner è veloce
+  await Promise.allSettled([mkLoadForex(), mkLoadCrypto(), mkLoadYahoo()]);
+
+  _mkLoading  = false;
+  _mkLastLoad = Date.now();
+
   mkUpdateMainTicker();
   var upd = document.getElementById('mkUpdTime');
-  if(upd) upd.textContent = 'Aggiornato: ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-  mkUpdateRiskBadge();
-
-  // Indici + materie prime (2 fasi progressive)
-  await mkLoadYahoo();
-
-  _mkLoading   = false;
-  _mkLastLoad  = Date.now();
-  mkUpdateMainTicker();
   if(upd) upd.textContent = 'Aggiornato: ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
   mkUpdateRiskBadge();
   mkRender();
@@ -1931,45 +1990,1209 @@ function renderGuide(){
 }
 
 // RENDER EA DOWNLOAD
-function renderEADownload(){
-  return'<div style="max-width:700px;margin:0 auto">'
-    +'<div style="text-align:center;padding:30px 0 24px"><div style="font-size:48px;margin-bottom:12px">⬇</div>'
-    +'<div style="font-size:22px;font-weight:800;color:var(--t);margin-bottom:6px">Expert Advisor PropHedge</div>'
-    +'<div style="font-size:13px;color:var(--t3)">Scarica l&#39;EA per collegare MT4 o MT5 al Journal</div></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px">'
-    +'<div style="background:var(--bg2);border:2px solid var(--border2);border-radius:18px;padding:28px;text-align:center;position:relative;overflow:hidden">'
-    +'<div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(to right,var(--teal),var(--teal2))"></div>'
-    +'<div style="font-size:48px;margin-bottom:14px">📊</div>'
-    +'<div style="font-size:20px;font-weight:800;color:var(--t);margin-bottom:4px">MetaTrader 4</div>'
-    +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-bottom:20px">PropHedge_EA.mq4</div>'
-    +'<a href="https://prophedge-iota.vercel.app/PropHedge_EA.mq4" download style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--teal2),var(--violet2));color:#fff;border-radius:12px;padding:12px 24px;font-size:12px;font-weight:700;text-decoration:none;text-transform:uppercase">⬇ Scarica MT4</a>'
-    +'</div>'
-    +'<div style="background:var(--bg2);border:2px solid var(--border2);border-radius:18px;padding:28px;text-align:center;position:relative;overflow:hidden">'
-    +'<div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(to right,var(--violet),var(--violet2))"></div>'
-    +'<div style="font-size:48px;margin-bottom:14px">📈</div>'
-    +'<div style="font-size:20px;font-weight:800;color:var(--t);margin-bottom:4px">MetaTrader 5</div>'
-    +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-bottom:20px">PropHedge_EA.mq5</div>'
-    +'<a href="https://prophedge-iota.vercel.app/PropHedge_EA.mq5" download style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--violet2),var(--teal2));color:#fff;border-radius:12px;padding:12px 24px;font-size:12px;font-weight:700;text-decoration:none;text-transform:uppercase">⬇ Scarica MT5</a>'
-    +'</div></div>'
-    +'<div class="note note-teal">Dopo il download: copia il file in MQL4/Experts (o MQL5/Experts), riavvia MT4/MT5, abilita WebRequest per <code>https://prophedge-iota.vercel.app</code></div>'
-    +'</div>';
+function renderEADownload() {
+  return '<div style="max-width:700px;margin:0 auto">'
+
+    // Header
+    + '<div style="text-align:center;padding:30px 0 24px">'
+    + '<div style="font-size:48px;margin-bottom:12px">⬇</div>'
+    + '<div style="font-size:22px;font-weight:800;color:var(--t);margin-bottom:6px">Expert Advisor PropHedge</div>'
+    + '<div style="font-size:13px;color:var(--t3)">Scarica l\'EA per collegare MT4 o MT5 al Journal</div>'
+    + '</div>'
+
+    // Due card download
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px">'
+
+    // Card MT4
+    + '<div style="background:var(--bg2);border:2px solid var(--border2);border-radius:18px;padding:28px;text-align:center;position:relative;overflow:hidden;transition:all .2s">'
+    + '<div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(to right,var(--teal),var(--teal2))"></div>'
+    + '<div style="font-size:48px;margin-bottom:14px">📊</div>'
+    + '<div style="font-size:20px;font-weight:800;color:var(--t);margin-bottom:4px">MetaTrader 4</div>'
+    + '<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-bottom:4px">PropHedge_EA.mq4</div>'
+    + '<div style="font-size:11px;color:var(--t2);line-height:1.7;margin-bottom:20px">Compatibile con FTMO,<br>FundedElite, FTUK e tutte<br>le prop firm su MT4</div>'
+    + '<a href="https://prophedge-iota.vercel.app/PropHedge_EA.mq4" download style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--teal2),var(--violet2));color:#fff;border-radius:12px;padding:12px 24px;font-size:12px;font-weight:700;text-decoration:none;letter-spacing:.06em;text-transform:uppercase">⬇ Scarica per MT4</a>'
+    + '</div>'
+
+    // Card MT5
+    + '<div style="background:var(--bg2);border:2px solid var(--border2);border-radius:18px;padding:28px;text-align:center;position:relative;overflow:hidden;transition:all .2s">'
+    + '<div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(to right,var(--violet),var(--violet2))"></div>'
+    + '<div style="font-size:48px;margin-bottom:14px">📈</div>'
+    + '<div style="font-size:20px;font-weight:800;color:var(--t);margin-bottom:4px">MetaTrader 5</div>'
+    + '<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-bottom:4px">PropHedge_EA.mq5</div>'
+    + '<div style="font-size:11px;color:var(--t2);line-height:1.7;margin-bottom:20px">Compatibile con Axi,<br>Pepperstone, IC Markets<br>e tutte le prop su MT5</div>'
+    + '<a href="https://prophedge-iota.vercel.app/PropHedge_EA.mq5" download style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--violet2),var(--teal2));color:#fff;border-radius:12px;padding:12px 24px;font-size:12px;font-weight:700;text-decoration:none;letter-spacing:.06em;text-transform:uppercase">⬇ Scarica per MT5</a>'
+    + '</div>'
+    + '</div>'
+
+    // Istruzioni
+    + '<div class="panel">'
+    + '<div class="ph"><h3>⚡ Installazione — una volta sola</h3></div>'
+    + '<div class="pb">'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">'
+
+    // Col 1: Installazione
+    + '<div>'
+    + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);font-family:var(--fd);margin-bottom:12px">📁 Installazione</div>'
+    + eaStep("1","Scarica l\'EA per la tua piattaforma (MT4 o MT5)")
+    + eaStep("2","Apri MT4/MT5 → File → Open Data Folder")
+    + eaStep("3","Copia il file in <strong>MQL4/Experts</strong> oppure <strong>MQL5/Experts</strong>")
+    + eaStep("4","Riavvia MT4/MT5")
+    + eaStep("5","Strumenti → Opzioni → Expert Advisor<br>Spunta <em>Consenti WebRequest</em> e aggiungi:<br><code style=\"background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:10px\">https://prophedge-iota.vercel.app</code>")
+    + '</div>'
+
+    // Col 2: Configurazione
+    + '<div>'
+    + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--violet);font-family:var(--fd);margin-bottom:12px">⚙️ Configurazione</div>'
+    + eaStep("6","Loggati sul conto da collegare (prop o broker)")
+    + eaStep("7","Apri grafico EURUSD M1 → trascina PropHedge_EA")
+    + eaStep("8","Vai in Journal → clicca sfida → Connetti → MT4/MT5<br>Copia <strong>Token</strong> e <strong>Journal ID</strong> e incollali nell\'EA")
+    + eaStep("9","Tasto destro grafico → Template → Salva → <em>PropHedge</em><br>Strumenti → Opzioni → Grafici → spunta <em>Salva grafici</em>")
+    + '</div>'
+    + '</div>'
+
+    // Nota finale
+    + '<div style="margin-top:16px;padding:12px 16px;background:rgba(0,229,204,.06);border:1px solid rgba(0,229,204,.15);border-radius:10px;font-size:12px;color:rgba(0,229,204,.9);line-height:1.7">'
+    + '✅ <strong>Da ora MT4/MT5 avvia l\'EA automaticamente</strong> ad ogni apertura.<br>'
+    + '<span style="color:var(--t3);font-size:11px">Ripeti i passi 6-8 per ogni conto usando lo stesso Journal ID ma AccountType diverso (prop / broker).</span>'
+    + '</div>'
+    + '</div></div>'
+
+    + '</div>';
 }
 
-// RENDER STATS (semplificato)
-function renderStats(){
-  return'<div class="empty ai"><div style="font-size:44px;margin-bottom:14px;opacity:.3">📊</div><p>Le statistiche vengono popolate automaticamente<br>quando colleghi un conto nel Journal.</p><button class="btn-p" onclick="goTab(\'journal\',document.getElementById(\'tabJournal\'))">Vai al Journal</button></div>';
+function eaStep(num, text) {
+  return '<div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">'
+    + '<div style="width:22px;height:22px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--teal);flex-shrink:0;font-family:var(--fd);margin-top:1px">' + num + '</div>'
+    + '<div style="font-size:12px;color:var(--t2);line-height:1.6">' + text + '</div>'
+    + '</div>';
 }
 
-// RENDER JOURNAL (semplificato)
-function renderJournal(){
-  var ct=document.getElementById('main');if(!ct)return;
-  ct.innerHTML='<div style="padding:30px;text-align:center">'
-    +'<div style="font-size:40px;margin-bottom:16px">📒</div>'
-    +'<div style="font-size:16px;font-weight:700;margin-bottom:8px">Trade Journal</div>'
-    +'<div style="color:var(--t3);font-size:13px;margin-bottom:20px">Collega un conto MT4/MT5 tramite il tab EA Download per tracciare i tuoi trade.</div>'
-    +'<button class="btn-p" onclick="goTab(\'eadownload\',document.getElementById(\'tabEA\'))">⬇ Scarica EA e collega</button>'
-    +'</div>';
+var jrnl = {
+  sessions: [],
+  activeIdx: 0,
+  showNewForm: false
+};
+
+function jrnlLoad() {
+  try {
+    var s = localStorage.getItem('ph_jrnl_v3');
+    if (s) { var d = JSON.parse(s); jrnl.sessions = d.sessions||[]; jrnl.activeIdx = d.activeIdx||0; }
+  } catch(e) {}
 }
+
+function jrnlSave() {
+  try { localStorage.setItem('ph_jrnl_v3', JSON.stringify({sessions:jrnl.sessions, activeIdx:jrnl.activeIdx})); } catch(e) {}
+}
+
+function jrnlGetActive() { return jrnl.sessions[jrnl.activeIdx]||null; }
+
+function jrnlNewSession(name, linkedPropId) {
+  var num = jrnl.sessions.length + 1;
+  jrnl.sessions.push({
+    id:'j'+Date.now(), name:name||('Sfida '+num),
+    linkedPropId: linkedPropId||null,
+    propConn:{platform:'',label:'',token:'',accountId:'',env:'live',connected:false},
+    brokerConn:{platform:'',label:'',token:'',accountId:'',env:'live',connected:false},
+    propTrades:[], brokerTrades:[],
+    concluded:false, concludedAt:null
+  });
+  jrnl.activeIdx = jrnl.sessions.length - 1;
+  jrnlSave();
+}
+
+function jrnlRenumber() {
+  // Rinumera le sfide dopo eliminazione
+  jrnl.sessions.forEach(function(s,i){ s.num = i+1; });
+}
+
+// ─── CSS ────────────────────────────────────────────────────────
+function jrnlInjectCSS() {
+  var el = document.getElementById('jrnl-css');
+  if (el) el.remove();
+  el = document.createElement('style');
+  el.id = 'jrnl-css';
+  el.textContent = ''
+    +'.jw{display:flex;height:calc(100vh - 106px);overflow:hidden}'
+    +'.jsb{width:180px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}'
+    +'.jsb-hd{padding:12px 14px 6px;display:flex;align-items:center;justify-content:space-between}'
+    +'.jsb-hd span{font-size:9px;font-weight:700;font-family:var(--fd);color:var(--t3);letter-spacing:.1em;text-transform:uppercase}'
+    +'.jsb-new{background:linear-gradient(135deg,var(--teal2),var(--violet2));border:none;color:#fff;border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--fm)}'
+    +'.jsb-item{padding:10px 14px;cursor:pointer;border-left:3px solid transparent;font-size:12px;font-weight:600;color:var(--t2);transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:6px}'
+    +'.jsb-item:hover{background:var(--bg3);color:var(--t)}'
+    +'.jsb-item.active{border-left-color:var(--teal);background:var(--teal-bg);color:var(--teal)}'
+    +'.jsb-item.done{opacity:.5}'
+    +'.jsb-del{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:0 2px;line-height:1;opacity:0;transition:opacity .15s}'
+    +'.jsb-item:hover .jsb-del{opacity:1}'
+    +'.jmain{flex:1;display:flex;flex-direction:column;overflow:hidden}'
+    +'.jbanner{padding:7px 16px;font-size:11px;display:flex;align-items:center;gap:8px;flex-shrink:0}'
+    +'.jbanner.concluded{background:rgba(255,64,96,.07);color:var(--red);border-bottom:1px solid rgba(255,64,96,.15)}'
+    +'.jpnl-chart{height:60px;background:var(--bg3);border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;flex-shrink:0}'
+    +'.jpnl-half{position:relative;overflow:hidden;padding:6px 14px 4px}'
+    +'.jpnl-half:first-child{border-right:5px solid var(--jdiv)}'
+    +'.jpnl-label{font-size:9px;font-family:var(--fd);color:var(--t3);text-transform:uppercase;letter-spacing:.08em}'
+    +'.jpnl-val{font-size:14px;font-weight:800;font-family:var(--fd);line-height:1.2}'
+    +'.jpnl-svg{position:absolute;bottom:0;left:0;right:0;height:28px;opacity:.55}'
+    +'.jcols-hdr{display:grid;grid-template-columns:1fr 1fr;flex-shrink:0;border-bottom:2px solid var(--border2)}'
+    +'.jcol-hdr{padding:8px 14px;background:var(--bg2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}'
+    +'.jcol-hdr:first-child{border-right:5px solid var(--jdiv)}'
+    +'.jcol-title{font-size:10px;font-weight:700;font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em}'
+    +'.jcol-title.prop{color:var(--violet)}.jcol-title.broker{color:var(--teal)}'
+    +'.jstats{display:flex;gap:8px;flex-wrap:wrap}'
+    +'.jstat{font-size:10px;font-family:var(--fd);color:var(--t3)}'
+    +'.jstat b{font-weight:700}'
+    +'.jcols-outer{flex:1;display:flex;flex-direction:column;overflow:hidden}'
+    +'.jscroll{flex:1;overflow-y:auto;overflow-x:hidden}'
+    +'.jscroll::-webkit-scrollbar{width:8px;background:var(--bg3)}'
+    +'.jscroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}'
+    +'.jrow-hdr{display:grid;grid-template-columns:1fr 1fr;position:sticky;top:0;z-index:2;background:var(--bg3);border-bottom:1px solid var(--border)}'
+    +'.jcell-hdr{padding:7px 12px;font-size:9px;font-family:var(--fd);color:var(--t3);text-transform:uppercase;letter-spacing:.08em;display:flex;gap:10px}'
+    +'.jcell-hdr:first-child{border-right:5px solid var(--jdiv)}'
+    +'.jrow{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--jrow-line);min-height:36px;transition:background .1s}'
+    +'.jrow:nth-child(even){background:var(--jrow-even)}'
+    +'.jrow:nth-child(odd){background:var(--jrow-odd)}'
+    +'.jrow:hover{background:var(--jrow-hover)!important}'
+    +'.jrow.mismatch{background:rgba(255,190,0,.07)!important;border-bottom:1px solid rgba(255,190,0,.15)!important}'
+    +'.jcell{padding:7px 12px;font-size:11px;color:var(--t2);display:flex;align-items:center}'
+    +'.jcell:first-child{border-right:5px solid var(--jdiv)}'
+    +'.jwarn{display:inline-flex;align-items:center;gap:3px;background:rgba(255,190,0,.15);color:#ffbe00;border-radius:5px;padding:1px 5px;font-size:9px;font-weight:700;margin-left:3px}'
+    +'.jconn-inline{padding:20px 14px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}'
+    +'.jnew-form{padding:30px 24px;max-width:480px}'
+    +'input[type=date],.jdate-input{background:var(--bg2);border:1px solid var(--border);color:var(--t);border-radius:6px;padding:4px 8px;font-size:11px;font-family:var(--fd)}'
+    +'input[type=date]::-webkit-calendar-picker-indicator,.jdate-input::-webkit-calendar-picker-indicator{cursor:pointer;opacity:.85}'
+    +'body:not(.light-theme) input[type=date]::-webkit-calendar-picker-indicator,body:not(.light-theme) .jdate-input::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.2)!important}'
+    +'.light-theme input[type=date]::-webkit-calendar-picker-indicator,.light-theme .jdate-input::-webkit-calendar-picker-indicator{filter:none!important}'
+    +'@media(max-width:700px){'
+    +'.jw{flex-direction:column;height:auto}'
+    +'.jsb{width:100%;flex-direction:row;overflow-x:auto;border-right:none;border-bottom:1px solid var(--border);height:auto}'
+    +'.jsb-hd{flex-shrink:0;border-right:1px solid var(--border)}'
+    +'.jsb-item{white-space:nowrap;border-left:none;border-bottom:3px solid transparent}'
+    +'.jsb-item.active{border-bottom-color:var(--teal);border-left:none}'
+    +'.jsb-del{display:none}'
+    +'.jmain{min-height:500px}'
+    +'.jrow,.jrow-hdr,.jcols-hdr,.jpnl-chart{grid-template-columns:1fr 1fr}'
+    +'}';
+  document.head.appendChild(el);
+}
+
+
+// ─── Render principale ───────────────────────────────────────────
+function renderJournal() {
+  var ct = document.getElementById('main');
+  ct.style.padding = '0';
+  ct.style.maxWidth = 'none';
+  jrnlInjectCSS();
+
+  if (jrnl.showNewForm) {
+    ct.innerHTML = '<div style="padding:0">' + jrnlRenderNewForm() + '</div>';
+    return;
+  }
+  if (jrnl.sessions.length === 0) {
+    ct.innerHTML = jrnlRenderEmpty();
+    return;
+  }
+  // Assicura che activeIdx sia valido
+  if (jrnl.activeIdx >= jrnl.sessions.length) jrnl.activeIdx = jrnl.sessions.length - 1;
+
+  ct.innerHTML = '<div class="jw">' + jrnlRenderSidebar() + '<div class="jmain" id="jmain">' + jrnlRenderMain() + '</div></div>';
+
+  // Bind scroll sincronizzato dopo render
+  setTimeout(jrnlBindScroll, 50);
+}
+
+function jrnlRenderEmpty() {
+  return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:16px;text-align:center;padding:20px">'
+    + '<div style="font-size:40px;opacity:.25">&#128202;</div>'
+    + '<div style="font-size:16px;font-weight:700">Nessuna sfida nel Journal</div>'
+    + '<div style="color:var(--t3);font-size:12px">Crea la tua prima sfida per iniziare a tracciare i trade</div>'
+    + '<button class="btn-p" onclick="jrnlShowNewForm()">+ Nuova sfida Journal</button>'
+    + '</div>';
+}
+
+function jrnlRenderSidebar() {
+  var html = '<div class="jsb">'
+    + '<div class="jsb-hd">'
+    + '<span>Sfide</span>'
+    + '<button class="jsb-new" onclick="jrnlShowNewForm()">+ Nuova</button>'
+    + '</div>';
+
+  jrnl.sessions.forEach(function(s, i) {
+    var active = jrnl.activeIdx === i;
+    html += '<div class="jsb-item' + (active?' active':'') + (s.concluded?' done':'') + '" onclick="jrnlSelect(' + i + ')">'
+      + '<div style="line-height:1.4">'
+      + (s.concluded?'<span style="font-size:9px;color:var(--teal)">✅ </span>':'')
+      + 'Sfida ' + (i+1)
+      + '<div style="font-size:10px;font-weight:400;opacity:.65;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + s.name + '</div>'
+      + '</div>'
+      + '<button class="jsb-del" onclick="event.stopPropagation();jrnlDelete(' + i + ')" title="Elimina">&#10005;</button>'
+      + '</div>';
+  });
+
+  html += '</div>';
+  return html;
+}
+
+function jrnlRenderMain() {
+  if (jrnl.showNewForm) return jrnlRenderNewForm();
+  var sess = jrnlGetActive();
+  if (!sess) return '<div style="padding:30px;color:var(--t3)">Seleziona una sfida</div>';
+  var i = jrnl.activeIdx;
+  var html = '';
+
+  // Banner conclusa
+  if (sess.concluded) {
+    html += '<div class="jbanner concluded">🏁 Sfida conclusa il '+(sess.concludedAt?new Date(sess.concludedAt).toLocaleDateString('it-IT'):'')+' — <a href="#" onclick="jrnlReset('+i+');return false" style="color:var(--teal);text-decoration:none">↺ Reimposta</a></div>';
+  }
+
+  // Lotti target dalla sfida Dashboard
+  var propTarget = 0, brokerTarget = 0;
+  if (sess.linkedPropId) {
+    var lp = props.find(function(p){ return p.id === sess.linkedPropId; });
+    if (lp) { var lc = calcChallenge(lp); propTarget = lc.propLots||0; brokerTarget = lc.hedgeLots||0; }
+  }
+
+  // Tutti i trade
+  var pt = (sess.propTrades||[]).slice().sort(function(a,b){
+    return new Date(b.open_time||b.opened_at||0) - new Date(a.open_time||a.opened_at||0);
+  });
+  var bt = (sess.brokerTrades||[]).slice().sort(function(a,b){
+    return new Date(b.open_time||b.opened_at||0) - new Date(a.open_time||a.opened_at||0);
+  });
+
+  var ptOpen   = pt.filter(function(t){ return t.status==='open'; });
+  var btOpen   = bt.filter(function(t){ return t.status==='open'; });
+  var ptPnl    = pt.reduce(function(s,t){ return s+parseFloat(t.profit||t.pnl_realized||0); }, 0);
+  var btPnl    = bt.reduce(function(s,t){ return s+parseFloat(t.profit||t.pnl_realized||0); }, 0);
+  var ptLive   = ptOpen.reduce(function(s,t){ return s+parseFloat(t.profit||t.pnl_realized||0); }, 0);
+  var btLive   = btOpen.reduce(function(s,t){ return s+parseFloat(t.profit||t.pnl_realized||0); }, 0);
+
+  // ── FILTRI IN CIMA ────────────────────────────────────────────
+  var filterId   = 'jf_'+i;
+  var filterMode = (sess._filterMode || 'all');    // 'open','closed','all'
+  var filterFrom = sess._filterFrom || '';
+  var filterTo   = sess._filterTo   || '';
+  var filterSym  = sess._filterSym  || '';
+
+  html += '<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0">';
+
+  // Toggle Aperti/Chiusi/Tutti
+  html += '<div style="display:flex;gap:2px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:2px">';
+  ['all','open','closed'].forEach(function(m){
+    var labels = {all:'Tutti', open:'Aperti', closed:'Chiusi'};
+    var active = filterMode === m;
+    html += '<button onclick="jrnlSetFilter('+i+',\'mode\',\''+m+'\')" style="padding:4px 12px;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--fm);transition:all .15s;background:'+(active?'var(--teal)':'transparent')+';color:'+(active?'#000':'var(--t3)')+'">' + labels[m] + '</button>';
+  });
+  html += '</div>';
+
+  // Date da/a
+  html += '<div style="display:flex;align-items:center;gap:6px">';
+  html += '<span style="font-size:10px;color:var(--t3);font-family:var(--fd)">Dal</span>';
+  html += '<input type="date" value="'+filterFrom+'" onchange="jrnlSetFilter('+i+',\'from\',this.value)" class="jdate-input">';
+  html += '<span style="font-size:10px;color:var(--t3);font-family:var(--fd)">Al</span>';
+  html += '<input type="date" value="'+filterTo+'" onchange="jrnlSetFilter('+i+',\'to\',this.value)" class="jdate-input">';
+  html += '</div>';
+
+  // Filtro simbolo
+  html += '<input type="text" value="'+filterSym+'" placeholder="Simbolo..." oninput="jrnlSetFilter('+i+',\'sym\',this.value)" style="background:var(--bg2);border:1px solid var(--border);color:var(--t);border-radius:6px;padding:4px 10px;font-size:11px;font-family:var(--fd);width:100px">';
+
+  // Reset filtri
+  html += '<button onclick="jrnlResetFilters('+i+')" class="btn-g" style="padding:4px 10px;font-size:10px">↺ Reset</button>';
+
+  // Pulsanti sync
+  if (sess.propConn.connected && !sess.concluded)
+    html += '<button class="btn-g" style="padding:4px 8px;font-size:10px;margin-left:auto" data-jsync-idx="'+i+'" data-jsync-side="prop">🔄 Prop</button>';
+  if (sess.brokerConn.connected && !sess.concluded)
+    html += '<button class="btn-g" style="padding:4px 8px;font-size:10px" data-jsync-idx="'+i+'" data-jsync-side="broker">🔄 Broker</button>';
+  if (!sess.concluded)
+    html += '<button class="btn-g" style="padding:4px 8px;font-size:10px;color:var(--amber)" data-jconclude="'+i+'">🏁 Conclusa</button>';
+
+  html += '</div>';
+
+  // ── P/L SUMMARY BAR ──────────────────────────────────────────
+  html += '<div class="jpnl-chart">';
+  html += '<div class="jpnl-half">'
+    + '<div class="jpnl-label">🎯 Prop — P/L Totale</div>'
+    + '<div class="jpnl-val '+(ptPnl>=0?'v-green':'v-red')+'">'+(ptPnl>=0?'+':'')+ptPnl.toFixed(2)+'$</div>'
+    + jrnlMiniChart(pt, 'prop')
+    + '</div>';
+  html += '<div class="jpnl-half">'
+    + '<div class="jpnl-label">💹 Broker — P/L Totale</div>'
+    + '<div class="jpnl-val '+(btPnl>=0?'v-green':'v-red')+'">'+(btPnl>=0?'+':'')+btPnl.toFixed(2)+'$</div>'
+    + jrnlMiniChart(bt, 'broker')
+    + '</div>';
+  html += '</div>';
+
+  // ── APPLICA FILTRI ────────────────────────────────────────────
+  function applyFilters(trades) {
+    return trades.filter(function(t) {
+      // Filtro aperti/chiusi
+      if (filterMode === 'open'   && t.status !== 'open')   return false;
+      if (filterMode === 'closed' && t.status !== 'closed') return false;
+      // Filtro data
+      var openTime = t.open_time || t.opened_at;
+      if (filterFrom && openTime) {
+        if (new Date(openTime) < new Date(filterFrom)) return false;
+      }
+      if (filterTo && openTime) {
+        if (new Date(openTime) > new Date(filterTo + 'T23:59:59')) return false;
+      }
+      // Filtro simbolo
+      if (filterSym && t.symbol) {
+        if (t.symbol.toUpperCase().indexOf(filterSym.toUpperCase()) === -1) return false;
+      }
+      return true;
+    });
+  }
+
+  var ptFiltered = applyFilters(pt);
+  var btFiltered = applyFilters(bt);
+
+  // ── HEADER COLONNE ────────────────────────────────────────────
+  html += '<div class="jcols-outer"><div class="jcols-hdr">';
+
+  // Header Prop
+  html += '<div class="jcol-hdr">'
+    + '<span class="jcol-title prop">🎯 Prop</span>'
+    + '<div class="jstats">'
+    + '<div class="jstat">Aperti: <b style="color:var(--teal)">'+ptOpen.length+'</b></div>'
+    + '<div class="jstat">Live: <b class="'+(ptLive>=0?'v-green':'v-red')+'">'+(ptLive>=0?'+':'')+ptLive.toFixed(2)+'$</b></div>'
+    + (propTarget>0?'<div class="jstat">Target: <b style="color:var(--t2)">'+propTarget.toFixed(2)+' lot</b></div>':'')
+    + '</div>'
+    + (sess.propConn.connected?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">● '+sess.propConn.label+'</span>':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="prop">🔗 Connetti</button>')
+    + '</div>';
+
+  // Header Broker
+  html += '<div class="jcol-hdr">'
+    + '<span class="jcol-title broker">💹 Broker</span>'
+    + '<div class="jstats">'
+    + '<div class="jstat">Aperti: <b style="color:var(--teal)">'+btOpen.length+'</b></div>'
+    + '<div class="jstat">Live: <b class="'+(btLive>=0?'v-green':'v-red')+'">'+(btLive>=0?'+':'')+btLive.toFixed(2)+'$</b></div>'
+    + (brokerTarget>0?'<div class="jstat">Target: <b style="color:var(--t2)">'+brokerTarget.toFixed(2)+' lot</b></div>':'')
+    + '</div>'
+    + (sess.brokerConn.connected?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">● '+sess.brokerConn.label+'</span>':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="broker">🔗 Connetti</button>')
+    + '</div>';
+
+  html += '</div>'; // fine jcols-hdr
+
+  // ── HEADER TABELLA ────────────────────────────────────────────
+  html += '<div class="jscroll"><div class="jrow-hdr">';
+  var colHdr = '<div style="display:flex;gap:8px;flex:1"><span style="color:var(--t3);min-width:18px">#</span><span style="min-width:60px">Simbolo</span><span style="min-width:36px">Dir.</span><span style="min-width:40px">Lotti</span><span style="min-width:55px">Apertura</span><span style="min-width:55px">Chiusura</span><span style="min-width:55px">P/L</span><span>Stato</span></div>';
+  html += '<div class="jcell-hdr">'+colHdr+'</div>';
+  html += '<div class="jcell-hdr">'+colHdr+'</div>';
+  html += '</div>';
+
+  // ── RIGHE TRADE ───────────────────────────────────────────────
+  var maxLen = Math.max(ptFiltered.length, btFiltered.length);
+  if (maxLen === 0) {
+    html += '<div class="jrow">';
+    html += '<div class="jcell">' + jrnlEmptyCol('prop', sess, i) + '</div>';
+    html += '<div class="jcell">' + jrnlEmptyCol('broker', sess, i) + '</div>';
+    html += '</div>';
+  } else {
+    for (var r = 0; r < maxLen; r++) {
+      var tP = ptFiltered[r] || null;
+      var tB = btFiltered[r] || null;
+
+      // Calcola alert mismatch
+      var alerts = [];
+      if (tP && tB) {
+        // Stessa direzione (errore — dovrebbero essere opposte)
+        if (tP.direction === tB.direction)
+          alerts.push('⚠️ Stessa direzione!');
+        // Lotti Prop sbagliati
+        if (propTarget > 0) {
+          var diffP = Math.abs(parseFloat(tP.volume||tP.lots||0) - propTarget) / propTarget;
+          if (diffP > 0.05) alerts.push('⚠️ Lotti Prop: '+parseFloat(tP.volume||tP.lots||0).toFixed(2)+' (target '+propTarget.toFixed(2)+')');
+        }
+        // Lotti Broker sbagliati
+        if (brokerTarget > 0) {
+          var diffB = Math.abs(parseFloat(tB.volume||tB.lots||0) - brokerTarget) / brokerTarget;
+          if (diffB > 0.05) alerts.push('⚠️ Lotti Broker: '+parseFloat(tB.volume||tB.lots||0).toFixed(2)+' (target '+brokerTarget.toFixed(2)+')');
+        }
+      }
+      // Trade aperto solo su un lato
+      if (tP && !tB && tP.status==='open') alerts.push('⚠️ Manca hedge su Broker!');
+      if (!tP && tB && tB.status==='open') alerts.push('⚠️ Manca trade su Prop!');
+
+      var hasMismatch = alerts.length > 0;
+
+      html += '<div class="jrow'+(hasMismatch?' mismatch':'')+'">';
+      html += '<div class="jcell">'+jrnlCellFull(tP, r, propTarget, hasMismatch)+'</div>';
+      html += '<div class="jcell">'+jrnlCellFull(tB, r, brokerTarget, hasMismatch)+'</div>';
+      html += '</div>';
+
+      // Riga alert gialla
+      if (hasMismatch) {
+        html += '<div style="grid-column:1/-1;background:rgba(255,190,11,.08);border-bottom:1px solid rgba(255,190,11,.15);padding:4px 12px;font-size:10px;color:var(--amber);font-family:var(--fd)">'
+          + alerts.join(' &nbsp;|&nbsp; ')
+          + '</div>';
+      }
+    }
+  }
+
+  html += '</div></div></div>';
+  html += jrnlConnModal();
+  return html;
+}
+
+// ── Funzioni filtro ───────────────────────────────────────────────
+function jrnlSetFilter(idx, key, val) {
+  var sess = jrnl.sessions[idx];
+  if (!sess) return;
+  if (key==='mode') sess._filterMode = val;
+  if (key==='from') sess._filterFrom = val;
+  if (key==='to')   sess._filterTo   = val;
+  if (key==='sym')  sess._filterSym  = val;
+  // Re-render solo il main
+  var jmain = document.getElementById('jmain');
+  if (jmain) jmain.innerHTML = jrnlRenderMain();
+}
+
+function jrnlResetFilters(idx) {
+  var sess = jrnl.sessions[idx];
+  if (!sess) return;
+  sess._filterMode = 'all';
+  sess._filterFrom = '';
+  sess._filterTo   = '';
+  sess._filterSym  = '';
+  var jmain = document.getElementById('jmain');
+  if (jmain) jmain.innerHTML = jrnlRenderMain();
+}
+
+// ── Cella trade dettagliata ───────────────────────────────────────
+function jrnlCellFull(t, rowIdx, target, hasMismatch) {
+  if (!t) return '<span style="color:var(--border2);font-size:11px;padding:4px">—</span>';
+
+  var pnl   = parseFloat(t.profit||t.pnl_realized||0);
+  var lots  = parseFloat(t.volume||t.lots||0);
+  var lotWarn = target > 0 && Math.abs(lots - target) / target > 0.05;
+  var isOpen  = t.status === 'open';
+
+  // Date formattate
+  var openTime  = t.open_time  || t.opened_at  || '';
+  var closeTime = t.close_time || t.closed_at  || '';
+  var openStr   = openTime  ? new Date(openTime).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+  var closeStr  = closeTime ? new Date(closeTime).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+
+  // Durata
+  var durStr = '';
+  if (openTime && closeTime) {
+    var dur = Math.round((new Date(closeTime) - new Date(openTime)) / 60000);
+    durStr = dur < 60 ? dur+'m' : Math.round(dur/60)+'h';
+  }
+
+  var html = '<div style="display:flex;align-items:center;gap:6px;padding:2px 0;flex-wrap:wrap">';
+  html += '<span style="color:var(--t3);font-family:var(--fd);font-size:10px;min-width:18px">'+(rowIdx+1)+'</span>';
+  html += '<b style="font-size:12px;min-width:60px">'+(t.symbol||'—')+'</b>';
+  html += '<b class="'+(t.direction==='BUY'?'v-green':'v-red')+'" style="min-width:36px">'+(t.direction||'—')+'</b>';
+
+  // Lotti con warning
+  html += '<span style="font-family:var(--fd);font-size:11px;min-width:40px'+(lotWarn?';color:var(--amber)':'')+'">'
+    + lots.toFixed(2)
+    + (lotWarn?' ⚠️':'')
+    + '</span>';
+
+  // Date apertura/chiusura
+  html += '<span style="font-size:10px;color:var(--t3);font-family:var(--fd);min-width:55px">'+openStr+'</span>';
+  html += '<span style="font-size:10px;color:var(--t3);font-family:var(--fd);min-width:55px">'+(isOpen?'—':closeStr+(durStr?' ('+durStr+')':''))+'</span>';
+
+  // P/L
+  html += '<span class="'+(pnl>=0?'v-green':'v-red')+'" style="font-family:var(--fd);font-weight:700;min-width:55px">'+(pnl>=0?'+':'')+pnl.toFixed(2)+'$</span>';
+
+  // Stato
+  html += isOpen
+    ? '<span style="background:rgba(0,229,204,.1);color:var(--teal);padding:1px 6px;border-radius:6px;font-size:9px;font-weight:700">APERTO</span>'
+    : '<span style="background:rgba(255,255,255,.06);color:var(--t3);padding:1px 6px;border-radius:6px;font-size:9px">CHIUSO</span>';
+
+  html += '</div>';
+  return html;
+}
+
+
+function jrnlMiniChart(trades, side) {
+  if (!trades || trades.length < 2) return '<svg class="jpnl-svg"></svg>';
+  // Calcola cumulative P/L
+  var cum = 0;
+  var pts = trades.slice().reverse().map(function(t){
+    cum += parseFloat(t.pnl_realized||0);
+    return cum;
+  });
+  var min = Math.min.apply(null, pts);
+  var max = Math.max.apply(null, pts);
+  var range = max - min || 1;
+  var w = 100; var h = 30;
+  var color = cum >= 0 ? 'var(--teal)' : 'var(--red)';
+  var svgPts = pts.map(function(v, i) {
+    var x = (i / (pts.length-1)) * w;
+    var y = h - ((v - min) / range) * (h-4) - 2;
+    return x.toFixed(1)+','+y.toFixed(1);
+  }).join(' ');
+  return '<svg class="jpnl-svg" viewBox="0 0 100 30" preserveAspectRatio="none">'
+    + '<polyline points="'+svgPts+'" fill="none" stroke="'+color+'" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
+    + '</svg>';
+}
+
+function jrnlCell(t, rowIdx, warn, target) {
+  if (!t) return '<span style="color:var(--border2);font-size:10px">—</span>';
+  var pnl = parseFloat(t.pnl_realized||0);
+  var lots = parseFloat(t.volume||0);
+  var lotWarn = target > 0 && Math.abs(lots - target) / target > 0.05;
+  var dirWarn = warn;
+
+  var html = '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
+  html += '<span style="color:var(--t3);font-family:var(--fd);font-size:10px;min-width:18px">'+(rowIdx+1)+'</span>';
+  html += '<b style="font-size:11px">'+(t.symbol||'—')+'</b>';
+
+  // Direzione con eventuale warning
+  html += '<b class="'+(t.direction==='BUY'?'v-green':'v-red')+'">'+(t.direction||'—')+'</b>';
+  if (dirWarn && t.direction) html += '<span class="jwarn">&#9651; dir.</span>';
+
+  // Lotti con eventuale warning
+  html += '<span style="font-family:var(--fd)">'+lots.toFixed(2)+'</span>';
+  if (lotWarn) html += '<span class="jwarn">&#9651; lot</span>';
+
+  // P/L
+  html += '<span class="'+(pnl>=0?'v-green':'v-red')+'" style="font-family:var(--fd);font-weight:700">'+(pnl>=0?'+':'')+pnl.toFixed(2)+'$</span>';
+
+  // Stato
+  html += t.status==='open'
+    ? '<span style="background:rgba(0,229,204,.1);color:var(--teal);padding:1px 6px;border-radius:6px;font-size:9px;font-weight:700">APE</span>'
+    : '<span style="background:rgba(255,255,255,.06);color:var(--t3);padding:1px 6px;border-radius:6px;font-size:9px">CHI</span>';
+
+  html += '</div>';
+  return html;
+}
+
+function jrnlEmptyCol(side, sess, i) {
+  var connected = side==='prop' ? sess.propConn.connected : sess.brokerConn.connected;
+  if (connected) return '<div class="jempty-col">Nessun trade</div>';
+  return '<div class="jconn-inline">'
+    + '<div style="font-size:11px;color:var(--t3)">'+(side==='prop'?'🎯 Prop non connesso':'💹 Broker non connesso')+'</div>'
+    + (sess.concluded?'':'<button class="btn-p" style="padding:4px 14px;font-size:11px" data-jconn-idx="'+i+'" data-jconn-side="'+side+'">🔗 Connetti</button>')
+    + '</div>';
+}
+
+function jrnlBindScroll() { /* scroll unico — nativo */ }
+
+function jrnlRenderNewForm() {
+  // Mostra sfide dalla dashboard con i lotti calcolati
+  var sfideHtml = '';
+  if (props.length > 0) {
+    sfideHtml = '<div style="margin-bottom:16px">'
+      + '<div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Collega a sfida Dashboard (opzionale)</div>'
+      + '<select id="jnf-prop" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fm)">'
+      + '<option value="">-- Nessun collegamento --</option>';
+    props.forEach(function(p) {
+      var c2 = calcChallenge(p);
+      sfideHtml += '<option value="'+p.id+'">'+p.name+' — Prop: '+c2.propLots.toFixed(2)+' lot | Hedge: '+c2.hedgeLots.toFixed(2)+' lot</option>';
+    });
+    sfideHtml += '</select>'
+      + '<div id="jnf-calc" style="margin-top:8px;font-size:11px;color:var(--teal);font-family:var(--fd)"></div>'
+      + '</div>';
+  }
+
+  return '<div class="jnew-form">'
+    + '<div style="font-size:16px;font-weight:700;margin-bottom:6px">+ Nuova sfida Journal</div>'
+    + '<div style="color:var(--t3);font-size:12px;margin-bottom:20px">Collega una sfida dalla Dashboard per avere i lotti target calcolati automaticamente.</div>'
+    + '<div class="f"><label>Nome sfida</label><input type="text" id="jnf-name" placeholder="Es. FTMO $100k Marzo 2026" style="font-size:14px"></div>'
+    + sfideHtml
+    + '<div style="display:flex;gap:8px;margin-top:4px">'
+    + '<button class="btn-p" onclick="jrnlCreateNew()">Crea sfida</button>'
+    + '<button class="btn-g" onclick="jrnlCancelNew()">Annulla</button>'
+    + '</div></div>';
+}
+
+function jrnlConnModal() {
+  return '<div id="jConnMod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)jrnlCloseConn()">'
+    + '<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:400px;padding:22px" onclick="event.stopPropagation()">'
+    + '<div style="font-size:14px;font-weight:700;margin-bottom:14px" id="jConnMod-title">Connetti conto</div>'
+    + '<div class="f"><label>Piattaforma</label><select id="jConnMod-plat" onchange="jrnlConnPlatChange()">'
+    + '<option value="ctrader">cTrader</option>'
+    + '<option value="mt4">MetaTrader 4</option>'
+    + '<option value="mt5">MetaTrader 5</option>'
+    + '<option value="tradovate">Tradovate</option>'
+    + '<option value="manual">Manuale</option>'
+    + '</select></div>'
+    + '<div id="jConnMod-fields"></div>'
+    + '<div style="display:flex;gap:8px;margin-top:14px">'
+    + '<button class="btn-p" onclick="jrnlSaveConn()">Salva</button>'
+    + '<button class="btn-g" onclick="jrnlCloseConn()">Annulla</button>'
+    + '</div></div></div>';
+}
+
+// ─── Controlli ───────────────────────────────────────────────────
+var _jConnSide = 'prop';
+var _jConnIdx  = 0;
+
+function jrnlSelect(i) {
+  jrnl.activeIdx = i;
+  jrnl.showNewForm = false;
+  jrnlSave();
+  renderJournal();
+}
+
+function jrnlShowNewForm() {
+  jrnl.showNewForm = true;
+  renderJournal();
+}
+
+function jrnlCancelNew() {
+  jrnl.showNewForm = false;
+  renderJournal();
+}
+
+function jrnlCreateNew() {
+  var name = (document.getElementById('jnf-name')||{value:''}).value.trim();
+  var linkedPropId = (document.getElementById('jnf-prop')||{value:''}).value;
+  if (!name) { alert('Inserisci un nome per la sfida.'); return; }
+  jrnlNewSession(name, linkedPropId);
+  jrnl.showNewForm = false;
+  jrnlSave();
+  renderJournal();
+}
+
+function jrnlDelete(i) {
+  if (!confirm('Eliminare la sfida "' + jrnl.sessions[i].name + '"?\nTutti i trade verranno cancellati.')) return;
+  jrnl.sessions.splice(i, 1);
+  if (jrnl.activeIdx >= jrnl.sessions.length) jrnl.activeIdx = Math.max(0, jrnl.sessions.length-1);
+  jrnlSave();
+  renderJournal();
+}
+
+function jrnlConclude(i) {
+  if (!confirm('Segna questa sfida come conclusa?')) return;
+  jrnl.sessions[i].concluded = true;
+  jrnl.sessions[i].concludedAt = new Date().toISOString();
+  jrnlSave();
+  renderJournal();
+}
+
+function jrnlReset(i) {
+  if (!confirm('Reimposta la sfida? I trade e le connessioni verranno cancellati.')) return;
+  var s = jrnl.sessions[i];
+  s.propConn   = {platform:'',label:'',token:'',accountId:'',env:'live',connected:false};
+  s.brokerConn = {platform:'',label:'',token:'',accountId:'',env:'live',connected:false};
+  s.propTrades = []; s.brokerTrades = [];
+  s.concluded = false; s.concludedAt = null;
+  jrnlSave();
+  renderJournal();
+}
+
+function jrnlOpenConn(i, side) {
+  _jConnIdx  = i;
+  _jConnSide = side;
+  var sess = jrnl.sessions[i];
+  var conn = side==='prop' ? sess.propConn : sess.brokerConn;
+  var mod  = document.getElementById('jConnMod');
+  if (!mod) return;
+  document.getElementById('jConnMod-title').innerHTML = side==='prop' ? '&#127942; Connetti conto Prop &mdash; '+sess.name : '&#128188; Connetti conto Broker &mdash; '+sess.name;
+  var sel = document.getElementById('jConnMod-plat');
+  if (sel && conn.platform) sel.value = conn.platform;
+  mod.style.display = 'flex';
+  jrnlConnPlatChange();
+}
+
+function jrnlCloseConn() {
+  var mod = document.getElementById('jConnMod');
+  if (mod) mod.style.display = 'none';
+}
+
+function jrnlConnPlatChange() {
+  var plat   = (document.getElementById('jConnMod-plat')||{value:'ctrader'}).value;
+  var sess   = jrnl.sessions[_jConnIdx];
+  var conn   = _jConnSide==='prop' ? sess.propConn : sess.brokerConn;
+  var fields = document.getElementById('jConnMod-fields');
+  if (!fields) return;
+
+  if (plat==='ctrader') {
+    fields.innerHTML = '<div class="note note-teal" style="margin-top:10px;font-size:11px">'
+      + 'Verrai reindirizzato su cTrader per autorizzare l\'accesso. Nessuna password da inserire qui.'
+      + '</div>'
+      + '<div class="f" style="margin-top:10px"><label>Ambiente</label><select id="jConn-env">'
+      + '<option value="live"'+(conn.env==='live'?' selected':'')+'>Live (Reale)</option>'
+      + '<option value="demo"'+(conn.env==='demo'?' selected':'')+'>Demo</option>'
+      + '</select></div>'
+      + '<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. TopFX Live"></div>';
+  } else if (plat==='mt4'||plat==='mt5') {
+    var jrnlId = (jrnl.sessions[_jConnIdx]||{id:'—'}).id;
+    var apiKey = 'PH_2026_AXI_SECRET_KEY_VISIONTRADING';
+
+    fields.innerHTML = ''
+      // ── Istruzioni ─────────────────────────────────────────────
+      + '<div class="note note-teal" style="margin-top:10px;font-size:11px;line-height:1.8">'
+      + '<strong>Come collegare MT4/MT5:</strong><br>'
+      + '1. Scarica l\'EA dalla tab <strong>⬇ EA Download</strong><br>'
+      + '2. Installa e trascina l\'EA sul grafico<br>'
+      + '3. Inserisci <strong>Email</strong>, <strong>API Key</strong> e <strong>Journal ID</strong> nei parametri<br>'
+      + '4. I trade appariranno automaticamente ogni 30 secondi'
+      + '</div>'
+
+      // ── Email ──────────────────────────────────────────────────
+      + '<div class="f" style="margin-top:12px">'
+      + '<label>La tua Email PropHedge <span style="color:var(--teal);font-size:9px;text-transform:none">— inseriscila nell\'EA</span></label>'
+      + '<div style="display:flex;gap:6px">'
+      + '<input type="text" id="jConn-email" value="' + (accountData.email||'') + '" readonly '
+      + 'style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
+      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-email\').value).then(function(){var b=document.getElementById(\'jConn-copyemail\');b.textContent=\'✓\';setTimeout(function(){b.textContent=\'Copia\'},1500)})" '
+      + 'id="jConn-copyemail" class="btn-g" style="padding:5px 12px;font-size:10px">Copia</button>'
+      + '</div></div>'
+
+      // ── API Key ─────────────────────────────────────────────────
+      + '<div class="f">'
+      + '<label>API Key <span style="color:var(--teal);font-size:9px;text-transform:none">— inseriscila nell\'EA (non scade mai)</span></label>'
+      + '<div style="display:flex;gap:6px">'
+      + '<input type="text" id="jConn-apikey" value="' + apiKey + '" readonly '
+      + 'style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
+      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-apikey\').value).then(function(){var b=document.getElementById(\'jConn-copykey\');b.textContent=\'✓\';setTimeout(function(){b.textContent=\'Copia\'},1500)})" '
+      + 'id="jConn-copykey" class="btn-g" style="padding:5px 12px;font-size:10px">Copia</button>'
+      + '</div>'
+      + '<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">✅ Questa chiave non scade — puoi usarla sempre</div>'
+      + '</div>'
+
+      // ── Journal ID ─────────────────────────────────────────────
+      + '<div class="f">'
+      + '<label>Journal ID <span style="color:var(--teal);font-size:9px;text-transform:none">— inseriscilo nell\'EA</span></label>'
+      + '<div style="display:flex;gap:6px">'
+      + '<input type="text" id="jConn-jrnlid" value="' + jrnlId + '" readonly '
+      + 'style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
+      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-jrnlid\').value).then(function(){var b=document.getElementById(\'jConn-copyjid\');b.textContent=\'✓\';setTimeout(function(){b.textContent=\'Copia\'},1500)})" '
+      + 'id="jConn-copyjid" class="btn-g" style="padding:5px 12px;font-size:10px">Copia</button>'
+      + '</div></div>'
+
+      // ── Tipo conto ─────────────────────────────────────────────
+      + '<div class="f"><label>Tipo conto nell\'EA</label>'
+      + '<select id="jConn-actype" style="background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fd);width:100%">'
+      + '<option value="prop"'+(_jConnSide==='prop'?' selected':'')+'>prop — conto prop firm</option>'
+      + '<option value="broker"'+(_jConnSide==='broker'?' selected':'')+'>broker — conto personale/hedge</option>'
+      + '</select></div>'
+
+      // ── Nome conto ─────────────────────────────────────────────
+      + '<div class="f"><label>Nome conto</label>'
+      + '<input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. FTMO MT5 $100k"></div>';
+
+    } else if (plat==='tradovate') {
+    fields.innerHTML = ''
+      + '<div class="note note-teal" style="margin-top:10px;font-size:11px;line-height:1.7">'
+      + 'Inserisci le tue credenziali Tradovate. Il software si collegherà in sola lettura per vedere i trade aperti e lo storico.'
+      + '</div>'
+      + '<div class="f" style="margin-top:10px"><label>Username</label>'
+      + '<input type="text" id="jConn-tvuser" value="'+(conn.tvuser||'')+'" placeholder="Il tuo username Tradovate"></div>'
+      + '<div class="f"><label>Password</label>'
+      + '<input type="password" id="jConn-tvpass" value="'+(conn.tvpass||'')+'" placeholder="La tua password Tradovate"></div>'
+      + '<div class="f"><label>Ambiente</label><select id="jConn-env">'
+      + '<option value="live"'+(conn.env==='live'?' selected':'')+'>Live (Reale)</option>'
+      + '<option value="demo"'+(conn.env==='demo'?' selected':'')+'>Demo (Simulato)</option>'
+      + '</select></div>'
+      + '<div class="f"><label>Nome conto</label>'
+      + '<input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. Tradovate Live"></div>';
+  } else {
+    fields.innerHTML = '<div class="f" style="margin-top:10px"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Inserimento manuale"></div>';
+  }
+}
+
+async function jrnlSaveConn() {
+  var plat  = (document.getElementById('jConnMod-plat')||{value:'manual'}).value;
+  var label = (document.getElementById('jConn-label')||{value:''}).value.trim() || plat.toUpperCase();
+  var token = (document.getElementById('jConn-token')||{value:''}).value.trim();
+  var env   = (document.getElementById('jConn-env')||{value:'live'}).value;
+  var sess  = jrnl.sessions[_jConnIdx];
+  var key   = _jConnSide==='prop' ? 'propConn' : 'brokerConn';
+
+  if (plat==='ctrader') {
+    sess[key] = {platform:'ctrader',label:label,env:env,connected:false,token:'',accountId:''};
+    localStorage.setItem('ph_jconn_pending', JSON.stringify({idx:_jConnIdx,side:_jConnSide,label:label,env:env}));
+    jrnlSave();
+    try {
+      var r = await fetch('/api/ctrader-auth-url?env='+env+'&redirect='+encodeURIComponent(window.location.origin+'/ctrader-callback'));
+      var d = await r.json();
+      if (d.url) { window.location.href=d.url; return; }
+      alert('Errore: '+(d.error||'URL non ricevuto'));
+    } catch(e) { alert('Errore: '+e.message); }
+    return;
+  }
+
+  if (plat==='mt4'||plat==='mt5') {
+    var actype = (document.getElementById('jConn-actype')||{value:_jConnSide}).value;
+    sess[key] = {platform:plat, label:label, env:'live', connected:true, accountId:'', actype:actype};
+    jrnlSave();
+    jrnlCloseConn();
+    jrnlSyncMT(_jConnIdx, _jConnSide);
+    return;
+  }
+
+  if (plat==='tradovate') {
+    var tvuser = (document.getElementById('jConn-tvuser')||{value:''}).value.trim();
+    var tvpass = (document.getElementById('jConn-tvpass')||{value:''}).value.trim();
+    if (!tvuser || !tvpass) { alert('Inserisci username e password Tradovate.'); return; }
+    sess[key] = {platform:'tradovate', label:label, tvuser:tvuser, tvpass:tvpass, env:env, connected:true, accountId:''};
+    jrnlSave();
+    jrnlCloseConn();
+    jrnlSyncTradovate(_jConnIdx, _jConnSide);
+    return;
+  }
+
+  sess[key] = {platform:plat, label:label, token:token, env:env, connected:true, accountId:''};
+  jrnlSave();
+  jrnlCloseConn();
+  renderJournal();
+}
+
+// ─── OAuth cTrader callback ──────────────────────────────────────
+async function jrnlHandleCtraderCallback(code) {
+  var pending = null;
+  try { pending = JSON.parse(localStorage.getItem('ph_jconn_pending')||'null'); } catch(e){}
+  if (!pending) return false;
+  try {
+    var r = await fetch('/api/ctrader-token',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code:code,redirect_uri:window.location.origin+'/ctrader-callback',env:pending.env})});
+    var d = await r.json();
+    if (!d.access_token) { alert('Errore cTrader: '+(d.error||'sconosciuto')); return true; }
+    var r2 = await fetch('/api/ctrader-accounts',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({access_token:d.access_token,env:pending.env})});
+    var d2 = await r2.json();
+    var acc = d2.accounts&&d2.accounts[0];
+    var sess = jrnl.sessions[pending.idx];
+    var key  = pending.side==='prop'?'propConn':'brokerConn';
+    sess[key] = {platform:'ctrader',label:pending.label||'cTrader',token:d.access_token,
+      accountId:acc?acc.ctidTraderAccountId:'',env:pending.env,connected:true,
+      balance:acc?(acc.balance/100):0};
+    localStorage.removeItem('ph_jconn_pending');
+    jrnlSave();
+    window.history.replaceState({},'',window.location.pathname);
+    await jrnlSync(pending.idx,pending.side);
+    goTab('journal',document.getElementById('tabJournal'));
+  } catch(e) { alert('Errore connessione: '+e.message); }
+  return true;
+}
+
+// ─── Sync trade ──────────────────────────────────────────────────
+async function jrnlSync(i, side) {
+  var sess = jrnl.sessions[i];
+  var conn = side==='prop' ? sess.propConn : sess.brokerConn;
+  if (!conn.connected || conn.platform!=='ctrader') return;
+  try {
+    var r = await fetch('/api/ctrader-positions',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({access_token:conn.token,account_id:conn.accountId,env:conn.env})});
+    var d = await r.json();
+    if (!d.positions) return;
+    var existing = side==='prop' ? sess.propTrades : sess.brokerTrades;
+    var closed = existing.filter(function(t){ return t.status==='closed'; });
+    var live = d.positions.map(function(p){
+      return {external_id:String(p.positionId),platform:'ctrader',symbol:p.symbol,
+        direction:p.tradeSide,volume:(p.volume||0)/100,entry_price:p.entryPrice,
+        pnl_realized:p.unrealizedGrossPnl||0,status:'open',opened_at:new Date().toISOString()};
+    });
+    if (side==='prop') sess.propTrades=closed.concat(live);
+    else sess.brokerTrades=closed.concat(live);
+    jrnlSave();
+    renderJournal();
+  } catch(e) { console.error('jrnlSync:',e); }
+}
+
+
+// ─── Sync MT4/MT5 da Supabase ────────────────────────────────────
+async function jrnlSyncMT(i, side) {
+  var sess = jrnl.sessions[i];
+  var conn = side==='prop' ? sess.propConn : sess.brokerConn;
+  if (!conn.connected || (conn.platform!=='mt4' && conn.platform!=='mt5')) return;
+  try {
+    var res = await _sb.auth.getSession();
+    var user = res&&res.data&&res.data.session&&res.data.session.user;
+    if (!user) return;
+    // account_type per Supabase: usa il campo actype salvato
+    var actype = conn.actype || side;
+    var q = await _sb.from('trades')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('journal_id', sess.id)
+      .eq('account_type', actype)
+      .order('open_time', {ascending: false})
+      .limit(200);
+    if (q.error) { console.error('jrnlSyncMT error:', q.error.message); return; }
+    var trades = (q.data||[]).map(function(t){
+      return {
+        external_id:  String(t.ticket),
+        platform:     t.platform||conn.platform,
+        symbol:       t.symbol,
+        direction:    t.direction,
+        volume:       parseFloat(t.volume||0),
+        lots:         parseFloat(t.volume||0),
+        open_price:   t.open_price,
+        close_price:  t.close_price,
+        stop_loss:    t.stop_loss,
+        take_profit:  t.take_profit,
+        profit:       parseFloat(t.profit||0),
+        pnl_realized: parseFloat(t.profit||0),
+        swap:         parseFloat(t.swap||0),
+        commission:   parseFloat(t.commission||0),
+        status:       t.status||'open',
+        open_time:    t.open_time,
+        close_time:   t.close_time,
+        opened_at:    t.open_time,
+        closed_at:    t.close_time,
+        comment:      t.comment||''
+      };
+    });
+    if (side==='prop') sess.propTrades = trades;
+    else               sess.brokerTrades = trades;
+    jrnlSave();
+    renderJournal();
+    console.log('jrnlSyncMT: caricate', trades.length, 'trade per', side);
+  } catch(e) { console.error('jrnlSyncMT:', e); }
+}
+
+// ─── Sync Tradovate ───────────────────────────────────────────────
+async function jrnlSyncTradovate(i, side) {
+  var sess = jrnl.sessions[i];
+  var conn = side==='prop' ? sess.propConn : sess.brokerConn;
+  if (!conn.connected || conn.platform!=='tradovate') return;
+  // Nota: Tradovate richiede autenticazione OAuth2 lato server
+  // Per ora mostriamo un messaggio informativo
+  console.log('Tradovate sync: da implementare con API server');
+  renderJournal();
+}
+
+// Event delegation per data attributes
+document.addEventListener('click', function(e) {
+  var el = e.target.closest('[data-jconn-idx]');
+  if (el) { jrnlOpenConn(parseInt(el.dataset.jconnIdx),el.dataset.jconnSide); return; }
+  var el2 = e.target.closest('[data-jconclude]');
+  if (el2) { jrnlConclude(parseInt(el2.dataset.jconclude)); return; }
+  var el3 = e.target.closest('[data-jsync-idx]');
+  if (el3) {
+    var idx = parseInt(el3.dataset.jsyncIdx);
+    var side = el3.dataset.jsyncSide;
+    var sess = jrnl.sessions[idx];
+    var conn = side==='prop' ? sess.propConn : sess.brokerConn;
+    if (conn.platform==='mt4'||conn.platform==='mt5') jrnlSyncMT(idx, side);
+    else if (conn.platform==='tradovate') jrnlSyncTradovate(idx, side);
+    else jrnlSync(idx, side);
+    return;
+  }
+});
+
+
+
+// ===== RENDER STATISTICHE =====
+function renderStats() {
+  // Raccoglie tutti i trade da tutte le sessioni Journal
+  var allTrades = [];
+  jrnl.sessions.forEach(function(sess) {
+    (sess.propTrades||[]).forEach(function(t){ allTrades.push(Object.assign({}, t, {sessName: sess.name, side:'prop'})); });
+    (sess.brokerTrades||[]).forEach(function(t){ allTrades.push(Object.assign({}, t, {sessName: sess.name, side:'broker'})); });
+  });
+
+  // Se non ci sono trade mostra stato vuoto
+  if (allTrades.length === 0) {
+    return '<div class="empty ai">'
+      + '<div style="font-size:44px;margin-bottom:14px;opacity:.3">📊</div>'
+      + '<p>Nessun trade nel Journal.<br>Connetti un conto dalla tab Journal per vedere le statistiche.</p>'
+      + '<button class="btn-p" onclick="goTab(&quot;journal&quot;,document.getElementById(&quot;tabJournal&quot;))">Vai al Journal</button>'
+      + '</div>';
+  }
+
+  // Calcola statistiche per ogni sessione
+  var sessStats = jrnl.sessions.map(function(sess, idx) {
+    var pt = sess.propTrades || [];
+    var bt = sess.brokerTrades || [];
+    var trades = pt.concat(bt).filter(function(t){ return t.status === 'closed'; });
+    return calcTradeStats(trades, sess.name, idx);
+  }).filter(function(s){ return s.totalTrades > 0; });
+
+  // Statistiche globali
+  var closedAll = allTrades.filter(function(t){ return t.status === 'closed'; });
+  var globalStats = calcTradeStats(closedAll, 'Tutte le sfide', -1);
+
+  var html = '<div style="max-width:1200px">';
+
+  // ── STAT CARDS GLOBALI ────────────────────────────────────────
+  html += '<div style="margin-bottom:22px">'
+    + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--t3);font-family:var(--fd);margin-bottom:14px">📊 Riepilogo Globale</div>'
+    + '<div class="sg">'
+    + statCard('🎯', 'Trade Totali', globalStats.totalTrades, 'chiusi')
+    + statCard('✅', 'Win Rate', globalStats.winRate.toFixed(1) + '%', globalStats.wins + 'W / ' + globalStats.losses + 'L', globalStats.winRate >= 50 ? 'var(--green)' : 'var(--red)')
+    + statCard('💰', 'P/L Totale', (globalStats.totalPnl >= 0 ? '+' : '') + globalStats.totalPnl.toFixed(2) + '$', 'profitto netto', globalStats.totalPnl >= 0 ? 'var(--green)' : 'var(--red)')
+    + statCard('⚡', 'Profit Factor', globalStats.profitFactor === Infinity ? '∞' : globalStats.profitFactor.toFixed(2), 'guadagni / perdite', globalStats.profitFactor >= 1 ? 'var(--green)' : 'var(--red)')
+    + '</div></div>';
+
+  // ── STAT CARDS DETTAGLIO ──────────────────────────────────────
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:22px">'
+    + detailCard('📈 Avg Profit', '+' + globalStats.avgWin.toFixed(2) + '$', 'per trade vincente', 'var(--green)')
+    + detailCard('📉 Avg Loss', '-' + globalStats.avgLoss.toFixed(2) + '$', 'per trade perdente', 'var(--red)')
+    + detailCard('🏆 Miglior Trade', (globalStats.bestTrade >= 0 ? '+' : '') + globalStats.bestTrade.toFixed(2) + '$', globalStats.bestSymbol || '—', 'var(--teal)')
+    + detailCard('💔 Peggior Trade', globalStats.worstTrade.toFixed(2) + '$', globalStats.worstSymbol || '—', 'var(--red)')
+    + detailCard('📊 Avg Trade', (globalStats.avgTrade >= 0 ? '+' : '') + globalStats.avgTrade.toFixed(2) + '$', 'media per trade', globalStats.avgTrade >= 0 ? 'var(--green)' : 'var(--red)')
+    + detailCard('🔥 Streak Vincente', globalStats.maxWinStreak + ' trade', 'consecutivi', 'var(--teal)')
+    + '</div>';
+
+  // ── EQUITY CURVE ──────────────────────────────────────────────
+  if (closedAll.length >= 2) {
+    html += '<div class="panel ai" style="margin-bottom:22px">'
+      + '<div class="ph"><h3>Equity Curve — Andamento P/L</h3>'
+      + '<div style="display:flex;gap:8px">';
+    jrnl.sessions.forEach(function(s, i) {
+      if ((s.propTrades||[]).concat(s.brokerTrades||[]).filter(function(t){return t.status==='closed';}).length > 0) {
+        html += '<span style="font-size:10px;font-family:var(--fd);color:var(--t3);padding:2px 8px;background:var(--bg3);border-radius:5px">' + s.name + '</span>';
+      }
+    });
+    html += '</div></div>'
+      + '<div class="pb" style="padding:10px 18px 18px">'
+      + renderEquityCurve(closedAll)
+      + '</div></div>';
+  }
+
+  // ── STATS PER SFIDA ───────────────────────────────────────────
+  if (sessStats.length > 1) {
+    html += '<div class="panel ai" style="margin-bottom:22px">'
+      + '<div class="ph"><h3>Statistiche per Sfida</h3></div>'
+      + '<div class="pb"><table class="pt"><thead><tr>'
+      + '<th>Sfida</th><th>Trade</th><th>Win Rate</th><th>P/L</th><th>Avg Win</th><th>Avg Loss</th><th>Profit Factor</th>'
+      + '</tr></thead><tbody>';
+    sessStats.forEach(function(s) {
+      var pnlCol = s.totalPnl >= 0 ? 'v-green' : 'v-red';
+      var wrCol  = s.winRate >= 50 ? 'v-green' : 'v-red';
+      html += '<tr>'
+        + '<td><strong>' + s.name + '</strong></td>'
+        + '<td>' + s.totalTrades + '</td>'
+        + '<td class="' + wrCol + '">' + s.winRate.toFixed(1) + '%</td>'
+        + '<td class="' + pnlCol + '">' + (s.totalPnl >= 0 ? '+' : '') + s.totalPnl.toFixed(2) + '$</td>'
+        + '<td class="v-green">+' + s.avgWin.toFixed(2) + '$</td>'
+        + '<td class="v-red">-' + s.avgLoss.toFixed(2) + '$</td>'
+        + '<td class="' + (s.profitFactor >= 1 ? 'v-green' : 'v-red') + '">' + (s.profitFactor === Infinity ? '∞' : s.profitFactor.toFixed(2)) + '</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// ── Helper: calcola statistiche da array di trade ────────────────
+function calcTradeStats(trades, name, idx) {
+  var closed = trades.filter(function(t){ return t.status === 'closed'; });
+  var wins   = closed.filter(function(t){ return parseFloat(t.pnl_realized||0) > 0; });
+  var losses = closed.filter(function(t){ return parseFloat(t.pnl_realized||0) <= 0; });
+  var totalPnl   = closed.reduce(function(s,t){ return s + parseFloat(t.pnl_realized||0); }, 0);
+  var totalWins  = wins.reduce(function(s,t){ return s + parseFloat(t.pnl_realized||0); }, 0);
+  var totalLoss  = Math.abs(losses.reduce(function(s,t){ return s + parseFloat(t.pnl_realized||0); }, 0));
+  var pnls = closed.map(function(t){ return parseFloat(t.pnl_realized||0); });
+  var best  = pnls.length ? Math.max.apply(null, pnls) : 0;
+  var worst = pnls.length ? Math.min.apply(null, pnls) : 0;
+  var bestT  = closed.find(function(t){ return parseFloat(t.pnl_realized||0) === best; });
+  var worstT = closed.find(function(t){ return parseFloat(t.pnl_realized||0) === worst; });
+
+  // Max win streak
+  var maxStreak = 0, curStreak = 0;
+  closed.forEach(function(t){
+    if (parseFloat(t.pnl_realized||0) > 0) { curStreak++; maxStreak = Math.max(maxStreak, curStreak); }
+    else curStreak = 0;
+  });
+
+  return {
+    name:         name,
+    totalTrades:  closed.length,
+    wins:         wins.length,
+    losses:       losses.length,
+    winRate:      closed.length ? (wins.length / closed.length * 100) : 0,
+    totalPnl:     totalPnl,
+    avgWin:       wins.length ? totalWins / wins.length : 0,
+    avgLoss:      losses.length ? totalLoss / losses.length : 0,
+    avgTrade:     closed.length ? totalPnl / closed.length : 0,
+    profitFactor: totalLoss > 0 ? totalWins / totalLoss : (totalWins > 0 ? Infinity : 0),
+    bestTrade:    best,
+    worstTrade:   worst,
+    bestSymbol:   bestT ? (bestT.symbol || '—') : '—',
+    worstSymbol:  worstT ? (worstT.symbol || '—') : '—',
+    maxWinStreak: maxStreak
+  };
+}
+
+// ── Helper: stat card grande ─────────────────────────────────────
+function statCard(icon, label, value, sub, color) {
+  return '<div class="sc-s ai">'
+    + '<div class="sc-s-ic">' + icon + '</div>'
+    + '<div class="sc-s-lb">' + label + '</div>'
+    + '<div class="sc-s-v" style="color:' + (color||'var(--t)') + '">' + value + '</div>'
+    + '<div class="sc-s-s">' + sub + '</div>'
+    + '</div>';
+}
+
+// ── Helper: detail card piccola ──────────────────────────────────
+function detailCard(label, value, sub, color) {
+  return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;transition:border-color .2s">'
+    + '<div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">' + label + '</div>'
+    + '<div style="font-size:20px;font-weight:700;font-family:var(--fd);color:' + (color||'var(--t)') + ';margin-bottom:4px">' + value + '</div>'
+    + '<div style="font-size:10px;color:var(--t3);font-family:var(--fd)">' + sub + '</div>'
+    + '</div>';
+}
+
+// ── Helper: equity curve SVG ─────────────────────────────────────
+function renderEquityCurve(trades) {
+  // Ordina per data apertura
+  var sorted = trades.slice().sort(function(a,b){
+    return new Date(a.opened_at||a.closed_at||0) - new Date(b.opened_at||b.closed_at||0);
+  });
+
+  // Calcola P/L cumulativo
+  var cum = 0;
+  var points = [{x:0, y:0}];
+  sorted.forEach(function(t, i) {
+    cum += parseFloat(t.pnl_realized||0);
+    points.push({x: i+1, y: cum});
+  });
+
+  var W = 800, H = 200;
+  var minY = Math.min.apply(null, points.map(function(p){return p.y;}));
+  var maxY = Math.max.apply(null, points.map(function(p){return p.y;}));
+  var rangeY = maxY - minY || 1;
+  var pad = 20;
+
+  function px(p) { return pad + (p.x / (points.length-1)) * (W - pad*2); }
+  function py(p) { return H - pad - ((p.y - minY) / rangeY) * (H - pad*2); }
+
+  var polyline = points.map(function(p){ return px(p).toFixed(1)+','+py(p).toFixed(1); }).join(' ');
+  var isPos = cum >= 0;
+  var color = isPos ? 'var(--teal)' : 'var(--red)';
+
+  // Area fill
+  var areaPoints = polyline + ' ' + px(points[points.length-1]).toFixed(1)+','+(H-pad) + ' ' + px(points[0]).toFixed(1)+','+(H-pad);
+
+  // Zero line
+  var zeroY = py({y:0}).toFixed(1);
+
+  var html = '<div style="position:relative;width:100%;overflow:hidden">'
+    + '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:180px" preserveAspectRatio="xMidYMid meet">'
+    // Grid orizzontale
+    + '<line x1="'+pad+'" y1="'+zeroY+'" x2="'+(W-pad)+'" y2="'+zeroY+'" stroke="var(--border2)" stroke-width="1" stroke-dasharray="4,4"/>'
+    // Area
+    + '<polygon points="'+areaPoints+'" fill="'+color+'" opacity="0.08"/>'
+    // Linea equity
+    + '<polyline points="'+polyline+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'
+    // Punto finale
+    + '<circle cx="'+px(points[points.length-1]).toFixed(1)+'" cy="'+py(points[points.length-1]).toFixed(1)+'" r="5" fill="'+color+'" opacity="0.9"/>'
+    // Label P/L finale
+    + '<text x="'+(W-pad-8)+'" y="'+(parseFloat(py(points[points.length-1]))-10)+'" text-anchor="end" font-size="11" font-family="JetBrains Mono,monospace" fill="'+color+'" font-weight="700">'
+    + (cum>=0?'+':'')+cum.toFixed(2)+'$'
+    + '</text>'
+    + '</svg>'
+    // Labels asse Y
+    + '<div style="position:absolute;left:0;top:'+pad+'px;font-size:9px;font-family:var(--fd);color:var(--t3)">' + maxY.toFixed(0) + '$</div>'
+    + '<div style="position:absolute;left:0;bottom:'+pad+'px;font-size:9px;font-family:var(--fd);color:var(--t3)">' + minY.toFixed(0) + '$</div>'
+    + '</div>';
+
+  // Trade count label
+  html += '<div style="text-align:center;font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:4px">'
+    + sorted.length + ' trade chiusi · dal '
+    + (sorted[0] ? new Date(sorted[0].opened_at||sorted[0].closed_at||0).toLocaleDateString('it-IT') : '—')
+    + ' al '
+    + (sorted[sorted.length-1] ? new Date(sorted[sorted.length-1].opened_at||sorted[sorted.length-1].closed_at||0).toLocaleDateString('it-IT') : '—')
+    + '</div>';
+
+  return html;
+}
+
+
+// ===== RENDER EA DOWNLOAD =====
 
 // RENDER PIATTAFORMA (TradingView)
 var PH_TV_KEY='ph_tv_state_v3';
@@ -2090,14 +3313,48 @@ function render(){
 // ===== INIT =====
 window.addEventListener('DOMContentLoaded',function(){
   loadAccountData();
+  jrnlLoad();
   buildBot(BOT_ALL);
   loadFX();
+
+  // Controlla callback cTrader OAuth
+  var urlParams = new URLSearchParams(window.location.search);
+  var authCode = urlParams.get('code');
+  var authState = urlParams.get('state');
+  if (authCode && authState === 'prophedge') {
+    var jPending = null;
+    try { jPending = JSON.parse(localStorage.getItem('ph_jconn_pending')||'null'); } catch(e){}
+    if (jPending) {
+      goTab('journal', document.getElementById('tabJournal'));
+      setTimeout(function(){ jrnlHandleCtraderCallback(authCode); }, 300);
+    }
+  }
+
   render();
-  // Dati mercati: carica solo la prima volta che si apre il pannello (niente timer aggressivo)
-  // Il pulsante 🔄 nel pannello permette di aggiornare manualmente
+
   // Network check
   function checkNet(){var w=document.getElementById('netWarn');if(w){if(!navigator.onLine||window._sbLoadError)w.style.display='block';else w.style.display='none';}}
   checkNet();window.addEventListener('online',checkNet);window.addEventListener('offline',checkNet);
+
+  // Delegazione eventi Journal
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('[data-jconn-idx]');
+    if (el) { jrnlOpenConn(parseInt(el.dataset.jconnIdx),el.dataset.jconnSide); return; }
+    var el2 = e.target.closest('[data-jconclude]');
+    if (el2) { jrnlConclude(parseInt(el2.dataset.jconclude)); return; }
+    var el3 = e.target.closest('[data-jsync-idx]');
+    if (el3) {
+      var idx = parseInt(el3.dataset.jsyncIdx);
+      var side = el3.dataset.jsyncSide;
+      var sess = jrnl.sessions[idx];
+      if(!sess) return;
+      var conn = side==='prop' ? sess.propConn : sess.brokerConn;
+      if (conn.platform==='mt4'||conn.platform==='mt5') jrnlSyncMT(idx, side);
+      else if (conn.platform==='tradovate') jrnlSyncTradovate(idx, side);
+      else jrnlSync(idx, side);
+      return;
+    }
+  });
 });
 </script>
 </body>
