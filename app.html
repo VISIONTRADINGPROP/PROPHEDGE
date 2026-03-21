@@ -3187,7 +3187,16 @@ async function jrnlSaveConn() {
     try {
       var r = await fetch('/api/ctrader-auth-url?env='+env+'&redirect='+encodeURIComponent(window.location.origin+'/ctrader-callback'));
       var d = await r.json();
-      if (d.url) { window.location.href=d.url; return; }
+      if (d.url) {
+        // Apri in popup — l'utente autorizza senza lasciare il software
+        var popup = window.open(d.url, 'ctrader_auth',
+          'width=520,height=640,left='+(screen.width/2-260)+',top='+(screen.height/2-320));
+        if(!popup) {
+          // Popup bloccato — fallback stessa finestra
+          window.location.href = d.url;
+        }
+        return;
+      }
       alert('Errore: '+(d.error||'URL non ricevuto'));
     } catch(e) { alert('Errore: '+e.message); }
     return;
@@ -3225,29 +3234,61 @@ async function jrnlSaveConn() {
 }
 
 // ─── OAuth cTrader callback ──────────────────────────────────────
-async function jrnlHandleCtraderCallback(code) {
-  var pending = null;
-  try { pending = JSON.parse(localStorage.getItem('ph_jconn_pending')||'null'); } catch(e){}
+// Chiamato da: postMessage del popup (token già pronto)
+//          o:  URL ?code= (stessa finestra)
+async function jrnlHandleCtraderCallback(code, directToken, directPending) {
+  var pending = directPending || null;
+  if(!pending){
+    try { pending = JSON.parse(localStorage.getItem('ph_jconn_pending')||'null'); } catch(e){}
+  }
   if (!pending) return false;
+
   try {
-    var r = await fetch('/api/ctrader-token',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({code:code,redirect_uri:window.location.origin+'/ctrader-callback',env:pending.env})});
-    var d = await r.json();
-    if (!d.access_token) { alert('Errore cTrader: '+(d.error||'sconosciuto')); return true; }
+    var access_token = directToken;
+
+    // Se non abbiamo il token diretto, scambia il code
+    if(!access_token && code){
+      var r = await fetch('/api/ctrader-token',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({code:code,redirect_uri:window.location.origin+'/ctrader-callback',env:pending.env})});
+      var d = await r.json();
+      if (!d.access_token) { alert('Errore cTrader: '+(d.error||'sconosciuto')); return true; }
+      access_token = d.access_token;
+    }
+
+    if(!access_token){ alert('Token cTrader non ricevuto.'); return true; }
+
+    // Recupera lista conti
     var r2 = await fetch('/api/ctrader-accounts',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({access_token:d.access_token,env:pending.env})});
+      body:JSON.stringify({access_token:access_token,env:pending.env})});
     var d2 = await r2.json();
-    var acc = d2.accounts&&d2.accounts[0];
+    var acc = (d2.accounts&&d2.accounts[0]) || null;
+
     var sess = jrnl.sessions[pending.idx];
     var key  = pending.side==='prop'?'propConn':'brokerConn';
-    sess[key] = {platform:'ctrader',label:pending.label||'cTrader',token:d.access_token,
-      accountId:acc?acc.ctidTraderAccountId:'',env:pending.env,connected:true,
-      balance:acc?(acc.balance/100):0};
+    var connectedAt = new Date().toISOString();
+
+    sess[key] = {
+      platform:    'ctrader',
+      label:       pending.label || (acc ? 'cTrader #'+acc.ctidTraderAccountId : 'cTrader'),
+      token:       access_token,
+      accountId:   acc ? String(acc.ctidTraderAccountId) : '',
+      env:         pending.env,
+      connected:   true,
+      connectedAt: connectedAt
+    };
+
+    // Svuota trade precedenti — nuova connessione
+    if(pending.side==='prop')   sess.propTrades   = [];
+    else                        sess.brokerTrades  = [];
+
     localStorage.removeItem('ph_jconn_pending');
     jrnlSave();
     window.history.replaceState({},'',window.location.pathname);
-    await jrnlSync(pending.idx,pending.side);
-    goTab('journal',document.getElementById('tabJournal'));
+
+    // Sync trade
+    await jrnlSync(pending.idx, pending.side);
+    goTab('journal', document.getElementById('tabJournal'));
+    alert('✅ cTrader collegato: ' + sess[key].label);
   } catch(e) { alert('Errore connessione: '+e.message); }
   return true;
 }
@@ -4133,7 +4174,18 @@ window.addEventListener('DOMContentLoaded',function(){
   buildBot(BOT_ALL);
   loadFX();
 
-  // Controlla callback cTrader OAuth
+  // Ascolta callback cTrader OAuth da popup
+  window.addEventListener('message', function(event) {
+    if(event.origin !== window.location.origin) return;
+    if(!event.data || event.data.type !== 'ctrader_callback') return;
+    var token   = event.data.access_token;
+    var pending = event.data.pending;
+    if(token && pending != null) {
+      jrnlHandleCtraderCallback(null, token, pending);
+    }
+  });
+
+  // Controlla callback cTrader OAuth (stessa finestra)
   var urlParams = new URLSearchParams(window.location.search);
   var authCode = urlParams.get('code');
   var authState = urlParams.get('state');
