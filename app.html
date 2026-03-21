@@ -1145,7 +1145,7 @@ function doRegister(){
 <div class="orb orb2"></div>
 
 <!-- LIVE ASSET TICKER -->
-<div class="tk-wrap" id="tkWrapBar" style="cursor:pointer" title="Clicca per aprire il pannello mercati">
+<div class="tk-wrap" id="tkWrapBar" onclick="openMarketsPanel()" style="cursor:pointer" title="Clicca per aprire il pannello mercati">
   <div class="tk-label"><div class="tk-ld"></div>LIVE</div>
   <div class="tk-scroll">
     <div class="tk-track" id="tkTrack">
@@ -4607,321 +4607,203 @@ function render() {
 
 // ===== INIT =====
 
-// ═══════════════════════════════════════════════════ PANNELLO MERCATI
 
+// ═══════════════════════════════════════ PANNELLO MERCATI
 var _mkCat = 'forex';
-var _mkData = {};
+var _mkAllData = {};
 
-var MK_SYMBOLS = {
-  forex: [
-    {sym:'EUR/USD',name:'Euro / Dollaro',    yid:'EURUSD=X'},
-    {sym:'GBP/USD',name:'Sterlina / Dollaro',yid:'GBPUSD=X'},
-    {sym:'USD/JPY',name:'Dollaro / Yen',     yid:'JPY=X'},
-    {sym:'AUD/USD',name:'Aussie / Dollaro',  yid:'AUDUSD=X'},
-    {sym:'USD/CHF',name:'Dollaro / Franco',  yid:'CHF=X'},
-    {sym:'USD/CAD',name:'Dollaro / Cad',     yid:'CAD=X'},
-    {sym:'NZD/USD',name:'Kiwi / Dollaro',    yid:'NZDUSD=X'},
-    {sym:'EUR/JPY',name:'Euro / Yen',        yid:'EURJPY=X'},
-    {sym:'EUR/GBP',name:'Euro / Sterlina',   yid:'EURGBP=X'},
-    {sym:'GBP/JPY',name:'Sterlina / Yen',    yid:'GBPJPY=X'},
-    {sym:'EUR/CHF',name:'Euro / Franco',     yid:'EURCHF=X'},
-    {sym:'AUD/JPY',name:'Aussie / Yen',      yid:'AUDJPY=X'},
-    {sym:'USD/MXN',name:'Dollaro / Peso',    yid:'MXN=X'},
-    {sym:'USD/SGD',name:'Dollaro / SGD',     yid:'SGD=X'},
-  ],
-  indices: [
-    {sym:'S&P 500', name:'USA Large Cap',    yid:'^GSPC'},
-    {sym:'Nasdaq',  name:'USA Tech',         yid:'^NDX'},
-    {sym:'Dow Jones',name:'USA Blue Chip',   yid:'^DJI'},
-    {sym:'DAX 40',  name:'Germania',         yid:'^GDAXI'},
-    {sym:'FTSE 100',name:'Regno Unito',      yid:'^FTSE'},
-    {sym:'CAC 40',  name:'Francia',          yid:'^FCHI'},
-    {sym:'Nikkei',  name:'Giappone',         yid:'^N225'},
-    {sym:'Hang Seng',name:'Hong Kong',       yid:'^HSI'},
-    {sym:'ASX 200', name:'Australia',        yid:'^AXJO'},
-    {sym:'VIX',     name:'Indice Paura',     yid:'^VIX'},
-  ],
-  commod: [
-    {sym:'XAU/USD', name:'Oro',              yid:'GC=F'},
-    {sym:'XAG/USD', name:'Argento',          yid:'SI=F'},
-    {sym:'WTI Oil', name:'Petrolio WTI',     yid:'CL=F'},
-    {sym:'Brent',   name:'Petrolio Brent',   yid:'BZ=F'},
-    {sym:'Nat Gas', name:'Gas Naturale',     yid:'NG=F'},
-    {sym:'Copper',  name:'Rame',             yid:'HG=F'},
-    {sym:'Platinum',name:'Platino',          yid:'PL=F'},
-    {sym:'Wheat',   name:'Grano',            yid:'ZW=F'},
-    {sym:'Corn',    name:'Mais',             yid:'ZC=F'},
-    {sym:'Coffee',  name:'Caffè',            yid:'KC=F'},
-  ],
-  crypto: [
-    {sym:'BTC/USD', name:'Bitcoin',          yid:'BTC-USD'},
-    {sym:'ETH/USD', name:'Ethereum',         yid:'ETH-USD'},
-    {sym:'SOL/USD', name:'Solana',           yid:'SOL-USD'},
-    {sym:'BNB/USD', name:'BNB',              yid:'BNB-USD'},
-    {sym:'XRP/USD', name:'XRP',              yid:'XRP-USD'},
-    {sym:'ADA/USD', name:'Cardano',          yid:'ADA-USD'},
-    {sym:'DOGE/USD',name:'Dogecoin',         yid:'DOGE-USD'},
-    {sym:'AVAX/USD',name:'Avalanche',        yid:'AVAX-USD'},
-  ]
+var MK_LABELS = {
+  forex:   ['EUR/USD','GBP/USD','USD/JPY','AUD/USD','USD/CHF','USD/CAD','NZD/USD','EUR/JPY','EUR/GBP','GBP/JPY','EUR/CHF','AUD/JPY','USD/MXN','USD/NOK'],
+  indices: ['S&P 500','Nasdaq','Dow Jones','DAX 40','FTSE 100','CAC 40','Nikkei','VIX'],
+  commod:  ['XAU/USD','XAG/USD','WTI Oil','Brent','Nat Gas','Copper','Platinum','Wheat','Corn','Coffee'],
+  crypto:  ['BTC/USD','ETH/USD','SOL/USD','BNB/USD','XRP/USD','ADA/USD','DOGE/USD','AVAX/USD']
+};
+
+var MK_NAMES = {
+  'EUR/USD':'Euro / Dollaro','GBP/USD':'Sterlina / Dollaro','USD/JPY':'Dollaro / Yen',
+  'AUD/USD':'Aussie / Dollaro','USD/CHF':'Dollaro / Franco','USD/CAD':'Dollaro / Cad',
+  'NZD/USD':'Kiwi / Dollaro','EUR/JPY':'Euro / Yen','EUR/GBP':'Euro / Sterlina',
+  'GBP/JPY':'Sterlina / Yen','EUR/CHF':'Euro / Franco','AUD/JPY':'Aussie / Yen',
+  'USD/MXN':'Dollaro / Peso','USD/NOK':'Dollaro / Corona',
+  'S&P 500':'USA Large Cap','Nasdaq':'USA Tech','Dow Jones':'USA Blue Chip',
+  'DAX 40':'Germania','FTSE 100':'Regno Unito','CAC 40':'Francia',
+  'Nikkei':'Giappone','VIX':'Indice Paura',
+  'XAU/USD':'Oro','XAG/USD':'Argento','WTI Oil':'Petrolio WTI','Brent':'Petrolio Brent',
+  'Nat Gas':'Gas Naturale','Copper':'Rame','Platinum':'Platino',
+  'Wheat':'Grano','Corn':'Mais','Coffee':'Caffè',
+  'BTC/USD':'Bitcoin','ETH/USD':'Ethereum','SOL/USD':'Solana','BNB/USD':'BNB',
+  'XRP/USD':'XRP','ADA/USD':'Cardano','DOGE/USD':'Dogecoin','AVAX/USD':'Avalanche'
 };
 
 function openMarketsPanel() {
-  var panel = document.getElementById('mkPanelFull');
-  if (!panel) return;
-  panel.style.display = 'flex';
-  if (!panel._loaded) { panel._loaded = true; loadMarketsData(); }
+  var existing = document.getElementById('mkPanel');
+  if (!existing) _mkBuildPanel();
+  document.getElementById('mkPanel').style.display = 'flex';
+  document.getElementById('mkOverlay').style.display = 'block';
+  if (Object.keys(_mkAllData).length === 0) _mkLoad();
+  else _mkRender();
 }
 
 function closeMarketsPanel() {
-  var panel = document.getElementById('mkPanelFull');
-  if (panel) panel.style.display = 'none';
+  var p = document.getElementById('mkPanel');
+  var o = document.getElementById('mkOverlay');
+  if (p) p.style.display = 'none';
+  if (o) o.style.display = 'none';
 }
 
+function _mkBuildPanel() {
+  // Overlay
+  var ov = document.createElement('div');
+  ov.id = 'mkOverlay';
+  ov.onclick = closeMarketsPanel;
+  ov.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9998';
+  document.body.appendChild(ov);
 
-function openMarketsPanel() {
-  document.getElementById('mkPanel').classList.add('mk-open');
-  document.getElementById('mkOverlay').classList.add('mk-open');
-  if (!window._mkLoaded) { loadMk(); window._mkLoaded = true; }
-  else mkRender();
+  // Panel
+  var p = document.createElement('div');
+  p.id = 'mkPanel';
+  p.style.cssText = 'display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;flex-direction:column;overflow:hidden';
+  // Usa colore diretto basato sul tema
+  var dark = !document.body.classList.contains('light-theme');
+  p.style.background = dark ? '#0b1221' : '#f0f2f8';
+  p.style.color = dark ? '#eef0f8' : '#0c1428';
+
+  p.innerHTML = _mkHeaderHTML() + _mkTabsHTML() + _mkColHeaderHTML()
+    + '<div id="mkBody" style="flex:1;overflow-y:auto;padding:0"></div>';
+  document.body.appendChild(p);
 }
 
-function closeMk() {
-  document.getElementById('mkPanel').classList.remove('mk-open');
-  document.getElementById('mkOverlay').classList.remove('mk-open');
+function _mkHeaderHTML() {
+  return '<div style="display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid rgba(128,128,128,.2);background:rgba(0,0,0,.1);flex-shrink:0">'
+    + '<span style="font-size:16px;font-weight:800">📊 Mercati in Tempo Reale</span>'
+    + '<span id="mkUpdateTime" style="font-size:10px;opacity:.5;font-family:monospace;margin-left:4px"></span>'
+    + '<span id="mkRisk" style="margin-left:10px;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700"></span>'
+    + '<button onclick="closeMarketsPanel()" style="margin-left:auto;background:rgba(128,128,128,.2);border:none;border-radius:8px;width:30px;height:30px;font-size:18px;cursor:pointer;color:inherit">✕</button>'
+    + '<button onclick="_mkLoad()" style="background:rgba(0,229,204,.15);border:1px solid rgba(0,229,204,.3);border-radius:8px;padding:4px 12px;font-size:11px;cursor:pointer;color:#00e5cc">🔄</button>'
+    + '</div>';
 }
 
-function closeMarketsPanel() { closeMk(); }
+function _mkTabsHTML() {
+  var h = '<div style="display:flex;gap:6px;padding:8px 20px;border-bottom:1px solid rgba(128,128,128,.15);flex-shrink:0">';
+  h += '<button id="mkT-forex"   onclick="_mkSetCat(\'forex\')"   style="padding:5px 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(128,128,128,.3);background:#00e5cc;color:#000">💱 Forex</button>';
+  h += '<button id="mkT-indices" onclick="_mkSetCat(\'indices\')" style="padding:5px 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(128,128,128,.3);background:rgba(0,0,0,.1);color:inherit">📈 Indici</button>';
+  h += '<button id="mkT-commod"  onclick="_mkSetCat(\'commod\')"  style="padding:5px 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(128,128,128,.3);background:rgba(0,0,0,.1);color:inherit">🛢️ Materie Prime</button>';
+  h += '<button id="mkT-crypto"  onclick="_mkSetCat(\'crypto\')"  style="padding:5px 14px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid rgba(128,128,128,.3);background:rgba(0,0,0,.1);color:inherit">₿ Crypto</button>';
+  return h + '</div>';
+}
 
-function mkCat(cat) {
+function _mkColHeaderHTML() {
+  return '<div style="display:grid;grid-template-columns:180px 130px 100px 100px 100px 120px;padding:7px 20px;border-bottom:1px solid rgba(128,128,128,.15);font-size:9px;font-weight:700;opacity:.5;text-transform:uppercase;letter-spacing:.1em;flex-shrink:0">'
+    + '<div>Simbolo</div><div>Prezzo</div><div>Giornaliero</div><div>Settimanale</div><div>Mensile</div><div>Sentiment</div>'
+    + '</div>';
+}
+
+function _mkSetCat(cat) {
   _mkCat = cat;
   ['forex','indices','commod','crypto'].forEach(function(c) {
-    var btn = document.getElementById('mkT-'+c);
-    if (!btn) return;
-    if (c===cat) {
-      btn.style.background = '#00e5cc'; btn.style.color = '#000'; btn.style.border = 'none'; btn.style.fontWeight = '700';
-    } else {
-      btn.style.background = 'rgba(255,255,255,.07)'; btn.style.color = 'inherit'; btn.style.border = '1px solid rgba(255,255,255,.1)'; btn.style.fontWeight = '600';
-    }
+    var b = document.getElementById('mkT-'+c);
+    if (!b) return;
+    if (c === cat) { b.style.background='#00e5cc'; b.style.color='#000'; }
+    else { b.style.background='rgba(0,0,0,.1)'; b.style.color='inherit'; }
   });
-  mkRender();
+  _mkRender();
 }
 
-async function loadMk() {
-  var rows = document.getElementById('mkRows');
-  if (rows) rows.innerHTML = '<div style="text-align:center;padding:60px;color:#8090b8;font-family:monospace">⏳ Caricamento dati...</div>';
-
-  await Promise.allSettled([
-    loadMkForex(),
-    loadMkCrypto(),
-    loadMkYahoo()
-  ]);
-
-  calcRiskSentiment();
-  var now = new Date();
-  var upEl = document.getElementById('mkUpdated');
-  if (upEl) upEl.textContent = 'Aggiornato: ' + now.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
-  mkRender();
-}
-
-async function loadMkForex() {
+async function _mkLoad() {
+  var body = document.getElementById('mkBody');
+  if (body) body.innerHTML = '<div style="text-align:center;padding:60px;opacity:.5">⏳ Caricamento dati...</div>';
   try {
-    var pairs = ['EUR','GBP','JPY','AUD','CHF','CAD','NZD'];
-    var prev = bizDayOffset ? bizDayOffset(2) : new Date(Date.now()-2*86400000).toISOString().slice(0,10);
-    var [r1,r2] = await Promise.all([
-      fetch('https://api.frankfurter.app/latest?from=USD&to='+pairs.join(',')).then(r=>r.json()),
-      fetch('https://api.frankfurter.app/'+prev+'?from=USD&to='+pairs.join(',')).then(r=>r.json())
-    ]);
-    var t = r1.rates||{}, p = r2.rates||{};
-    function cross(b,q) {
-      var tp = b==='USD'?t[q]:q==='USD'?1/t[b]:t[q]/t[b];
-      var pp = b==='USD'?p[q]:q==='USD'?1/p[b]:p[q]/p[b];
-      return {price:tp, pct1d:((tp-pp)/pp)*100, pct1w:null, pct1m:null};
+    var r = await fetch('/api/market-data').then(function(x){return x.json();});
+    if (r.success && r.data) {
+      var d = r.data;
+      // Forex
+      if (d.forex) Object.keys(d.forex).forEach(function(k){ _mkAllData[k]=d.forex[k]; });
+      // Crypto
+      if (d.crypto) Object.keys(d.crypto).forEach(function(k){ _mkAllData[k]=d.crypto[k]; });
+      // Indices
+      if (d.indices) Object.keys(d.indices).forEach(function(k){ _mkAllData[k]=d.indices[k]; });
+      // Commod
+      if (d.commod) Object.keys(d.commod).forEach(function(k){ _mkAllData[k]=d.commod[k]; });
+      // Update time
+      var el = document.getElementById('mkUpdateTime');
+      if (el) el.textContent = 'Aggiornato: ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+      // Risk badge
+      _mkCalcRisk(d);
     }
-    _mkData['EURUSD=X']=cross('EUR','USD'); _mkData['GBPUSD=X']=cross('GBP','USD');
-    _mkData['JPY=X']=cross('USD','JPY');    _mkData['AUDUSD=X']=cross('AUD','USD');
-    _mkData['CHF=X']=cross('USD','CHF');    _mkData['CAD=X']=cross('USD','CAD');
-    _mkData['NZDUSD=X']=cross('NZD','USD'); _mkData['EURJPY=X']=cross('EUR','JPY');
-    _mkData['EURGBP=X']=cross('EUR','GBP'); _mkData['GBPJPY=X']=cross('GBP','JPY');
-    _mkData['EURCHF=X']=cross('EUR','CHF'); _mkData['AUDJPY=X']=cross('AUD','JPY');
-    _mkData['MXN=X']=cross('USD','MXN')||{price:null,pct1d:null};
-  } catch(e) { console.warn('Forex load error:', e); }
+  } catch(e) {
+    var body2 = document.getElementById('mkBody');
+    if (body2) body2.innerHTML = '<div style="text-align:center;padding:40px;color:#ff4060">❌ Errore caricamento: ' + e.message + '</div>';
+  }
+  _mkRender();
 }
 
-async function loadMkCrypto() {
-  try {
-    var ids = 'bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,avalanche-2';
-    var r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids='+ids+'&vs_currencies=usd&include_24hr_change=true', {headers:{'Accept':'application/json'}}).then(x=>x.json());
-    var map = {'bitcoin':'BTC-USD','ethereum':'ETH-USD','solana':'SOL-USD','binancecoin':'BNB-USD','ripple':'XRP-USD','cardano':'ADA-USD','dogecoin':'DOGE-USD','avalanche-2':'AVAX-USD'};
-    Object.keys(map).forEach(function(id) {
-      if (!r[id]) return;
-      _mkData[map[id]] = {price:r[id].usd, pct1d:r[id].usd_24h_change||null, pct1w:r[id].usd_7d_change||null, pct1m:r[id].usd_30d_change||null};
-    });
-  } catch(e) { console.warn('Crypto load error:', e); }
+function _mkCalcRisk(d) {
+  var el = document.getElementById('mkRisk');
+  if (!el) return;
+  var vix = d.indices && d.indices['VIX'];
+  var spx = d.indices && d.indices['S&P 500'];
+  var riskOff = (vix && vix.price > 25) || (spx && spx.pct1d < -0.8);
+  var riskOn  = (vix && vix.price < 18) || (spx && spx.pct1d > 0.8);
+  if (riskOff) { el.textContent='🔴 RISK OFF'; el.style.cssText='padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(255,64,96,.15);color:#ff4060'; }
+  else if (riskOn) { el.textContent='🟢 RISK ON'; el.style.cssText='padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(0,214,143,.15);color:#00d68f'; }
+  else { el.textContent='🟡 NEUTRALE'; el.style.cssText='padding:3px 12px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(255,190,11,.12);color:#ffbe0b'; }
 }
 
-async function loadMkYahoo() {
-  // Simboli indici e materie prime via Yahoo con multipli proxy
-  var syms = ['^GSPC','^NDX','^DJI','^GDAXI','^FTSE','^FCHI','^N225','^HSI','^AXJO','^VIX','GC=F','SI=F','CL=F','BZ=F','NG=F','HG=F','PL=F','ZW=F','ZC=F','KC=F'];
-  var target = 'https://query1.finance.yahoo.com/v8/finance/quote?symbols=' + encodeURIComponent(syms.join(','));
-  var proxies = [
-    'https://api.allorigins.win/raw?url=' + encodeURIComponent(target),
-    'https://thingproxy.freeboard.io/fetch/' + target
-  ];
-  for (var pi = 0; pi < proxies.length; pi++) {
-    try {
-      var resp = await fetch(proxies[pi], {signal:AbortSignal.timeout(7000)});
-      var data = await resp.json();
-      var results = (data.quoteResponse||data.finance||{result:[]}).result || data.result || [];
-      if (results.length > 0) {
-        results.forEach(function(q) {
-          _mkData[q.symbol] = {
-            price: q.regularMarketPrice,
-            pct1d: q.regularMarketChangePercent||null,
-            pct1w: q.fiftyTwoWeekChangePercent ? null : null,
-            pct1m: null,
-            closed: q.marketState && q.marketState !== 'REGULAR'
-          };
-        });
-        return;
-      }
-    } catch(e) {}
-  }
-  // Se Yahoo non risponde, usa dati mock per mostrare la struttura
-  syms.forEach(function(s){ if(!_mkData[s]) _mkData[s] = {price:null,pct1d:null,pct1w:null,pct1m:null}; });
-}
-
-async function loadHistoricalChanges(symbols) {
-  // Prende la variazione settimanale e mensile da Yahoo v8 chart
-  // Per performance, solo i principali
-  var mainSyms = ['^GSPC','^VIX','GC=F','CL=F','BTC-USD','EURUSD=X'];
-  for (var i = 0; i < mainSyms.length; i++) {
-    try {
-      var sym = mainSyms[i];
-      var target = 'https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=1mo';
-      var url = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(target);
-      var r = await fetch(url, {signal: AbortSignal.timeout(5000)}).then(function(x){return x.json();});
-      var meta = r && r.chart && r.chart.result && r.chart.result[0];
-      if (!meta) continue;
-      var closes = meta.indicators && meta.indicators.quote && meta.indicators.quote[0].close;
-      if (!closes || closes.length < 2) continue;
-      var cur   = closes[closes.length-1];
-      var w1ago = closes.length >= 6  ? closes[closes.length-6]  : closes[0];
-      var m1ago = closes[0];
-      if (cur && w1ago) _mkData[sym].pct1w = ((cur-w1ago)/w1ago)*100;
-      if (cur && m1ago) _mkData[sym].pct1m = ((cur-m1ago)/m1ago)*100;
-    } catch(e) {}
-  }
-}
-
-function calcRiskSentiment() {
-  var vix = _mkData['^VIX'];
-  var spx = _mkData['^GSPC'];
-  var gold = _mkData['GC=F'];
-  var badge = document.getElementById('mkRisk');
-  if (!badge) return;
-
-  var isRiskOff = false;
-  var isRiskOn  = false;
-
-  if (vix && vix.price) {
-    if (vix.price > 25) isRiskOff = true;
-    else if (vix.price < 18) isRiskOn = true;
-  }
-  if (spx && spx.pct1d) {
-    if (spx.pct1d < -0.5) isRiskOff = true;
-    else if (spx.pct1d > 0.5) isRiskOn = true;
-  }
-
-  if (isRiskOff && !isRiskOn) {
-    badge.textContent = '🔴 RISK OFF';
-    badge.style.background = 'rgba(255,64,96,.15)';
-    badge.style.color = 'var(--red)';
-  } else if (isRiskOn && !isRiskOff) {
-    badge.textContent = '🟢 RISK ON';
-    badge.style.background = 'rgba(0,214,143,.15)';
-    badge.style.color = 'var(--green)';
-  } else {
-    badge.textContent = '🟡 NEUTRALE';
-    badge.style.background = 'rgba(255,190,11,.12)';
-    badge.style.color = 'var(--amber)';
-  }
-}
-
-function mkRender() {
-  var container = document.getElementById('mkBody');
-  if (!container) return;
-  var syms = MK_SYMBOLS[_mkCat] || [];
-  if (syms.length === 0) { container.innerHTML = '<div style="padding:40px;color:var(--t3);text-align:center">Nessun simbolo</div>'; return; }
-
+function _mkRender() {
+  var body = document.getElementById('mkBody');
+  if (!body) return;
+  var labels = MK_LABELS[_mkCat] || [];
+  if (labels.length === 0) { body.innerHTML = '<div style="padding:40px;text-align:center;opacity:.4">Nessun dato</div>'; return; }
+  var dark = !document.body.classList.contains('light-theme');
+  var evenBg = dark ? 'rgba(255,255,255,.03)' : 'rgba(0,0,0,.03)';
   var html = '';
-  syms.forEach(function(s, idx) {
-    var d = _mkData[s.yid];
-    var price = d ? formatMkPrice(d.price, s.sym) : '—';
-    var pct1d = d && d.pct1d != null ? d.pct1d : null;
-    var pct1w = d && d.pct1w != null ? d.pct1w : null;
-    var pct1m = d && d.pct1m != null ? d.pct1m : null;
-    var closed = d && d.closed;
-
-    // Sentiment per simbolo
-    var sentiment = mkSymbolSentiment(s.yid, d);
-
-    var rowBg = idx%2===0?'rgba(255,255,255,.025)':'rgba(0,0,0,0)';
-    html += '<div style="display:grid;grid-template-columns:170px 140px 110px 110px 110px 140px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06);align-items:center;background:'+rowBg+'">';
-    // Simbolo
-    html += '<div><div class="mkSym">'+s.sym+'</div><div class="mkName">'+s.name+'</div></div>';
-    // Prezzo
-    html += '<div class="mkPrice">' + (closed ? '<span style="font-size:9px;color:var(--t3)">[Chiuso] </span>' : '') + price + '</div>';
-    // Giornaliero
-    html += '<div>' + mkPctBadge(pct1d) + '</div>';
-    // Settimanale
-    html += '<div>' + mkPctBadge(pct1w) + '</div>';
-    // Mensile
-    html += '<div>' + mkPctBadge(pct1m) + '</div>';
-    // Sentiment
-    html += '<div>' + sentiment + '</div>';
+  labels.forEach(function(sym, idx) {
+    var d = _mkAllData[sym];
+    var price = d && d.price ? _mkFmtPrice(d.price, sym) : '—';
+    html += '<div style="display:grid;grid-template-columns:180px 130px 100px 100px 100px 120px;padding:11px 20px;border-bottom:1px solid rgba(128,128,128,.1);align-items:center;background:'+(idx%2===0?evenBg:'transparent')+'">';
+    html += '<div><div style="font-weight:800;font-size:13px">'+sym+'</div><div style="font-size:10px;opacity:.45;margin-top:1px">'+(MK_NAMES[sym]||'')+'</div></div>';
+    html += '<div style="font-size:13px;font-weight:700;font-family:monospace">'+price+'</div>';
+    html += '<div>'+_mkPct(d?d.pct1d:null)+'</div>';
+    html += '<div>'+_mkPct(d?d.pct1w:null)+'</div>';
+    html += '<div>'+_mkPct(d?d.pct1m:null)+'</div>';
+    html += '<div>'+_mkSentiment(sym, d)+'</div>';
     html += '</div>';
   });
-
-  container.innerHTML = html;
+  body.innerHTML = html;
 }
 
-function mkPctBadge(pct) {
-  if (pct == null) return '<span style="color:#3d4d78;font-family:monospace;font-size:12px">—</span>';
-  var color = pct >= 0 ? '#00d68f' : '#ff4060';
-  var bg    = pct >= 0 ? 'rgba(0,214,143,.1)' : 'rgba(255,64,96,.1)';
-  var sign  = pct >= 0 ? '+' : '';
-  return '<span style="color:'+color+';background:'+bg+';padding:2px 8px;border-radius:6px;font-size:12px;font-weight:700;font-family:monospace">' + sign + pct.toFixed(2) + '%</span>';
+function _mkFmtPrice(p, sym) {
+  if (!p) return '—';
+  if (sym==='USD/JPY'||sym==='EUR/JPY'||sym==='GBP/JPY'||sym==='AUD/JPY') return p.toFixed(3);
+  if (p>10000) return p.toLocaleString('it-IT',{maximumFractionDigits:0});
+  if (p>100)   return p.toFixed(2);
+  if (p>1)     return p.toFixed(4);
+  return p.toFixed(5);
 }
 
-function formatMkPrice(price, sym) {
-  if (!price) return '—';
-  if (sym.includes('JPY') || sym === 'USD/JPY') return price.toFixed(3);
-  if (price > 10000) return price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-  if (price > 100) return price.toFixed(2);
-  if (price > 1) return price.toFixed(4);
-  return price.toFixed(5);
+function _mkPct(v) {
+  if (v==null) return '<span style="opacity:.3">—</span>';
+  var c = v>=0 ? '#00d68f' : '#ff4060';
+  var bg = v>=0 ? 'rgba(0,214,143,.1)' : 'rgba(255,64,96,.1)';
+  return '<span style="color:'+c+';background:'+bg+';padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700;font-family:monospace">'+(v>=0?'+':'')+v.toFixed(2)+'%</span>';
 }
 
-function mkSymbolSentiment(yid, d) {
-  if (!d || d.pct1d == null) return '<span class="mkSentBadge neu">N/D</span>';
-  var pct = d.pct1d;
-
-  // VIX: alto = risk off
-  if (yid === '^VIX') {
-    if (d.price > 30) return '<span class="mkSentBadge roff">⚠️ Alta paura</span>';
-    if (d.price > 20) return '<span class="mkSentBadge neu">😐 Attenzione</span>';
-    return '<span class="mkSentBadge ron">😊 Calmo</span>';
+function _mkSentiment(sym, d) {
+  if (!d||d.pct1d==null) return '<span style="opacity:.3;font-size:10px">N/D</span>';
+  var p = d.pct1d;
+  if (sym==='VIX') {
+    if (d.price>30) return '<span style="color:#ff4060;font-size:10px;font-weight:700">⚠️ Alta paura</span>';
+    if (d.price>20) return '<span style="color:#ffbe0b;font-size:10px;font-weight:700">😐 Attenzione</span>';
+    return '<span style="color:#00d68f;font-size:10px;font-weight:700">😊 Calmo</span>';
   }
-  // Oro: sale in risk off
-  if (yid === 'GC=F') {
-    if (pct > 0.5) return '<span class="mkSentBadge roff">🔴 Risk Off</span>';
-    if (pct < -0.5) return '<span class="mkSentBadge ron">🟢 Risk On</span>';
-    return '<span class="mkSentBadge neu">🟡 Neutrale</span>';
+  if (sym==='XAU/USD'||sym==='XAG/USD') {
+    if (p>0.5) return '<span style="color:#ff4060;font-size:10px;font-weight:700">🔴 Risk Off</span>';
+    if (p<-0.5) return '<span style="color:#00d68f;font-size:10px;font-weight:700">🟢 Risk On</span>';
+    return '<span style="opacity:.5;font-size:10px">🟡 Neutrale</span>';
   }
-  // Generico
-  if (pct > 0.5)  return '<span class="mkSentBadge ron">🟢 Risk On</span>';
-  if (pct < -0.5) return '<span class="mkSentBadge roff">🔴 Risk Off</span>';
-  return '<span class="mkSentBadge neu">🟡 Neutrale</span>';
+  if (p>0.5) return '<span style="color:#00d68f;font-size:10px;font-weight:700">🟢 Risk On</span>';
+  if (p<-0.5) return '<span style="color:#ff4060;font-size:10px;font-weight:700">🔴 Risk Off</span>';
+  return '<span style="opacity:.5;font-size:10px">🟡 Neutrale</span>';
 }
 
 
@@ -4988,15 +4870,7 @@ window.addEventListener('DOMContentLoaded', function() {
   buildBot(BOT_ALL);
   loadFX();
 
-  // Click sulla barra asset → apri pannello mercati
-  document.addEventListener('click', function(e) {
-    var tkBar = document.getElementById('tkWrapBar') || document.querySelector('.tk-wrap');
-    if (tkBar && tkBar.contains(e.target)) {
-      e.preventDefault();
-      e.stopPropagation();
-      openMarketsPanel();
-    }
-  });
+
   render();
   checkConsent();
 });
