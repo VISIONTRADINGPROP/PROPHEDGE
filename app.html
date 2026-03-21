@@ -3252,27 +3252,37 @@ async function jrnlHandleCtraderCallback(code) {
   return true;
 }
 
-// ─── Sync trade ──────────────────────────────────────────────────
+// ─── Sync trade cTrader ──────────────────────────────────────────
 async function jrnlSync(i, side) {
   var sess = jrnl.sessions[i];
   var conn = side==='prop' ? sess.propConn : sess.brokerConn;
   if (!conn.connected || conn.platform!=='ctrader') return;
   try {
     var r = await fetch('/api/ctrader-positions',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({access_token:conn.token,account_id:conn.accountId,env:conn.env})});
+      body:JSON.stringify({
+        access_token: conn.token,
+        account_id:   conn.accountId,
+        env:          conn.env,
+        connected_at: conn.connectedAt || sess.createdAt || null
+      })});
     var d = await r.json();
-    if (!d.positions) return;
-    var existing = side==='prop' ? sess.propTrades : sess.brokerTrades;
-    var closed = existing.filter(function(t){ return t.status==='closed'; });
-    var live = d.positions.map(function(p){
-      return {external_id:String(p.positionId),platform:'ctrader',symbol:p.symbol,
-        direction:p.tradeSide,volume:(p.volume||0)/100,entry_price:p.entryPrice,
-        pnl_realized:p.unrealizedGrossPnl||0,status:'open',opened_at:new Date().toISOString()};
+
+    // Trade aperti
+    var live = (d.positions||[]).map(function(p){
+      return Object.assign(p, {status:'open'});
     });
-    if (side==='prop') sess.propTrades=closed.concat(live);
-    else sess.brokerTrades=closed.concat(live);
+
+    // Trade chiusi (dal momento della connessione)
+    var closed = (d.closed||[]).map(function(p){
+      return Object.assign(p, {status:'closed'});
+    });
+
+    if (side==='prop') sess.propTrades   = live.concat(closed);
+    else               sess.brokerTrades = live.concat(closed);
+
     jrnlSave();
     renderJournal();
+    console.log('cTrader sync:', live.length, 'aperte,', closed.length, 'chiuse per', side);
   } catch(e) { console.error('jrnlSync:',e); }
 }
 
