@@ -1225,97 +1225,180 @@ async function mkLoadCrypto() {
 // Fonte: Yahoo Finance via 3 proxy CORS in cascata
 // Dati: ultimo close + variazioni da chiusure storiche reali
 // ═══════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════
+// INDICI + MATERIE PRIME — Stooq.com (CORS nativo, no proxy)
+// Stooq restituisce CSV con storico giornaliero
+// Simboli Stooq: differenti da Yahoo Finance
+// ═══════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// INDICI + MATERIE PRIME — Strategia a 2 fasi
+//
+// FASE 1 (istantanea): Una sola chiamata proxy Yahoo /quote
+//   → tutti i prezzi live + variazione giornaliera % in 1 shot
+//
+// FASE 2 (progressiva): chiamate chart individuali sequenziali
+//   → variazione settimanale e mensile (dati storici reali)
+// ═══════════════════════════════════════════════════════════════
+
+// Mappa Yahoo Finance symbol → nome pannello
+var YF_MAP = {
+  '^GSPC':'S&P 500',    '^NDX':'Nasdaq',       '^DJI':'Dow Jones',
+  '^RUT':'Russell 2000','^GDAXI':'DAX 40',     '^FTSE':'FTSE 100',
+  '^FCHI':'CAC 40',     '^N225':'Nikkei 225',  '^HSI':'Hang Seng',
+  '^VIX':'VIX',
+  'GC=F':'XAU/USD',     'SI=F':'Silver',       'PL=F':'Platinum',
+  'PA=F':'Palladium',   'CL=F':'WTI Oil',      'BZ=F':'Brent',
+  'NG=F':'Nat Gas',     'HG=F':'Copper',
+  'ZW=F':'Wheat',       'ZC=F':'Corn',         'KC=F':'Coffee',  'SB=F':'Sugar'
+};
+
+var YF_SYMS = Object.keys(YF_MAP);
+
+// Pool di proxy CORS da ruotare
+var PROXY_POOL = [
+  function(u){ return 'https://corsproxy.io/?'                + encodeURIComponent(u); },
+  function(u){ return 'https://api.allorigins.win/raw?url='   + encodeURIComponent(u); },
+  function(u){ return 'https://api.codetabs.com/v1/proxy?quest='+ encodeURIComponent(u); }
+];
+var _proxyIdx = 0;
+function nextProxy(url) {
+  var fn = PROXY_POOL[_proxyIdx % PROXY_POOL.length];
+  _proxyIdx++;
+  return fn(url);
+}
+
+// Fetch con timeout e rotazione proxy automatica
+async function proxiedFetch(targetUrl, ms) {
+  ms = ms || 9000;
+  for(var attempt = 0; attempt < PROXY_POOL.length; attempt++) {
+    var proxyUrl = PROXY_POOL[attempt](targetUrl);
+    try {
+      var r = await Promise.race([
+        fetch(proxyUrl, {cache:'no-store'}),
+        new Promise(function(_,rej){ setTimeout(function(){rej(new Error('to'));}, ms); })
+      ]);
+      if(!r.ok) continue;
+      var json = await r.json();
+      if(json) return json;
+    } catch(e) { /* prova prossimo proxy */ }
+  }
+  return null;
+}
+
+// ── FASE 1: prezzi live + % giornaliera in UN'UNICA chiamata ───
+async function mkLoadQuotes() {
+  var allSyms = YF_SYMS.join(',');
+  var url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols='
+    + encodeURIComponent(allSyms)
+    + '&fields=regularMarketPrice,regularMarketChangePercent,currency';
+
+  var data = await proxiedFetch(url, 12000);
+  if(!data) return false;
+
+  var results = data.quoteResponse && data.quoteResponse.result;
+  if(!results || !results.length) return false;
+
+  results.forEach(function(q){
+    var name = YF_MAP[q.symbol];
+    if(!name) return;
+    if(q.regularMarketPrice == null) return;
+    // Inizializza con prezzo e % giornaliera — settimana/mese verranno dopo
+    if(!_mkData[name]) _mkData[name] = {};
+    _mkData[name].price = q.regularMarketPrice;
+    _mkData[name].pct1d = q.regularMarketChangePercent != null
+      ? q.regularMarketChangePercent : null;
+    if(_mkData[name].pct1w === undefined) _mkData[name].pct1w = null;
+    if(_mkData[name].pct1m === undefined) _mkData[name].pct1m = null;
+  });
+
+  return true;
+}
+
+// ── FASE 2: storico per settimana/mese — sequenziale con delay ──
+async function mkLoadHistory(sym, name) {
+  var url = 'https://query1.finance.yahoo.com/v8/finance/chart/'
+    + encodeURIComponent(sym)
+    + '?interval=1d&range=35d&includePrePost=false';
+
+  var data = await proxiedFetch(url, 10000);
+  if(!data) return;
+
+  var res = data.chart && data.chart.result && data.chart.result[0];
+  if(!res) return;
+
+  var closes = (res.indicators.quote[0].close || []).filter(function(v){return v!=null;});
+  if(closes.length < 6) return;
+
+  var now  = closes[closes.length - 1];
+  var d5   = closes.length >= 6  ? closes[closes.length - 6]  : null;
+  var d22  = closes.length >= 22 ? closes[closes.length - 22] : closes[0];
+
+  if(!_mkData[name]) _mkData[name] = {};
+  // Aggiorna prezzo con dato intraday più fresco se disponibile
+  if(res.meta && res.meta.regularMarketPrice)
+    _mkData[name].price = res.meta.regularMarketPrice;
+  _mkData[name].pct1w = d5  ? ((now - d5)  / d5)  * 100 : null;
+  _mkData[name].pct1m = d22 ? ((now - d22) / d22) * 100 : null;
+}
+
+// ── Orchestratore indici/materie prime ──────────────────────────
 async function mkLoadYahoo() {
-  var ymap = {
-    '^GSPC':'S&P 500',   '^NDX':'Nasdaq',     '^DJI':'Dow Jones',
-    '^RUT':'Russell 2000','^GDAXI':'DAX 40',  '^FTSE':'FTSE 100',
-    '^FCHI':'CAC 40',    '^N225':'Nikkei 225','^HSI':'Hang Seng',
-    '^VIX':'VIX',
-    'GC=F':'XAU/USD',    'SI=F':'Silver',     'PL=F':'Platinum',
-    'PA=F':'Palladium',  'CL=F':'WTI Oil',    'BZ=F':'Brent',
-    'NG=F':'Nat Gas',    'HG=F':'Copper',
-    'ZW=F':'Wheat',      'ZC=F':'Corn',       'KC=F':'Coffee',  'SB=F':'Sugar'
-  };
+  // FASE 1 — una sola chiamata, tutti i prezzi e % giornaliere
+  var ok = await mkLoadQuotes();
+  if(ok) {
+    mkRender();          // mostra subito prezzi + giornaliero
+    mkUpdateMainTicker();
+  }
 
-  // Proxy in ordine di affidabilità — si prova il primo, poi in cascata
-  var PROXIES = [
-    function(u){ return 'https://corsproxy.io/?'+encodeURIComponent(u); },
-    function(u){ return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u); },
-    function(u){ return 'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u); }
-  ];
-
-  async function fetchYF(sym) {
-    // Yahoo v8 — 35 giorni di dati giornalieri per avere settimana e mese
-    var url = 'https://query1.finance.yahoo.com/v8/finance/chart/'
-      + encodeURIComponent(sym)
-      + '?interval=1d&range=35d&includePrePost=false&events=div';
-
-    for(var p = 0; p < PROXIES.length; p++) {
-      try {
-        var r = await mkFetch(PROXIES[p](url), 10000);
-        var res = r && r.chart && r.chart.result && r.chart.result[0];
-        if(!res) continue;
-        var closes = (res.indicators.quote[0].close || []).filter(function(v){ return v != null; });
-        if(closes.length < 2) continue;
-        var now = closes[closes.length - 1];
-        var d1  = closes[closes.length - 2];
-        var d7  = closes.length >= 6  ? closes[closes.length - 6]  : null;
-        var d30 = closes.length >= 22 ? closes[closes.length - 22] : closes[0];
-        return {
-          price: now,
-          pct1d: ((now - d1) / d1) * 100,
-          pct1w: d7  ? ((now - d7)  / d7)  * 100 : null,
-          pct1m: d30 ? ((now - d30) / d30) * 100 : null
-        };
-      } catch(e) { continue; }
+  // FASE 2 — storico settimana/mese, uno alla volta con pausa 400ms
+  for(var i = 0; i < YF_SYMS.length; i++) {
+    var sym  = YF_SYMS[i];
+    var name = YF_MAP[sym];
+    await mkLoadHistory(sym, name);
+    mkRender();          // aggiorna riga per riga man mano
+    if(i < YF_SYMS.length - 1) {
+      await new Promise(function(r){ setTimeout(r, 350); });
     }
-    return null;
   }
-
-  // Parallelizza ma con piccolo delay tra i batch per non sovraccaricare i proxy
-  var symbols = Object.keys(ymap);
-  var batch1  = symbols.slice(0, 11);   // indici + VIX
-  var batch2  = symbols.slice(11);      // materie prime
-
-  async function runBatch(batch) {
-    await Promise.allSettled(batch.map(async function(yf){
-      var data = await fetchYF(yf);
-      if(data) _mkData[ymap[yf]] = data;
-    }));
-  }
-
-  await runBatch(batch1);
-  await new Promise(function(r){ setTimeout(r, 500); }); // piccola pausa
-  await runBatch(batch2);
 }
 
 // ═══════════════════════════════════════════════════════
-// ORCHESTRATORE — cache 5 min, no spam
+// ORCHESTRATORE PRINCIPALE
 // ═══════════════════════════════════════════════════════
 async function mkLoadAll() {
   var now = Date.now();
-  if(_mkLoading||(now-_mkLastLoad<5*60*1000&&Object.keys(_mkData).length>5)){
+  if(_mkLoading || (now - _mkLastLoad < 5*60*1000 && Object.keys(_mkData).length > 5)) {
     mkRender(); return;
   }
   _mkLoading = true;
+  _proxyIdx  = 0; // reset rotazione proxy
 
-  var body=document.getElementById('mkBody');
-  if(body) body.innerHTML='<div style="text-align:center;padding:80px;font-family:var(--fd);font-size:12px;color:#3d4d78;letter-spacing:.04em">⏳ Caricamento dati in corso...</div>';
+  var body = document.getElementById('mkBody');
+  if(body) body.innerHTML = '<div style="text-align:center;padding:60px;font-family:var(--fd);font-size:12px;color:#3d4d78">⏳ Caricamento... i dati compaiono progressivamente</div>';
 
-  await Promise.allSettled([mkLoadForex(), mkLoadCrypto(), mkLoadYahoo()]);
-
-  _mkLoading = false;
-  _mkLastLoad = Date.now();
-
+  // Forex + Crypto in parallelo (veloci, nessun proxy)
+  await Promise.allSettled([mkLoadForex(), mkLoadCrypto()]);
+  mkRender();
   mkUpdateMainTicker();
-  var upd=document.getElementById('mkUpdTime');
-  if(upd) upd.textContent='Aggiornato: '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  var upd = document.getElementById('mkUpdTime');
+  if(upd) upd.textContent = 'Aggiornato: ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  mkUpdateRiskBadge();
 
+  // Indici + materie prime (2 fasi progressive)
+  await mkLoadYahoo();
+
+  _mkLoading   = false;
+  _mkLastLoad  = Date.now();
+  mkUpdateMainTicker();
+  if(upd) upd.textContent = 'Aggiornato: ' + new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
   mkUpdateRiskBadge();
   mkRender();
 }
 
 async function mkForceReload() {
+  _mkData     = {};
   _mkLastLoad = 0;
   await mkLoadAll();
 }
