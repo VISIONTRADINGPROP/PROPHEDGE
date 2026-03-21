@@ -4009,8 +4009,27 @@ function calRender(){
             : 'border-left:3px solid transparent;';
 
         // Link ForexFactory
-        var ffDay = (ev.date||'').replace(/T.*/,'').replace(/-/g,'');
-        var ffUrl = ev.url || ('https://www.forexfactory.com/calendar?day='+ffDay);
+        // ForexFactory URL formato: mar21.2026 + anchor con titolo evento
+        var ffUrl = ev.url || (function(){
+          // Parsa la data dal formato FF: "03-21-2026" o ISO
+          var raw = (ev.date||'').replace(/T.*/,'');
+          var parts = raw.indexOf('-')!==-1 ? raw.split('-') : [];
+          var d;
+          if(parts.length===3){
+            // Formato "MM-DD-YYYY"
+            var mo=parseInt(parts[0]),da=parseInt(parts[1]),yr=parseInt(parts[2]);
+            if(yr>2000){ d=new Date(yr,mo-1,da); }   // MM-DD-YYYY
+            else { d=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2])); } // YYYY-MM-DD
+          } else { d=new Date(raw); }
+          var months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+          var mo2=months[d.getMonth()]||'jan';
+          var da2=d.getDate();
+          var yr2=d.getFullYear();
+          var dayParam=mo2+da2+'.'+yr2;  // es. mar21.2026
+          // Titolo come anchor per scorrere alla notizia specifica
+          var titleAnchor=encodeURIComponent((ev.title||ev.event||'').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,''));
+          return 'https://www.forexfactory.com/calendar?day='+dayParam+(titleAnchor?'#'+titleAnchor:'');
+        })();
 
         html+='<div class="cal-row" data-ffurl="'+ffUrl+'" style="'+rowBg+'cursor:pointer" onclick="calOpenLink(event,this)">'
           +'<div class="cal-time '+timeCls+'">'+timeStr+(isSoon?'<br><span style="font-size:8px;color:#ffbe0b">⚠ PRESTO</span>':'')+'</div>'
