@@ -1085,14 +1085,44 @@ function mkSetCat(cat) {
 // ═══════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════
-// MARKET DATA ENGINE — VERSIONE DEFINITIVA
-//
-// FOREX:  Frankfurter (BCE, CORS nativo) — affidabile 100%
-// CRYPTO: CoinGecko /coins/markets — 24h+7d+30d ufficiali
-// INDICI+MATERIE PRIME: Stooq CSV diretto (CORS nativo confermato)
-//         + query2.finance.yahoo.com come alternativa
+
 // ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════
+// MARKET DATA ENGINE — DEFINITIVO
+// 3 proxy in gara simultanea (Promise.any) — vince il più veloce
+// ═══════════════════════════════════════════════════════
 var _mkLastLoad = 0;
+
+var MK_PROXIES = [
+  function(u){ return 'https://api.allorigins.win/raw?url='    + encodeURIComponent(u); },
+  function(u){ return 'https://corsproxy.io/?'                 + encodeURIComponent(u); },
+  function(u){ return 'https://api.codetabs.com/v1/proxy?quest='+ encodeURIComponent(u); }
+];
+
+// Fetch JSON: tutti e 3 i proxy partono insieme, risponde il primo
+function mkJSON(url, ms) {
+  ms = ms || 12000;
+  var attempts = MK_PROXIES.map(function(pfn) {
+    return new Promise(function(resolve, reject) {
+      var timer = setTimeout(function(){ reject(new Error('timeout')); }, ms);
+      fetch(pfn(url), {cache:'no-store'})
+        .then(function(r){ clearTimeout(timer); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+        .then(resolve)
+        .catch(function(){ clearTimeout(timer); reject(new Error('fail')); });
+    });
+  });
+  // Promise.any: risolve col primo successo
+  if(typeof Promise.any === 'function') return Promise.any(attempts);
+  // Fallback per browser vecchi
+  return new Promise(function(resolve, reject) {
+    var done = false, failed = 0;
+    attempts.forEach(function(p) {
+      p.then(function(v){ if(!done){done=true;resolve(v);} })
+       .catch(function(){ if(++failed===attempts.length) reject(new Error('all failed')); });
+    });
+  });
+}
 
 function mkBizDate(n){
   var d=new Date(),c=0;
@@ -1100,24 +1130,15 @@ function mkBizDate(n){
   return d.toISOString().split('T')[0];
 }
 
-function mkFetchT(url,ms,mode){
-  return Promise.race([
-    fetch(url,{cache:'no-store',mode:mode||'cors'}).then(function(r){
-      if(!r.ok)throw new Error('HTTP '+r.status);
-      return r;
-    }),
-    new Promise(function(_,rej){setTimeout(function(){rej(new Error('timeout'));},ms||9000);})
-  ]);
-}
-
-// ── FOREX ──────────────────────────────────────────────────────
+// ── FOREX — Frankfurter (CORS nativo, no proxy) ─────────────────
 async function mkLoadForex(){
   try{
-    var res=await Promise.allSettled([
-      mkFetchT('https://api.frankfurter.app/latest?from=USD',7000).then(function(r){return r.json();}),
-      mkFetchT('https://api.frankfurter.app/'+mkBizDate(1)+'?from=USD',7000).then(function(r){return r.json();}),
-      mkFetchT('https://api.frankfurter.app/'+mkBizDate(5)+'?from=USD',7000).then(function(r){return r.json();}),
-      mkFetchT('https://api.frankfurter.app/'+mkBizDate(22)+'?from=USD',7000).then(function(r){return r.json();})
+    function ff(url){ return fetch(url,{cache:'no-store'}).then(function(r){return r.json();}); }
+    var res = await Promise.allSettled([
+      ff('https://api.frankfurter.app/latest?from=USD'),
+      ff('https://api.frankfurter.app/'+mkBizDate(1)+'?from=USD'),
+      ff('https://api.frankfurter.app/'+mkBizDate(5)+'?from=USD'),
+      ff('https://api.frankfurter.app/'+mkBizDate(22)+'?from=USD')
     ]);
     var t0=res[0].status==='fulfilled'&&res[0].value.rates?res[0].value.rates:null;
     if(!t0)return;
@@ -1143,7 +1164,7 @@ async function mkLoadForex(){
   }catch(e){}
 }
 
-// ── CRYPTO ─────────────────────────────────────────────────────
+// ── CRYPTO — CoinGecko (CORS nativo) con fallback CryptoCompare ─
 async function mkLoadCrypto(){
   var ids='bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,avalanche-2,polkadot,chainlink,matic-network,litecoin';
   var nm={'bitcoin':'BTC/USD','ethereum':'ETH/USD','solana':'SOL/USD',
@@ -1151,9 +1172,8 @@ async function mkLoadCrypto(){
     'dogecoin':'DOGE/USD','avalanche-2':'AVAX/USD','polkadot':'DOT/USD',
     'chainlink':'LINK/USD','matic-network':'MATIC/USD','litecoin':'LTC/USD'};
   try{
-    var url='https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='+ids
-      +'&price_change_percentage=7d,30d&order=market_cap_desc&sparkline=false';
-    var r=await mkFetchT(url,12000);var d=await r.json();
+    var r=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='+ids+'&price_change_percentage=7d,30d&sparkline=false',{cache:'no-store'});
+    var d=await r.json();
     if(!Array.isArray(d))throw new Error('bad');
     d.forEach(function(c){
       var s=nm[c.id];if(!s||c.current_price==null)return;
@@ -1164,10 +1184,9 @@ async function mkLoadCrypto(){
     });
     return;
   }catch(e){}
-  // Fallback CryptoCompare
   try{
-    var r2=await mkFetchT('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,SOL,BNB,XRP,ADA,DOGE,AVAX,DOT,LINK,MATIC,LTC&tsyms=USD',9000);
-    var d2=await r2.json();if(!d2.RAW)return;
+    var r2=await fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,ETH,SOL,BNB,XRP,ADA,DOGE,AVAX,DOT,LINK,MATIC,LTC&tsyms=USD',{cache:'no-store'});
+    var d2=await r2.json();if(!d2||!d2.RAW)return;
     var m={'BTC':'BTC/USD','ETH':'ETH/USD','SOL':'SOL/USD','BNB':'BNB/USD',
       'XRP':'XRP/USD','ADA':'ADA/USD','DOGE':'DOGE/USD','AVAX':'AVAX/USD',
       'DOT':'DOT/USD','LINK':'LINK/USD','MATIC':'MATIC/USD','LTC':'LTC/USD'};
@@ -1178,101 +1197,70 @@ async function mkLoadCrypto(){
   }catch(e){}
 }
 
-// ── INDICI + MATERIE PRIME — Stooq CSV (CORS nativo) ───────────
-// Stooq permette fetch diretto dal browser senza proxy
-var STOOQ=[
-  ['^spx','S&P 500'],['^ndq','Nasdaq'],['^dji','Dow Jones'],['^rut','Russell 2000'],
-  ['^dax','DAX 40'],['^ukx','FTSE 100'],['^cac','CAC 40'],['^nkx','Nikkei 225'],
-  ['^hsi','Hang Seng'],['^vix','VIX'],
-  ['gc.f','XAU/USD'],['si.f','Silver'],['pl.f','Platinum'],['pa.f','Palladium'],
-  ['cl.f','WTI Oil'],['co.f','Brent'],['ng.f','Nat Gas'],['hg.f','Copper'],
-  ['zw.f','Wheat'],['zc.f','Corn'],['kc.f','Coffee'],['sb.f','Sugar']
+// ── INDICI + MATERIE PRIME ──────────────────────────────────────
+// Fase 1: UN'UNICA chiamata Yahoo quote per tutti i simboli (prezzi + 1d%)
+// Fase 2: storico chart IN PARALLELO per tutti — ogni sym usa 3 proxy in gara
+var YQ_SYMS = [
+  ['^GSPC','S&P 500'],['^NDX','Nasdaq'],['^DJI','Dow Jones'],['^RUT','Russell 2000'],
+  ['^GDAXI','DAX 40'],['^FTSE','FTSE 100'],['^FCHI','CAC 40'],['^N225','Nikkei 225'],
+  ['^HSI','Hang Seng'],['^VIX','VIX'],
+  ['GC=F','XAU/USD'],['SI=F','Silver'],['PL=F','Platinum'],['PA=F','Palladium'],
+  ['CL=F','WTI Oil'],['BZ=F','Brent'],['NG=F','Nat Gas'],['HG=F','Copper'],
+  ['ZW=F','Wheat'],['ZC=F','Corn'],['KC=F','Coffee'],['SB=F','Sugar']
 ];
 
-async function mkFetchStooq(sym){
-  var now=new Date();
-  var from=new Date(now);from.setDate(from.getDate()-60);
-  function fmt(d){return d.toISOString().split('T')[0].replace(/-/g,'');}
-  var url='https://stooq.com/q/d/l/?s='+sym+'&d1='+fmt(from)+'&d2='+fmt(now)+'&i=d';
-  try{
-    var r=await mkFetchT(url,10000,'no-cors').catch(function(){
-      // no-cors non restituisce body leggibile, prova cors
-      return mkFetchT(url,10000,'cors');
-    });
-    var txt=await r.text();
-    if(!txt||txt.length<30||txt.indexOf('No data')!==-1||txt.indexOf('Exceeded')!==-1)return null;
-    var rows=txt.trim().split('\n').slice(1);
-    var closes=[];
-    rows.forEach(function(row){
-      var p=row.split(',');
-      if(p.length>=5){var c=parseFloat(p[4]);if(!isNaN(c)&&c>0)closes.push(c);}
-    });
-    if(closes.length<2)return null;
-    var now_p=closes[closes.length-1];
-    return{price:now_p,
-      pct1d:((now_p-closes[closes.length-2])/closes[closes.length-2])*100,
-      pct1w:closes.length>=6?((now_p-closes[closes.length-6])/closes[closes.length-6])*100:null,
-      pct1m:closes.length>=22?((now_p-closes[closes.length-22])/closes[closes.length-22])*100:null};
-  }catch(e){return null;}
-}
-
-// Yahoo query2 come alternativa a Stooq
-async function mkFetchYahoo(sym){
-  var url='https://query2.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(sym)
-    +'?interval=1d&range=35d&includePrePost=false';
-  var proxies=[
-    url, // diretto (query2 ha CORS su alcuni endpoint)
-    'https://api.allorigins.win/raw?url='+encodeURIComponent(url),
-    'https://corsproxy.io/?'+encodeURIComponent(url)
-  ];
-  var YSYM={'^spx':'^GSPC','^ndq':'^NDX','^dji':'^DJI','^rut':'^RUT',
-    '^dax':'^GDAXI','^ukx':'^FTSE','^cac':'^FCHI','^nkx':'^N225',
-    '^hsi':'^HSI','^vix':'^VIX',
-    'gc.f':'GC=F','si.f':'SI=F','pl.f':'PL=F','pa.f':'PA=F',
-    'cl.f':'CL=F','co.f':'BZ=F','ng.f':'NG=F','hg.f':'HG=F',
-    'zw.f':'ZW=F','zc.f':'ZC=F','kc.f':'KC=F','sb.f':'SB=F'};
-  // convert stooq sym to yahoo sym if needed
-  var ySym=YSYM[sym]||sym;
-  var yUrl='https://query2.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(ySym)
-    +'?interval=1d&range=35d&includePrePost=false';
-  var yProxies=[yUrl,'https://api.allorigins.win/raw?url='+encodeURIComponent(yUrl)];
-  for(var i=0;i<yProxies.length;i++){
-    try{
-      var r=await mkFetchT(yProxies[i],9000);
-      var j=await r.json();
-      var res=j&&j.chart&&j.chart.result&&j.chart.result[0];
-      if(!res)continue;
-      var c=(res.indicators.quote[0].close||[]).filter(function(v){return v!=null;});
-      if(c.length<2)continue;
-      var now_p=res.meta&&res.meta.regularMarketPrice?res.meta.regularMarketPrice:c[c.length-1];
-      var d1=c[c.length-2];
-      return{price:now_p,
-        pct1d:((now_p-d1)/d1)*100,
-        pct1w:c.length>=6?((now_p-c[c.length-6])/c[c.length-6])*100:null,
-        pct1m:c.length>=22?((now_p-c[c.length-22])/c[c.length-22])*100:null};
-    }catch(e){continue;}
-  }
-  return null;
-}
-
 async function mkLoadIndicesCommod(){
-  for(var i=0;i<STOOQ.length;i++){
-    var sym=STOOQ[i][0],name=STOOQ[i][1];
-    // Prova prima Stooq, poi Yahoo
-    var data=await mkFetchStooq(sym);
-    if(!data)data=await mkFetchYahoo(sym);
-    if(data){_mkData[name]=data;mkRender();mkUpdateMainTicker();}
-    await new Promise(function(r){setTimeout(r,200);});
-  }
+  // FASE 1 — UN'UNICA chiamata bulk per prezzi + 1d%
+  var allSyms = YQ_SYMS.map(function(p){return p[0];}).join(',');
+  var quoteUrl = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols='
+    + encodeURIComponent(allSyms)
+    + '&fields=regularMarketPrice,regularMarketChangePercent';
+  try{
+    var qj = await mkJSON(quoteUrl, 15000);
+    var results = qj && qj.quoteResponse && qj.quoteResponse.result;
+    if(results && results.length){
+      var nameMap = {};
+      YQ_SYMS.forEach(function(p){nameMap[p[0]]=p[1];});
+      results.forEach(function(q){
+        var name=nameMap[q.symbol];
+        if(!name||q.regularMarketPrice==null)return;
+        _mkData[name]={price:q.regularMarketPrice,
+          pct1d:q.regularMarketChangePercent!=null?q.regularMarketChangePercent:null,
+          pct1w:null,pct1m:null};
+      });
+      mkRender();mkUpdateMainTicker();
+    }
+  }catch(e){}
+
+  // FASE 2 — storico in PARALLELO per tutti i simboli (3 proxy in gara per ognuno)
+  var nameMap2={};YQ_SYMS.forEach(function(p){nameMap2[p[0]]=p[1];});
+  await Promise.allSettled(YQ_SYMS.map(async function(pair){
+    var sym=pair[0],name=pair[1];
+    var chartUrl='https://query1.finance.yahoo.com/v8/finance/chart/'
+      +encodeURIComponent(sym)+'?interval=1d&range=35d&includePrePost=false';
+    try{
+      var j=await mkJSON(chartUrl,14000);
+      var res=j&&j.chart&&j.chart.result&&j.chart.result[0];
+      if(!res)return;
+      var c=(res.indicators.quote[0].close||[]).filter(function(v){return v!=null;});
+      if(c.length<2)return;
+      var nowP=res.meta&&res.meta.regularMarketPrice?res.meta.regularMarketPrice:c[c.length-1];
+      if(!_mkData[name])_mkData[name]={price:nowP,pct1d:null,pct1w:null,pct1m:null};
+      else _mkData[name].price=nowP;
+      _mkData[name].pct1w=c.length>=6?((nowP-c[c.length-6])/c[c.length-6])*100:null;
+      _mkData[name].pct1m=c.length>=22?((nowP-c[c.length-22])/c[c.length-22])*100:null;
+      mkRender();
+    }catch(e){}
+  }));
 }
 
-// ── ORCHESTRATORE ──────────────────────────────────────────────
+// ── ORCHESTRATORE ───────────────────────────────────────────────
 async function mkLoadAll(){
   var now=Date.now();
   if(_mkLoading||(now-_mkLastLoad<5*60*1000&&Object.keys(_mkData).length>5)){mkRender();return;}
   _mkLoading=true;
   var body=document.getElementById('mkBody');
-  if(body)body.innerHTML='<div style="text-align:center;padding:60px;font-family:var(--fd);font-size:12px;color:#3d4d78">&#x23F3; Caricamento in corso...</div>';
+  if(body)body.innerHTML='<div style="text-align:center;padding:60px;font-family:var(--fd);font-size:12px;color:#3d4d78">&#x23F3; Caricamento...</div>';
   await Promise.allSettled([mkLoadForex(),mkLoadCrypto()]);
   mkRender();mkUpdateMainTicker();
   var upd=document.getElementById('mkUpdTime');
@@ -1286,8 +1274,7 @@ async function mkLoadAll(){
 }
 
 async function mkForceReload(){
-  _mkData={};_mkLastLoad=0;
-  await mkLoadAll();
+  _mkData={};_mkLastLoad=0;await mkLoadAll();
 }
 
 function mkUpdateRiskBadge(){
