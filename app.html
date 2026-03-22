@@ -3079,6 +3079,14 @@ function jrnlCloseConn() {
   if (mod) mod.style.display = 'none';
 }
 
+function jrnlCtraderMethodChange() {
+  var method = (document.getElementById('jConn-ct-method')||{value:'oauth'}).value;
+  var oauthDiv  = document.getElementById('jConn-ct-oauth');
+  var manualDiv = document.getElementById('jConn-ct-manual');
+  if(oauthDiv)  oauthDiv.style.display  = method==='oauth'  ? '' : 'none';
+  if(manualDiv) manualDiv.style.display = method==='manual' ? '' : 'none';
+}
+
 function jrnlConnPlatChange() {
   var plat   = (document.getElementById('jConnMod-plat')||{value:'ctrader'}).value;
   var sess   = jrnl.sessions[_jConnIdx];
@@ -3087,14 +3095,48 @@ function jrnlConnPlatChange() {
   if (!fields) return;
 
   if (plat==='ctrader') {
-    fields.innerHTML = '<div class="note note-teal" style="margin-top:10px;font-size:11px">'
-      + 'Verrai reindirizzato su cTrader per autorizzare l\'accesso. Nessuna password da inserire qui.'
+    fields.innerHTML = ''
+      // Selezione metodo connessione
+      + '<div class="f" style="margin-top:10px"><label>Metodo di connessione</label>'
+      + '<select id="jConn-ct-method" onchange="jrnlCtraderMethodChange()" style="background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fd);width:100%">'
+      + '<option value="oauth">OAuth — Login cTrader (app in attesa approvazione)</option>'
+      + '<option value="manual">Token manuale — Incolla il tuo Access Token</option>'
+      + '</select></div>'
+
+      // ── Sezione OAuth ──────────────────────────────────────────
+      + '<div id="jConn-ct-oauth">'
+      + '<div class="note note-teal" style="margin-top:10px;font-size:11px;line-height:1.7">'
+      + '&#128274; Verrai reindirizzato su cTrader per autorizzare l\'accesso.<br>'
+      + '<span style="color:var(--amber)">⚠ L\'app è in attesa di approvazione Spotware (max 3 giorni lavorativi).</span>'
+      + '</div></div>'
+
+      // ── Sezione Token Manuale ──────────────────────────────────
+      + '<div id="jConn-ct-manual" style="display:none">'
+      + '<div class="note" style="margin-top:10px;font-size:11px;line-height:1.7;background:rgba(255,190,11,.08);border:1px solid rgba(255,190,11,.2);border-radius:8px;padding:10px;color:var(--t2)">'
+      + '<strong style="color:var(--amber)">Come ottenere il token:</strong><br>'
+      + '1. Vai su <a href="https://connect.spotware.com/apps/23386/playground" target="_blank" style="color:var(--teal)">connect.spotware.com → Sandbox</a><br>'
+      + '2. Clicca <strong>Ottieni il token</strong><br>'
+      + '3. Copia l\'Access Token e incollalo qui sotto'
       + '</div>'
-      + '<div class="f" style="margin-top:10px"><label>Ambiente</label><select id="jConn-env">'
+      + '<div class="f" style="margin-top:10px"><label>Access Token cTrader</label>'
+      + '<input type="text" id="jConn-ct-token" value="'+(conn.token||'')+'" placeholder="Incolla qui l\'access token..." '
+      + 'style="font-family:var(--fd);font-size:10px;background:var(--bg);border-color:var(--amber)">'
+      + '</div>'
+      + '<div class="f"><label>Account ID cTrader</label>'
+      + '<input type="text" id="jConn-ct-accountid" value="'+(conn.accountId||'')+'" placeholder="Es. 12345678" '
+      + 'style="font-family:var(--fd);font-size:12px;background:var(--bg)">'
+      + '<div style="font-size:9px;color:var(--t3);margin-top:3px">Trovi l\'Account ID nel Sandbox o nelle impostazioni cTrader</div>'
+      + '</div>'
+      + '</div>'
+
+      // ── Campi comuni ───────────────────────────────────────────
+      + '<div class="f" style="margin-top:10px"><label>Ambiente</label>'
+      + '<select id="jConn-env" style="background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fd);width:100%">'
       + '<option value="live"'+(conn.env==='live'?' selected':'')+'>Live (Reale)</option>'
       + '<option value="demo"'+(conn.env==='demo'?' selected':'')+'>Demo</option>'
       + '</select></div>'
-      + '<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. TopFX Live"></div>';
+      + '<div class="f"><label>Nome conto</label>'
+      + '<input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. IC Markets Live cTrader"></div>';
   } else if (plat==='mt4'||plat==='mt5') {
     var jrnlId = (jrnl.sessions[_jConnIdx]||{id:'—'}).id;
     var apiKey = 'PH_2026_AXI_SECRET_KEY_VISIONTRADING';
@@ -3181,20 +3223,42 @@ async function jrnlSaveConn() {
   var key   = _jConnSide==='prop' ? 'propConn' : 'brokerConn';
 
   if (plat==='ctrader') {
-    sess[key] = {platform:'ctrader',label:label,env:env,connected:false,token:'',accountId:''};
+    var method    = (document.getElementById('jConn-ct-method')||{value:'oauth'}).value;
+    var connectedAt = new Date().toISOString();
+
+    if(method === 'manual') {
+      // ── Token manuale — connessione diretta ─────────────────
+      var manualToken     = (document.getElementById('jConn-ct-token')||{value:''}).value.trim();
+      var manualAccountId = (document.getElementById('jConn-ct-accountid')||{value:''}).value.trim();
+      if(!manualToken) { alert('Inserisci l\'Access Token cTrader.'); return; }
+      sess[key] = {
+        platform:    'ctrader',
+        label:       label || 'cTrader Manual',
+        token:       manualToken,
+        accountId:   manualAccountId,
+        env:         env,
+        connected:   true,
+        connectedAt: connectedAt
+      };
+      if(_jConnSide==='prop')   sess.propTrades   = [];
+      else                      sess.brokerTrades  = [];
+      jrnlSave();
+      jrnlCloseConn();
+      jrnlSync(_jConnIdx, _jConnSide);
+      return;
+    }
+
+    // ── OAuth — apri popup ──────────────────────────────────
+    sess[key] = {platform:'ctrader',label:label,env:env,connected:false,token:'',accountId:'',connectedAt:connectedAt};
     localStorage.setItem('ph_jconn_pending', JSON.stringify({idx:_jConnIdx,side:_jConnSide,label:label,env:env}));
     jrnlSave();
     try {
       var r = await fetch('/api/ctrader-auth-url?env='+env+'&redirect='+encodeURIComponent(window.location.origin+'/ctrader-callback'));
       var d = await r.json();
       if (d.url) {
-        // Apri in popup — l'utente autorizza senza lasciare il software
         var popup = window.open(d.url, 'ctrader_auth',
           'width=520,height=640,left='+(screen.width/2-260)+',top='+(screen.height/2-320));
-        if(!popup) {
-          // Popup bloccato — fallback stessa finestra
-          window.location.href = d.url;
-        }
+        if(!popup) window.location.href = d.url;
         return;
       }
       alert('Errore: '+(d.error||'URL non ricevuto'));
