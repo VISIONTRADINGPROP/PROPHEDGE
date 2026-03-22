@@ -978,13 +978,28 @@ function doForgotSubmit(){
 </button>
 
 <div id="aiFloatPanel">
-  <div class="ai-panel-hdr">
+  <!-- Header AI mode -->
+  <div class="ai-panel-hdr" id="aiHdrAI">
     <div class="ai-avatar">🤖</div>
     <div>
-      <div class="ai-title" id="aiPanelTitle">PropHedge AI</div>
-      <div class="ai-status"><span class="ai-dot" id="aiStatusDot"></span><span id="aiStatusText">Online · risponde in secondi</span></div>
+      <div class="ai-title">PropHedge AI</div>
+      <div class="ai-status"><span class="ai-dot"></span><span>Online · risponde in secondi</span></div>
     </div>
     <button class="ai-close" onclick="toggleAIChat()">✕</button>
+  </div>
+  <!-- Header Human mode (nascosto inizialmente) -->
+  <div class="ai-panel-hdr" id="aiHdrHuman" style="display:none">
+    <div id="aiOpAvatar" style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;font-family:var(--fd)">M</div>
+    <div>
+      <div class="ai-title" id="aiOpName">Supporto PropHedge</div>
+      <div class="ai-status"><span class="ai-dot" style="background:#00d68f;animation:pu 1.5s infinite"></span><span id="aiOpStatus">Team VisionTrading · In diretta</span></div>
+    </div>
+    <button class="ai-close" onclick="toggleAIChat()">✕</button>
+  </div>
+  <!-- Operatori (visibile prima di avviare supporto umano) -->
+  <div id="aiOperatorsBar" style="display:none;padding:10px 12px 6px;border-bottom:1px solid rgba(128,128,128,.1);background:rgba(0,0,0,.15)">
+    <div style="font-size:9px;color:rgba(128,128,128,.5);font-family:var(--fd);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">OPERATORI DISPONIBILI</div>
+    <div id="aiOpsList" style="display:flex;gap:10px"></div>
   </div>
   <div class="ai-msgs" id="aiFloatMsgs"></div>
   <div class="ai-quick-btns" id="aiQuickBtns">
@@ -2199,101 +2214,276 @@ function render(){
 }
 
 // ══ FLOATING AI CHAT — con supporto umano Telegram nascosto ══════
-var _aiOpen=false,_aiHist=[],_aiGreeted=false;
-var _humanMode=false,_ticketId=null,_pollTimer=null,_lastMsgAt=null;
+
+// 9 operatori con nomi, colori e iniziali
+var OPERATORS = [
+  {name:'Micol',     initials:'MI', color:'#e056a0', bg:'rgba(224,86,160,.15)'},
+  {name:'Lorenzo',   initials:'LO', color:'#5b7ce6', bg:'rgba(91,124,230,.15)'},
+  {name:'Valentina', initials:'VA', color:'#e08a30', bg:'rgba(224,138,48,.15)'},
+  {name:'Davide',    initials:'DA', color:'#30c48a', bg:'rgba(48,196,138,.15)'},
+  {name:'Chiara',    initials:'CH', color:'#9b5de5', bg:'rgba(155,93,229,.15)'},
+  {name:'Marco',     initials:'MA', color:'#00b8a4', bg:'rgba(0,184,164,.15)'},
+  {name:'Federica',  initials:'FE', color:'#e05050', bg:'rgba(224,80,80,.15)'},
+  {name:'Simone',    initials:'SI', color:'#4fc3f7', bg:'rgba(79,195,247,.15)'},
+  {name:'Alessia',   initials:'AL', color:'#ffb347', bg:'rgba(255,179,71,.15)'}
+];
+
+var _aiOpen      = false;
+var _aiHist      = [];
+var _aiGreeted   = false;
+var _humanMode   = false;
+var _ticketId    = null;
+var _pollTimer   = null;
+var _lastMsgAt   = null;
+var _activeOp    = null;   // operatore assegnato
+var _opRotTimer  = null;   // timer rotazione operatori
+var _opOffset    = 0;      // quale gruppo di 3 mostrare
 
 function genTicketId(){return'ticket_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
 
-function toggleAIChat(){
-  _aiOpen=!_aiOpen;
-  var panel=document.getElementById('aiFloatPanel');if(panel)panel.classList.toggle('open',_aiOpen);
-  var notif=document.querySelector('#aiFloatBtn .ai-notif');if(notif)notif.style.display='none';
-  if(_aiOpen&&!_aiGreeted){_aiGreeted=true;aiFloatAddMsg('bot','Ciao! 👋 Sono l\'assistente AI di PropHedge.\n\nPosso aiutarti su qualsiasi funzione del software: calcolo lotti, connessione broker, journal, calendario economico e altro.\n\nCome posso aiutarti?');}
-  if(_aiOpen&&_humanMode&&!_pollTimer)startSupportPolling();
+// ── Rotazione operatori nella barra ──────────────────────────────
+function renderOperatorsBar(){
+  var bar = document.getElementById('aiOpsList');
+  if(!bar) return;
+  // Prendi 3 operatori a partire da _opOffset
+  var group = [];
+  for(var i=0;i<3;i++) group.push(OPERATORS[(_opOffset+i)%OPERATORS.length]);
+  
+  bar.innerHTML = group.map(function(op){
+    return '<div style="display:flex;align-items:center;gap:6px">'
+      +'<div style="width:32px;height:32px;border-radius:50%;background:'+op.bg+';border:2px solid '+op.color+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+op.color+';font-family:var(--fd);flex-shrink:0;position:relative">'
+      +op.initials
+      +'<span style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:#00d68f;border:1.5px solid #0a0c18;box-shadow:0 0 4px #00d68f"></span>'
+      +'</div>'
+      +'<div style="font-size:10px;color:#c8d0e8;font-weight:600">'+op.name+'</div>'
+      +'</div>';
+  }).join('');
 }
 
-function aiFloatAddMsg(role,text){
-  var msgs=document.getElementById('aiFloatMsgs');if(!msgs)return null;
-  var isBot=(role==='bot'||role==='support');
-  var row=document.createElement('div');row.className='ai-msg-row'+(isBot?'':' user');
-  var ava='<div class="ai-msg-ava '+(isBot?'bot':'usr')+'">'+(isBot?'🤖':'👤')+'</div>';
-  var bubble=document.createElement('div');bubble.className='ai-bubble '+(isBot?'bot':'usr');
-  bubble.innerHTML=text.replace(/\n/g,'<br>');
-  row.innerHTML=ava;row.appendChild(bubble);msgs.appendChild(row);msgs.scrollTop=msgs.scrollHeight;return bubble;
+function startOpRotation(){
+  renderOperatorsBar();
+  if(_opRotTimer) clearInterval(_opRotTimer);
+  _opRotTimer = setInterval(function(){
+    _opOffset = (_opOffset + 3) % OPERATORS.length;
+    renderOperatorsBar();
+  }, 4000);
+}
+
+function stopOpRotation(){
+  if(_opRotTimer){ clearInterval(_opRotTimer); _opRotTimer=null; }
+}
+
+function toggleAIChat(){
+  _aiOpen = !_aiOpen;
+  var panel = document.getElementById('aiFloatPanel');
+  if(panel) panel.classList.toggle('open', _aiOpen);
+  var notif = document.querySelector('#aiFloatBtn .ai-notif');
+  if(notif) notif.style.display = 'none';
+  if(_aiOpen && !_aiGreeted){
+    _aiGreeted = true;
+    aiFloatAddMsg('bot','Ciao! 👋 Sono l'assistente AI di PropHedge.\n\nPosso aiutarti su qualsiasi funzione del software: calcolo lotti, connessione broker, journal, calendario economico e altro.\n\nCome posso aiutarti?');
+  }
+  if(_aiOpen && _humanMode && !_pollTimer) startSupportPolling();
+  if(!_aiOpen && !_humanMode) stopOpRotation();
+}
+
+function aiFloatAddMsg(role, text){
+  var msgs = document.getElementById('aiFloatMsgs');
+  if(!msgs) return null;
+  var isBot = (role==='bot'||role==='support');
+  var row = document.createElement('div');
+  row.className = 'ai-msg-row'+(isBot?'':' user');
+
+  // Avatar — se supporto umano mostra iniziali operatore
+  var avatarHtml;
+  if(role==='support' && _activeOp){
+    avatarHtml = '<div style="width:26px;height:26px;border-radius:50%;background:'+_activeOp.bg+';border:1.5px solid '+_activeOp.color+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:'+_activeOp.color+';flex-shrink:0;font-family:var(--fd)">'+_activeOp.initials+'</div>';
+  } else if(isBot){
+    avatarHtml = '<div class="ai-msg-ava bot">🤖</div>';
+  } else {
+    avatarHtml = '<div class="ai-msg-ava usr">👤</div>';
+  }
+
+  var bubble = document.createElement('div');
+  bubble.className = 'ai-bubble '+(isBot?'bot':'usr');
+  bubble.innerHTML = text.replace(/\n/g,'<br>');
+  row.innerHTML = avatarHtml;
+  row.appendChild(bubble);
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+  return bubble;
 }
 
 function aiFloatAddTyping(){
-  var msgs=document.getElementById('aiFloatMsgs');if(!msgs)return null;
-  var row=document.createElement('div');row.className='ai-msg-row';row.id='aiTypingRow';
-  row.innerHTML='<div class="ai-msg-ava bot">🤖</div>';
-  var bubble=document.createElement('div');bubble.className='ai-bubble bot';bubble.id='aiTypingBubble';
-  bubble.innerHTML='<span id="aiTypingDots">●</span>';
-  var t=0;bubble._timer=setInterval(function(){t=(t+1)%3;var el=document.getElementById('aiTypingDots');if(el)el.textContent='●'.repeat(t+1);},400);
-  row.appendChild(bubble);msgs.appendChild(row);msgs.scrollTop=msgs.scrollHeight;return bubble;
+  var msgs = document.getElementById('aiFloatMsgs');
+  if(!msgs) return null;
+  var row = document.createElement('div');
+  row.className = 'ai-msg-row';
+  row.id = 'aiTypingRow';
+  // Avatar operatore se in human mode
+  var ava = (_humanMode && _activeOp)
+    ? '<div style="width:26px;height:26px;border-radius:50%;background:'+_activeOp.bg+';border:1.5px solid '+_activeOp.color+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:'+_activeOp.color+';flex-shrink:0;font-family:var(--fd)">'+_activeOp.initials+'</div>'
+    : '<div class="ai-msg-ava bot">🤖</div>';
+  row.innerHTML = ava;
+  var bubble = document.createElement('div');
+  bubble.className = 'ai-bubble bot';
+  bubble.id = 'aiTypingBubble';
+  bubble.innerHTML = '<span id="aiTypingDots">●</span>';
+  var t=0;
+  bubble._timer = setInterval(function(){t=(t+1)%3;var el=document.getElementById('aiTypingDots');if(el)el.textContent='●'.repeat(t+1);},400);
+  row.appendChild(bubble);
+  msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+  return bubble;
 }
 
 function aiFloatRemoveTyping(){
-  var row=document.getElementById('aiTypingRow');var bub=document.getElementById('aiTypingBubble');
-  if(bub&&bub._timer)clearInterval(bub._timer);if(row)row.remove();
+  var row = document.getElementById('aiTypingRow');
+  var bub = document.getElementById('aiTypingBubble');
+  if(bub && bub._timer) clearInterval(bub._timer);
+  if(row) row.remove();
 }
 
-// ── Attiva supporto umano silenzioso (Telegram dietro le quinte) ─
+// ── Attiva supporto umano con operatore assegnato ─────────────────
 function switchToHumanSupport(){
-  _humanMode=true;_ticketId=genTicketId();_lastMsgAt=new Date().toISOString();
-  var hdrTitle=document.querySelector('#aiFloatPanel .ai-title');
-  var hdrStatus=document.querySelector('#aiFloatPanel .ai-status');
-  if(hdrTitle)hdrTitle.textContent='Supporto PropHedge';
-  if(hdrStatus)hdrStatus.innerHTML='<span class="ai-dot" style="background:#00d68f;animation:pu 1.5s infinite"></span> Team VisionTrading · In diretta';
-  var qb=document.getElementById('aiQuickBtns');if(qb)qb.style.display='none';
+  _humanMode = true;
+  _ticketId  = genTicketId();
+  _lastMsgAt = new Date().toISOString();
+
+  // Assegna operatore random
+  _activeOp = OPERATORS[Math.floor(Math.random()*OPERATORS.length)];
+
+  // Nascondi header AI, mostra header operatore
+  var hdrAI    = document.getElementById('aiHdrAI');
+  var hdrHuman = document.getElementById('aiHdrHuman');
+  var opsBar   = document.getElementById('aiOperatorsBar');
+  if(hdrAI)    hdrAI.style.display    = 'none';
+  if(hdrHuman) hdrHuman.style.display = 'flex';
+  if(opsBar)   opsBar.style.display   = 'none';
+
+  // Aggiorna avatar e nome operatore nell'header
+  var opAv = document.getElementById('aiOpAvatar');
+  var opNm = document.getElementById('aiOpName');
+  if(opAv){
+    opAv.textContent       = _activeOp.initials;
+    opAv.style.background  = _activeOp.bg;
+    opAv.style.border      = '2px solid '+_activeOp.color;
+    opAv.style.color       = _activeOp.color;
+  }
+  if(opNm) opNm.textContent = _activeOp.name+' — PropHedge';
+
+  stopOpRotation();
+  var qb = document.getElementById('aiQuickBtns');
+  if(qb) qb.style.display = 'none';
+
   aiFloatAddMsg('bot','Perfetto! Sei ora connesso direttamente con il team VisionTrading. 🎧\n\nScrivi il tuo messaggio, ti risponderemo qui a breve.');
-  var input=document.getElementById('aiFloatInput');if(input)input.placeholder='Scrivi al team di supporto...';
+
+  var input = document.getElementById('aiFloatInput');
+  if(input) input.placeholder = 'Scrivi al team di supporto...';
+
   startSupportPolling();
 }
 
-function startSupportPolling(){if(_pollTimer)clearInterval(_pollTimer);_pollTimer=setInterval(pollSupportMessages,5000);}
+// ── Polling risposte ──────────────────────────────────────────────
+function startSupportPolling(){
+  if(_pollTimer) clearInterval(_pollTimer);
+  _pollTimer = setInterval(pollSupportMessages, 5000);
+}
 
 async function pollSupportMessages(){
-  if(!_ticketId)return;
+  if(!_ticketId) return;
   try{
-    var url='/api/support-messages?ticket_id='+encodeURIComponent(_ticketId);
-    if(_lastMsgAt)url+='&after='+encodeURIComponent(_lastMsgAt);
-    var r=await fetch(url);var d=await r.json();
-    if(d.messages&&d.messages.length>0){
-      d.messages.forEach(function(m){aiFloatAddMsg('support',m.content);_lastMsgAt=m.created_at;});
+    var url = '/api/support-messages?ticket_id='+encodeURIComponent(_ticketId);
+    if(_lastMsgAt) url += '&after='+encodeURIComponent(_lastMsgAt);
+    var r = await fetch(url);
+    var d = await r.json();
+    if(d.messages && d.messages.length>0){
+      d.messages.forEach(function(m){
+        aiFloatAddMsg('support', m.content);
+        _lastMsgAt = m.created_at;
+      });
     }
   }catch(e){}
 }
 
+// ── Invia messaggio al supporto ───────────────────────────────────
 async function sendToHumanSupport(text){
-  var btn=document.getElementById('aiFloatSend');if(btn)btn.disabled=true;
-  aiFloatAddMsg('usr',text);
-  aiFloatAddMsg('bot','✓ Messaggio consegnato. Risponderemo a breve.');
+  var btn = document.getElementById('aiFloatSend');
+  if(btn) btn.disabled = true;
+
+  aiFloatAddMsg('usr', text);
+  aiFloatAddMsg('bot', '✓ Messaggio consegnato. Risponderemo a breve.');
+
   try{
-    await fetch('/api/support-send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket_id:_ticketId,message:text,user_email:accountData.email||'',user_name:((accountData.firstName||'')+' '+(accountData.lastName||'')).trim()||'Utente'})});
-  }catch(e){}
-  if(btn)btn.disabled=false;
+    var r = await fetch('/api/support-send',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        ticket_id:  _ticketId,
+        message:    text,
+        user_email: accountData.email||'',
+        user_name:  (((accountData.firstName||'')+' '+(accountData.lastName||'')).trim()||'Utente'),
+        operator:   _activeOp ? _activeOp.name : 'Team'
+      })
+    });
+    if(!r.ok) console.warn('support-send HTTP', r.status);
+  }catch(e){ console.error('support-send error:', e); }
+
+  if(btn) btn.disabled = false;
 }
 
+// ── Main send ─────────────────────────────────────────────────────
 async function aiFloatSend(){
-  var input=document.getElementById('aiFloatInput');var btn=document.getElementById('aiFloatSend');
-  if(!input)return;var text=input.value.trim();if(!text)return;
-  input.value='';if(input.style)input.style.height='auto';
-  // Se già in modalità supporto umano → invia a Telegram
-  if(_humanMode){await sendToHumanSupport(text);if(input)input.focus();return;}
-  // Altrimenti → AI normale
-  if(btn)btn.disabled=true;
-  aiFloatAddMsg('usr',text);_aiHist.push({role:'user',content:text});
-  var qb=document.getElementById('aiQuickBtns');if(qb)qb.style.display='none';
+  var input = document.getElementById('aiFloatInput');
+  var btn   = document.getElementById('aiFloatSend');
+  if(!input) return;
+  var text = input.value.trim();
+  if(!text) return;
+
+  input.value = '';
+  if(input.style) input.style.height = 'auto';
+
+  if(_humanMode){ await sendToHumanSupport(text); if(input)input.focus(); return; }
+
+  if(btn) btn.disabled = true;
+  aiFloatAddMsg('usr', text);
+  _aiHist.push({role:'user', content:text});
+
+  var qb = document.getElementById('aiQuickBtns');
+  if(qb) qb.style.display = 'none';
+
+  // Mostra barra operatori mentre attende la risposta AI
+  var opsBar = document.getElementById('aiOperatorsBar');
+  if(opsBar && opsBar.style.display==='none'){
+    opsBar.style.display = 'block';
+    startOpRotation();
+  }
+
   aiFloatAddTyping();
+
   try{
-    var resp=await fetch('/api/ai-support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:_aiHist})});
-    var data=await resp.json();var reply=data.reply||'Non ho capito, puoi ripetere?';
+    var resp = await fetch('/api/ai-support',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:_aiHist})
+    });
+    var data = await resp.json();
+    var reply = data.reply || 'Non ho capito, puoi ripetere?';
     aiFloatRemoveTyping();
-    // L'AI ha deciso di passare al supporto umano
-    if(reply.indexOf('###HUMAN_SUPPORT###')!==-1){switchToHumanSupport();}
-    else{aiFloatAddMsg('bot',reply);_aiHist.push({role:'assistant',content:reply});if(_aiHist.length>20)_aiHist=_aiHist.slice(-20);}
-  }catch(e){aiFloatRemoveTyping();aiFloatAddMsg('bot','Errore di connessione. Riprova tra qualche secondo. 🙏');}
-  if(btn)btn.disabled=false;if(input)input.focus();
+    if(reply.indexOf('###HUMAN_SUPPORT###')!==-1){
+      switchToHumanSupport();
+    } else {
+      aiFloatAddMsg('bot', reply);
+      _aiHist.push({role:'assistant', content:reply});
+      if(_aiHist.length>20) _aiHist=_aiHist.slice(-20);
+    }
+  }catch(e){
+    aiFloatRemoveTyping();
+    aiFloatAddMsg('bot','Errore di connessione. Riprova tra qualche secondo. 🙏');
+  }
+
+  if(btn) btn.disabled = false;
+  if(input) input.focus();
 }
 
 function aiFloatAsk(text){var input=document.getElementById('aiFloatInput');if(input){input.value=text;aiFloatSend();}}
