@@ -4,50 +4,32 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
-
-  // GET: test che l'endpoint funzioni
-  if (req.method === 'GET') {
-    const hasKey = !!process.env.ANTHROPIC_API_KEY;
-    return res.status(200).json({
-      status: 'ok',
-      hasApiKey: hasKey,
-      keyPrefix: hasKey ? process.env.ANTHROPIC_API_KEY.slice(0,20)+'...' : 'MISSING'
-    });
-  }
-
-  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  if (req.method === 'GET') return res.status(200).json({ status: 'ok', hasKey: !!process.env.ANTHROPIC_API_KEY });
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    console.error('ANTHROPIC_API_KEY not set');
-    return res.status(500).json({ error: 'API key non configurata sul server' });
-  }
+  if (!apiKey) return res.status(500).json({ error: 'API key mancante' });
 
   const { messages } = req.body || {};
-  if (!messages || !Array.isArray(messages)) {
-    return res.status(400).json({ error: 'messages array richiesto' });
-  }
+  if (!messages || !Array.isArray(messages) || !messages.length)
+    return res.status(400).json({ error: 'messages richiesto' });
 
-  const SYSTEM = `Sei l'assistente AI ufficiale di PropHedge — software italiano per trader di prop firm sviluppato da VisionTrading.
+  const SYSTEM = `Sei l'assistente AI di PropHedge, software per trader di prop firm di VisionTrading.
+Rispondi SEMPRE in italiano, in modo pratico e dettagliato con istruzioni passo per passo.
 
-FUNZIONALITÀ:
-- Dashboard: sfide attive, P&L reale, lotti calcolati, scenari A e B
-- Nuova Sfida: parametri prop firm → calcola lotti hedge ottimali
-- Hedge: Prop+Personale o Prop+Prop. Scenario A = prop chiusa. Scenario B = payout
+FUNZIONI DEL SOFTWARE:
+- Dashboard: sfide attive, P&L reale, lotti, scenario A (prop chiusa) e B (payout)
+- Nuova Sfida: inserisci dimensione, DD%, giorni, payout% → calcola lotti hedge
 - Journal: trade dal momento connessione, aperti/chiusi, P&L, equity curve
-- MT4/MT5: EA da EA Download. Parametri: Email + API Key + Journal ID
-- cTrader: Token manuale dal Sandbox Spotware
-- Mercati Live: Forex, Crypto (Binance WebSocket), Indici/Materie prime
-- Calendario: ForexFactory, alert notizie, countdown
-- Supporto: WhatsApp +39 333 855 3199, Email visiontradingprop@gmail.com
+- MT4/MT5: scarica EA da tab "EA Download", inserisci Email + API Key + Journal ID
+- cTrader: vai su connect.spotware.com/apps/23386/playground, ottieni token, incollalo nel dialog Connetti
+- Mercati Live: Forex ogni 5s, Crypto tick (Binance), Indici ogni 30s
+- Calendario: ForexFactory, alert notizie rosse, countdown
+- Supporto umano: WhatsApp +39 333 855 3199, Email visiontradingprop@gmail.com
 
-REGOLE:
-- Rispondi SEMPRE in italiano
-- Sii pratico, dai istruzioni passo per passo con numeri
-- Se l'utente chiede supporto umano scrivi esattamente: ###HUMAN_SUPPORT###`;
+Se l'utente chiede supporto umano rispondi SOLO: ###HUMAN_SUPPORT###`;
 
   try {
-    console.log('Calling Anthropic API...');
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -56,26 +38,24 @@ REGOLE:
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 600,
+        model: 'claude-opus-4-6',
+        max_tokens: 800,
         system: SYSTEM,
         messages: messages.slice(-10)
       })
     });
 
     const data = await r.json();
-    console.log('Anthropic response status:', r.status);
+    console.log('Anthropic status:', r.status, JSON.stringify(data).slice(0, 200));
 
-    if (!r.ok) {
-      console.error('Anthropic error:', JSON.stringify(data));
-      return res.status(r.status).json({ error: data.error?.message || 'Errore Anthropic API' });
-    }
+    if (!r.ok) return res.status(r.status).json({ error: data.error?.message || 'Errore API' });
 
-    const reply = data.content?.[0]?.text || 'Non ho capito, ripeti.';
+    const reply = data.content?.[0]?.text;
+    if (!reply) return res.status(500).json({ error: 'Risposta vuota da API' });
+
     return res.status(200).json({ reply });
-
   } catch (err) {
-    console.error('ai-support exception:', err.message);
-    return res.status(500).json({ error: 'Errore server: ' + err.message });
+    console.error('ai-support error:', err.message);
+    return res.status(500).json({ error: err.message });
   }
 };
