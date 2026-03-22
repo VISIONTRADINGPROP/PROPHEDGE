@@ -2226,15 +2226,15 @@ function render(){
 
 // 9 operatori con nomi, colori e iniziali
 var OPERATORS = [
-  {name:'Micol',     initials:'MI', color:'#e056a0', bg:'rgba(224,86,160,.15)'},
-  {name:'Lorenzo',   initials:'LO', color:'#5b7ce6', bg:'rgba(91,124,230,.15)'},
-  {name:'Valentina', initials:'VA', color:'#e08a30', bg:'rgba(224,138,48,.15)'},
-  {name:'Davide',    initials:'DA', color:'#30c48a', bg:'rgba(48,196,138,.15)'},
-  {name:'Chiara',    initials:'CH', color:'#9b5de5', bg:'rgba(155,93,229,.15)'},
-  {name:'Marco',     initials:'MA', color:'#00b8a4', bg:'rgba(0,184,164,.15)'},
-  {name:'Federica',  initials:'FE', color:'#e05050', bg:'rgba(224,80,80,.15)'},
-  {name:'Simone',    initials:'SI', color:'#4fc3f7', bg:'rgba(79,195,247,.15)'},
-  {name:'Alessia',   initials:'AL', color:'#ffb347', bg:'rgba(255,179,71,.15)'}
+  {name:'Micol',     initials:'MI', color:'#e056a0', bg:'rgba(224,86,160,.15)', photo:'https://ui-avatars.com/api/?name=Micol&background=e056a0&color=fff&size=128&rounded=true&bold=true'},
+  {name:'Lorenzo',   initials:'LO', color:'#5b7ce6', bg:'rgba(91,124,230,.15)', photo:'https://ui-avatars.com/api/?name=Lorenzo&background=5b7ce6&color=fff&size=128&rounded=true&bold=true'},
+  {name:'Valentina', initials:'VA', color:'#e08a30', bg:'rgba(224,138,48,.15)', photo:'https://ui-avatars.com/api/?name=Valentina&background=e08a30&color=fff&size=128&rounded=true&bold=true'},
+  {name:'Davide',    initials:'DA', color:'#30c48a', bg:'rgba(48,196,138,.15)', photo:'https://ui-avatars.com/api/?name=Davide&background=30c48a&color=fff&size=128&rounded=true&bold=true'},
+  {name:'Chiara',    initials:'CH', color:'#9b5de5', bg:'rgba(155,93,229,.15)', photo:'https://ui-avatars.com/api/?name=Chiara&background=9b5de5&color=fff&size=128&rounded=true&bold=true'},
+  {name:'Marco',     initials:'MA', color:'#00b8a4', bg:'rgba(0,184,164,.15)',  photo:'https://ui-avatars.com/api/?name=Marco&background=00b8a4&color=fff&size=128&rounded=true&bold=true'},
+  {name:'Federica',  initials:'FE', color:'#e05050', bg:'rgba(224,80,80,.15)',  photo:'https://ui-avatars.com/api/?name=Federica&background=e05050&color=fff&size=128&rounded=true&bold=true'},
+  {name:'Simone',    initials:'SI', color:'#4fc3f7', bg:'rgba(79,195,247,.15)', photo:'https://ui-avatars.com/api/?name=Simone&background=4fc3f7&color=000&size=128&rounded=true&bold=true'},
+  {name:'Alessia',   initials:'AL', color:'#ffb347', bg:'rgba(255,179,71,.15)', photo:'https://ui-avatars.com/api/?name=Alessia&background=ffb347&color=000&size=128&rounded=true&bold=true'}
 ];
 
 var _aiOpen      = false;
@@ -2259,12 +2259,13 @@ function renderOperatorsBar(){
   for(var i=0;i<3;i++) group.push(OPERATORS[(_opOffset+i)%OPERATORS.length]);
   
   bar.innerHTML = group.map(function(op){
-    return '<div style="display:flex;align-items:center;gap:6px">'
-      +'<div style="width:32px;height:32px;border-radius:50%;background:'+op.bg+';border:2px solid '+op.color+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+op.color+';font-family:var(--fd);flex-shrink:0;position:relative">'
-      +op.initials
-      +'<span style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:#00d68f;border:1.5px solid #0a0c18;box-shadow:0 0 4px #00d68f"></span>'
+    return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px">'
+      +'<div style="position:relative;width:36px;height:36px;flex-shrink:0">'
+      +'<img src="'+op.photo+'" style="width:36px;height:36px;border-radius:50%;border:2px solid '+op.color+';object-fit:cover" onerror="this.style.display=&quot;none&quot;;this.nextSibling.style.display=&quot;flex&quot;">'
+      +'<div style="display:none;width:36px;height:36px;border-radius:50%;background:'+op.bg+';border:2px solid '+op.color+';align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+op.color+';font-family:var(--fd)">'+op.initials+'</div>'
+      +'<span style="position:absolute;bottom:0;right:0;width:10px;height:10px;border-radius:50%;background:#00d68f;border:1.5px solid #0a0c18;box-shadow:0 0 5px #00d68f"></span>'
       +'</div>'
-      +'<div style="font-size:10px;color:#c8d0e8;font-weight:600">'+op.name+'</div>'
+      +'<div style="font-size:9px;color:#c8d0e8;font-weight:600;text-align:center">'+op.name+'</div>'
       +'</div>';
   }).join('');
 }
@@ -2374,10 +2375,14 @@ function switchToHumanSupport(){
   var opAv = document.getElementById('aiOpAvatar');
   var opNm = document.getElementById('aiOpName');
   if(opAv){
-    opAv.textContent       = _activeOp.initials;
-    opAv.style.background  = _activeOp.bg;
+    // Mostra foto reale nell'header
+    opAv.style.background  = 'transparent';
     opAv.style.border      = '2px solid '+_activeOp.color;
-    opAv.style.color       = _activeOp.color;
+    opAv.style.padding     = '0';
+    opAv.style.overflow    = 'hidden';
+    opAv.innerHTML = '<img src="'+_activeOp.photo+'" style="width:100%;height:100%;border-radius:50%;object-fit:cover">'
+      +'<span style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:'+_activeOp.color+'">'+_activeOp.initials+'</span>';
+    opAv.style.position = 'relative';
   }
   if(opNm) opNm.textContent = _activeOp.name+' — PropHedge';
 
@@ -2399,6 +2404,8 @@ function startSupportPolling(){
   _pollTimer = setInterval(pollSupportMessages, 5000);
 }
 
+var _firstReplyReceived = false;
+
 async function pollSupportMessages(){
   if(!_ticketId) return;
   try{
@@ -2408,11 +2415,33 @@ async function pollSupportMessages(){
     var d = await r.json();
     if(d.messages && d.messages.length>0){
       d.messages.forEach(function(m){
+        // Prima risposta: mostra "Sei in linea con [operatore]"
+        if(!_firstReplyReceived && _activeOp){
+          _firstReplyReceived = true;
+          // Aggiorna header con pallino verde pulsante
+          var opStatus = document.getElementById('aiOpStatus');
+          if(opStatus) opStatus.innerHTML = '&#128994; Sei in linea con <strong>'+_activeOp.name+'</strong>';
+          // Messaggio di stato nella chat
+          showOnlineStatus(_activeOp);
+        }
         aiFloatAddMsg('support', m.content);
         _lastMsgAt = m.created_at;
       });
     }
   }catch(e){}
+}
+
+function showOnlineStatus(op){
+  var msgs = document.getElementById('aiFloatMsgs');
+  if(!msgs) return;
+  var div = document.createElement('div');
+  div.style.cssText = 'text-align:center;padding:6px 12px;margin:4px 0';
+  div.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(0,214,143,.1);border:1px solid rgba(0,214,143,.25);border-radius:20px;padding:4px 12px;font-size:11px;color:#00d68f;font-weight:600">'
+    +'<span style="width:8px;height:8px;border-radius:50%;background:#00d68f;box-shadow:0 0 6px #00d68f;animation:pu 1s infinite"></span>'
+    +'Sei in linea con '+op.name
+    +'</span>';
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
 }
 
 // ── Invia messaggio al supporto ───────────────────────────────────
