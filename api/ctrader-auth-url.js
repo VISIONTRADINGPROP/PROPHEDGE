@@ -1,6 +1,6 @@
 // api/ctrader-auth-url.js
-// Genera il link OAuth cTrader usando le credenziali del server
-// Il cliente non vede mai Client ID e Client Secret
+// Genera l'URL di autorizzazione OAuth cTrader
+// URL corretto: id.ctrader.com (non connect.ctrader.com)
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -8,24 +8,25 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
 
-  const { env, redirect } = req.query;
-  const clientId = process.env.CTRADER_CLIENT_ID;
+  const clientId    = process.env.CTRADER_CLIENT_ID;
+  const redirectUri = req.query.redirect || (process.env.APP_URL + '/ctrader-callback');
+  const env         = req.query.env || 'live';
 
   if (!clientId) {
-    return res.status(500).json({ error: 'Credenziali cTrader non configurate sul server' });
+    return res.status(500).json({ error: 'CTRADER_CLIENT_ID non configurato' });
   }
 
-  const authBase = env === 'live'
-    ? 'https://connect.ctrader.com/oauth/authorize'
-    : 'https://id.ctrader.com/oauth2/auth';
+  // Scopes richiesti
+  const scope = 'trading';
 
-  const params = new URLSearchParams({
-    response_type: 'code',
-    client_id:     clientId,
-    redirect_uri:  redirect || (process.env.APP_URL + '/ctrader-callback'),
-    scope:         'trading',
-    state:         'prophedge'
-  });
+  // URL corretto cTrader Open API OAuth2
+  // NOTA: usare id.ctrader.com, NON connect.ctrader.com
+  const authUrl = 'https://id.ctrader.com/oauth2/auth'
+    + '?response_type=code'
+    + '&client_id='    + encodeURIComponent(clientId)
+    + '&redirect_uri=' + encodeURIComponent(redirectUri)
+    + '&scope='        + encodeURIComponent(scope)
+    + '&state=prophedge';
 
-  res.status(200).json({ url: authBase + '?' + params.toString() });
+  return res.status(200).json({ url: authUrl });
 };
