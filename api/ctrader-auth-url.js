@@ -20,8 +20,7 @@ module.exports = async function handler(req, res) {
   const scope = 'trading';
 
   // URL corretto cTrader Open API OAuth2
-  // NOTA: usare id.ctrader.com, NON connect.ctrader.com
-  const authUrl = 'https://id.ctrader.com/oauth2/auth'
+  const authUrl = 'https://id.ctrader.com/oauth/authorize'
     + '?response_type=code'
     + '&client_id='    + encodeURIComponent(clientId)
     + '&redirect_uri=' + encodeURIComponent(redirectUri)
