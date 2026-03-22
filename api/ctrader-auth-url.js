@@ -19,8 +19,9 @@ module.exports = async function handler(req, res) {
   // Scopes richiesti
   const scope = 'trading';
 
-  // URL corretto cTrader Open API OAuth2
-  const authUrl = 'https://id.ctrader.com/oauth/authorize'
+  // URL CORRETTO cTrader Open API OAuth2
+  // Fonte: documentazione ufficiale OpenApiPy + connect.spotware.com
+  const authUrl = 'https://connect.spotware.com/apps/auth'
     + '?response_type=code'
     + '&client_id='    + encodeURIComponent(clientId)
     + '&redirect_uri=' + encodeURIComponent(redirectUri)
