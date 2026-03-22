@@ -10,50 +10,48 @@ module.exports = async function handler(req, res) {
   const CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
 
   if (!BOT_TOKEN || !CHAT_ID) {
-    console.error('Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID');
-    return res.status(500).json({ error: 'Telegram non configurato' });
+    return res.status(500).json({ error: 'Env vars mancanti: TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID' });
   }
 
   const { ticket_id, message, user_email, user_name, operator } = req.body || {};
   if (!message || !ticket_id) return res.status(400).json({ error: 'Dati mancanti' });
 
-  // Formatta il messaggio per Telegram
-  const opLine = operator ? `👩‍💼 *Operatore assegnato:* ${operator}` : '';
-  const text = [
-    '🆘 *NUOVO MESSAGGIO SUPPORTO*',
+  // Testo SENZA Markdown per evitare errori di parsing con caratteri speciali
+  const lines = [
+    '🆘 NUOVO MESSAGGIO SUPPORTO',
     '',
-    `👤 *Cliente:* ${user_name || 'Utente'} ${user_email ? '(' + user_email + ')' : ''}`,
-    opLine,
-    `💬 *Messaggio:*`,
+    'Cliente: ' + (user_name || 'Utente') + (user_email ? ' (' + user_email + ')' : ''),
+    operator ? 'Operatore: ' + operator : '',
+    '',
+    'Messaggio:',
     message,
     '',
-    `🎫 TICKET: ${ticket_id}`,
+    'TICKET: ' + ticket_id,
     '',
-    '_Rispondi a questo messaggio per rispondere al cliente_'
-  ].filter(Boolean).join('\n');
+    'Rispondi a questo messaggio per rispondere al cliente'
+  ].filter(l => l !== undefined && !(l === '' && lines === undefined));
+
+  const text = lines.join('\n');
 
   try {
     const r = await fetch(
-      `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`,
+      'https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chat_id:    CHAT_ID,
-          text:       text,
-          parse_mode: 'Markdown'
+          chat_id: String(CHAT_ID).trim(),
+          text:    text
+          // NO parse_mode - testo semplice, nessun rischio di errori
         })
       }
     );
     const data = await r.json();
-    console.log('Telegram response:', JSON.stringify(data));
     if (!data.ok) {
-      console.error('Telegram error:', data.description);
-      return res.status(500).json({ error: data.description });
+      return res.status(500).json({ error: data.description, chat_id_used: String(CHAT_ID).trim() });
     }
-    return res.status(200).json({ ok: true, message_id: data.result.message_id });
+    return res.status(200).json({ ok: true });
   } catch(err) {
-    console.error('support-send fetch error:', err.message);
     return res.status(500).json({ error: err.message });
   }
 };
