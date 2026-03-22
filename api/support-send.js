@@ -1,6 +1,4 @@
 // /api/support-send.js
-// Cliente invia messaggio → arriva su Telegram come notifica
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -12,24 +10,27 @@ module.exports = async function handler(req, res) {
   const CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
 
   if (!BOT_TOKEN || !CHAT_ID) {
+    console.error('Missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID');
     return res.status(500).json({ error: 'Telegram non configurato' });
   }
 
-  const { ticket_id, message, user_email, user_name } = req.body || {};
+  const { ticket_id, message, user_email, user_name, operator } = req.body || {};
   if (!message || !ticket_id) return res.status(400).json({ error: 'Dati mancanti' });
 
   // Formatta il messaggio per Telegram
+  const opLine = operator ? `👩‍💼 *Operatore assegnato:* ${operator}` : '';
   const text = [
     '🆘 *NUOVO MESSAGGIO SUPPORTO*',
     '',
-    `👤 *Cliente:* ${user_name || 'Utente'} ${user_email ? '('+user_email+')' : ''}`,
+    `👤 *Cliente:* ${user_name || 'Utente'} ${user_email ? '(' + user_email + ')' : ''}`,
+    opLine,
     `💬 *Messaggio:*`,
     message,
     '',
     `🎫 TICKET: ${ticket_id}`,
     '',
     '_Rispondi a questo messaggio per rispondere al cliente_'
-  ].join('\n');
+  ].filter(Boolean).join('\n');
 
   try {
     const r = await fetch(
@@ -45,9 +46,14 @@ module.exports = async function handler(req, res) {
       }
     );
     const data = await r.json();
-    if (!data.ok) return res.status(500).json({ error: data.description });
+    console.log('Telegram response:', JSON.stringify(data));
+    if (!data.ok) {
+      console.error('Telegram error:', data.description);
+      return res.status(500).json({ error: data.description });
+    }
     return res.status(200).json({ ok: true, message_id: data.result.message_id });
   } catch(err) {
+    console.error('support-send fetch error:', err.message);
     return res.status(500).json({ error: err.message });
   }
 };
