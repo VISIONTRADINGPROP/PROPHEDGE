@@ -898,6 +898,7 @@ function doForgotSubmit(){
   <div class="tab" onclick="goTab('calendar',this)" id="tabCal">📅 Calendario</div>
   <div class="tab" onclick="goTab('stats',this)" id="tabStats">📊 Statistiche</div>
   <div class="tab" onclick="goTab('guide',this)" id="tabGuide">Guida</div>
+  <div class="tab" onclick="goTab('support',this)" id="tabSupport">💬 Supporto</div>
   <div class="tab" onclick="toggleAccDrop(event)" id="tabAccount" style="margin-left:auto;display:flex;align-items:center;gap:7px;padding:6px 12px;position:relative">
     <span id="tabAccountFlag" style="line-height:1;flex-shrink:0"></span>
     <div id="tabAccountPhoto" style="width:26px;height:26px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--t3)">
@@ -3096,165 +3097,80 @@ function jrnlConnPlatChange() {
 
   if (plat==='ctrader') {
     fields.innerHTML = ''
-
-      // ── GUIDA VISIVA cTrader ────────────────────────────────────
-      + '<div style="margin-top:12px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden">'
-
-      // Header guida
-      + '<div style="background:linear-gradient(135deg,rgba(0,229,204,.15),rgba(155,93,229,.1));padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">'
-      + '<span style="font-size:20px">📋</span>'
-      + '<div><div style="font-size:12px;font-weight:700;font-family:var(--fh);letter-spacing:.06em">GUIDA CONNESSIONE cTRADER</div>'
-      + '<div style="font-size:10px;color:var(--t3)">Segui i passi per collegare il tuo conto</div></div>'
-      + '</div>'
-
-      // Steps visivi
-      + '<div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">'
-
-      // Step 1
-      + '<div style="display:flex;gap:10px;align-items:flex-start">'
-      + '<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--teal2),var(--violet2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;font-family:var(--fd)">1</div>'
-      + '<div style="flex:1">'
-      + '<div style="font-size:12px;font-weight:600;color:var(--t);margin-bottom:2px">Apri il Sandbox cTrader</div>'
-      + '<div style="font-size:11px;color:var(--t3);line-height:1.5">Vai su <a href="https://connect.spotware.com/apps/23386/playground" target="_blank" style="color:var(--teal);text-decoration:none;font-weight:600">connect.spotware.com → Sandbox ↗</a></div>'
-      + '<div style="margin-top:6px;background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:6px 10px;font-size:10px;color:var(--t2);font-family:var(--fd)">'
-      + '&#128279; connect.spotware.com/apps/23386/playground</div>'
-      + '</div></div>'
-
-      // Freccia
-      + '<div style="display:flex;justify-content:flex-start;padding-left:11px"><div style="width:2px;height:12px;background:var(--border2);border-radius:1px"></div></div>'
-
-      // Step 2
-      + '<div style="display:flex;gap:10px;align-items:flex-start">'
-      + '<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--teal2),var(--violet2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;font-family:var(--fd)">2</div>'
-      + '<div style="flex:1">'
-      + '<div style="font-size:12px;font-weight:600;color:var(--t);margin-bottom:2px">Scegli le autorizzazioni</div>'
-      + '<div style="font-size:11px;color:var(--t3);line-height:1.5">Seleziona <strong style="color:var(--t2)">&#34;Informazioni sull\'account e sulle operazioni di trading&#34;</strong></div>'
-      + '<div style="margin-top:6px;display:flex;gap:6px;align-items:center;background:rgba(0,214,143,.06);border:1px solid rgba(0,214,143,.2);border-radius:6px;padding:5px 8px">'
-      + '<span style="font-size:12px">&#9989;</span>'
-      + '<span style="font-size:10px;color:var(--t2)">Informazioni sull\'account e sulle operazioni di trading</span>'
-      + '</div>'
-      + '</div></div>'
-
-      // Freccia
-      + '<div style="display:flex;justify-content:flex-start;padding-left:11px"><div style="width:2px;height:12px;background:var(--border2);border-radius:1px"></div></div>'
-
-      // Step 3
-      + '<div style="display:flex;gap:10px;align-items:flex-start">'
-      + '<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--teal2),var(--violet2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;font-family:var(--fd)">3</div>'
-      + '<div style="flex:1">'
-      + '<div style="font-size:12px;font-weight:600;color:var(--t);margin-bottom:2px">Clicca "Ottieni il token"</div>'
-      + '<div style="font-size:11px;color:var(--t3);line-height:1.5">Premi il pulsante blu in fondo alla pagina. Apparirà il tuo Access Token.</div>'
-      + '<div style="margin-top:6px;display:inline-flex;align-items:center;gap:6px;background:#1565c0;border-radius:6px;padding:5px 12px">'
-      + '<span style="font-size:11px;color:#fff;font-weight:700">Ottieni il token</span>'
-      + '</div>'
-      + '</div></div>'
-
-      // Freccia
-      + '<div style="display:flex;justify-content:flex-start;padding-left:11px"><div style="width:2px;height:12px;background:var(--border2);border-radius:1px"></div></div>'
-
-      // Step 4
-      + '<div style="display:flex;gap:10px;align-items:flex-start">'
-      + '<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--teal2),var(--violet2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;font-family:var(--fd)">4</div>'
-      + '<div style="flex:1">'
-      + '<div style="font-size:12px;font-weight:600;color:var(--t);margin-bottom:2px">Copia il token e incollalo qui sotto</div>'
-      + '<div style="font-size:11px;color:var(--t3);line-height:1.5">Seleziona <strong style="color:var(--teal)">Token manuale</strong> nel menu e incolla il token nel campo.</div>'
-      + '</div></div>'
-
-      + '</div></div>'
-
-      // ── Selezione metodo ───────────────────────────────────────
-      + '<div class="f" style="margin-top:14px"><label>Metodo di connessione</label>'
+      // ── CLEAN cTrader form ─────────────────────────────────────
+      + '<div class="f" style="margin-top:10px"><label>Metodo</label>'
       + '<select id="jConn-ct-method" onchange="jrnlCtraderMethodChange()" style="background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fd);width:100%">'
-      + '<option value="manual">&#128274; Token manuale (usa il Sandbox)</option>'
-      + '<option value="oauth">&#9729; OAuth automatico (disponibile dopo approvazione)</option>'
+      + '<option value="manual">Token manuale (disponibile ora)</option>'
+      + '<option value="oauth">OAuth cTrader (in attesa approvazione)</option>'
       + '</select></div>'
 
-      // ── Sezione Token Manuale (default) ───────────────────────
+      // Token manuale
       + '<div id="jConn-ct-manual">'
-      + '<div class="f" style="margin-top:10px"><label>Access Token <span style="color:var(--teal);font-size:9px">— dal Sandbox Spotware</span></label>'
-      + '<div style="display:flex;gap:6px">'
-      + '<input type="text" id="jConn-ct-token" value="'+(conn.token||'')+'" placeholder="Incolla qui l\'Access Token..." '
-      + 'style="flex:1;font-family:var(--fd);font-size:10px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
-      + '</div></div>'
-      + '<div class="f"><label>Account ID cTrader <span style="color:var(--t3);font-size:9px">— numero del conto</span></label>'
-      + '<input type="text" id="jConn-ct-accountid" value="'+(conn.accountId||'')+'" placeholder="Es. 12345678" '
-      + 'style="font-family:var(--fd);font-size:12px;background:var(--bg)">'
-      + '<div style="font-size:9px;color:var(--t3);margin-top:3px">&#8505; Trovi l\'Account ID nel Sandbox cTrader dopo aver ottenuto il token</div>'
-      + '</div>'
+      + '<div class="f" style="margin-top:10px"><label>Access Token</label>'
+      + '<input type="text" id="jConn-ct-token" value="'+(conn.token||'')+'" placeholder="Incolla il tuo Access Token..." style="font-family:var(--fd);font-size:10px;background:var(--bg);border-color:var(--teal)" onclick="this.select()"></div>'
+      + '<div class="f"><label>Account ID</label>'
+      + '<input type="text" id="jConn-ct-accountid" value="'+(conn.accountId||'')+'" placeholder="Es. 12345678" style="font-family:var(--fd);font-size:12px;background:var(--bg)"></div>'
       + '</div>'
 
-      // ── Sezione OAuth (nascosta finché non approvata) ──────────
+      // OAuth (nascosta)
       + '<div id="jConn-ct-oauth" style="display:none">'
-      + '<div class="note note-teal" style="margin-top:10px;font-size:11px;line-height:1.7">'
-      + '&#128274; Premi Salva — verrai reindirizzato su cTrader per autorizzare l\'accesso al tuo conto.<br>'
-      + '<span style="color:var(--amber)">&#9888; L\'app è in attesa approvazione Spotware (max 3 giorni).</span>'
-      + '</div></div>'
+      + '<div class="note note-teal" style="margin-top:10px;font-size:11px">Premi Salva — si apre un popup per autorizzare il tuo conto cTrader.<br><span style="color:var(--amber)">&#9888; App in attesa approvazione Spotware.</span></div>'
+      + '</div>'
 
-      // ── Campi comuni ───────────────────────────────────────────
       + '<div class="f" style="margin-top:10px"><label>Ambiente</label>'
       + '<select id="jConn-env" style="background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fd);width:100%">'
       + '<option value="live"'+(conn.env==='live'?' selected':'')+'>Live (Reale)</option>'
       + '<option value="demo"'+(conn.env==='demo'?' selected':'')+'>Demo</option>'
       + '</select></div>'
       + '<div class="f"><label>Nome conto</label>'
-      + '<input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. IC Markets Live cTrader"></div>';
+      + '<input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. IC Markets Live"></div>'
+
+      // Guida button
+      + '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">'
+      + '<button onclick="openGuide(\'ctrader\')" type="button" style="width:100%;padding:9px;border-radius:8px;border:1px solid rgba(0,229,204,.3);background:rgba(0,229,204,.06);color:var(--teal);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--fh);letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:6px">'
+      + '&#127916; GUIDA ANIMATA — Come collegare cTrader passo per passo</button>'
+      + '</div>';
+
   } else if (plat==='mt4'||plat==='mt5') {
     var jrnlId = (jrnl.sessions[_jConnIdx]||{id:'—'}).id;
     var apiKey = 'PH_2026_AXI_SECRET_KEY_VISIONTRADING';
 
     fields.innerHTML = ''
-      // ── Istruzioni ─────────────────────────────────────────────
       + '<div class="note note-teal" style="margin-top:10px;font-size:11px;line-height:1.8">'
-      + '<strong>Come collegare MT4/MT5:</strong><br>'
-      + '1. Scarica l\'EA dalla tab <strong>⬇ EA Download</strong><br>'
-      + '2. Installa e trascina l\'EA sul grafico<br>'
-      + '3. Inserisci <strong>Email</strong>, <strong>API Key</strong> e <strong>Journal ID</strong> nei parametri<br>'
-      + '4. I trade appariranno automaticamente ogni 30 secondi'
-      + '</div>'
+      + '<strong>Parametri da inserire nell&#39;EA:</strong></div>'
 
-      // ── Email ──────────────────────────────────────────────────
-      + '<div class="f" style="margin-top:12px">'
-      + '<label>La tua Email PropHedge <span style="color:var(--teal);font-size:9px;text-transform:none">— inseriscila nell\'EA</span></label>'
+      + '<div class="f" style="margin-top:10px"><label>La tua Email PropHedge</label>'
       + '<div style="display:flex;gap:6px">'
-      + '<input type="text" id="jConn-email" value="' + (accountData.email||'') + '" readonly '
-      + 'style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
-      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-email\').value).then(function(){var b=document.getElementById(\'jConn-copyemail\');b.textContent=\'✓\';setTimeout(function(){b.textContent=\'Copia\'},1500)})" '
-      + 'id="jConn-copyemail" class="btn-g" style="padding:5px 12px;font-size:10px">Copia</button>'
+      + '<input type="text" id="jConn-email" value="'+(accountData.email||'')+'" readonly style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
+      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-email\').value).then(function(){var b=document.getElementById(\'jConn-copyemail\');b.textContent=\'✓\';setTimeout(function(){b.textContent=\'Copia\'},1500)})" id="jConn-copyemail" class="btn-g" style="padding:5px 12px;font-size:10px">Copia</button>'
       + '</div></div>'
 
-      // ── API Key ─────────────────────────────────────────────────
-      + '<div class="f">'
-      + '<label>API Key <span style="color:var(--teal);font-size:9px;text-transform:none">— inseriscila nell\'EA (non scade mai)</span></label>'
+      + '<div class="f"><label>API Key</label>'
       + '<div style="display:flex;gap:6px">'
-      + '<input type="text" id="jConn-apikey" value="' + apiKey + '" readonly '
-      + 'style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
-      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-apikey\').value).then(function(){var b=document.getElementById(\'jConn-copykey\');b.textContent=\'✓\';setTimeout(function(){b.textContent=\'Copia\'},1500)})" '
-      + 'id="jConn-copykey" class="btn-g" style="padding:5px 12px;font-size:10px">Copia</button>'
-      + '</div>'
-      + '<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">✅ Questa chiave non scade — puoi usarla sempre</div>'
-      + '</div>'
-
-      // ── Journal ID ─────────────────────────────────────────────
-      + '<div class="f">'
-      + '<label>Journal ID <span style="color:var(--teal);font-size:9px;text-transform:none">— inseriscilo nell\'EA</span></label>'
-      + '<div style="display:flex;gap:6px">'
-      + '<input type="text" id="jConn-jrnlid" value="' + jrnlId + '" readonly '
-      + 'style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
-      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-jrnlid\').value).then(function(){var b=document.getElementById(\'jConn-copyjid\');b.textContent=\'✓\';setTimeout(function(){b.textContent=\'Copia\'},1500)})" '
-      + 'id="jConn-copyjid" class="btn-g" style="padding:5px 12px;font-size:10px">Copia</button>'
+      + '<input type="text" id="jConn-apikey" value="'+apiKey+'" readonly style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
+      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-apikey\').value).then(function(){var b=document.getElementById(\'jConn-copykey\');b.textContent=\'✓\';setTimeout(function(){b.textContent=\'Copia\'},1500)})" id="jConn-copykey" class="btn-g" style="padding:5px 12px;font-size:10px">Copia</button>'
       + '</div></div>'
 
-      // ── Tipo conto ─────────────────────────────────────────────
-      + '<div class="f"><label>Tipo conto nell\'EA</label>'
+      + '<div class="f"><label>Journal ID</label>'
+      + '<div style="display:flex;gap:6px">'
+      + '<input type="text" id="jConn-jrnlid" value="'+jrnlId+'" readonly style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
+      + '<button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-jrnlid\').value).then(function(){var b=document.getElementById(\'jConn-copyjid\');b.textContent=\'✓\';setTimeout(function(){b.textContent=\'Copia\'},1500)})" id="jConn-copyjid" class="btn-g" style="padding:5px 12px;font-size:10px">Copia</button>'
+      + '</div></div>'
+
+      + '<div class="f"><label>Tipo conto nell&#39;EA</label>'
       + '<select id="jConn-actype" style="background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fd);width:100%">'
       + '<option value="prop"'+(_jConnSide==='prop'?' selected':'')+'>prop — conto prop firm</option>'
       + '<option value="broker"'+(_jConnSide==='broker'?' selected':'')+'>broker — conto personale/hedge</option>'
       + '</select></div>'
 
-      // ── Nome conto ─────────────────────────────────────────────
       + '<div class="f"><label>Nome conto</label>'
-      + '<input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. FTMO MT5 $100k"></div>';
+      + '<input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. FTMO MT5 $100k"></div>'
 
+      // Guida button
+      + '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">'
+      + '<button onclick="openGuide(\'mt\')" type="button" style="width:100%;padding:9px;border-radius:8px;border:1px solid rgba(155,93,229,.3);background:rgba(155,93,229,.06);color:var(--violet);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--fh);letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:6px">'
+      + '&#127916; GUIDA ANIMATA — Installazione EA MT4/MT5 passo per passo</button>'
+      + '</div>';
     } else if (plat==='tradovate') {
     fields.innerHTML = ''
       + '<div class="note note-teal" style="margin-top:10px;font-size:11px;line-height:1.7">'
@@ -4273,6 +4189,432 @@ function renderCalendar(){
 
 // ── Fine Calendario ────────────────────────────────────────────
 
+
+// ═══════════════════════════════════════════════════════
+// GUIDE ANIMATE — cTrader e MT4/MT5
+// ═══════════════════════════════════════════════════════
+
+var _guideStep = 0;
+var _guideType = '';
+var _guideTimer = null;
+
+var GUIDES = {
+  ctrader: {
+    title: 'Collegare cTrader a PropHedge',
+    color: '#00e5cc',
+    steps: [
+      {
+        title: 'Apri il Sandbox cTrader',
+        desc:  'Vai su connect.spotware.com → Applicazioni → VisionTrading → Sandbox',
+        url:   'https://connect.spotware.com/apps/23386/playground',
+        screen: 'ct_sandbox'
+      },
+      {
+        title: 'Seleziona le autorizzazioni',
+        desc:  'Spunta "Informazioni sull&#39;account e sulle operazioni di trading" poi clicca "Ottieni il token"',
+        screen: 'ct_scope'
+      },
+      {
+        title: 'Copia l\'Access Token',
+        desc:  'Apparirà una lunga stringa di testo — selezionala tutta e copiala (Ctrl+C)',
+        screen: 'ct_token'
+      },
+      {
+        title: 'Torna su PropHedge',
+        desc:  'Nel dialog "Connetti" → seleziona "Token manuale" → incolla il token → inserisci Account ID → Salva',
+        screen: 'ct_paste'
+      },
+      {
+        title: 'Connessione completata!',
+        desc:  'I tuoi trade cTrader appariranno automaticamente nel Journal dalla data di connessione.',
+        screen: 'ct_done'
+      }
+    ]
+  },
+  mt: {
+    title: 'Installare EA MT4/MT5 su PropHedge',
+    color: '#9b5de5',
+    steps: [
+      {
+        title: 'Scarica l\'EA',
+        desc:  'Vai su "EA Download" nel menu → scarica PropHedge_EA.mq4 (per MT4) o .mq5 (per MT5)',
+        screen: 'mt_download'
+      },
+      {
+        title: 'Apri la cartella Experts',
+        desc:  'In MT4/MT5: File → Apri cartella dati → MQL4/Experts (o MQL5/Experts) → copia il file EA qui',
+        screen: 'mt_folder'
+      },
+      {
+        title: 'Abilita WebRequest',
+        desc:  'MT4/MT5 → Strumenti → Opzioni → Expert Advisor → Spunta "Consenti WebRequest" → Aggiungi: https://prophedge-iota.vercel.app',
+        screen: 'mt_webreq'
+      },
+      {
+        title: 'Trascina EA sul grafico',
+        desc:  'Riavvia MT4/MT5 → Nel Navigator trovi PropHedge_EA → Trascinalo su un grafico qualsiasi (es. EURUSD M1)',
+        screen: 'mt_drag'
+      },
+      {
+        title: 'Inserisci Email, API Key e Journal ID',
+        desc:  'Nella finestra parametri EA: copia Email, API Key e Journal ID dal dialog "Connetti" su PropHedge',
+        screen: 'mt_params'
+      },
+      {
+        title: 'Connessione completata!',
+        desc:  'L\'EA si sincronizza ogni 30 secondi. I trade appariranno nel Journal automaticamente.',
+        screen: 'mt_done'
+      }
+    ]
+  }
+};
+
+// Schermate animate SVG per ogni step
+function guideScreen(type, screen, color) {
+  var bg   = 'rgba(10,12,22,.95)';
+  var c    = color || '#00e5cc';
+  var cv   = color === '#9b5de5' ? '#9b5de5' : '#00e5cc';
+
+  var screens = {
+    // cTrader screens
+    ct_sandbox: '<rect width="360" height="200" fill="#0a0c16" rx="8"/>'
+      +'<rect x="0" y="0" width="360" height="28" fill="#111420" rx="8"/>'
+      +'<circle cx="14" cy="14" r="5" fill="#ff4060"/><circle cx="28" cy="14" r="5" fill="#ffbe0b"/><circle cx="42" cy="14" r="5" fill="#00d68f"/>'
+      +'<rect x="60" y="6" width="240" height="16" fill="#1a1e2e" rx="4"/>'
+      +'<text x="180" y="18" text-anchor="middle" font-size="8" fill="#8090b8" font-family="monospace">connect.spotware.com/apps/23386/playground</text>'
+      +'<text x="180" y="60" text-anchor="middle" font-size="16" fill="'+c+'" font-weight="bold">Sandbox</text>'
+      +'<rect x="60" y="80" width="240" height="40" fill="#111420" rx="8" stroke="'+c+'" stroke-width="1"/>'
+      +'<text x="180" y="96" text-anchor="middle" font-size="10" fill="#eef0f8" font-weight="600">VisionTrading</text>'
+      +'<text x="180" y="112" text-anchor="middle" font-size="9" fill="#8090b8">Software di gestione hedge per prop firm</text>'
+      +'<rect x="100" y="140" width="160" height="28" fill="#1565c0" rx="6" class="pulse-btn"/>'
+      +'<text x="180" y="159" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Ottieni il token</text>',
+
+    ct_scope: '<rect width="360" height="200" fill="#0a0c16" rx="8"/>'
+      +'<text x="180" y="30" text-anchor="middle" font-size="11" fill="#eef0f8" font-weight="700">Ambito di applicazione</text>'
+      +'<rect x="40" y="50" width="280" height="36" fill="#111420" rx="7" stroke="rgba(128,128,128,.2)" stroke-width="1"/>'
+      +'<circle cx="60" cy="68" r="7" fill="none" stroke="#555" stroke-width="1.5"/>'
+      +'<text x="74" y="72" font-size="10" fill="#8090b8">Informazioni sull\'account</text>'
+      +'<rect x="40" y="100" width="280" height="36" fill="rgba(0,214,143,.08)" rx="7" stroke="rgba(0,214,143,.3)" stroke-width="1.5"/>'
+      +'<circle cx="60" cy="118" r="7" fill="'+c+'" stroke="'+c+'" stroke-width="1.5"/>'
+      +'<circle cx="60" cy="118" r="3" fill="#fff"/>'
+      +'<text x="74" y="122" font-size="10" fill="#eef0f8">Informazioni account + operazioni trading</text>'
+      +'<rect x="100" y="156" width="160" height="28" fill="#1565c0" rx="6"/>'
+      +'<text x="180" y="175" text-anchor="middle" font-size="11" fill="#fff" font-weight="700">Ottieni il token</text>'
+      +'<animateTransform attributeName="transform" type="translate" values="0,0;0,-2;0,0" dur="1.5s" repeatCount="indefinite" additive="sum"/>',
+
+    ct_token: '<rect width="360" height="200" fill="#0a0c16" rx="8"/>'
+      +'<text x="180" y="35" text-anchor="middle" font-size="11" fill="#eef0f8" font-weight="700">Access Token generato</text>'
+      +'<rect x="20" y="55" width="320" height="80" fill="#0d1117" rx="8" stroke="'+c+'" stroke-width="1.5"/>'
+      +'<text x="36" y="75" font-size="7.5" fill="'+c+'" font-family="monospace">eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9</text>'
+      +'<text x="36" y="90" font-size="7.5" fill="'+c+'" font-family="monospace">.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6</text>'
+      +'<text x="36" y="105" font-size="7.5" fill="'+c+'" font-family="monospace">"Vm9pZFRyYWRlciIsImlhdCI6MTUxNjIzOTAy</text>'
+      +'<text x="36" y="120" font-size="7.5" fill="'+c+'" font-family="monospace">MH0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6y...</text>'
+      +'<rect x="260" y="148" width="80" height="24" fill="'+c+'" rx="5" opacity="0.9"/>'
+      +'<text x="300" y="164" text-anchor="middle" font-size="10" fill="#000" font-weight="700">Copia</text>'
+      +'<text x="180" y="192" text-anchor="middle" font-size="9" fill="#8090b8">Seleziona tutto il testo e premi Ctrl+C</text>',
+
+    ct_paste: '<rect width="360" height="200" fill="#0a0c16" rx="8"/>'
+      +'<text x="180" y="25" text-anchor="middle" font-size="11" fill="#eef0f8" font-weight="700">Incolla in PropHedge</text>'
+      +'<rect x="20" y="38" width="320" height="22" fill="#111420" rx="5" stroke="rgba(128,128,128,.2)"/>'
+      +'<text x="30" y="53" font-size="9" fill="#8090b8">Metodo:</text>'
+      +'<text x="100" y="53" font-size="9" fill="'+c+'" font-weight="600">Token manuale</text>'
+      +'<rect x="20" y="68" width="320" height="40" fill="#111420" rx="5" stroke="'+c+'" stroke-width="1.5"/>'
+      +'<text x="30" y="83" font-size="8" fill="#8090b8">Access Token</text>'
+      +'<text x="30" y="98" font-size="7" fill="#eef0f8" font-family="monospace">eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...</text>'
+      +'<rect x="20" y="116" width="320" height="30" fill="#111420" rx="5" stroke="rgba(128,128,128,.2)"/>'
+      +'<text x="30" y="131" font-size="8" fill="#8090b8">Account ID</text>'
+      +'<text x="30" y="141" font-size="10" fill="#eef0f8" font-family="monospace">12345678</text>'
+      +'<rect x="100" y="160" width="160" height="28" fill="linear-gradient(135deg,#00b8a4,#7e40cc)" rx="7"/>'
+      +'<rect x="100" y="160" width="160" height="28" fill="'+c+'" rx="7" opacity="0.8"/>'
+      +'<text x="180" y="179" text-anchor="middle" font-size="11" fill="#000" font-weight="700">Salva</text>',
+
+    ct_done: '<rect width="360" height="200" fill="#0a0c16" rx="8"/>'
+      +'<circle cx="180" cy="80" r="40" fill="rgba(0,214,143,.1)" stroke="'+c+'" stroke-width="2"/>'
+      +'<text x="180" y="90" text-anchor="middle" font-size="32">✓</text>'
+      +'<text x="180" y="140" text-anchor="middle" font-size="13" fill="'+c+'" font-weight="700">Connesso!</text>'
+      +'<text x="180" y="160" text-anchor="middle" font-size="10" fill="#8090b8">I trade appaiono nel Journal</text>'
+      +'<text x="180" y="175" text-anchor="middle" font-size="10" fill="#8090b8">automaticamente ogni 30 secondi</text>',
+
+    // MT screens
+    mt_download: '<rect width="360" height="200" fill="#0a0c16" rx="8"/>'
+      +'<text x="180" y="30" text-anchor="middle" font-size="11" fill="#eef0f8" font-weight="700">Tab EA Download</text>'
+      +'<rect x="30" y="50" width="140" height="110" fill="#111420" rx="10" stroke="'+cv+'" stroke-width="1.5"/>'
+      +'<text x="100" y="78" text-anchor="middle" font-size="20">📊</text>'
+      +'<text x="100" y="98" text-anchor="middle" font-size="11" fill="#eef0f8" font-weight="700">MetaTrader 4</text>'
+      +'<text x="100" y="112" text-anchor="middle" font-size="8" fill="#8090b8">PropHedge_EA.mq4</text>'
+      +'<rect x="50" y="125" width="100" height="22" fill="'+cv+'" rx="5"/>'
+      +'<text x="100" y="140" text-anchor="middle" font-size="9" fill="#000" font-weight="700">⬇ Scarica MT4</text>'
+      +'<rect x="190" y="50" width="140" height="110" fill="#111420" rx="10" stroke="'+cv+'" stroke-width="1.5"/>'
+      +'<text x="260" y="78" text-anchor="middle" font-size="20">📈</text>'
+      +'<text x="260" y="98" text-anchor="middle" font-size="11" fill="#eef0f8" font-weight="700">MetaTrader 5</text>'
+      +'<text x="260" y="112" text-anchor="middle" font-size="8" fill="#8090b8">PropHedge_EA.mq5</text>'
+      +'<rect x="210" y="125" width="100" height="22" fill="'+cv+'" rx="5" opacity="0.7"/>'
+      +'<text x="260" y="140" text-anchor="middle" font-size="9" fill="#fff" font-weight="700">⬇ Scarica MT5</text>'
+      +'<text x="180" y="180" text-anchor="middle" font-size="9" fill="#8090b8">Clicca il pulsante per la tua piattaforma</text>',
+
+    mt_folder: '<rect width="360" height="200" fill="#0a0c16" rx="8"/>'
+      +'<text x="180" y="25" text-anchor="middle" font-size="11" fill="#eef0f8" font-weight="700">Copia il file nella cartella Experts</text>'
+      +'<rect x="20" y="40" width="320" height="22" fill="#1a1a2e" rx="4" stroke="rgba(128,128,128,.2)"/>'
+      +'<text x="30" y="55" font-size="9" fill="#8090b8" font-family="monospace">MT4/MT5 → File → Apri cartella dati</text>'
+      +'<text x="30" y="78" font-size="9" fill="#8090b8">📁 MetaTrader → </text>'
+      +'<text x="120" y="78" font-size="9" fill="'+cv+'" font-weight="600">MQL4/Experts</text>'
+      +'<rect x="30" y="90" width="200" height="60" fill="#111420" rx="6" stroke="rgba(128,128,128,.15)"/>'
+      +'<text x="42" y="110" font-size="10">📄</text><text x="58" y="110" font-size="9" fill="#8090b8">SomeOtherEA.mq4</text>'
+      +'<text x="42" y="128" font-size="10">📄</text><text x="58" y="128" font-size="9" fill="'+cv+'" font-weight="600">PropHedge_EA.mq4</text>'
+      +'<text x="42" y="146" font-size="8" fill="rgba(155,93,229,.6)">← copia qui</text>'
+      +'<text x="180" y="180" text-anchor="middle" font-size="9" fill="#8090b8">Poi riavvia MT4/MT5</text>',
+
+    mt_webreq: '<rect width="360" height="200" fill="#0a0c16" rx="8"/>'
+      +'<text x="180" y="22" text-anchor="middle" font-size="11" fill="#eef0f8" font-weight="700">Abilita WebRequest in MT4/MT5</text>'
+      +'<rect x="20" y="35" width="320" height="130" fill="#1c1c2e" rx="8" stroke="rgba(128,128,128,.15)"/>'
+      +'<text x="35" y="55" font-size="10" fill="#eef0f8">Strumenti → Opzioni → Expert Advisor</text>'
+      +'<line x1="35" y1="62" x2="325" y2="62" stroke="rgba(128,128,128,.2)" stroke-width="0.5"/>'
+      +'<rect x="35" y="70" width="12" height="12" fill="none" stroke="rgba(128,128,128,.5)" stroke-width="1"/>'
+      +'<text x="53" y="81" font-size="9" fill="#8090b8">Consenti trading automatico</text>'
+      +'<rect x="35" y="90" width="12" height="12" fill="'+cv+'" rx="1"/>'
+      +'<text x="35" y="96" font-size="7" fill="#fff" font-weight="700">✓</text>'
+      +'<text x="53" y="101" font-size="9" fill="#eef0f8">Consenti WebRequest per i seguenti URL:</text>'
+      +'<rect x="35" y="110" width="290" height="22" fill="#0d1117" rx="4" stroke="'+cv+'" stroke-width="1"/>'
+      +'<text x="42" y="125" font-size="8" fill="'+cv+'" font-family="monospace">https://prophedge-iota.vercel.app</text>'
+      +'<rect x="250" y="152" width="80" height="22" fill="#1565c0" rx="5"/>'
+      +'<text x="290" y="167" text-anchor="middle" font-size="10" fill="#fff" font-weight="700">OK</text>',
+
+    mt_drag: '<rect width="360" height="200" fill="#0a0c16" rx="8"/>'
+      +'<text x="180" y="22" text-anchor="middle" font-size="11" fill="#eef0f8" font-weight="700">Trascina EA sul grafico EURUSD</text>'
+      +'<rect x="80" y="35" width="120" height="70" fill="#111420" rx="6" stroke="rgba(128,128,128,.2)"/>'
+      +'<text x="140" y="55" text-anchor="middle" font-size="9" fill="#8090b8">Navigator</text>'
+      +'<text x="90" y="75" font-size="8" fill="#8090b8">▶ Expert Advisors</text>'
+      +'<text x="98" y="91" font-size="9" fill="'+cv+'" font-weight="600">PropHedge_EA</text>'
+      +'<text x="180" y="120" text-anchor="middle" font-size="18" fill="'+cv+'">→</text>'
+      +'<rect x="210" y="35" width="130" height="90" fill="#0d1117" rx="6" stroke="rgba(0,214,143,.3)"/>'
+      +'<text x="275" y="55" text-anchor="middle" font-size="9" fill="#8090b8">EURUSD M1</text>'
+      +'<polyline points="220,100 235,80 250,90 265,70 280,85 295,65 325,75" fill="none" stroke="#00d68f" stroke-width="1.5"/>'
+      +'<text x="180" y="150" text-anchor="middle" font-size="9" fill="#8090b8">Trascina con il mouse dal Navigator al grafico</text>',
+
+    mt_params: '<rect width="360" height="200" fill="#0a0c16" rx="8"/>'
+      +'<text x="180" y="22" text-anchor="middle" font-size="11" fill="#eef0f8" font-weight="700">Parametri EA</text>'
+      +'<rect x="20" y="35" width="320" height="145" fill="#111420" rx="8" stroke="rgba(128,128,128,.2)"/>'
+      +'<text x="35" y="55" font-size="9" fill="#8090b8">Email:</text>'
+      +'<rect x="100" y="43" width="220" height="16" fill="#0d1117" rx="3" stroke="'+cv+'" stroke-width="0.8"/>'
+      +'<text x="108" y="55" font-size="8" fill="'+cv+'" font-family="monospace">utente@email.com</text>'
+      +'<text x="35" y="80" font-size="9" fill="#8090b8">API Key:</text>'
+      +'<rect x="100" y="68" width="220" height="16" fill="#0d1117" rx="3" stroke="'+cv+'" stroke-width="0.8"/>'
+      +'<text x="108" y="80" font-size="8" fill="'+cv+'" font-family="monospace">PH_2026_AXI_SECRET...</text>'
+      +'<text x="35" y="105" font-size="9" fill="#8090b8">Journal ID:</text>'
+      +'<rect x="100" y="93" width="220" height="16" fill="#0d1117" rx="3" stroke="'+cv+'" stroke-width="0.8"/>'
+      +'<text x="108" y="105" font-size="8" fill="'+cv+'" font-family="monospace">j1234567890</text>'
+      +'<text x="35" y="130" font-size="9" fill="#8090b8">AccountType:</text>'
+      +'<rect x="110" y="118" width="80" height="16" fill="#0d1117" rx="3" stroke="rgba(128,128,128,.3)"/>'
+      +'<text x="118" y="130" font-size="8" fill="#eef0f8">prop</text>'
+      +'<rect x="230" y="150" width="90" height="20" fill="'+cv+'" rx="5"/>'
+      +'<text x="275" y="164" text-anchor="middle" font-size="10" fill="#000" font-weight="700">OK</text>',
+
+    mt_done: '<rect width="360" height="200" fill="#0a0c16" rx="8"/>'
+      +'<circle cx="180" cy="80" r="40" fill="rgba(155,93,229,.1)" stroke="'+cv+'" stroke-width="2"/>'
+      +'<text x="180" y="90" text-anchor="middle" font-size="32">✓</text>'
+      +'<text x="180" y="140" text-anchor="middle" font-size="13" fill="'+cv+'" font-weight="700">EA Installato!</text>'
+      +'<text x="180" y="160" text-anchor="middle" font-size="10" fill="#8090b8">Sync ogni 30s — i trade appaiono</text>'
+      +'<text x="180" y="175" text-anchor="middle" font-size="10" fill="#8090b8">automaticamente nel Journal</text>'
+  };
+
+  return screens[screen] || '<rect width="360" height="200" fill="#0a0c16" rx="8"/><text x="180" y="100" text-anchor="middle" fill="#555">step</text>';
+}
+
+function openGuide(type) {
+  _guideType = type;
+  _guideStep = 0;
+  var guide = GUIDES[type];
+  if(!guide) return;
+
+  // Crea il modal guida se non esiste
+  var existing = document.getElementById('guideModal');
+  if(existing) existing.remove();
+
+  var c = guide.color;
+  var totalSteps = guide.steps.length;
+
+  var el = document.createElement('div');
+  el.id = 'guideModal';
+  el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  el.innerHTML = '<div style="background:#0a0c16;border:1px solid '+c+';border-radius:20px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 0 60px rgba(0,0,0,.8)">'
+    // Header
+    +'<div style="background:linear-gradient(135deg,rgba(0,0,0,.8),rgba(10,12,22,1));padding:16px 20px;border-bottom:1px solid rgba(128,128,128,.1);display:flex;align-items:center;justify-content:space-between">'
+    +'<div><div style="font-size:13px;font-weight:700;font-family:var(--fh);color:'+c+';letter-spacing:.06em">'+guide.title+'</div>'
+    +'<div id="guideStepLabel" style="font-size:10px;color:#8090b8;margin-top:2px">Passo 1 di '+totalSteps+'</div></div>'
+    +'<button onclick="closeGuide()" style="background:none;border:none;color:#8090b8;font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px">✕</button>'
+    +'</div>'
+    // Progress bar
+    +'<div style="height:3px;background:rgba(128,128,128,.15)">'
+    +'<div id="guideProgress" style="height:100%;background:'+c+';transition:width .4s;width:'+(1/totalSteps*100)+'%"></div>'
+    +'</div>'
+    // Screen SVG
+    +'<div style="padding:20px 20px 12px;background:#060810">'
+    +'<svg id="guideSVG" viewBox="0 0 360 200" style="width:100%;border-radius:10px;display:block" xmlns="http://www.w3.org/2000/svg">'
+    +'<style>.pulse-btn{animation:pb 1.5s ease-in-out infinite}@keyframes pb{0%,100%{opacity:1}50%{opacity:.6}}</style>'
+    + guideScreen(type, guide.steps[0].screen, c)
+    +'</svg></div>'
+    // Step info
+    +'<div style="padding:0 20px 16px">'
+    +'<div id="guideStepTitle" style="font-size:14px;font-weight:700;color:#eef0f8;margin-bottom:6px">'+guide.steps[0].title+'</div>'
+    +'<div id="guideStepDesc" style="font-size:12px;color:#8090b8;line-height:1.6">'+guide.steps[0].desc+'</div>'
+    +(guide.steps[0].url ? '<a href="'+guide.steps[0].url+'" target="_blank" style="display:inline-block;margin-top:8px;font-size:11px;color:'+c+';text-decoration:none">Apri pagina ↗</a>' : '')
+    +'</div>'
+    // Navigation
+    +'<div style="padding:12px 20px;border-top:1px solid rgba(128,128,128,.1);display:flex;gap:8px;align-items:center">'
+    +'<button id="guidePrev" onclick="guideNav(-1)" style="padding:8px 16px;border-radius:8px;border:1px solid rgba(128,128,128,.3);background:transparent;color:#8090b8;font-size:12px;cursor:pointer;opacity:0.3" disabled>← Indietro</button>'
+    +'<div style="flex:1;display:flex;gap:4px;justify-content:center" id="guideDots">'
+    + guide.steps.map(function(_,i){ return '<div style="width:6px;height:6px;border-radius:50%;background:'+(i===0?c:'rgba(128,128,128,.3)')+';transition:background .3s"></div>'; }).join('')
+    +'</div>'
+    +'<button id="guideNext" onclick="guideNav(1)" style="padding:8px 16px;border-radius:8px;border:none;background:'+c+';color:#000;font-size:12px;font-weight:700;cursor:pointer">Avanti →</button>'
+    +'</div>'
+    +'</div>';
+
+  document.body.appendChild(el);
+}
+
+function closeGuide() {
+  var el = document.getElementById('guideModal');
+  if(el) el.remove();
+  if(_guideTimer) clearInterval(_guideTimer);
+}
+
+function guideNav(dir) {
+  var guide = GUIDES[_guideType];
+  if(!guide) return;
+  _guideStep = Math.max(0, Math.min(guide.steps.length-1, _guideStep + dir));
+  var step = guide.steps[_guideStep];
+  var total = guide.steps.length;
+  var c = guide.color;
+  var isLast = _guideStep === total-1;
+
+  // Update SVG
+  var svg = document.getElementById('guideSVG');
+  if(svg) {
+    svg.innerHTML = '<style>.pulse-btn{animation:pb 1.5s ease-in-out infinite}@keyframes pb{0%,100%{opacity:1}50%{opacity:.6}}</style>'
+      + guideScreen(_guideType, step.screen, c);
+  }
+
+  // Update text
+  document.getElementById('guideStepTitle').textContent = step.title;
+  document.getElementById('guideStepDesc').textContent  = step.desc;
+  document.getElementById('guideStepLabel').textContent = 'Passo '+(_guideStep+1)+' di '+total;
+
+  // Update progress
+  var prog = document.getElementById('guideProgress');
+  if(prog) prog.style.width = ((_guideStep+1)/total*100)+'%';
+
+  // Update dots
+  var dots = document.getElementById('guideDots');
+  if(dots) {
+    Array.from(dots.children).forEach(function(d,i){
+      d.style.background = i===_guideStep ? c : 'rgba(128,128,128,.3)';
+    });
+  }
+
+  // Update link
+  var linkEl = document.querySelector('#guideModal a[href]');
+  // Remove old link if present
+  var oldLink = document.querySelector('#guideModal .guide-link');
+  if(oldLink) oldLink.remove();
+  if(step.url) {
+    var descEl = document.getElementById('guideStepDesc');
+    var a = document.createElement('a');
+    a.href=step.url; a.target='_blank'; a.className='guide-link';
+    a.style.cssText='display:inline-block;margin-top:8px;font-size:11px;color:'+c+';text-decoration:none';
+    a.textContent='Apri pagina ↗';
+    descEl.parentNode.appendChild(a);
+  }
+
+  // Buttons
+  var prev = document.getElementById('guidePrev');
+  var next = document.getElementById('guideNext');
+  if(prev){ prev.disabled=_guideStep===0; prev.style.opacity=_guideStep===0?'0.3':'1'; }
+  if(next){ next.textContent = isLast ? '✓ Chiudi' : 'Avanti →'; next.onclick = isLast ? closeGuide : function(){guideNav(1);}; }
+}
+
+
+
+// ═══════════════════════════════════════════════════════
+// PAGINA SUPPORTO
+// ═══════════════════════════════════════════════════════
+function renderSupport() {
+  return '<div style="max-width:680px;margin:0 auto;padding:10px 0">'
+
+    // Header
+    + '<div style="text-align:center;padding:32px 0 28px">'
+    + '<div style="font-size:48px;margin-bottom:12px">🎧</div>'
+    + '<div style="font-size:24px;font-weight:800;font-family:var(--fh);letter-spacing:.04em;margin-bottom:8px">Supporto PropHedge</div>'
+    + '<div style="font-size:14px;color:var(--t3);line-height:1.6">Hai dubbi, domande o problemi?<br>Il team VisionTrading è qui per aiutarti.</div>'
+    + '</div>'
+
+    // Cards contatto
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px">'
+
+    // WhatsApp card
+    + '<a href="https://wa.me/393338553199" target="_blank" rel="noopener" style="text-decoration:none">'
+    + '<div style="background:var(--bg2);border:1px solid rgba(37,211,102,.25);border-radius:16px;padding:28px 24px;text-align:center;transition:all .2s;cursor:pointer" '
+    + 'onmouseover="this.style.borderColor=\'rgba(37,211,102,.6)\';this.style.background=\'rgba(37,211,102,.06)\'" '
+    + 'onmouseout="this.style.borderColor=\'rgba(37,211,102,.25)\';this.style.background=\'var(--bg2)\'">'
+    + '<div style="width:56px;height:56px;border-radius:50%;background:rgba(37,211,102,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:28px">💬</div>'
+    + '<div style="font-size:16px;font-weight:700;font-family:var(--fh);margin-bottom:4px;color:var(--t)">WhatsApp</div>'
+    + '<div style="font-size:13px;color:var(--t3);margin-bottom:12px">Risposta rapida</div>'
+    + '<div style="font-size:14px;font-weight:700;font-family:var(--fd);color:#25d366;background:rgba(37,211,102,.1);padding:6px 14px;border-radius:8px;display:inline-block">+39 333 855 3199</div>'
+    + '<div style="margin-top:14px;padding:10px 20px;background:#25d366;border-radius:10px;color:#fff;font-size:12px;font-weight:700;font-family:var(--fh);letter-spacing:.06em">&#9654; APRI CHAT</div>'
+    + '</div></a>'
+
+    // Email card
+    + '<a href="mailto:visiontradingprop@gmail.com" style="text-decoration:none">'
+    + '<div style="background:var(--bg2);border:1px solid rgba(0,229,204,.2);border-radius:16px;padding:28px 24px;text-align:center;transition:all .2s;cursor:pointer" '
+    + 'onmouseover="this.style.borderColor=\'rgba(0,229,204,.5)\';this.style.background=\'rgba(0,229,204,.05)\'" '
+    + 'onmouseout="this.style.borderColor=\'rgba(0,229,204,.2)\';this.style.background=\'var(--bg2)\'">'
+    + '<div style="width:56px;height:56px;border-radius:50%;background:rgba(0,229,204,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:28px">📧</div>'
+    + '<div style="font-size:16px;font-weight:700;font-family:var(--fh);margin-bottom:4px;color:var(--t)">Email</div>'
+    + '<div style="font-size:13px;color:var(--t3);margin-bottom:12px">Richieste dettagliate</div>'
+    + '<div style="font-size:12px;font-weight:700;font-family:var(--fd);color:var(--teal);background:rgba(0,229,204,.08);padding:6px 10px;border-radius:8px;display:inline-block;word-break:break-all">visiontradingprop<br>@gmail.com</div>'
+    + '<div style="margin-top:14px;padding:10px 20px;background:var(--teal2);border-radius:10px;color:#fff;font-size:12px;font-weight:700;font-family:var(--fh);letter-spacing:.06em">&#9654; INVIA EMAIL</div>'
+    + '</div></a>'
+
+    + '</div>'
+
+    // Orari e info
+    + '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:20px">'
+    + '<div style="font-size:11px;font-weight:700;font-family:var(--fh);letter-spacing:.14em;color:var(--t3);text-transform:uppercase;margin-bottom:14px">&#128337; Orari di supporto</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    + '<div style="display:flex;gap:10px;align-items:center">'
+    + '<div style="width:8px;height:8px;border-radius:50%;background:#25d366;box-shadow:0 0 6px #25d366;flex-shrink:0"></div>'
+    + '<div><div style="font-size:13px;font-weight:600;color:var(--t)">WhatsApp</div><div style="font-size:11px;color:var(--t3)">Lun–Sab · 9:00–21:00</div></div>'
+    + '</div>'
+    + '<div style="display:flex;gap:10px;align-items:center">'
+    + '<div style="width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal);flex-shrink:0"></div>'
+    + '<div><div style="font-size:13px;font-weight:600;color:var(--t)">Email</div><div style="font-size:11px;color:var(--t3)">Risposta entro 24h</div></div>'
+    + '</div>'
+    + '</div>'
+    + '</div>'
+
+    // FAQ rapide
+    + '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px 24px">'
+    + '<div style="font-size:11px;font-weight:700;font-family:var(--fh);letter-spacing:.14em;color:var(--t3);text-transform:uppercase;margin-bottom:14px">&#10067; Domande frequenti</div>'
+    + faqItem("Come collego MT4/MT5?", "Vai su EA Download, scarica l\'EA per la tua piattaforma e segui la guida passo per passo.")
+    + faqItem("Come collego cTrader?", "Vai su Journal → Connetti → cTrader → Token manuale. Segui la guida integrata nel dialog.")
+    + faqItem("I dati di mercato non si aggiornano?", "Clicca il pulsante 🔄 nel pannello Mercati. Se il problema persiste controlla la tua connessione internet.")
+    + faqItem("Come creo una nuova sfida?", "Clicca su Nuova Sfida nel menu in alto, compila i parametri e premi Aggiungi.")
+    + faqItem("Posso usare il software su più device?", "Sì — accedi con le tue credenziali da qualsiasi browser. I dati sono sincronizzati via cloud.")
+    + '</div>'
+
+    + '</div>';
+}
+
+function faqItem(q, a) {
+  var qid = 'faq_'+Math.random().toString(36).slice(2,7);
+  return '<div style="border-bottom:1px solid var(--border);padding:10px 0;cursor:pointer" onclick="var ans=document.getElementById(\''+qid+'\');ans.style.display=ans.style.display===\'none\'?\'block\':\'none\'">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center">'
+    + '<div style="font-size:13px;font-weight:600;color:var(--t)">'+q+'</div>'
+    + '<div style="font-size:16px;color:var(--teal);flex-shrink:0;margin-left:8px">+</div>'
+    + '</div>'
+    + '<div id="'+qid+'" style="display:none;font-size:12px;color:var(--t3);line-height:1.6;margin-top:8px;padding-bottom:4px">'+a+'</div>'
+    + '</div>';
+}
+
 // MAIN RENDER
 function render(){
   var ct=document.getElementById('main');if(!ct)return;
@@ -4283,6 +4625,7 @@ function render(){
   else if(currentTab==='proplist') ct.innerHTML=renderPropList();
   else if(currentTab==='brokerlist') ct.innerHTML=renderBrokerList();
   else if(currentTab==='guide')  ct.innerHTML=renderGuide();
+  else if(currentTab==='support') ct.innerHTML=renderSupport();
   else if(currentTab==='eadownload') ct.innerHTML=renderEADownload();
   else if(currentTab==='calendar'){ renderCalendar(); return; }
   else if(currentTab==='stats')  ct.innerHTML=renderStats();
