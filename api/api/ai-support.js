@@ -1,17 +1,59 @@
 // /api/ai-support.js
-// Proxy sicuro verso Anthropic API — la chiave non viene mai esposta al client
-
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
-  if (req.method !== 'POST')    { res.status(405).json({ error: 'Method not allowed' }); return; }
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'ANTHROPIC_API_KEY non configurata' });
+  if (!apiKey) return res.status(500).json({ error: 'API key non configurata' });
+
+  const { messages } = req.body;
+  if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: 'messages required' });
+
+  const SYSTEM = `Sei l'assistente AI ufficiale di PropHedge — software italiano per trader di prop firm sviluppato da VisionTrading (Russo Antonino Christian).
+
+FUNZIONALITÀ CHE CONOSCI:
+- Dashboard: sfide attive, P&L reale, lotti calcolati, scenario A e B
+- Nuova Sfida: parametri prop firm → calcola lotti hedge ottimali automaticamente
+- Hedge: Prop+Personale o Prop+Prop. Scenario A = prop chiusa. Scenario B = payout incassato
+- Journal: trade dal momento connessione, aperti/chiusi, P&L, equity curve
+- MT4/MT5: EA scaricabile da EA Download. Parametri: Email + API Key + Journal ID
+- cTrader: OAuth o Token manuale dal Sandbox Spotware (connect.spotware.com/apps/23386/playground)
+- Mercati Live: Forex 5s (Frankfurter), Crypto tick (Binance WebSocket), Indici 30s (Yahoo)
+- Calendario: ForexFactory, alert notizie rosse, countdown
+- Supporto umano: WhatsApp +39 333 855 3199, Email visiontradingprop@gmail.com
+
+REGOLE:
+- Rispondi SEMPRE in italiano
+- Sii pratico, dai istruzioni passo per passo
+- Se non riguarda PropHedge, declina gentilmente
+- Se l'utente chiede supporto umano scrivi esattamente: ###HUMAN_SUPPORT###`;
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 600,
+        system: SYSTEM,
+        messages: messages.slice(-10)
+      })
+    });
+
+    const data = await r.json();
+    if (!r.ok) return res.status(r.status).json({ error: data.error?.message || 'Errore API' });
+    return res.status(200).json({ reply: data.content?.[0]?.text || 'Non ho capito, ripeti.' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
+};
 
   const { messages } = req.body;
   if (!messages || !Array.isArray(messages)) {
