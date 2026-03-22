@@ -4537,82 +4537,221 @@ function guideNav(dir) {
 // ═══════════════════════════════════════════════════════
 // PAGINA SUPPORTO
 // ═══════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════
+// PAGINA SUPPORTO — con AI Assistant live
+// ═══════════════════════════════════════════════════════
 function renderSupport() {
-  return '<div style="max-width:680px;margin:0 auto;padding:10px 0">'
+  return '<div style="max-width:720px;margin:0 auto;padding:10px 0">'
 
     // Header
-    + '<div style="text-align:center;padding:32px 0 28px">'
-    + '<div style="font-size:48px;margin-bottom:12px">🎧</div>'
-    + '<div style="font-size:24px;font-weight:800;font-family:var(--fh);letter-spacing:.04em;margin-bottom:8px">Supporto PropHedge</div>'
-    + '<div style="font-size:14px;color:var(--t3);line-height:1.6">Hai dubbi, domande o problemi?<br>Il team VisionTrading è qui per aiutarti.</div>'
+    + '<div style="text-align:center;padding:28px 0 24px">'
+    + '<div style="font-size:44px;margin-bottom:10px">🎧</div>'
+    + '<div style="font-size:22px;font-weight:800;font-family:var(--fh);letter-spacing:.04em;margin-bottom:6px">Supporto PropHedge</div>'
+    + '<div style="font-size:13px;color:var(--t3)">Hai dubbi, domande o problemi? Siamo qui per aiutarti.</div>'
     + '</div>'
 
-    // Cards contatto
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px">'
+    // AI Assistant — principale
+    + '<div style="background:var(--bg2);border:1px solid rgba(0,229,204,.3);border-radius:16px;overflow:hidden;margin-bottom:20px">'
 
-    // WhatsApp card
-    + '<a href="https://wa.me/393338553199" target="_blank" rel="noopener" style="text-decoration:none">'
-    + '<div style="background:var(--bg2);border:1px solid rgba(37,211,102,.25);border-radius:16px;padding:28px 24px;text-align:center;transition:all .2s;cursor:pointer" '
-    + 'onmouseover="this.style.borderColor=\'rgba(37,211,102,.6)\';this.style.background=\'rgba(37,211,102,.06)\'" '
-    + 'onmouseout="this.style.borderColor=\'rgba(37,211,102,.25)\';this.style.background=\'var(--bg2)\'">'
-    + '<div style="width:56px;height:56px;border-radius:50%;background:rgba(37,211,102,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:28px">💬</div>'
-    + '<div style="font-size:16px;font-weight:700;font-family:var(--fh);margin-bottom:4px;color:var(--t)">WhatsApp</div>'
-    + '<div style="font-size:13px;color:var(--t3);margin-bottom:12px">Risposta rapida</div>'
-    + '<div style="font-size:14px;font-weight:700;font-family:var(--fd);color:#25d366;background:rgba(37,211,102,.1);padding:6px 14px;border-radius:8px;display:inline-block">+39 333 855 3199</div>'
-    + '<div style="margin-top:14px;padding:10px 20px;background:#25d366;border-radius:10px;color:#fff;font-size:12px;font-weight:700;font-family:var(--fh);letter-spacing:.06em">&#9654; APRI CHAT</div>'
+    // AI Header
+    + '<div style="background:linear-gradient(135deg,rgba(0,229,204,.12),rgba(155,93,229,.08));padding:14px 18px;border-bottom:1px solid rgba(128,128,128,.1);display:flex;align-items:center;gap:10px">'
+    + '<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--teal2),var(--violet2));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🤖</div>'
+    + '<div>'
+    + '<div style="font-size:13px;font-weight:700;font-family:var(--fh);letter-spacing:.04em">PropHedge AI Assistant</div>'
+    + '<div style="font-size:10px;color:var(--t3);display:flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:#00d68f;display:inline-block;box-shadow:0 0 5px #00d68f"></span>Online — risponde in secondi</div>'
+    + '</div>'
+    + '<div style="margin-left:auto;font-size:10px;font-family:var(--fd);color:var(--t3);background:var(--bg3);padding:3px 10px;border-radius:5px;border:1px solid var(--border)">Powered by Claude AI</div>'
+    + '</div>'
+
+    // Chat messages area
+    + '<div id="aiChatMsgs" style="height:320px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;scrollbar-width:thin;scrollbar-color:rgba(128,128,128,.2) transparent">'
+    // Messaggio benvenuto
+    + '<div style="display:flex;gap:8px;align-items:flex-start">'
+    + '<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--teal2),var(--violet2));display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">🤖</div>'
+    + '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:12px 12px 12px 2px;padding:10px 14px;max-width:85%;font-size:13px;color:var(--t2);line-height:1.6">'
+    + 'Ciao! Sono l\'assistente AI di PropHedge. Posso aiutarti con:<br>'
+    + '<span style="color:var(--teal)">• Calcolo lotti e hedge</span><br>'
+    + '<span style="color:var(--teal)">• Connessione MT4/MT5/cTrader</span><br>'
+    + '<span style="color:var(--teal)">• Gestione sfide prop firm</span><br>'
+    + '<span style="color:var(--teal)">• Qualsiasi funzione del software</span><br><br>'
+    + 'Come posso aiutarti?'
+    + '</div></div>'
+    + '</div>'
+
+    // Domande rapide
+    + '<div style="padding:0 16px 10px;display:flex;gap:6px;flex-wrap:wrap">'
+    + quickQ('Come calcolo i lotti?')
+    + quickQ('Come collego MT4?')
+    + quickQ('Come collego cTrader?')
+    + quickQ('Come funziona il Journal?')
+    + quickQ('Calendario economico?')
+    + '</div>'
+
+    // Input area
+    + '<div style="padding:12px 16px;border-top:1px solid rgba(128,128,128,.1);display:flex;gap:8px;align-items:flex-end">'
+    + '<textarea id="aiChatInput" placeholder="Scrivi la tua domanda..." rows="2" '
+    + 'style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--fm);resize:none;outline:none;line-height:1.5" '
+    + 'onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();aiSend();}"></textarea>'
+    + '<button onclick="aiSend()" id="aiSendBtn" style="padding:10px 18px;background:linear-gradient(135deg,var(--teal2),var(--violet2));color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;white-space:nowrap;height:42px">Invia ↗</button>'
+    + '</div>'
+    + '</div>'
+
+    // Contatti umani — solo bottoni senza info visibili
+    + '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:20px">'
+    + '<div style="font-size:11px;font-weight:700;font-family:var(--fh);letter-spacing:.14em;color:var(--t3);text-transform:uppercase;margin-bottom:14px">Parla con una persona reale</div>'
+    + '<div style="display:flex;gap:10px">'
+
+    // WhatsApp btn
+    + '<a href="https://wa.me/393338553199" target="_blank" rel="noopener" style="text-decoration:none;flex:1">'
+    + '<div style="background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.3);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:all .2s" '
+    + 'onmouseover="this.style.background=\'rgba(37,211,102,.15)\'" onmouseout="this.style.background=\'rgba(37,211,102,.08)\'">'
+    + '<div style="font-size:24px;margin-bottom:6px">💬</div>'
+    + '<div style="font-size:12px;font-weight:700;color:#25d366;font-family:var(--fh)">WhatsApp</div>'
+    + '<div style="font-size:10px;color:var(--t3);margin-top:2px">Lun–Sab 9–21</div>'
     + '</div></a>'
 
-    // Email card
-    + '<a href="mailto:visiontradingprop@gmail.com" style="text-decoration:none">'
-    + '<div style="background:var(--bg2);border:1px solid rgba(0,229,204,.2);border-radius:16px;padding:28px 24px;text-align:center;transition:all .2s;cursor:pointer" '
-    + 'onmouseover="this.style.borderColor=\'rgba(0,229,204,.5)\';this.style.background=\'rgba(0,229,204,.05)\'" '
-    + 'onmouseout="this.style.borderColor=\'rgba(0,229,204,.2)\';this.style.background=\'var(--bg2)\'">'
-    + '<div style="width:56px;height:56px;border-radius:50%;background:rgba(0,229,204,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:28px">📧</div>'
-    + '<div style="font-size:16px;font-weight:700;font-family:var(--fh);margin-bottom:4px;color:var(--t)">Email</div>'
-    + '<div style="font-size:13px;color:var(--t3);margin-bottom:12px">Richieste dettagliate</div>'
-    + '<div style="font-size:12px;font-weight:700;font-family:var(--fd);color:var(--teal);background:rgba(0,229,204,.08);padding:6px 10px;border-radius:8px;display:inline-block;word-break:break-all">visiontradingprop<br>@gmail.com</div>'
-    + '<div style="margin-top:14px;padding:10px 20px;background:var(--teal2);border-radius:10px;color:#fff;font-size:12px;font-weight:700;font-family:var(--fh);letter-spacing:.06em">&#9654; INVIA EMAIL</div>'
+    // Email btn
+    + '<a href="mailto:visiontradingprop@gmail.com" style="text-decoration:none;flex:1">'
+    + '<div style="background:rgba(0,229,204,.06);border:1px solid rgba(0,229,204,.2);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:all .2s" '
+    + 'onmouseover="this.style.background=\'rgba(0,229,204,.12)\'" onmouseout="this.style.background=\'rgba(0,229,204,.06)\'">'
+    + '<div style="font-size:24px;margin-bottom:6px">📧</div>'
+    + '<div style="font-size:12px;font-weight:700;color:var(--teal);font-family:var(--fh)">Email</div>'
+    + '<div style="font-size:10px;color:var(--t3);margin-top:2px">Risposta entro 24h</div>'
     + '</div></a>'
 
-    + '</div>'
+    + '</div></div>'
 
-    // Orari e info
-    + '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px 24px;margin-bottom:20px">'
-    + '<div style="font-size:11px;font-weight:700;font-family:var(--fh);letter-spacing:.14em;color:var(--t3);text-transform:uppercase;margin-bottom:14px">&#128337; Orari di supporto</div>'
-    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    + '<div style="display:flex;gap:10px;align-items:center">'
-    + '<div style="width:8px;height:8px;border-radius:50%;background:#25d366;box-shadow:0 0 6px #25d366;flex-shrink:0"></div>'
-    + '<div><div style="font-size:13px;font-weight:600;color:var(--t)">WhatsApp</div><div style="font-size:11px;color:var(--t3)">Lun–Sab · 9:00–21:00</div></div>'
-    + '</div>'
-    + '<div style="display:flex;gap:10px;align-items:center">'
-    + '<div style="width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal);flex-shrink:0"></div>'
-    + '<div><div style="font-size:13px;font-weight:600;color:var(--t)">Email</div><div style="font-size:11px;color:var(--t3)">Risposta entro 24h</div></div>'
-    + '</div>'
-    + '</div>'
-    + '</div>'
-
-    // FAQ rapide
-    + '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px 24px">'
-    + '<div style="font-size:11px;font-weight:700;font-family:var(--fh);letter-spacing:.14em;color:var(--t3);text-transform:uppercase;margin-bottom:14px">&#10067; Domande frequenti</div>'
-    + faqItem("Come collego MT4/MT5?", "Vai su EA Download, scarica l\'EA per la tua piattaforma e segui la guida passo per passo.")
-    + faqItem("Come collego cTrader?", "Vai su Journal → Connetti → cTrader → Token manuale. Segui la guida integrata nel dialog.")
-    + faqItem("I dati di mercato non si aggiornano?", "Clicca il pulsante 🔄 nel pannello Mercati. Se il problema persiste controlla la tua connessione internet.")
-    + faqItem("Come creo una nuova sfida?", "Clicca su Nuova Sfida nel menu in alto, compila i parametri e premi Aggiungi.")
-    + faqItem("Posso usare il software su più device?", "Sì — accedi con le tue credenziali da qualsiasi browser. I dati sono sincronizzati via cloud.")
+    // FAQ accordion
+    + '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 20px">'
+    + '<div style="font-size:11px;font-weight:700;font-family:var(--fh);letter-spacing:.14em;color:var(--t3);text-transform:uppercase;margin-bottom:12px">❓ FAQ</div>'
+    + faqItem('Come collego MT4/MT5?','Vai su EA Download, scarica l\'EA per la tua piattaforma e segui la guida.')
+    + faqItem('Come collego cTrader?','Journal → Connetti → cTrader → Token manuale. Segui la guida nel dialog.')
+    + faqItem('I dati non si aggiornano?','Clicca 🔄 nel pannello Mercati. Controlla la connessione internet.')
+    + faqItem('Come creo una nuova sfida?','Clicca Nuova Sfida nel menu, compila i parametri e premi Aggiungi.')
+    + faqItem('Posso usare su più device?','Sì — accedi con le tue credenziali da qualsiasi browser.')
     + '</div>'
 
     + '</div>';
 }
 
+function quickQ(text) {
+  return '<button onclick="aiAskQuick(\''+text+'\')" style="padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);color:var(--t2);font-size:11px;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:var(--fm)" '
+    + 'onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\'" '
+    + 'onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--t2)\'">'+text+'</button>';
+}
+
 function faqItem(q, a) {
   var qid = 'faq_'+Math.random().toString(36).slice(2,7);
-  return '<div style="border-bottom:1px solid var(--border);padding:10px 0;cursor:pointer" onclick="var ans=document.getElementById(\''+qid+'\');ans.style.display=ans.style.display===\'none\'?\'block\':\'none\'">'
+  return '<div style="border-bottom:1px solid var(--border);padding:10px 0;cursor:pointer" onclick="var el=document.getElementById(\''+qid+'\');el.style.display=el.style.display===\'none\'?\'block\':\'none\'">'
     + '<div style="display:flex;justify-content:space-between;align-items:center">'
     + '<div style="font-size:13px;font-weight:600;color:var(--t)">'+q+'</div>'
-    + '<div style="font-size:16px;color:var(--teal);flex-shrink:0;margin-left:8px">+</div>'
+    + '<div style="font-size:14px;color:var(--teal)">+</div>'
     + '</div>'
-    + '<div id="'+qid+'" style="display:none;font-size:12px;color:var(--t3);line-height:1.6;margin-top:8px;padding-bottom:4px">'+a+'</div>'
+    + '<div id="'+qid+'" style="display:none;font-size:12px;color:var(--t3);line-height:1.6;margin-top:6px">'+a+'</div>'
     + '</div>';
+}
+
+// ── AI Chat Engine ──────────────────────────────────────────────
+var _aiHistory = [];
+
+var AI_SYSTEM = 'Sei l\'assistente AI di PropHedge - software italiano per trader di prop firm (FTMO, FundedElite, FTUK, Axi, ecc.).\n\n'
+  + 'Il software permette di:\n'
+  + '- Calcolare lotti hedge ottimali per sfide prop firm\n'
+  + '- Gestire più sfide prop contemporaneamente (dashboard)\n'
+  + '- Collegare conti MT4/MT5 tramite Expert Advisor (EA)\n'
+  + '- Collegare conti cTrader tramite OAuth o token manuale\n'
+  + '- Monitorare P&L reale in tempo reale\n'
+  + '- Consultare il calendario economico ForexFactory\n'
+  + '- Trade Journal con storico trade dalla data di connessione\n'
+  + '- Prezzi live: Forex (Frankfurter BCE), Crypto (Binance WebSocket), Indici/Materie prime (Yahoo Finance)\n\n'
+  + 'Strategie supportate: Prop+Personale (hedge classico), Prop+Prop (doppia prop).\n'
+  + 'Scenari calcolati: Scenario A (prop chiusa, hedge incassato), Scenario B (payout + hedge).\n\n'
+  + 'Rispondi SOLO in italiano, in modo conciso e pratico. Se la domanda non riguarda il software o il trading con prop firm, rispondi gentilmente che puoi aiutare solo con PropHedge.';
+
+function aiAddMsg(role, text, isLoading) {
+  var msgs = document.getElementById('aiChatMsgs');
+  if(!msgs) return;
+  var isAI = role === 'assistant';
+  var div = document.createElement('div');
+  div.style.cssText = 'display:flex;gap:8px;align-items:flex-start' + (isAI?'':';flex-direction:row-reverse');
+  var avatar = isAI
+    ? '<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--teal2),var(--violet2));display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">🤖</div>'
+    : '<div style="width:28px;height:28px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">👤</div>';
+  var bubble = document.createElement('div');
+  bubble.style.cssText = 'background:'+(isAI?'var(--bg3)':'rgba(0,229,204,.08)')+';border:1px solid '+(isAI?'var(--border)':'rgba(0,229,204,.2)')+';border-radius:'+(isAI?'12px 12px 12px 2px':'12px 12px 2px 12px')+';padding:10px 14px;max-width:85%;font-size:13px;color:var(--t2);line-height:1.6';
+  if(isLoading) {
+    bubble.innerHTML = '<span id="aiDots" style="opacity:.6">&#9679;&#9679;&#9679;</span>';
+    bubble.id = 'aiBubbleLoading';
+    // Anima i pallini
+    var d=0; bubble._timer=setInterval(function(){ d=(d+1)%4; var el=document.getElementById('aiDots'); if(el)el.textContent='●'.repeat(d+1); },400);
+  } else {
+    bubble.textContent = text;
+  }
+  div.innerHTML = avatar;
+  div.appendChild(bubble);
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return bubble;
+}
+
+function aiRemoveLoading() {
+  var el = document.getElementById('aiBubbleLoading');
+  if(el){ if(el._timer)clearInterval(el._timer); el.parentElement.remove(); }
+}
+
+async function aiSend() {
+  var input = document.getElementById('aiChatInput');
+  var btn   = document.getElementById('aiSendBtn');
+  if(!input) return;
+  var text = input.value.trim();
+  if(!text) return;
+
+  input.value = '';
+  input.disabled = true;
+  if(btn) btn.disabled = true;
+
+  // Messaggio utente
+  aiAddMsg('user', text);
+  _aiHistory.push({role:'user', content:text});
+
+  // Loading
+  var loadBubble = aiAddMsg('assistant', '', true);
+
+  try {
+    var resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:      'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system:     AI_SYSTEM,
+        messages:   _aiHistory
+      })
+    });
+    var data = await resp.json();
+    var reply = (data.content && data.content[0] && data.content[0].text) || 'Non ho capito, puoi ripetere?';
+
+    aiRemoveLoading();
+    aiAddMsg('assistant', reply);
+    _aiHistory.push({role:'assistant', content:reply});
+
+    // Mantieni storico max 20 messaggi
+    if(_aiHistory.length > 20) _aiHistory = _aiHistory.slice(-20);
+
+  } catch(e) {
+    aiRemoveLoading();
+    aiAddMsg('assistant', 'Errore di connessione. Riprova o contattaci via WhatsApp.');
+  }
+
+  if(input) input.disabled = false;
+  if(btn)   btn.disabled = false;
+  if(input) input.focus();
+}
+
+function aiAskQuick(text) {
+  var input = document.getElementById('aiChatInput');
+  if(input){ input.value = text; aiSend(); }
 }
 
 // MAIN RENDER
