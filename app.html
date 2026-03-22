@@ -3096,38 +3096,99 @@ function jrnlConnPlatChange() {
 
   if (plat==='ctrader') {
     fields.innerHTML = ''
-      // Selezione metodo connessione
-      + '<div class="f" style="margin-top:10px"><label>Metodo di connessione</label>'
-      + '<select id="jConn-ct-method" onchange="jrnlCtraderMethodChange()" style="background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fd);width:100%">'
-      + '<option value="oauth">OAuth — Login cTrader (app in attesa approvazione)</option>'
-      + '<option value="manual">Token manuale — Incolla il tuo Access Token</option>'
-      + '</select></div>'
 
-      // ── Sezione OAuth ──────────────────────────────────────────
-      + '<div id="jConn-ct-oauth">'
-      + '<div class="note note-teal" style="margin-top:10px;font-size:11px;line-height:1.7">'
-      + '&#128274; Verrai reindirizzato su cTrader per autorizzare l\'accesso.<br>'
-      + '<span style="color:var(--amber)">⚠ L\'app è in attesa di approvazione Spotware (max 3 giorni lavorativi).</span>'
+      // ── GUIDA VISIVA cTrader ────────────────────────────────────
+      + '<div style="margin-top:12px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden">'
+
+      // Header guida
+      + '<div style="background:linear-gradient(135deg,rgba(0,229,204,.15),rgba(155,93,229,.1));padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">'
+      + '<span style="font-size:20px">📋</span>'
+      + '<div><div style="font-size:12px;font-weight:700;font-family:var(--fh);letter-spacing:.06em">GUIDA CONNESSIONE cTRADER</div>'
+      + '<div style="font-size:10px;color:var(--t3)">Segui i passi per collegare il tuo conto</div></div>'
+      + '</div>'
+
+      // Steps visivi
+      + '<div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">'
+
+      // Step 1
+      + '<div style="display:flex;gap:10px;align-items:flex-start">'
+      + '<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--teal2),var(--violet2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;font-family:var(--fd)">1</div>'
+      + '<div style="flex:1">'
+      + '<div style="font-size:12px;font-weight:600;color:var(--t);margin-bottom:2px">Apri il Sandbox cTrader</div>'
+      + '<div style="font-size:11px;color:var(--t3);line-height:1.5">Vai su <a href="https://connect.spotware.com/apps/23386/playground" target="_blank" style="color:var(--teal);text-decoration:none;font-weight:600">connect.spotware.com → Sandbox ↗</a></div>'
+      + '<div style="margin-top:6px;background:var(--bg2);border:1px solid var(--border2);border-radius:7px;padding:6px 10px;font-size:10px;color:var(--t2);font-family:var(--fd)">'
+      + '&#128279; connect.spotware.com/apps/23386/playground</div>'
       + '</div></div>'
 
-      // ── Sezione Token Manuale ──────────────────────────────────
-      + '<div id="jConn-ct-manual" style="display:none">'
-      + '<div class="note" style="margin-top:10px;font-size:11px;line-height:1.7;background:rgba(255,190,11,.08);border:1px solid rgba(255,190,11,.2);border-radius:8px;padding:10px;color:var(--t2)">'
-      + '<strong style="color:var(--amber)">Come ottenere il token:</strong><br>'
-      + '1. Vai su <a href="https://connect.spotware.com/apps/23386/playground" target="_blank" style="color:var(--teal)">connect.spotware.com → Sandbox</a><br>'
-      + '2. Clicca <strong>Ottieni il token</strong><br>'
-      + '3. Copia l\'Access Token e incollalo qui sotto'
+      // Freccia
+      + '<div style="display:flex;justify-content:flex-start;padding-left:11px"><div style="width:2px;height:12px;background:var(--border2);border-radius:1px"></div></div>'
+
+      // Step 2
+      + '<div style="display:flex;gap:10px;align-items:flex-start">'
+      + '<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--teal2),var(--violet2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;font-family:var(--fd)">2</div>'
+      + '<div style="flex:1">'
+      + '<div style="font-size:12px;font-weight:600;color:var(--t);margin-bottom:2px">Scegli le autorizzazioni</div>'
+      + '<div style="font-size:11px;color:var(--t3);line-height:1.5">Seleziona <strong style="color:var(--t2)">&#34;Informazioni sull\'account e sulle operazioni di trading&#34;</strong></div>'
+      + '<div style="margin-top:6px;display:flex;gap:6px;align-items:center;background:rgba(0,214,143,.06);border:1px solid rgba(0,214,143,.2);border-radius:6px;padding:5px 8px">'
+      + '<span style="font-size:12px">&#9989;</span>'
+      + '<span style="font-size:10px;color:var(--t2)">Informazioni sull\'account e sulle operazioni di trading</span>'
       + '</div>'
-      + '<div class="f" style="margin-top:10px"><label>Access Token cTrader</label>'
-      + '<input type="text" id="jConn-ct-token" value="'+(conn.token||'')+'" placeholder="Incolla qui l\'access token..." '
-      + 'style="font-family:var(--fd);font-size:10px;background:var(--bg);border-color:var(--amber)">'
+      + '</div></div>'
+
+      // Freccia
+      + '<div style="display:flex;justify-content:flex-start;padding-left:11px"><div style="width:2px;height:12px;background:var(--border2);border-radius:1px"></div></div>'
+
+      // Step 3
+      + '<div style="display:flex;gap:10px;align-items:flex-start">'
+      + '<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--teal2),var(--violet2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;font-family:var(--fd)">3</div>'
+      + '<div style="flex:1">'
+      + '<div style="font-size:12px;font-weight:600;color:var(--t);margin-bottom:2px">Clicca "Ottieni il token"</div>'
+      + '<div style="font-size:11px;color:var(--t3);line-height:1.5">Premi il pulsante blu in fondo alla pagina. Apparirà il tuo Access Token.</div>'
+      + '<div style="margin-top:6px;display:inline-flex;align-items:center;gap:6px;background:#1565c0;border-radius:6px;padding:5px 12px">'
+      + '<span style="font-size:11px;color:#fff;font-weight:700">Ottieni il token</span>'
       + '</div>'
-      + '<div class="f"><label>Account ID cTrader</label>'
+      + '</div></div>'
+
+      // Freccia
+      + '<div style="display:flex;justify-content:flex-start;padding-left:11px"><div style="width:2px;height:12px;background:var(--border2);border-radius:1px"></div></div>'
+
+      // Step 4
+      + '<div style="display:flex;gap:10px;align-items:flex-start">'
+      + '<div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--teal2),var(--violet2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;font-family:var(--fd)">4</div>'
+      + '<div style="flex:1">'
+      + '<div style="font-size:12px;font-weight:600;color:var(--t);margin-bottom:2px">Copia il token e incollalo qui sotto</div>'
+      + '<div style="font-size:11px;color:var(--t3);line-height:1.5">Seleziona <strong style="color:var(--teal)">Token manuale</strong> nel menu e incolla il token nel campo.</div>'
+      + '</div></div>'
+
+      + '</div></div>'
+
+      // ── Selezione metodo ───────────────────────────────────────
+      + '<div class="f" style="margin-top:14px"><label>Metodo di connessione</label>'
+      + '<select id="jConn-ct-method" onchange="jrnlCtraderMethodChange()" style="background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fd);width:100%">'
+      + '<option value="manual">&#128274; Token manuale (usa il Sandbox)</option>'
+      + '<option value="oauth">&#9729; OAuth automatico (disponibile dopo approvazione)</option>'
+      + '</select></div>'
+
+      // ── Sezione Token Manuale (default) ───────────────────────
+      + '<div id="jConn-ct-manual">'
+      + '<div class="f" style="margin-top:10px"><label>Access Token <span style="color:var(--teal);font-size:9px">— dal Sandbox Spotware</span></label>'
+      + '<div style="display:flex;gap:6px">'
+      + '<input type="text" id="jConn-ct-token" value="'+(conn.token||'')+'" placeholder="Incolla qui l\'Access Token..." '
+      + 'style="flex:1;font-family:var(--fd);font-size:10px;background:var(--bg);border-color:var(--teal)" onclick="this.select()">'
+      + '</div></div>'
+      + '<div class="f"><label>Account ID cTrader <span style="color:var(--t3);font-size:9px">— numero del conto</span></label>'
       + '<input type="text" id="jConn-ct-accountid" value="'+(conn.accountId||'')+'" placeholder="Es. 12345678" '
       + 'style="font-family:var(--fd);font-size:12px;background:var(--bg)">'
-      + '<div style="font-size:9px;color:var(--t3);margin-top:3px">Trovi l\'Account ID nel Sandbox o nelle impostazioni cTrader</div>'
+      + '<div style="font-size:9px;color:var(--t3);margin-top:3px">&#8505; Trovi l\'Account ID nel Sandbox cTrader dopo aver ottenuto il token</div>'
       + '</div>'
       + '</div>'
+
+      // ── Sezione OAuth (nascosta finché non approvata) ──────────
+      + '<div id="jConn-ct-oauth" style="display:none">'
+      + '<div class="note note-teal" style="margin-top:10px;font-size:11px;line-height:1.7">'
+      + '&#128274; Premi Salva — verrai reindirizzato su cTrader per autorizzare l\'accesso al tuo conto.<br>'
+      + '<span style="color:var(--amber)">&#9888; L\'app è in attesa approvazione Spotware (max 3 giorni).</span>'
+      + '</div></div>'
 
       // ── Campi comuni ───────────────────────────────────────────
       + '<div class="f" style="margin-top:10px"><label>Ambiente</label>'
