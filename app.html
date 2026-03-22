@@ -973,16 +973,25 @@ function doForgotSubmit(){
      FLOATING AI CHAT WIDGET
 ══════════════════════════════════════════════════════════ -->
 <button id="aiFloatBtn" onclick="toggleAIChat()" title="Assistente AI PropHedge">
-  🤖
+  <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
+    <rect width="36" height="36" rx="18" fill="#0c1428"/>
+    <polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#00e5cc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="33" cy="7" r="3" fill="#9b5de5"/>
+  </svg>
   <span class="ai-notif"></span>
 </button>
 
 <div id="aiFloatPanel">
   <!-- Header AI mode -->
   <div class="ai-panel-hdr" id="aiHdrAI">
-    <div class="ai-avatar">🤖</div>
+    <div class="ai-avatar" style="background:linear-gradient(135deg,#0c1428,#111628);border:1px solid #2a3560">
+      <svg width="20" height="20" viewBox="0 0 36 36" fill="none">
+        <polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#00e5cc" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="33" cy="7" r="3.2" fill="#9b5de5"/>
+      </svg>
+    </div>
     <div>
-      <div class="ai-title">PropHedge AI</div>
+      <div class="ai-title"><span style="color:#00e5cc">Prop</span><span style="color:#9b5de5">Hedge</span> Support</div>
       <div class="ai-status"><span class="ai-dot"></span><span>Online · risponde in secondi</span></div>
     </div>
     <button class="ai-close" onclick="toggleAIChat()">✕</button>
@@ -2281,7 +2290,7 @@ function toggleAIChat(){
   if(notif) notif.style.display = 'none';
   if(_aiOpen && !_aiGreeted){
     _aiGreeted = true;
-    aiFloatAddMsg('bot','Ciao! 👋 Sono l'assistente AI di PropHedge.\n\nPosso aiutarti su qualsiasi funzione del software: calcolo lotti, connessione broker, journal, calendario economico e altro.\n\nCome posso aiutarti?');
+    aiFloatAddMsg('bot','Ciao! 👋 Sono l\'assistente AI di PropHedge.\nPosso aiutarti su qualsiasi funzione del software: calcolo lotti, connessione broker, journal, calendario economico e altro.\nCome posso aiutarti?');
   }
   if(_aiOpen && _humanMode && !_pollTimer) startSupportPolling();
   if(!_aiOpen && !_humanMode) stopOpRotation();
@@ -2376,7 +2385,7 @@ function switchToHumanSupport(){
   var qb = document.getElementById('aiQuickBtns');
   if(qb) qb.style.display = 'none';
 
-  aiFloatAddMsg('bot','Perfetto! Sei ora connesso direttamente con il team VisionTrading. 🎧\n\nScrivi il tuo messaggio, ti risponderemo qui a breve.');
+  aiFloatAddMsg('bot','Perfetto! Sei ora connesso con il team VisionTrading. Scrivi il tuo messaggio, ti risponderemo qui a breve.');
 
   var input = document.getElementById('aiFloatInput');
   if(input) input.placeholder = 'Scrivi al team di supporto...';
