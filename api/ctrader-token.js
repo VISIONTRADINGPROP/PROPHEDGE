@@ -19,8 +19,8 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: 'Credenziali cTrader non configurate' });
     }
 
-    // URL corretto per il token — id.ctrader.com
-    const tokenUrl = 'https://id.ctrader.com/oauth2/token';
+    // URL CORRETTO per il token
+    const tokenUrl = 'https://connect.spotware.com/apps/token';
 
     const params = new URLSearchParams({
       grant_type:    'authorization_code',
