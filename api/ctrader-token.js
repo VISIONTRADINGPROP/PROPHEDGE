@@ -1,6 +1,5 @@
 // api/ctrader-token.js
 // Scambia il codice OAuth con access token cTrader
-// Le credenziali sono sul server — il cliente non le vede mai
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -13,7 +12,6 @@ module.exports = async function handler(req, res) {
     const { code, redirect_uri, env } = req.body;
     if (!code) return res.status(400).json({ error: 'Codice OAuth mancante' });
 
-    // Credenziali dal server — mai esposte al client
     const clientId     = process.env.CTRADER_CLIENT_ID;
     const clientSecret = process.env.CTRADER_CLIENT_SECRET;
 
@@ -21,9 +19,8 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: 'Credenziali cTrader non configurate' });
     }
 
-    const tokenUrl = env === 'live'
-      ? 'https://connect.ctrader.com/oauth/token'
-      : 'https://id.ctrader.com/oauth2/token';
+    // URL corretto per il token — id.ctrader.com
+    const tokenUrl = 'https://id.ctrader.com/oauth2/token';
 
     const params = new URLSearchParams({
       grant_type:    'authorization_code',
@@ -42,9 +39,15 @@ module.exports = async function handler(req, res) {
     const data = await r.json();
 
     if (data.access_token) {
-      res.status(200).json({ access_token: data.access_token, refresh_token: data.refresh_token });
+      res.status(200).json({
+        access_token:  data.access_token,
+        refresh_token: data.refresh_token || null,
+        expires_in:    data.expires_in    || 3600
+      });
     } else {
-      res.status(200).json({ error: data.error_description || data.error || 'Errore token' });
+      res.status(200).json({
+        error: data.error_description || data.error || 'Errore token'
+      });
     }
   } catch (err) {
     console.error('ctrader-token error:', err.message);
