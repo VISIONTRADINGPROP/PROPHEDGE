@@ -1,57 +1,61 @@
-// /api/support-send.js
-module.exports = async function handler(req, res) {
+// api/support-send.js
+// Posiziona questo file in: /api/support-send.js su Vercel
+
+export default async function handler(req, res) {
+  // Abilita CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') { res.status(200).end(); return; }
-  if (req.method !== 'POST') return res.status(405).end();
 
-  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-  const CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
-
-  if (!BOT_TOKEN || !CHAT_ID) {
-    return res.status(500).json({ error: 'Env vars mancanti: TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID' });
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  const { ticket_id, message, user_email, user_name, operator } = req.body || {};
-  if (!message || !ticket_id) return res.status(400).json({ error: 'Dati mancanti' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
-  // Testo SENZA Markdown per evitare errori di parsing con caratteri speciali
-  const lines = [
-    '🆘 NUOVO MESSAGGIO SUPPORTO',
-    '',
-    'Cliente: ' + (user_name || 'Utente') + (user_email ? ' (' + user_email + ')' : ''),
-    operator ? 'Operatore: ' + operator : '',
-    '',
-    'Messaggio:',
-    message,
-    '',
-    'TICKET: ' + ticket_id,
-    '',
-    'Rispondi a questo messaggio per rispondere al cliente'
-  ].filter(l => l !== undefined && !(l === '' && lines === undefined));
-
-  const text = lines.join('\n');
+  const TELEGRAM_BOT_TOKEN = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA';
+  const TELEGRAM_CHAT_ID   = '998979042';
 
   try {
-    const r = await fetch(
-      'https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: String(CHAT_ID).trim(),
-          text:    text
-          // NO parse_mode - testo semplice, nessun rischio di errori
-        })
-      }
-    );
-    const data = await r.json();
-    if (!data.ok) {
-      return res.status(500).json({ error: data.description, chat_id_used: String(CHAT_ID).trim() });
+    const { ticket_id, message, user_email, user_name } = req.body;
+
+    if (!message) {
+      return res.status(400).json({ error: 'Messaggio mancante' });
     }
-    return res.status(200).json({ ok: true });
-  } catch(err) {
-    return res.status(500).json({ error: err.message });
+
+    // Costruisce il messaggio Telegram
+    const telegramText =
+      `🆕 *NUOVO MESSAGGIO SUPPORTO*\n\n` +
+      `👤 *Utente:* ${user_name || 'Sconosciuto'}\n` +
+      `📧 *Email:* ${user_email || 'N/D'}\n` +
+      `🎫 *Ticket:* \`${ticket_id || 'N/D'}\`\n\n` +
+      `💬 *Messaggio:*\n${message}`;
+
+    // Invia a Telegram
+    const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const telegramRes = await fetch(telegramUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: TELEGRAM_CHAT_ID,
+        text: telegramText,
+        parse_mode: 'Markdown'
+      })
+    });
+
+    const telegramData = await telegramRes.json();
+
+    if (!telegramData.ok) {
+      console.error('Telegram error:', telegramData);
+      return res.status(500).json({ error: 'Errore invio Telegram', details: telegramData });
+    }
+
+    return res.status(200).json({ success: true, telegram_message_id: telegramData.result.message_id });
+
+  } catch (err) {
+    console.error('support-send error:', err);
+    return res.status(500).json({ error: 'Errore interno', details: err.message });
   }
-};
+}
