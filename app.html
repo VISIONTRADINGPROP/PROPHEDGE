@@ -4314,18 +4314,18 @@ function startSupportPolling() {
 
 
 
-function changeAppLang(c) {
-  var s = document.querySelector('.goog-te-combo');
-  if(s) { 
-    s.value = c; 
-    s.dispatchEvent(new Event('change')); 
-    // Nasconde le tendine in automatico dopo il click
-    var langOpt = document.getElementById('langOptions');
-    if(langOpt) langOpt.style.display = 'none';
-    closeAccDrop(); 
+function changeAppLang(langCode) {
+  // Se sceglie italiano, rimuove il cookie di traduzione e torna alla lingua originale
+  if (langCode === 'it') {
+    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + location.hostname;
   } else {
-    alert("Il traduttore si sta ancora caricando, attendi un istante e riprova.");
+    // Imposta il cookie di Google Translate per forzare la lingua scelta
+    document.cookie = "googtrans=/it/" + langCode + "; path=/;";
+    document.cookie = "googtrans=/it/" + langCode + "; path=/; domain=" + location.hostname;
   }
+  // Ricarica la pagina per applicare istantaneamente la traduzione su tutto il software
+  location.reload();
 }
   
 function saveProfileData() {
