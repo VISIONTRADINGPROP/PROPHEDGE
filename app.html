@@ -2315,66 +2315,47 @@ function aiFloatRemoveTyping(){
   if(bub&&bub._timer)clearInterval(bub._timer);if(row)row.remove();
 }
 
-// ── Attiva supporto umano silenzioso (Telegram dietro le quinte) ─
-function switchToHumanSupport(){
-  _humanMode=true;_ticketId=genTicketId();_lastMsgAt=new Date().toISOString();
-  var hdrTitle=document.querySelector('#aiFloatPanel .ai-title');
-  var hdrStatus=document.querySelector('#aiFloatPanel .ai-status');
-  if(hdrTitle)hdrTitle.textContent='Supporto PropHedge';
-  if(hdrStatus)hdrStatus.innerHTML='<span class="ai-dot" style="background:#00d68f;animation:pu 1.5s infinite"></span> Team VisionTrading · In diretta';
-  var qb=document.getElementById('aiQuickBtns');if(qb)qb.style.display='none';
- aiFloatAddMsg('bot','Ti sto reindirizzando alla chat live in attesa che si colleghi un operatore. 🎧\n\nPer favore, scrivi qui sotto la tua EMAIL, NOME e COGNOME. Così appena l\'operatore si collega saprà chi sei!');
-  var input=document.getElementById('aiFloatInput');if(input)input.placeholder='Scrivi al team di supporto...';
+// Gestione dei 9 Operatori Supporto
+var supportStaff = [
+  {n:'Marco', img:'https://i.pravatar.cc/150?img=11'}, {n:'Laura', img:'https://i.pravatar.cc/150?img=5'}, 
+  {n:'Alessio', img:'https://i.pravatar.cc/150?img=12'}, {n:'Giulia', img:'https://i.pravatar.cc/150?img=9'},
+  {n:'Roberto', img:'https://i.pravatar.cc/150?img=13'}, {n:'Elena', img:'https://i.pravatar.cc/150?img=10'},
+  {n:'Fabio', img:'https://i.pravatar.cc/150?img=14'}, {n:'Chiara', img:'https://i.pravatar.cc/150?img=16'},
+  {n:'Davide', img:'https://i.pravatar.cc/150?img=18'}
+];
+
+function aiFloatAddMsg(role, text) {
+  var msgs = document.getElementById('aiFloatMsgs'); if (!msgs) return null;
+  var isBot = (role === 'bot'); var isSupport = (role === 'support');
+  var row = document.createElement('div'); row.className = 'ai-msg-row' + ((isBot || isSupport) ? '' : ' user');
+  
+  // Immagine avatar: se è supporto umano usa una delle foto staff
+  var randomStaff = supportStaff[Math.floor(Math.random() * supportStaff.length)];
+  var avaImg = isSupport ? '<img src="'+randomStaff.img+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">' : (isBot ? '🤖' : '👤');
+  
+  row.innerHTML = '<div class="ai-msg-ava ' + ((isBot||isSupport)?'bot':'usr') + '">' + avaImg + '</div>'
+                + '<div class="ai-bubble ' + ((isBot||isSupport)?'bot':'usr') + '">' + text.replace(/\n/g, '<br>') + '</div>';
+  msgs.appendChild(row); msgs.scrollTop = msgs.scrollHeight;
+}
+
+function switchToHumanSupport() {
+  _humanMode = true; _ticketId = genTicketId(); _lastMsgAt = new Date().toISOString();
+  var hdrTitle = document.querySelector('#aiFloatPanel .ai-title');
+  var hdrStatus = document.querySelector('#aiFloatPanel .ai-status');
+  
+  // Scegliamo 3 operatori a caso per mostrarli online
+  var online = supportStaff.sort(() => 0.5 - Math.random()).slice(0, 3).map(s => s.n).join(', ');
+  
+  if (hdrTitle) hdrTitle.textContent = 'Supporto Live';
+  if (hdrStatus) hdrStatus.innerHTML = '<span class="ai-dot"></span> Online: ' + online;
+  
+  var qb = document.getElementById('aiQuickBtns'); if (qb) qb.style.display = 'none';
+
+  aiFloatAddMsg('bot', 'Ti sto mettendo in contatto con un operatore. 🎧\n\nIn attesa che si colleghi, per favore scrivi qui sotto la tua **EMAIL, NOME e COGNOME**. Ti risponderemo subito!');
+  
+  var input = document.getElementById('aiFloatInput'); if (input) input.placeholder = 'Scrivi i tuoi dati...';
   startSupportPolling();
 }
-
-function startSupportPolling(){if(_pollTimer)clearInterval(_pollTimer);_pollTimer=setInterval(pollSupportMessages,5000);}
-
-async function pollSupportMessages(){
-  if(!_ticketId)return;
-  try{
-    var url='/api/support-messages?ticket_id='+encodeURIComponent(_ticketId);
-    if(_lastMsgAt)url+='&after='+encodeURIComponent(_lastMsgAt);
-    var r=await fetch(url);var d=await r.json();
-    if(d.messages&&d.messages.length>0){
-      d.messages.forEach(function(m){aiFloatAddMsg('support',m.content);_lastMsgAt=m.created_at;});
-    }
-  }catch(e){}
-}
-
-async function sendToHumanSupport(text){
-  var btn=document.getElementById('aiFloatSend');if(btn)btn.disabled=true;
-  aiFloatAddMsg('usr',text);
-  aiFloatAddMsg('bot','✓ Messaggio consegnato. Risponderemo a breve.');
-  try{
-    await fetch('/api/support-send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket_id:_ticketId,message:text,user_email:accountData.email||'',user_name:((accountData.firstName||'')+' '+(accountData.lastName||'')).trim()||'Utente'})});
-  }catch(e){}
-  if(btn)btn.disabled=false;
-}
-
-async function aiFloatSend(){
-  var input=document.getElementById('aiFloatInput');var btn=document.getElementById('aiFloatSend');
-  if(!input)return;var text=input.value.trim();if(!text)return;
-  input.value='';if(input.style)input.style.height='auto';
-  // Se già in modalità supporto umano → invia a Telegram
-  if(_humanMode){await sendToHumanSupport(text);if(input)input.focus();return;}
-  // Altrimenti → AI normale
-  if(btn)btn.disabled=true;
-  aiFloatAddMsg('usr',text);_aiHist.push({role:'user',content:text});
-  var qb=document.getElementById('aiQuickBtns');if(qb)qb.style.display='none';
-  aiFloatAddTyping();
-  try{
-    var resp=await fetch('/api/ai-support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:_aiHist})});
-    var data=await resp.json();var reply=data.reply||'Non ho capito, puoi ripetere?';
-    aiFloatRemoveTyping();
-    // L'AI ha deciso di passare al supporto umano
-    if(reply.indexOf('###HUMAN_SUPPORT###')!==-1){switchToHumanSupport();}
-    else{aiFloatAddMsg('bot',reply);_aiHist.push({role:'assistant',content:reply});if(_aiHist.length>20)_aiHist=_aiHist.slice(-20);}
-  }catch(e){aiFloatRemoveTyping();aiFloatAddMsg('bot','Errore di connessione. Riprova tra qualche secondo. 🙏');}
-  if(btn)btn.disabled=false;if(input)input.focus();
-}
-
-function aiFloatAsk(text){var input=document.getElementById('aiFloatInput');if(input){input.value=text;aiFloatSend();}}
 
 // ══ INIT ══════════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded',function(){
