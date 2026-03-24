@@ -2109,15 +2109,15 @@ function renderAccountDrop() {
     + '<input type="file" id="accPhotoInput" style="display:none" accept="image/*" onchange="updateProfilePhoto(this)">'
     + '<div><div style="font-size:15px;font-weight:700">' + displayName + '</div><div style="font-size:12px;color:var(--t3);font-family:var(--fd)">' + accountData.email + '</div></div></div>'
     
-    // SEZIONE LINGUE CON BANDIERE
+    // SEZIONE LINGUE CON BANDIERE E NOMI
     + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
     + '<div style="font-size:10px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Lingua / Language</div>'
     + '<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">'
-    + '<button onclick="changeAppLang(\'it\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇮🇹 IT</button>'
-    + '<button onclick="changeAppLang(\'en\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇺🇸 EN</button>'
-    + '<button onclick="changeAppLang(\'es\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇪🇸 ES</button>'
-    + '<button onclick="changeAppLang(\'fr\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇫🇷 FR</button>'
-    + '<button onclick="changeAppLang(\'de\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇩🇪 DE</button>'
+    + '<button onclick="changeAppLang(\'it\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇮🇹 ITALIA</button>'
+    + '<button onclick="changeAppLang(\'en\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇺🇸 INGLESE</button>'
+    + '<button onclick="changeAppLang(\'es\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇪🇸 SPAGNA</button>'
+    + '<button onclick="changeAppLang(\'fr\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇫🇷 FRANCIA</button>'
+    + '<button onclick="changeAppLang(\'de\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇩🇪 GERMANIA</button>'
     + '</div><div id="google_translate_element" style="display:none"></div></div>'
 
     + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
@@ -2129,6 +2129,38 @@ function renderAccountDrop() {
     + '<button onclick="toggleTheme()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--t);cursor:pointer;font-size:13px"><span>🎨</span><span>Tema</span></button>'
     + '<button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(255,64,96,.2);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px"><span>🔓</span><span>Esci</span></button>'
     + '</div></div>';
+}
+
+function changeAppLang(c) {
+  var s = document.querySelector('.goog-te-combo');
+  if(s) { s.value = c; s.dispatchEvent(new Event('change')); }
+}
+
+async function aiFloatSend(){
+  var input = document.getElementById('aiFloatInput');
+  var text = input.value.trim();
+  if(!text) return;
+  aiFloatAddMsg('usr', text);
+  input.value = '';
+  if(text.toLowerCase().includes('supporto umano') || _humanMode){
+    if(!_humanMode){ switchToHumanSupport(); } 
+    else {
+      try {
+        await fetch('/api/support-send', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ ticket_id: _ticketId, message: text, user: accountData.email })
+        });
+        aiFloatAddMsg('support', 'Messaggio ricevuto! Un operatore ti risponderà qui a breve.');
+      } catch(e) { aiFloatAddMsg('support', 'Messaggio inviato. In attesa di risposta...'); }
+    }
+  } else {
+    aiFloatAddTyping();
+    setTimeout(() => {
+      aiFloatRemoveTyping();
+      aiFloatAddMsg('bot', 'Ho ricevuto la tua richiesta. Per parlare con un umano scrivi "supporto umano".');
+    }, 1500);
+  }
 }
 
 function changeAppLang(c) {
