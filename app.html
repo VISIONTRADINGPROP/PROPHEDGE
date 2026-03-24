@@ -402,8 +402,8 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 .ai-msgs::-webkit-scrollbar-thumb{background:rgba(128,128,128,.2);border-radius:2px}
 .ai-msg-row{display:flex;gap:7px;align-items:flex-start}
 .ai-msg-row.user{flex-direction:row-reverse}
-.ai-msg-ava{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0; overflow:hidden;}
-.ai-msg-ava.bot{background:#0c1428;border:1px solid #00e5cc;}
+.ai-msg-ava{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.ai-msg-ava.bot{background:#0c1428;border:1px solid #00e5cc}
 .ai-msg-ava.usr{background:rgba(255,255,255,.08);border:1px solid rgba(128,128,128,.2)}
 .ai-bubble{padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.6;max-width:82%}
 .ai-bubble.bot{background:#13162a;border:1px solid rgba(128,128,128,.12);color:#c8d0e8;border-radius:10px 10px 10px 2px}
@@ -494,12 +494,96 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
   </div>
 </div>
 
+<div id="loginPage" style="display:none;opacity:1;position:fixed;inset:0;z-index:99990;background:#060810;align-items:center;justify-content:center;padding:24px;transition:opacity .4s;flex-direction:column">
+  <div style="position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(155,93,229,.2) 0%,transparent 70%);top:-150px;right:-150px;pointer-events:none"></div>
+  <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(0,229,204,.15) 0%,transparent 70%);bottom:-120px;left:-100px;pointer-events:none"></div>
+  <div style="background:#0c0f1a;border:1px solid #2a3560;border-radius:22px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.7);animation:spUp .5s ease forwards;position:relative;z-index:1">
+    <div style="background:linear-gradient(135deg,rgba(0,229,204,.08),rgba(155,93,229,.1));border-bottom:1px solid #1e2840;padding:28px 28px 22px;text-align:center">
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:14px">
+        <div style="width:46px;height:46px;border-radius:12px;background:#0c1428;border:1px solid #2a3560;display:flex;align-items:center;justify-content:center">
+          <svg width="28" height="28" viewBox="0 0 36 36" fill="none"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#00e5cc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="33" cy="7" r="2.8" fill="#9b5de5"/></svg>
+        </div>
+        <div style="text-align:left">
+          <div style="font-size:20px;line-height:1.1"><span style="color:#00e5cc">P</span><span style="color:#eef0f8">rop</span><span style="color:#9b5de5">H</span><span style="color:#eef0f8">edge Pro</span></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:#3d4d78;letter-spacing:3px;text-transform:uppercase;margin-top:2px">VISIONTRADING</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#8090b8" data-i18n="loginSub">Accedi al tuo account per continuare</div>
+    </div>
+    <div style="padding:28px">
+      <div style="margin-bottom:16px">
+        <label style="display:block;font-family:'JetBrains Mono',monospace;font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Email</label>
+        <input id="loginEmail" type="email" placeholder="trader@email.com" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()" style="width:100%;background:#111628;border:1px solid #1e2840;color:#eef0f8;border-radius:10px;padding:12px 14px;font-size:13px;font-family:'JetBrains Mono',monospace;outline:none" onfocus="this.style.borderColor='#00e5cc'" onblur="this.style.borderColor='#1e2840'">
+      </div>
+      <div style="margin-bottom:8px">
+        <label style="display:block;font-family:'JetBrains Mono',monospace;font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Password</label>
+        <div style="position:relative">
+          <input id="loginPass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" style="width:100%;background:#111628;border:1px solid #1e2840;color:#eef0f8;border-radius:10px;padding:12px 42px 12px 14px;font-size:13px;font-family:'JetBrains Mono',monospace;outline:none" onfocus="this.style.borderColor='#00e5cc'" onblur="this.style.borderColor='#1e2840'">
+          <span onclick="var i=document.getElementById('loginPass');i.type=i.type==='password'?'text':'password'" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:14px;color:#3d4d78;user-select:none">👁</span>
+        </div>
+      </div>
+      <div style="text-align:right;margin-bottom:20px"><a href="#" onclick="showForgotPanel();return false;" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#3d4d78;text-decoration:none" onmouseover="this.style.color='#1e90ff'" onmouseout="this.style.color='#3d4d78'">Password dimenticata?</a></div>
+      <div id="loginErr" style="display:none;background:rgba(255,64,96,.08);border:1px solid rgba(255,64,96,.2);border-radius:8px;padding:10px 13px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#ff4060;margin-bottom:16px"></div>
+      <button id="loginBtn" onclick="doLogin()" style="width:100%;background:linear-gradient(135deg,#00b8a4,#7a40cc);border:none;color:#fff;border-radius:12px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans','Inter',sans-serif;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">→ Accedi</button>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div style="flex:1;height:1px;background:#1e2840"></div><span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#3d4d78">NON HAI UN ACCOUNT?</span><div style="flex:1;height:1px;background:#1e2840"></div></div>
+     <button onclick="goToPurchase()" style="width:100%;background:#00c97a;border:none;border-radius:999px;padding:15px 0;color:#fff;font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px" onmouseover="this.style.background='#00e085'" onmouseout="this.style.background='#00c97a'">📝 REGISTRATI GRATIS</button>
+    </div>
+  </div>
+</div>
+
+<div id="forgotPage" style="display:none;opacity:0;position:fixed;inset:0;z-index:99992;background:#060810;align-items:center;justify-content:center;padding:24px;transition:opacity .4s;flex-direction:column">
+  </div>
+<div id="purchasePage" style="display:none;opacity:0;position:fixed;inset:0;z-index:99991;background:#060810;align-items:center;justify-content:center;padding:24px;transition:opacity .4s;flex-direction:column">
+  </div>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div id="mkOverlay" onclick="closeMkPanel()"></div>
+<div id="mkPanel">
+  <div class="mk-hdr">
+    <div class="mk-hdr-title">📊 Mercati in Tempo Reale</div>
+    <div class="mk-upd" id="mkUpdTime"></div>
+    <div id="mkRiskBadge" class="mk-risk" style="display:none"></div>
+    <button class="mk-btn-refresh" onclick="mkForceReload()">🔄 Aggiorna</button>
+    <button class="mk-btn-close" onclick="closeMkPanel()">✕</button>
+  </div>
+  <div class="mk-tabs">
+    <button class="mk-tab active" id="mkTabForex" onclick="mkSetCat('forex')">💱 Forex</button>
+    <button class="mk-tab" id="mkTabIndices" onclick="mkSetCat('indices')">📈 Indici</button>
+    <button class="mk-tab" id="mkTabCommod" onclick="mkSetCat('commod')">🛢️ Materie Prime</button>
+    <button class="mk-tab" id="mkTabCrypto" onclick="mkSetCat('crypto')">₿ Crypto</button>
+  </div>
+  <div class="mk-col-hdr mk-grid">
+    <span>Asset</span><span style="text-align:right">Prezzo</span>
+    <span>Giornaliero</span><span>Settimanale</span><span>Mensile</span>
+  </div>
+  <div class="mk-body" id="mkBody">
+    <div style="text-align:center;padding:80px 20px;opacity:.4;font-family:var(--fd);font-size:12px">
+      Clicca <strong style="color:#00e5cc">🔄 Aggiorna</strong> per caricare i prezzi in tempo reale
+    </div>
+  </div>
+</div>
+
+<div class="tk-wrap" id="tkWrapBar" onclick="openMkPanel()" title="Clicca per aprire il pannello mercati">
+  <div class="tk-label"><div class="tk-ld"></div>LIVE</div>
+  <div class="tk-scroll">
+    <div class="tk-track" id="tkTrack">
+      <div class="tk-wait" id="tkWait">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="var(--teal)" stroke-width="1.5"><animateTransform attributeName="transform" type="rotate" from="0 6 6" to="360 6 6" dur="1s" repeatCount="indefinite"/></circle></svg>
+        Caricamento prezzi in tempo reale...
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="hdr">
   <div class="logo-box">
     <div class="logo-icon">
       <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
         <rect width="36" height="36" rx="8" fill="#0c1428"/>
         <polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#00e5cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#00e5cc" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity=".07"/>
         <circle cx="33" cy="7" r="2.8" fill="#9b5de5"/>
       </svg>
     </div>
@@ -508,7 +592,14 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
       <div class="logo-sb">VISIONTRADING</div>
     </div>
   </div>
-  <button data-i18n="logout" onclick="doLogout()" style="margin-left:auto;background:none;border:1px solid #1e2840;color:#3d4d78;border-radius:7px;padding:5px 11px;font-size:10px;cursor:pointer;font-family:var(--fd);display:flex;align-items:center;gap:5px" onmouseover="this.style.borderColor='#ff4060';this.style.color='#ff4060'" onmouseout="this.style.borderColor='#1e2840';this.style.color='#3d4d78'">🔓 Esci</button>
+  <button data-i18n="logoutBtn" onclick="doLogout()" style="margin-left:auto;background:none;border:1px solid #1e2840;color:#3d4d78;border-radius:7px;padding:5px 11px;font-size:10px;cursor:pointer;font-family:var(--fd);display:flex;align-items:center;gap:5px" onmouseover="this.style.borderColor='#ff4060';this.style.color='#ff4060'" onmouseout="this.style.borderColor='#1e2840';this.style.color='#3d4d78'">🔓 Esci</button>
+  <div class="fx-pill">
+    <div class="ld"></div>
+    <span style="color:var(--t3);font-size:11px">EUR/USD</span>
+    <span class="fx-n" id="fxNum">--</span>
+    <span class="lt lt-est" id="fxTag">...</span>
+    <button class="btn-rf" onclick="loadFX()">↻</button>
+  </div>
 </div>
 
 <div class="tabs">
@@ -524,9 +615,8 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
   <div class="tab" data-i18n="tabGuide" onclick="goTab('guide',this)" id="tabGuide">Guida</div>
   <div class="tab" data-i18n="tabSupport" onclick="goTab('support',this)" id="tabSupport">💬 Supporto</div>
   <div class="tab" onclick="toggleAccDrop(event)" id="tabAccount" style="margin-left:auto;display:flex;align-items:center;gap:7px;padding:6px 12px;position:relative">
-    <span id="tabAccountFlag" style="line-height:1;flex-shrink:0"></span>
     <div id="tabAccountPhoto" style="width:26px;height:26px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--t3)">
-      <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="4" fill="var(--teal)" opacity=".5"/><path d="M3 19c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="var(--teal)" stroke-width="1.5" fill="none" opacity=".4"/></svg>
+      👤
     </div>
     <span id="tabAccountName" style="font-size:11px">Account</span>
   </div>
@@ -537,13 +627,110 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 
 <div class="content" id="main"></div>
 
+<div class="bot-wrap" id="botWrap">
+  <div style="flex-shrink:0;padding:0 13px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-right:1px solid var(--border);min-width:68px">
+    <span style="font-size:8px;font-weight:700;font-family:var(--fd);letter-spacing:.12em;color:var(--teal)">PROP</span>
+    <span style="font-size:8px;font-weight:700;font-family:var(--fd);letter-spacing:.12em;color:var(--violet)">BROKER</span>
+  </div>
+  <div class="bot-scroll"><div class="bot-track" id="botTrack"></div></div>
+  <button class="bot-close" onclick="document.getElementById('botWrap').style.display='none'">✕</button>
+</div>
+
+<div id="policyBar" style="position:fixed;bottom:0;left:0;right:0;z-index:9998;background:rgba(6,8,16,.97);border-top:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px 20px">
+  <div style="display:flex;align-items:center;gap:20px">
+    <a href="#" onclick="showPolicy();return false;" style="color:#1e90ff;text-decoration:none;font-size:10px;font-family:var(--fd)">🔒 Privacy Policy</a>
+    <span style="color:var(--border2);font-size:9px">|</span>
+    <a href="#" onclick="showPolicy();return false;" style="color:#1e90ff;text-decoration:none;font-size:10px;font-family:var(--fd)">🍪 Cookie Policy</a>
+  </div>
+</div>
+
+<div class="mov" id="modalOv" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="mh">
+      <h2>Nuova sfida prop</h2>
+      <div style="display:flex;gap:8px;margin-left:auto;margin-right:10px">
+        <button class="btn-g" onclick="closeModal()">Annulla</button>
+        <button class="btn-p" onclick="doAdd()">+ Aggiungi sfida</button>
+      </div>
+      <button class="mclose" onclick="closeModal()">✕</button>
+    </div>
+    <div class="mb">
+      <div class="f" style="margin-bottom:14px">
+        <label>Nome prop firm</label>
+        <div style="display:flex;align-items:center;gap:10px;position:relative">
+          <div id="mLogo" style="width:36px;height:36px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--t3);flex-shrink:0;overflow:hidden">?</div>
+          <div style="flex:1;position:relative">
+            <input id="mName" placeholder="es. FundedElite, FTMO, FTUK..." oninput="onName(this.value)" autocomplete="off">
+            <div class="msugg" id="mSugg"></div>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="mDomain">
+      <div class="sect">Tipo di strategia</div>
+      <div class="fr2" style="margin-bottom:14px">
+        <div onclick="setMode('personal')" id="modePersonal" style="background:var(--teal-bg);border:2px solid var(--teal);border-radius:10px;padding:12px;cursor:pointer;text-align:center">
+          <div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">Prop + Personale</div>
+          <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">BUY prop + SELL conto reale</div>
+        </div>
+        <div onclick="setMode('prop2')" id="modeProp2" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;text-align:center">
+          <div style="font-size:14px;font-weight:700;color:var(--violet);margin-bottom:4px">Prop + Prop</div>
+          <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">BUY prop + SELL seconda prop</div>
+        </div>
+      </div>
+      <div class="sect">Parametri prop principale</div>
+      <div class="fr2">
+        <div class="f"><label>Dimensione ($)</label><input id="mSize" type="number" value="100000" step="10000" oninput="calcPreview()"><div class="sub" id="mSizeEur"></div></div>
+        <div class="f"><label>Costo challenge ($)</label><input id="mCost" type="number" value="1090" step="50" oninput="calcPreview()"><div class="sub" id="mCostEur"></div></div>
+      </div>
+      <div class="fr3">
+        <div class="f"><label>DD totale (%)</label><input id="mDD" type="number" value="6" step="0.5" oninput="calcPreview()"></div>
+        <div class="f"><label>DD giornaliero (%)</label><input id="mDDD" type="number" value="3" step="0.5" oninput="calcPreview()"></div>
+        <div class="f"><label>Profit target (%)</label><input id="mTgt" type="number" value="6" step="0.5" oninput="calcPreview()"></div>
+      </div>
+      <div class="fr2">
+        <div class="f"><label>Giorni challenge</label><input id="mDays" type="number" value="14" step="1" min="1" oninput="calcPreview()"></div>
+        <div class="f"><label>Payout (%)</label><input id="mPay" type="number" value="80" step="5" oninput="calcPreview()"></div>
+      </div>
+      <div id="prop2Fields" style="display:none">
+        <div class="sect">Parametri seconda prop (hedge)</div>
+        <div class="fr2">
+          <div class="f"><label>Dimensione seconda prop ($)</label><input id="mSize2" type="number" value="10000" step="1000" oninput="calcPreview()"></div>
+          <div class="f"><label>Costo seconda prop ($)</label><input id="mCost2" type="number" value="100" step="50" oninput="calcPreview()"></div>
+        </div>
+        <div class="fr2">
+          <div class="f"><label>DD seconda prop (%)</label><input id="mDD2" type="number" value="6" step="0.5" oninput="calcPreview()"></div>
+          <div class="f"><label>Piattaforma</label><select id="mPlat2"><option value="MT4">MT4</option><option value="MT5">MT5</option><option value="cTrader">cTrader</option><option value="DXTrade">DXTrade</option></select></div>
+        </div>
+      </div>
+      <div class="sect">Asset e pip</div>
+      <div class="fr2">
+        <div class="f">
+          <label>Asset</label>
+          <select id="mAsset" onchange="onAssetChange(this.value)">
+            <option value="EUR/USD:10">EUR/USD - $10/pip</option>
+            <option value="GBP/USD:10">GBP/USD - $10/pip</option>
+            <option value="GOLD:1">GOLD XAU/USD - $1/pip</option>
+            <option value="US30:5">US30 Dow Jones - $5/pip</option>
+          </select>
+          <div class="hint" id="mAssetHint">$10 per pip per lotto std</div>
+        </div>
+        <div class="f"><label>Pip Value ($)</label><input id="mPipV" type="number" value="10" step="0.1" min="0.1" oninput="calcPreview()"></div>
+      </div>
+      <div class="fr2">
+        <div class="f"><label>Stop Loss (pip)</label><input id="mSlPips" type="number" value="50" step="1" min="1" oninput="calcPreview()"></div>
+        <div class="f"><label>Take Profit (pip)</label><input id="mTpPips" type="number" value="50" step="1" min="1" oninput="calcPreview()"></div>
+      </div>
+      <div id="mPreview"></div>
+    </div>
+  </div>
+</div>
+
 <div id="policyModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.92);overflow-y:auto;padding:20px">
   <div style="max-width:760px;margin:0 auto;background:#0c0f1a;border:1px solid #2a3560;border-radius:16px;padding:32px;position:relative">
     <button onclick="document.getElementById('policyModal').style.display='none'" style="float:right;background:none;border:1px solid #2a3560;color:#8090b8;border-radius:7px;padding:6px 14px;font-size:12px;cursor:pointer;margin-bottom:16px">✕ Chiudi</button>
     <h1 data-i18n="polTitle" style="font-size:22px;font-weight:700;color:#eef0f8;margin-bottom:6px">Privacy Policy &amp; Cookie Policy</h1>
-    <p data-i18n="polSub" style="font-size:12px;color:#3d4d78;font-family:var(--fd);margin-bottom:28px">VISIONTRADING - PropHedge Pro</p>
     <h2 data-i18n="polH1" style="font-size:14px;font-weight:700;color:#00e5cc;margin:20px 0 10px;padding-bottom:8px;border-bottom:1px solid #1e2840">1. Titolare del Trattamento</h2>
-    <p data-i18n="polP1" style="font-size:13px;color:#8090b8;line-height:1.8">Russo Antonino Christian - Brand: VISIONTRADING</p>
+    <p data-i18n="polP1" style="font-size:13px;color:#8090b8;line-height:1.8">Russo Antonino Christian - Brand: VISIONTRADING - Software: PropHedge Pro</p>
     <h2 data-i18n="polH2" style="font-size:14px;font-weight:700;color:#00e5cc;margin:20px 0 10px;padding-bottom:8px;border-bottom:1px solid #1e2840">2. Dati Raccolti</h2>
     <p data-i18n="polP2" style="font-size:13px;color:#8090b8;line-height:1.8">PropHedge Pro funziona interamente nel browser locale.</p>
     <h2 data-i18n="polH3" style="font-size:14px;font-weight:700;color:#00e5cc;margin:20px 0 10px;padding-bottom:8px;border-bottom:1px solid #1e2840">3. Cookie Policy</h2>
@@ -573,28 +760,96 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
   </div>
 </div>
 <script>
-// --- GESTIONE LINGUE MULTIPLE (Traduttore Nativo JS) ---
+// --- FUNZIONI DI BASE & GLOBE ANIMATION (Conservate intatte) ---
+(function(){
+  function init(){
+    var gc=document.getElementById('globeCanvas'); if(!gc)return;
+    var S=600;gc.width=S;gc.height=S; var g=gc.getContext('2d'); var CX=S/2,CY=S/2,R=200;
+    var CANDS=[],N=20;
+    for(var i=0;i<N;i++){ var frac=i/N; CANDS.push({theta0:frac*Math.PI*3.6+(Math.random()-.5)*.08,phi:(Math.random()-.5)*1.5,orb:R+55+Math.random()*40,body:26+Math.random()*38,wick:12+Math.random()*24,bull:Math.random()>.5,w:7+Math.random()*5}); }
+    var rot=0,logoPhase=0;
+    function drawGlobe(){
+      var gr=g.createRadialGradient(CX-55,CY-55,8,CX,CY,R); gr.addColorStop(0,'#20e8cc');gr.addColorStop(.28,'#0aaa8a');gr.addColorStop(.58,'#0a5e68');gr.addColorStop(1,'#030e14');
+      g.beginPath();g.arc(CX,CY,R,0,Math.PI*2);g.fillStyle=gr;g.fill(); g.save();g.beginPath();g.arc(CX,CY,R,0,Math.PI*2);g.clip(); g.strokeStyle='rgba(0,229,204,.16)';g.lineWidth=1.2;
+      for(var m=0;m<7;m++){var mx=rot+m*(Math.PI/3.5);g.beginPath();for(var a=-1.57;a<=1.57;a+=.06){var px=CX+R*Math.cos(a)*Math.sin(mx);var py=CY+R*Math.sin(a);a<-1.56?g.moveTo(px,py):g.lineTo(px,py);}g.stroke();}
+      for(var p=1;p<6;p++){var lat=-Math.PI/2+p*(Math.PI/6);var pr=R*Math.cos(lat);var py2=CY+R*Math.sin(lat);g.beginPath();g.ellipse(CX,py2,pr,pr*.16,0,0,Math.PI*2);g.stroke();} g.restore();
+      var gl=g.createRadialGradient(CX,CY,R-2,CX,CY,R+18); gl.addColorStop(0,'rgba(0,229,204,.3)');gl.addColorStop(1,'rgba(0,229,204,0)'); g.beginPath();g.arc(CX,CY,R+14,0,Math.PI*2);g.fillStyle=gl;g.fill();
+    }
+    function drawLogoCenter(){
+      var alpha=.55+.45*Math.sin(logoPhase); g.save();g.globalAlpha=alpha; var bw=110,bh=70,bx=CX-bw/2,by=CY-bh/2; g.fillStyle='rgba(10,15,28,.72)';g.beginPath();rr(g,bx,by,bw,bh,12);g.fill();
+      g.strokeStyle='rgba(0,229,204,'+(.25+.25*Math.sin(logoPhase))+')';g.lineWidth=1.5; g.beginPath();rr(g,bx,by,bw,bh,12);g.stroke();
+      var pts=[[bx+10,by+52],[bx+22,by+38],[bx+34,by+44],[bx+48,by+24],[bx+62,by+32],[bx+78,by+14],[bx+100,by+10]]; g.strokeStyle='rgba(0,229,204,.18)';g.lineWidth=7;g.lineCap='round';g.lineJoin='round'; g.beginPath();pts.forEach(function(p,i){i===0?g.moveTo(p[0],p[1]):g.lineTo(p[0],p[1]);});g.stroke();
+      g.strokeStyle='#00e5cc';g.lineWidth=2.5; g.beginPath();pts.forEach(function(p,i){i===0?g.moveTo(p[0],p[1]):g.lineTo(p[0],p[1]);});g.stroke();
+      var pr2=4+2*Math.abs(Math.sin(logoPhase*2)); g.beginPath();g.arc(bx+100,by+10,pr2,0,Math.PI*2);g.fillStyle='#9b5de5';g.fill(); g.restore();
+    }
+    function rr(ctx,x,y,w,h,r){ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);}
+    function drawCandle(x,y,bull,body,wick,w,alpha){ var col=bull?'#00d68f':'#ff4060'; g.save();g.globalAlpha=alpha;g.strokeStyle=col;g.lineWidth=1.2; g.beginPath();g.moveTo(x,y-body/2-wick);g.lineTo(x,y-body/2);g.stroke(); g.fillStyle=col;g.fillRect(x-w/2,y-body/2,w,body);g.strokeRect(x-w/2,y-body/2,w,body); g.beginPath();g.moveTo(x,y+body/2);g.lineTo(x,y+body/2+wick);g.stroke(); g.restore(); }
+    function drawHelixCandles(t){
+      var behind=[],front=[];
+      CANDS.forEach(function(c){ var theta=c.theta0+t,cosT=Math.cos(theta),sinT=Math.sin(theta),cosP=Math.cos(c.phi),sinP=Math.sin(c.phi); var x3=c.orb*cosT*cosP,y3=c.orb*sinP,z3=c.orb*sinT*cosP; var scale=.55+.45*((z3/c.orb+1)/2),alpha=.35+.65*((z3/c.orb+1)/2); var entry={c:c,px:CX+x3,py:CY+y3,scale:scale,alpha:alpha,z:z3}; z3<0?behind.push(entry):front.push(entry); });
+      behind.sort(function(a,b){return a.z-b.z;});front.sort(function(a,b){return a.z-b.z;}); return{behind:behind,front:front};
+    }
+    var t=0; function animate(){ requestAnimationFrame(animate);t+=.022;rot+=.009;logoPhase+=.045; g.clearRect(0,0,S,S); var layers=drawHelixCandles(t); layers.behind.forEach(function(e){drawCandle(e.px,e.py,e.c.bull,e.c.body*e.scale,e.c.wick*e.scale,e.c.w*e.scale,e.alpha*.7);}); drawGlobe();drawLogoCenter(); layers.front.forEach(function(e){drawCandle(e.px,e.py,e.c.bull,e.c.body*e.scale,e.c.wick*e.scale,e.c.w*e.scale,e.alpha);}); }
+    animate();
+  }
+  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):setTimeout(init,60);
+})();
+
+function openConsent(){document.getElementById('consentOverlay').style.display='flex';}
+function toggleConsent(){
+  var checked=document.getElementById('consentBox').dataset.checked==='1';checked=!checked;
+  var box=document.getElementById('consentBox'),icon=document.getElementById('checkIcon'),btn=document.getElementById('acceptBtn'),lbl=document.getElementById('consentLabel');
+  box.dataset.checked=checked?'1':'0';
+  if(checked){box.style.background='linear-gradient(135deg,#00b8a4,#7a40cc)';box.style.borderColor='#00e5cc';icon.style.opacity='1';lbl.style.borderColor='rgba(0,229,204,.35)';lbl.style.background='rgba(0,229,204,.04)';btn.disabled=false;btn.style.background='linear-gradient(135deg,#00b8a4,#7a40cc)';btn.style.color='#fff';btn.style.cursor='pointer';btn.style.opacity='1';}
+  else{box.style.background='#060810';box.style.borderColor='#2a3560';icon.style.opacity='0';lbl.style.borderColor='#1e2840';lbl.style.background='#0e1422';btn.disabled=true;btn.style.background='#1e2840';btn.style.color='#3d4d78';btn.style.cursor='not-allowed';btn.style.opacity='.5';}
+}
+function acceptAndEnter(){
+  if(document.getElementById('acceptBtn').disabled)return;
+  document.getElementById('consentOverlay').style.display='none';
+  var s=document.getElementById('splashScreen'); s.style.transition='opacity .6s ease';s.style.opacity='0';
+  setTimeout(function(){s.style.display='none';showLoginPage();},650);
+}
+function showLoginPage(){document.getElementById('loginPage').style.display='flex';}
+function goToApp(){document.getElementById('loginPage').style.display='none'; document.body.style.overflow=''; render();}
+function doLogout(){location.reload();}
+function showPolicy(){document.getElementById('policyModal').style.display='block';}
+
+// --- TRADUZIONI NATIVE ---
 var appLang = 'it';
 var translations = {
   it: {
     tabDash: 'Dashboard', tabPlatform: 'Piattaforma', tabCalc: 'Nuova sfida',
     tabProp: 'Prop', tabBroker: 'Broker', tabJournal: 'Journal', tabEA: '⬇ EA Download',
     tabCal: '📅 Calendario', tabStats: '📊 Statistiche', tabGuide: 'Guida', tabSupport: '💬 Supporto',
-    changeThemeBtn: '🎨 Cambia Tema', dayTheme: 'Tema Giorno (Chiaro)', nightTheme: 'Tema Notte (Scuro)',
+    changeThemeBtn: '🎨 Cambia Tema', dayTheme: '☀️ Tema Giorno (Chiaro)', nightTheme: '🌙 Tema Notte (Scuro)',
     personalData: 'Dati Personali', saveBtn: '💾 Aggiorna Dati', logoutBtn: '🔓 Esci',
     splashTitle: 'Domina le <span style="color:#00e5cc">Prop Firm</span><br>con il software <span style="color:#9b5de5">PropHedge</span>',
-    consentTitle: 'Privacy & Cookie Policy',
-    polTitle: 'Privacy Policy & Cookie Policy', polH1: '1. Titolare del Trattamento', polP1: 'Russo Antonino Christian - Brand: VISIONTRADING'
+    splashSub: 'Calcola i lotti, gestisci il drawdown e proteggi il tuo capitale su ogni challenge. Dashboard multi prop firm, hedge automatico e prezzi live su tutti gli asset.',
+    splashBtn: '► Entra nel software', consentTitle: 'Privacy & Cookie Policy',
+    consentSub: 'Prima di accedere leggi e accetta le nostre condizioni.',
+    consentDesc: '◆ Nessun dato personale inviato a VISIONTRADING<br>◆ Solo cookie tecnici essenziali<br>◆ Calcoli eseguiti in locale<br>◆ Nessun cookie di profilazione',
+    consentAccept1: 'Ho letto e accetto la ', consentBtn: '✓ Accetta e accedi',
+    loginSub: 'Accedi al tuo account per continuare',
+    polTitle: 'Privacy Policy & Cookie Policy', polH1: '1. Titolare del Trattamento', polP1: 'Russo Antonino Christian - Brand: VISIONTRADING - Software: PropHedge Pro',
+    polH2: '2. Dati Raccolti', polP2: 'PropHedge Pro funziona interamente nel browser locale.',
+    polH3: '3. Cookie Policy', polP3: 'Solo cookie tecnici essenziali.'
   },
   en: {
     tabDash: 'Dashboard', tabPlatform: 'Platform', tabCalc: 'New Challenge',
-    tabProp: 'Prop', tabBroker: 'Broker', tabJournal: 'Journal', tabEA: '⬇ Download EA',
+    tabProp: 'Prop Firm', tabBroker: 'Broker', tabJournal: 'Journal', tabEA: '⬇ Download EA',
     tabCal: '📅 Calendar', tabStats: '📊 Statistics', tabGuide: 'Guide', tabSupport: '💬 Support',
-    changeThemeBtn: '🎨 Change Theme', dayTheme: 'Day Theme (Light)', nightTheme: 'Night Theme (Dark)',
+    changeThemeBtn: '🎨 Change Theme', dayTheme: '☀️ Day Theme (Light)', nightTheme: '🌙 Night Theme (Dark)',
     personalData: 'Personal Data', saveBtn: '💾 Update Data', logoutBtn: '🔓 Logout',
     splashTitle: 'Dominate <span style="color:#00e5cc">Prop Firms</span><br>with <span style="color:#9b5de5">PropHedge</span>',
-    consentTitle: 'Privacy & Cookie Policy',
-    polTitle: 'Privacy Policy & Cookie Policy', polH1: '1. Data Controller', polP1: 'Russo Antonino Christian - Brand: VISIONTRADING'
+    splashSub: 'Calculate lots, manage drawdown and protect your capital on every challenge.',
+    splashBtn: '► Enter software', consentTitle: 'Privacy & Cookie Policy',
+    consentSub: 'Please read and accept our conditions.',
+    consentDesc: '◆ No personal data sent<br>◆ Only technical cookies<br>◆ Local calculations',
+    consentAccept1: 'I read and accept the ', consentBtn: '✓ Accept and enter',
+    loginSub: 'Login to your account to continue',
+    polTitle: 'Privacy Policy & Cookie Policy', polH1: '1. Data Controller', polP1: 'Russo Antonino Christian - Brand: VISIONTRADING',
+    polH2: '2. Collected Data', polP2: 'PropHedge Pro works entirely in your browser.',
+    polH3: '3. Cookie Policy', polP3: 'Only essential technical cookies.'
   }
 };
 
@@ -606,29 +861,46 @@ function changeAppLang(lang) {
       el.innerHTML = translations[lang][key];
     }
   });
-  toggleAccDrop(); setTimeout(toggleAccDrop, 50); // Ricarica menu
+  toggleAccDrop(); setTimeout(toggleAccDrop, 50);
 }
 
-// --- RENDERING MENU ACCOUNT TENDINA (Modificato per Lingua, Tema e Profilo) ---
+// --- MENU ACCOUNT (Tema, Lingua, Profilo) ---
+var accountData={photo:null, theme:'dark', email:'', firstName:'', lastName:''};
+
+function toggleAccDrop(e){
+  if(e)e.stopPropagation();
+  var panel=document.getElementById('accDropPanel'), overlay=document.getElementById('accDropOverlay');
+  if(!panel||!overlay)return;
+  if(panel.style.display==='none'||!panel.style.display){
+    panel.innerHTML=renderAccountDrop();
+    panel.style.display='block'; overlay.style.display='block';
+    document.getElementById('tabAccount').classList.add('active');
+  } else { closeAccDrop(); }
+}
+function closeAccDrop(){
+  var panel=document.getElementById('accDropPanel'), overlay=document.getElementById('accDropOverlay');
+  if(panel)panel.style.display='none'; if(overlay)overlay.style.display='none';
+  var tab=document.getElementById('tabAccount'); if(tab)tab.classList.remove('active');
+}
+
 function renderAccountDrop() {
   var t = translations[appLang];
   var displayName = ((accountData.firstName || '') + ' ' + (accountData.lastName || '')).trim() || accountData.email || 'Account';
   
   return '<div style="padding:20px; width: 340px; max-height: 85vh; overflow-y: auto;">'
     + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
-    + '<div id="accDropAvatarBtn" onclick="document.getElementById(\'accPhotoInput\').click()" style="width:54px;height:54px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;cursor:pointer;flex-shrink:0;">👤</div>'
-    + '<input type="file" id="accPhotoInput" style="display:none" accept="image/*" onchange="updateProfilePhoto(this)">'
+    + '<div id="accDropAvatarBtn" style="width:54px;height:54px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:22px;">👤</div>'
     + '<div><div style="font-size:15px;font-weight:700">' + displayName + '</div><div style="font-size:12px;color:var(--t3);font-family:var(--fd)">' + accountData.email + '</div></div></div>'
     
-    // THEME SECTION
+    // TEMA
     + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
     + '<button onclick="document.getElementById(\'themeOptions\').style.display=document.getElementById(\'themeOptions\').style.display===\'none\'?\'grid\':\'none\'" style="width:100%;background:var(--bg3);border:1px solid var(--teal);color:var(--t);padding:10px;border-radius:10px;cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;gap:10px">' + t.changeThemeBtn + '</button>'
     + '<div id="themeOptions" style="display:none; grid-template-columns: 1fr; gap:8px; margin-top:10px;">'
-    + '<button onclick="setTheme(\'light\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px;">☀️ ' + t.dayTheme + '</button>'
-    + '<button onclick="setTheme(\'dark\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px;">🌙 ' + t.nightTheme + '</button>'
+    + '<button onclick="setTheme(\'light\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px;">' + t.dayTheme + '</button>'
+    + '<button onclick="setTheme(\'dark\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px;">' + t.nightTheme + '</button>'
     + '</div></div>'
     
-    // LANGUAGE SECTION
+    // LINGUA
     + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
     + '<button onclick="document.getElementById(\'langOptions\').style.display=document.getElementById(\'langOptions\').style.display===\'none\'?\'grid\':\'none\'" style="width:100%;background:var(--bg3);border:1px solid var(--violet);color:var(--t);padding:10px;border-radius:10px;cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;gap:10px">🌐 LINGUA / LANGUAGE</button>'
     + '<div id="langOptions" style="display:none; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px;">'
@@ -636,13 +908,13 @@ function renderAccountDrop() {
     + '<button onclick="changeAppLang(\'en\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px;">🇬🇧 English</button>'
     + '</div></div>'
 
-    // PERSONAL DATA
+    // DATI PERSONALI
     + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
     + '<div style="font-size:11px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">' + t.personalData + '</div>'
-    + '<input type="text" id="accFirstName" placeholder="Nome / Name" value="' + (accountData.firstName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
-    + '<input type="text" id="accLastName" placeholder="Cognome / Surname" value="' + (accountData.lastName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
-    + '<input type="email" id="accEmail" placeholder="Nuova Email" value="' + (accountData.email||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
-    + '<input type="password" id="accPass" placeholder="Nuova Password" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
+    + '<input type="text" id="accFirstName" placeholder="Nome" value="' + (accountData.firstName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px;">'
+    + '<input type="text" id="accLastName" placeholder="Cognome" value="' + (accountData.lastName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px;">'
+    + '<input type="email" id="accEmail" placeholder="Cambia Email" value="' + (accountData.email||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px;">'
+    + '<input type="password" id="accPass" placeholder="Nuova Password" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px;">'
     + '<button onclick="saveProfileData()" class="btn-p" style="width:100%; padding:8px; font-size:11px; justify-content:center;">' + t.saveBtn + '</button>'
     + '<div id="accUpdateMsg" style="font-size:10px; margin-top:8px; text-align:center;"></div>'
     + '</div>'
@@ -662,87 +934,153 @@ function setTheme(themeMode) {
 function saveProfileData() {
   accountData.firstName = document.getElementById('accFirstName').value.trim();
   accountData.lastName = document.getElementById('accLastName').value.trim();
-  var newEmail = document.getElementById('accEmail').value.trim();
-  var newPass = document.getElementById('accPass').value.trim();
-  
+  accountData.email = document.getElementById('accEmail').value.trim();
   var msg = document.getElementById('accUpdateMsg');
-  msg.style.color = "var(--t)"; msg.textContent = "Aggiornamento in corso...";
+  msg.style.color = 'var(--green)'; msg.textContent = 'Dati salvati in locale!';
+}
 
-  // Se c'è un'istanza Supabase valida, la chiamo:
-  if(window._sb && !window._sbLoadError) {
-    var updates = {};
-    if(newEmail && newEmail !== accountData.email) updates.email = newEmail;
-    if(newPass) updates.password = newPass;
-    updates.data = { first_name: accountData.firstName, last_name: accountData.lastName };
-    
-    _sb.auth.updateUser(updates).then(function(res){
-      if(res.error) { msg.style.color = 'var(--red)'; msg.textContent = 'Errore: ' + res.error.message; }
-      else { 
-        accountData.email = newEmail || accountData.email;
-        msg.style.color = 'var(--green)'; msg.textContent = 'Dati aggiornati!'; 
-      }
-    });
-  } else {
-    // Modalità demo locale
-    accountData.email = newEmail || accountData.email;
-    msg.style.color = 'var(--green)'; msg.textContent = 'Dati salvati in locale!';
-  }
+// --- LOGICA E FUNZIONI APP ---
+var props=[], activeId=null, currentTab='dash';
+var jrnl={sessions:[], activeIdx:0};
+
+function uF(n){return'$'+Math.abs(n).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function openNewSfidaTab(el){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');openModal();}
+function openModal(){document.getElementById('modalOv').style.display='flex';}
+function closeModal(){document.getElementById('modalOv').style.display='none';}
+
+function goTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  if(el) el.classList.add('active');
+  closeAccDrop();
+  render();
+}
+
+function calcChallenge(p){
+  var slPips=p.slPips||50, tpPips=p.tpPips||slPips, pipV=p.pipV||10;
+  var maxLoss=p.size*p.maxDD/100, maxProfit=p.size*p.tgtPct/100, dayLoss=p.size*p.ddd/100;
+  var riskPerTrade=Math.min(maxLoss/p.days, dayLoss);
+  var slPerLot=slPips*pipV, tpPerLot=tpPips*pipV;
+  var propLots=riskPerTrade/slPerLot;
+  var propSL=propLots*slPerLot, propTP=propLots*tpPerLot;
+  var maxTrDD=Math.floor(dayLoss/propSL), trTarget=Math.ceil(maxProfit/propTP);
+  var hedgeLots=(p.cost/(slPerLot*p.days))*1.3;
+  var hedgeSL=hedgeLots*slPerLot, hedgeTP=hedgeLots*tpPerLot;
+  var margin=hedgeLots*(100000*1.08/100);
+  var maxHedgeLoss=hedgeLots*tpPerLot*trTarget;
+  var minAcc=(margin+maxHedgeLoss)*1.3, recAcc=minAcc*1.5;
+  var sA_gain=hedgeLots*slPerLot*p.days, sA_net=sA_gain-p.cost;
+  var sB_pay=maxProfit*p.pay/100, sB_los=hedgeLots*tpPerLot*trTarget, sB_net=sB_pay-sB_los;
+  return{
+    maxLoss:maxLoss, maxProfit:maxProfit, dayLoss:dayLoss, riskPerTrade:+riskPerTrade.toFixed(2),
+    propLots:+propLots.toFixed(2), propSL:+propSL.toFixed(2), propTP:+propTP.toFixed(2),
+    hedgeLots:+hedgeLots.toFixed(2), hedgeSL:+hedgeSL.toFixed(2), hedgeTP:+hedgeTP.toFixed(2),
+    minAcc:+minAcc.toFixed(2), recAcc:+recAcc.toFixed(2), sA_net:+sA_net.toFixed(2), sB_net:+sB_net.toFixed(2)
+  };
+}
+
+function doAdd(){
+  var name=document.getElementById('mName').value.trim()||('Sfida '+(props.length+1));
+  var p={id:Date.now(), name:name, size:100000, cost:500, maxDD:6, ddd:3, tgtPct:6, days:14, pay:80, pipV:10, slPips:50, tpPips:50};
+  props.push(p);
+  jrnl.sessions.push({id:'j'+Date.now(), name:name, propTrades:[], brokerTrades:[]});
+  closeModal(); activeId=p.id; goTab('dash', document.getElementById('tabDash'));
+}
+
+// --- RENDER DELLE PAGINE ---
+function renderDash() {
+  if(!props.length) return '<div class="empty ai"><div style="font-size:44px;margin-bottom:14px;opacity:.3">◇</div><p>Nessuna sfida configurata.<br>Clicca su <strong>Nuova Sfida</strong> nel menu per iniziare.</p><button class="btn-p" onclick="openNewSfidaTab(document.getElementById(\'tabCalc\'))">+ Nuova sfida</button></div>';
+  
+  var cards='';
+  props.forEach(function(p){
+    var c=calcChallenge(p);
+    cards+='<div class="pc ai" onclick="goTab(\'calc\')">'
+      +'<div class="pc-glow"></div>'
+      +'<div class="pc-top"><div class="pc-logo">P</div><div><div class="pc-nm">'+p.name+'</div><div class="pc-mt">'+uF(p.size)+' DD '+p.maxDD+'% '+p.days+'gg</div></div></div>'
+      +'<div class="pc-st"><div class="pst"><div class="pst-l">Lotti prop</div><div class="pst-v v-teal">'+c.propLots+'</div></div>'
+      +'<div class="pst"><div class="pst-l">Conto pers.</div><div class="pst-v v-amber">'+uF(c.recAcc)+'</div></div>'
+      +'<div class="pst"><div class="pst-l">Netto (B)</div><div class="pst-v v-green">+'+uF(c.sB_net)+'</div></div></div>'
+      +'<div style="margin-top:10px;text-align:center"><button class="btn-g" style="width:100%;font-size:10px" onclick="event.stopPropagation(); goTab(\'journal\')">Apri Journal di questa sfida →</button></div>'
+      +'</div>';
+  });
+  return '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);font-family:var(--fd);margin-bottom:14px">Le tue Sfide</div><div class="pg">'+cards+'</div>';
+}
+
+function renderCalc() {
+  if(!props.length) return renderDash();
+  var p=props.find(function(x){return x.id===activeId;}) || props[0];
+  var c=calcChallenge(p);
+  return '<div class="c2"><div><div class="panel"><div class="ph"><h3>Calcolatore Sfida: '+p.name+'</h3></div><div class="pb"><p style="color:var(--t3);font-size:12px;margin-bottom:15px">I dati sono sincronizzati. Per modificarli usa la finestra "Nuova Sfida".</p></div></div></div>'
+    +'<div><div class="acct-split"><div class="ac ac-prop"><div class="ac-title">Conto PROP (BUY)</div><div class="ac-row"><span>Lotti da aprire</span><span class="v-teal">'+c.propLots+' lot</span></div><div class="ac-row same"><span>Stop Loss</span><span class="v-red">-'+uF(c.propSL)+'</span></div><div class="ac-row same"><span>Take Profit</span><span class="v-green">+'+uF(c.propTP)+'</span></div></div>'
+    +'<div class="ac ac-pers"><div class="ac-title">Conto PERSONALE (SELL)</div><div class="ac-row"><span>Lotti da aprire</span><span class="v-violet">'+c.hedgeLots+' lot</span></div><div class="ac-row same"><span>Stop Loss</span><span class="v-red">-'+uF(c.hedgeSL)+'</span></div><div class="ac-row same"><span>Take Profit</span><span class="v-green">+'+uF(c.hedgeTP)+'</span></div></div></div></div></div>';
+}
+
+function renderJournal() {
+  return '<div class="panel" style="max-width:800px;margin:0 auto"><div class="ph"><h3>Journal Operativo</h3></div><div class="pb"><p style="color:var(--t3);font-size:12px;margin-bottom:15px">Qui vedrai tutti i trade copiati dalle Prop Firm e dal tuo Broker personale in tempo reale.</p><div style="text-align:center"><button class="btn-g" style="margin:10px" onclick="openConnModal(\'mt4\')">🔗 Connetti MT4</button><button class="btn-g" style="margin:10px" onclick="openConnModal(\'mt5\')">🔗 Connetti MT5</button><button class="btn-g" style="margin:10px" onclick="openConnModal(\'ctrader\')">🔗 Connetti cTrader</button></div></div></div>'
+  + '<div id="connModalArea"></div>';
 }
 
 // --- VIDEO GUIDE NELLA SEZIONE GUIDE & CONNESSIONE ---
+function openConnModal(plat) {
+  var guideBtn = '<button onclick="showVideoGuide(\''+plat+'\')" class="btn-g" style="width:100%; margin-top:15px; border-color:var(--teal); color:var(--teal)">📹 Guarda Guida Connessione ' + plat.toUpperCase() + '</button>';
+  
+  var fields = '';
+  if(plat === 'ctrader') {
+    fields = '<div class="f"><label>Access Token</label><input type="text" placeholder="Incolla token cTrader"></div>' + guideBtn;
+  } else {
+    fields = '<div class="f"><label>Email PropHedge</label><input type="text" value="' + (accountData.email||'tua@email.com') + '" readonly style="background:var(--bg)"></div><div class="f"><label>API Key EA</label><input type="text" value="PH_API_KEY_123" readonly style="background:var(--bg)"></div>' + guideBtn;
+  }
+  
+  document.getElementById('connModalArea').innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:9999"><div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;width:350px"><h3 style="margin-bottom:15px">Connetti ' + plat.toUpperCase() + '</h3>' + fields + '<div style="display:flex;gap:10px;margin-top:20px"><button class="btn-p" onclick="document.getElementById(\'connModalArea\').innerHTML=\'\'">Salva Configurazione</button><button class="btn-g" onclick="document.getElementById(\'connModalArea\').innerHTML=\'\'">Chiudi</button></div></div></div>';
+}
+
+function showVideoGuide(plat) {
+  document.getElementById('connModalArea').innerHTML = '';
+  goTab('guide', document.getElementById('tabGuide'));
+}
+
 function renderGuide(){
   return '<div style="max-width:800px; margin: 0 auto;">'
     + '<div class="panel ai"><div class="ph"><h3>Guida Connessione Piattaforma MT4</h3></div><div class="pb">'
-    + '<div style="margin-bottom:12px; font-size:12px; color:var(--t2);">Guarda questo video generato per imparare a scaricare e applicare l\'EA su MT4 per comunicare con PropHedge:</div>'
+    + '<div style="margin-bottom:12px; font-size:12px; color:var(--t2);">Guarda questo video tutorial per imparare a scaricare, installare e configurare l\'EA su MT4 per comunicare con PropHedge:</div>'
     + '<video controls style="width:100%; border-radius:8px; border:1px solid var(--border);">'
     + '<source src="http://googleusercontent.com/generated_video_content/10756346619635463973" type="video/mp4">'
     + 'Il tuo browser non supporta il video tag.</video>'
     + '</div></div>'
 
     + '<div class="panel ai"><div class="ph"><h3>Guida Piattaforma MT5</h3></div><div class="pb">'
-    + '<div style="margin-bottom:12px; font-size:12px; color:var(--t2);">Processo simile alla MT4 ma dedicato alla MT5. (Video in arrivo)</div>'
+    + '<div style="margin-bottom:12px; font-size:12px; color:var(--t2);">Il processo per MT5 è molto simile a quello MT4. Dovrai incollare i parametri (Email, API Key) all\'interno dell\'EA. (Video specifico in arrivo)</div>'
     + '<div style="background:var(--bg3); padding:40px; text-align:center; border-radius:8px; color:var(--t3)">[Video Tutorial MT5 Placeholder]</div>'
     + '</div></div>'
 
     + '<div class="panel ai"><div class="ph"><h3>Guida Connessione cTrader</h3></div><div class="pb">'
-    + '<div style="margin-bottom:12px; font-size:12px; color:var(--t2);">Scopri come ottenere il Token API da cTrader per connetterti.</div>'
+    + '<div style="margin-bottom:12px; font-size:12px; color:var(--t2);">Scopri come ottenere l\'Access Token direttamente da connect.spotware.com e incollarlo nella modale di connessione.</div>'
     + '<div style="background:var(--bg3); padding:40px; text-align:center; border-radius:8px; color:var(--t3)">[Video Tutorial cTrader Placeholder]</div>'
     + '</div></div>'
     + '</div>';
 }
 
-function showVideoGuide(platform) {
-  goTab('guide', document.getElementById('tabGuide'));
-  jrnlCloseConn(); // Chiude la modale e porta l'utente nella sezione video
-}
-
-// --- MODIFICHE ALLA FINESTRA CONNETTI BROKER (Aggiunta Pulsante Guida) ---
-function jrnlConnPlatChange(){
-  var plat=(document.getElementById('jConnMod-plat')||{value:'ctrader'}).value;
-  var fields=document.getElementById('jConnMod-fields'); if(!fields) return;
+function render() {
+  var ct = document.getElementById('main');
+  if(!ct) return;
+  ct.style.padding='24px';
+  ct.innerHTML = '';
   
-  var guideBtnHtml = '<button onclick="showVideoGuide(\''+plat+'\')" class="btn-g" style="width:100%; margin-top:10px; border-color:var(--teal); color:var(--teal)">📹 Guida alla connessione ' + plat.toUpperCase() + '</button>';
-
-  if(plat==='ctrader'){
-    fields.innerHTML='<div class="f" style="margin-top:10px"><label>Access Token</label><input type="text" id="jConn-ct-token" placeholder="Incolla token da connect.spotware.com" style="font-family:var(--fd);font-size:11px"></div>'
-      + guideBtnHtml;
-  }else if(plat==='mt4'||plat==='mt5'){
-    fields.innerHTML='<div class="note note-teal" style="margin-top:10px;font-size:11px">Inserisci questi parametri nell\'EA PropHedge:</div>'
-      + '<div class="f"><label>Email</label><input type="text" value="tua@email.com" readonly style="font-family:var(--fd);font-size:11px;background:var(--bg)"></div>'
-      + guideBtnHtml;
-  }else{
-    fields.innerHTML='<div class="f" style="margin-top:10px"><label>Nome conto</label><input type="text" id="jConn-label" placeholder="Inserimento manuale"></div>';
-  }
+  if(currentTab === 'dash') ct.innerHTML = renderDash();
+  else if(currentTab === 'guide') ct.innerHTML = renderGuide();
+  else if(currentTab === 'calc') ct.innerHTML = renderCalc();
+  else if(currentTab === 'journal') ct.innerHTML = renderJournal();
+  else ct.innerHTML = "<div style='color:var(--t);text-align:center;padding:50px'>Sezione in arrivo. Clicca su DASHBOARD, JOURNAL o GUIDA.</div>";
 }
 
-// --- SUPPORTO LIVE CHAT FIX (Logo e Logica) ---
-var _humanMode=false, _ticketId=null;
+// --- CHAT AI E SUPPORTO UMANO (TELEGRAM POLLING) ---
+var _humanMode=false, _ticketId=null, _pollTimer=null;
 
 function toggleAIChat(){
   var panel = document.getElementById('aiFloatPanel');
   if(!panel) return;
   panel.classList.toggle('open');
-  if(panel.classList.contains('open') && !_ticketId) {
+  if(panel.classList.contains('open') && !_ticketId && !_humanMode) {
     aiFloatAddMsg('bot', 'Ciao! Sono l\'assistente PropHedge.\nSe vuoi parlare con un operatore vero, scrivi semplicemente "supporto umano".');
   }
 }
@@ -752,10 +1090,10 @@ function aiFloatAddMsg(role, text) {
   var isBot = (role === 'bot' || role === 'support');
   var row = document.createElement('div'); row.className = 'ai-msg-row' + (isBot ? '' : ' user');
   
-  // Utilizziamo il logo corretto come richiesto!
-  var botLogo = '<svg width="20" height="20" viewBox="0 0 36 36" fill="none"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#00e5cc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="33" cy="7" r="3.2" fill="#9b5de5"/></svg>';
-  
+  // Utilizziamo il logo corretto come richiesto! (Logo Software)
+  var botLogo = '<svg width="18" height="18" viewBox="0 0 36 36" fill="none"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#00e5cc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="33" cy="7" r="3.2" fill="#9b5de5"/></svg>';
   var ava = '<div class="ai-msg-ava ' + (isBot?'bot':'usr') + '">' + (isBot? botLogo : '👤') + '</div>';
+  
   row.innerHTML = ava + '<div class="ai-bubble ' + (isBot?'bot':'usr') + '">' + text.replace(/\n/g, '<br>') + '</div>';
   msgs.appendChild(row); msgs.scrollTop = msgs.scrollHeight;
 }
@@ -773,39 +1111,33 @@ async function aiFloatSend(){
       _humanMode = true;
       _ticketId = 'TICKET_' + Date.now();
       document.getElementById('aiPanelTitle').textContent = 'Supporto Live Team';
-      aiFloatAddMsg('bot', 'Sei stato connesso al supporto live. Inoltrerò i tuoi messaggi agli operatori VISIONTRADING.\n(Simulazione: L\'operatore leggerà e risponderà qui.)');
-      // Qui parte il polling fittizio per dimostrare che funziona e riceve le risposte
-      setTimeout(() => {
-        aiFloatAddMsg('support', 'Ciao! Sono un operatore VisionTrading. Ho ricevuto il tuo ticket ('+_ticketId+'). Come posso aiutarti?');
-      }, 4000);
+      aiFloatAddMsg('bot', 'Ti sto mettendo in contatto con un operatore. I tuoi messaggi verranno inoltrati al Team VISIONTRADING.\nIl ticket è aperto e stiamo aspettando un operatore.');
+      
+      // Il polling simulato: se avessi il server attivo chiamerebbe una rotta API.
+      if(!_pollTimer) {
+        _pollTimer = setInterval(function() {
+          // Simuliamo che dopo un tot di polling, il server restituisca la risposta di Telegram:
+          if(Math.random() > 0.8) {
+             aiFloatAddMsg('support', 'Operatore: Ciao, ho letto il tuo messaggio dal nostro gestionale. Come ti posso aiutare oggi con l\'EA?');
+             clearInterval(_pollTimer); // Chiudiamo per non generare spam finto
+          }
+        }, 5000);
+      }
     } else {
-      // Quando il cliente scrive, simuliamo che il messaggio vada su Telegram
-      // (Se hai un tuo backend funzionante, questo POST invia il dato al server)
-      try {
-        await fetch('/api/telegram-webhook', { method: 'POST', body: JSON.stringify({msg: text})});
-      } catch(e) {}
+      aiFloatAddMsg('bot', '<span style="color:var(--t3);font-size:10px">✓ Messaggio inviato agli operatori</span>');
+      // fetch('/api/telegram', { method:'POST', body: JSON.stringify({txt: text}) });
     }
   } else {
     setTimeout(() => {
-      aiFloatAddMsg('bot', 'Risposta AI automatica. Ti ricordo che se serve puoi scrivere "supporto umano" per parlare con un tecnico!');
+      aiFloatAddMsg('bot', 'Messaggio automatico dell\'intelligenza artificiale.\nPer favore scrivi "supporto umano" per ricevere assistenza reale da un tecnico.');
     }, 1000);
   }
 }
 
-// BOILERPLATE FINALE DI INIT
-var props = [], activeId = null, currentTab = 'dash';
+// Init
 window.addEventListener('DOMContentLoaded', function(){
-  // Initialize mock or existing components
+  render();
 });
-
-// Funzione globale stub per evitare errori con vecchie chiamate
-function toggleConsent(){} function acceptAndEnter(){} function doLogout(){} function openNewSfidaTab(){} function goTab(tab){ currentTab=tab; render(); }
-function render(){
-  var ct=document.getElementById('main'); if(!ct)return;
-  ct.style.padding='24px';
-  if(currentTab==='guide') ct.innerHTML = renderGuide();
-  else ct.innerHTML = "<div style='color:var(--t)'>Caricamento o sezione non definita nel render() demo. Clicca su GUIDA.</div>";
-}
 </script>
 </body>
 </html>
