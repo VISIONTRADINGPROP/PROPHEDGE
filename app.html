@@ -2130,6 +2130,15 @@ function renderAccountDrop() {
     + '<button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(255,64,96,.2);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px"><span>🔓</span><span>Esci</span></button>'
     + '</div></div>';
 }
+ function changeAppLang(c) {
+  var s = document.querySelector('.goog-te-combo');
+  if(s) { 
+    s.value = c; 
+    s.dispatchEvent(new Event('change')); 
+  } else {
+    alert("Il traduttore si sta caricando, riprova tra un secondo!");
+  }
+} 
 
 function changeAppLang(c) {
   var s = document.querySelector('.goog-te-combo');
