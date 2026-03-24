@@ -4244,27 +4244,34 @@ function renderAccountDrop() {
 }
 
 function resetUserPassword() {
-  if (confirm("Vuoi ricevere un'email con il link sicuro per reimpostare la tua password?")) {
-    _sb.auth.resetPasswordForEmail(accountData.email).then(function(res) {
-      if(res.error) {
+  var newPass = prompt("Inserisci la TUA NUOVA PASSWORD (minimo 6 caratteri):");
+  if (newPass && newPass.length >= 6) {
+    _sb.auth.updateUser({ password: newPass }).then(function(res) {
+      if (res.error) {
         alert("Errore: " + res.error.message);
       } else {
-        alert("Email di reset inviata! Controlla la tua casella di posta (anche nella cartella Spam).");
+        alert("✅ Password aggiornata con successo! Al prossimo accesso usa quella nuova.");
         toggleAccDrop();
       }
     });
+  } else if (newPass) {
+    alert("Attenzione: la password deve essere di almeno 6 caratteri.");
   }
 }
 
 function changeUserEmail() {
-  var newEmail = prompt("Inserisci la tua nuova email:");
+  var newEmail = prompt("Inserisci la tua NUOVA EMAIL:");
   if (newEmail && newEmail.trim() !== "") {
     _sb.auth.updateUser({ email: newEmail.trim() }).then(function(res) {
-      if(res.error) {
+      if (res.error) {
         alert("Errore: " + res.error.message);
       } else {
-        alert("Richiesta inviata a Supabase! Per sicurezza, devi controllare ENTRAMBE le tue email (quella vecchia e quella nuova) e cliccare sui link di conferma.");
-        toggleAccDrop();
+        // Aggiorna anche i dati in locale per vederli subito
+        accountData.email = newEmail.trim();
+        try{ localStorage.setItem('ph_account', JSON.stringify(accountData)); }catch(e){}
+        
+        alert("✅ Email aggiornata con successo nel database!");
+        toggleAccDrop(); setTimeout(toggleAccDrop, 50);
       }
     });
   }
