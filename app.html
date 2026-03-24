@@ -69,6 +69,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;opacity:.18}
 .orb1{width:500px;height:500px;background:var(--violet);top:-150px;right:-150px}
 .orb2{width:350px;height:350px;background:var(--teal);bottom:-120px;left:-80px}
+
+/* LIVE ASSET TICKER */
 .tk-wrap{background:var(--bg3);border-bottom:1px solid var(--border);overflow:hidden;height:34px;display:flex;align-items:center;position:relative;z-index:101;cursor:pointer}
 .tk-label{flex-shrink:0;padding:0 13px;font-size:8px;font-weight:700;color:var(--teal);font-family:var(--fd);letter-spacing:.16em;text-transform:uppercase;border-right:1px solid var(--border);height:100%;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .tk-ld{width:5px;height:5px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal);animation:pu 2s infinite;flex-shrink:0}
@@ -84,6 +86,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .tk-dn{color:var(--red);background:rgba(255,64,96,.1)}
 .tk-na{color:var(--t3)}
 .tk-wait{display:inline-flex;align-items:center;padding:0 20px;font-size:10px;color:var(--t3);font-family:var(--fd);gap:8px;height:34px}
+
+/* HEADER */
 .hdr{position:sticky;top:0;z-index:100;background:var(--bg-hdr,rgba(6,8,16,.95));backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;gap:14px}
 .logo-box{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:6px 14px 6px 8px}
 .logo-icon{width:36px;height:36px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#0c1428;display:flex;align-items:center;justify-content:center}
@@ -99,18 +103,25 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .lt-est{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(255,190,11,.2)}
 .btn-rf{background:none;border:1px solid var(--border2);color:var(--t2);border-radius:5px;padding:3px 9px;font-size:11px;cursor:pointer;transition:all .15s}
 .btn-rf:hover{border-color:var(--teal);color:var(--teal)}
+
+/* TABS */
 .tabs{position:sticky;top:58px;z-index:99;background:rgba(6,8,16,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:2px}
 .tab{padding:8px 15px;font-size:10.5px;font-weight:600;font-family:var(--fh);color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;white-space:nowrap;letter-spacing:.1em;text-transform:uppercase;border-radius:8px;margin:5px 2px}
 .tab:hover{color:#fff;background:linear-gradient(135deg,rgba(0,229,204,.16),rgba(155,93,229,.16));box-shadow:0 0 0 1px rgba(0,229,204,.22),0 4px 16px rgba(0,229,204,.1);border-bottom-color:transparent}
 .tab.active{color:var(--teal);background:linear-gradient(135deg,rgba(0,229,204,.11),rgba(155,93,229,.11));border-bottom-color:var(--teal);box-shadow:0 0 0 1px rgba(0,229,204,.25)}
+
 .content{padding:24px;max-width:1400px;margin:0 auto;position:relative;z-index:1;flex:1;width:100%}
 .c2{display:grid;grid-template-columns:380px 1fr;gap:14px;align-items:start}
 @media(max-width:900px){.c2{grid-template-columns:1fr}}
+
+/* PANELS */
 .panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px}
 .ph{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .ph h3{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--t2);font-family:var(--fh);font-weight:600;display:flex;align-items:center;gap:8px}
 .ph h3::before{content:'';width:3px;height:11px;background:linear-gradient(var(--teal),var(--violet));border-radius:2px;flex-shrink:0}
 .pb{padding:18px}
+
+/* FORM */
 .f{margin-bottom:12px}
 .f label{display:block;font-size:9.5px;color:var(--t3);margin-bottom:5px;font-family:var(--fh);text-transform:uppercase;letter-spacing:.12em;font-weight:600}
 .f input,.f select{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fd);font-weight:400;outline:none;transition:all .2s;-moz-appearance:textfield}
@@ -121,6 +132,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .fr2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .sect{font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:var(--t3);font-family:var(--fh);font-weight:700;margin:14px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+
+/* ACCOUNT CARDS */
 .acct-split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
 .ac{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:15px;position:relative;overflow:hidden}
 .ac::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
@@ -136,6 +149,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .ac-row.same{background:rgba(0,229,204,.05);border-radius:6px;padding:6px 8px;margin:3px 0;border:none}
 .ac-row.same span:first-child{color:var(--teal);font-size:10px}
 .v-teal{color:var(--teal)}.v-violet{color:var(--violet)}.v-amber{color:var(--amber)}.v-red{color:var(--red)}.v-green{color:var(--green)}
+
+/* ROI */
 .roi-box{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .roi-card{border-radius:12px;padding:14px;border:1px solid;text-align:center}
 .roi-a{background:var(--red-bg);border-color:rgba(255,64,96,.2)}
@@ -143,17 +158,23 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .roi-lbl{font-size:9.5px;color:var(--t3);font-family:var(--fh);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;font-weight:600}
 .roi-val{font-size:26px;font-weight:700;font-family:var(--fd);margin-bottom:2px;letter-spacing:.02em}
 .roi-sub{font-size:11px;color:var(--t3);font-family:var(--fd);line-height:1.6;font-weight:300}
+
+/* TABLE */
 .pt{width:100%;border-collapse:collapse}
 .pt th{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);font-family:var(--fd);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3)}
 .pt td{padding:10px;font-size:13px;border-bottom:1px solid var(--border)}
 .pt td:last-child,.pt td:nth-child(2){text-align:right;font-family:var(--fd);font-weight:600}
 .pt tr:last-child td{border-bottom:none}
 .pt tr.hi td{background:rgba(0,229,204,.04)}
+
+/* BADGES / NOTES */
 .badge{font-size:10px;padding:3px 9px;border-radius:5px;font-family:var(--fd);font-weight:600}
 .b-teal{background:var(--teal-bg);color:var(--teal);border:1px solid rgba(0,229,204,.2)}
 .note{border-radius:8px;padding:10px 13px;font-size:12px;line-height:1.6;margin-bottom:8px;border:1px solid}
 .note-teal{background:var(--teal-bg);border-color:rgba(0,229,204,.15);color:rgba(0,229,204,.85)}
 .note-amber{background:var(--amber-bg);border-color:rgba(255,190,11,.15);color:rgba(255,190,11,.85)}
+
+/* RULE ROWS */
 .rr{display:flex;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:6px}
 .rr-ok{background:var(--green-bg);border:1px solid rgba(0,214,143,.15)}
 .rr-warn{background:var(--amber-bg);border:1px solid rgba(255,190,11,.15)}
@@ -162,6 +183,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .rr-ok .rr-t{color:var(--green)}.rr-warn .rr-t{color:var(--amber)}
 .rr-d{font-size:11px}
 .rr-ok .rr-d{color:rgba(0,214,143,.7)}.rr-warn .rr-d{color:rgba(255,190,11,.7)}
+
+/* STAT CARDS */
 .sg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
 @media(max-width:800px){.sg{grid-template-columns:1fr 1fr}}
 .sc-s{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;transition:all .2s;cursor:default}
@@ -170,6 +193,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .sc-s-lb{font-size:9px;color:var(--t3);font-family:var(--fh);text-transform:uppercase;letter-spacing:.14em;margin-bottom:5px;font-weight:600}
 .sc-s-v{font-size:22px;font-weight:700;font-family:var(--fd);letter-spacing:.02em}
 .sc-s-s{font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:3px;font-weight:300}
+
+/* PROP CARDS */
 .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:13px}
 .pc{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:17px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden}
 .pc:hover{border-color:var(--border2);transform:translateY(-2px)}
@@ -186,10 +211,14 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .pst{background:var(--bg3);border-radius:8px;padding:8px;text-align:center;border:1px solid var(--border)}
 .pst-l{font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:3px}
 .pst-v{font-size:13px;font-weight:600;font-family:var(--fd)}
+
+/* BUTTONS */
 .btn-p{background:linear-gradient(135deg,var(--teal2),var(--violet2));border:none;color:#fff;border-radius:9px;padding:10px 20px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--fm);letter-spacing:.06em;text-transform:uppercase;display:inline-flex;align-items:center;gap:7px;transition:all .2s}
 .btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,184,164,.25)}
 .btn-g{background:none;border:1px solid var(--border2);color:var(--t2);border-radius:8px;padding:9px 16px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--fm);transition:all .15s;text-transform:uppercase;letter-spacing:.04em}
 .btn-g:hover{border-color:var(--teal);color:var(--teal)}
+
+/* MODAL */
 .mov{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)}
 .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:480px;max-height:88vh;max-height:88dvh;overflow-y:auto;display:flex;flex-direction:column}
 .mh{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;flex-shrink:0;position:sticky;top:0;background:var(--bg2);z-index:2}
@@ -203,12 +232,16 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .si:last-child{border-bottom:none}
 .si-logo{width:26px;height:26px;border-radius:6px;overflow:hidden;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:700}
 .si-logo img{width:100%;height:100%;object-fit:cover;border-radius:5px}
+
+/* PREVIEW */
 .prev{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px;margin-top:12px}
 .prev-g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .pv{background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)}
 .pv-lb{font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
 .pv-v{font-size:18px;font-weight:700;font-family:var(--fd)}
 .pv-s{font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:2px}
+
+/* BROKER */
 .bk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .bk-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px}
 .bk-card:hover{border-color:var(--border2)}
@@ -229,6 +262,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .ai-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
 .ai-lb{font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
 .ai-v{font-size:16px;font-weight:700;font-family:var(--fd)}
+
+/* BOTTOM BANNER */
 .bot-wrap{position:fixed!important;bottom:36px!important;left:0!important;right:0!important;z-index:9999!important;background:var(--bg2);border-top:1px solid var(--border2);height:54px;display:flex!important;align-items:center;overflow:hidden}
 .bot-scroll{overflow:hidden;flex:1}
 .bot-track{display:flex;white-space:nowrap;animation:botTk 26s linear infinite}
@@ -245,6 +280,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .bt-b{background:var(--violet-bg);color:var(--violet);border:1px solid rgba(155,93,229,.2)}
 .bot-close{flex-shrink:0;background:none;border:none;color:var(--t3);cursor:pointer;padding:0 14px;font-size:16px;height:100%;transition:color .15s;border-left:1px solid var(--border)}
 .bot-close:hover{color:var(--t)}
+
+/* JOURNAL */
 .jw{display:flex;height:calc(100vh - 106px);overflow:hidden}
 .jsb{width:180px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
 .jsb-hd{padding:12px 14px 6px;display:flex;align-items:center;justify-content:space-between}
@@ -263,12 +300,16 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .jcell{padding:7px 12px;font-size:11px;color:var(--t2);display:flex;align-items:center;border-right:1px solid rgba(255,255,255,.1)}
 input[type=date]{background:var(--bg2);border:1px solid var(--border);color:var(--t);border-radius:6px;padding:4px 8px;font-size:11px;font-family:var(--fd)}
 body:not(.light-theme) input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.5)!important;opacity:.9}
+
+/* EMPTY */
 .empty{text-align:center;padding:70px 20px}
 .empty p{font-size:14px;color:var(--t2);line-height:1.7;margin-bottom:20px}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .ai{animation:fadeUp .3s ease forwards}
 @keyframes spUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @keyframes logoPulse{0%,100%{box-shadow:0 0 36px rgba(0,229,204,.22)}50%{box-shadow:0 0 60px rgba(0,229,204,.5),0 0 100px rgba(155,93,229,.2)}}
+
+/* ====== PANNELLO MERCATI FULLSCREEN ====== */
 #mkOverlay{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.7);backdrop-filter:blur(4px)}
 #mkPanel{display:none;position:fixed;inset:0;z-index:10001;flex-direction:column;overflow:hidden;background:#080d1c;font-family:'Plus Jakarta Sans','Inter',sans-serif;color:#eef0f8}
 body.light-theme #mkPanel{background:#f0f2f8;color:#0c1428}
@@ -323,6 +364,8 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 .mks-na{color:#3d4d78;border:1px solid rgba(61,77,120,.2)}
 @media(max-width:900px){.mk-grid{--c1:160px;--c2:110px}.mk-col-hdr span:last-child,.mk-row .mk-period:last-child{display:none}}
 @media(max-width:600px){.mk-grid{--c1:130px;--c2:95px;grid-template-columns:var(--c1) var(--c2) 1fr 1fr}.mk-col-hdr span:nth-child(4),.mk-col-hdr span:nth-child(5){display:none}.mk-row .mk-period:nth-child(4),.mk-row .mk-period:nth-child(5){display:none}}
+
+/* ECONOMIC CALENDAR */
 .cal-wrap{max-width:1100px;margin:0 auto}
 .cal-day-hdr{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-family:var(--fh);color:var(--t3);padding:18px 0 8px;border-bottom:2px solid var(--border2);margin-bottom:4px}
 .cal-row{display:grid;grid-template-columns:80px 36px 36px 1fr 120px 90px 90px 90px;align-items:center;gap:0;padding:10px 12px;border-bottom:1px solid rgba(128,128,128,.06);border-radius:6px;transition:background .12s;cursor:default}
@@ -358,6 +401,8 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 .cal-alert-box{background:rgba(255,64,96,.08);border:1px solid rgba(255,64,96,.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--t2);display:none}
 .cal-alert-box.show{display:flex}
 @media(max-width:800px){.cal-row{grid-template-columns:70px 28px 28px 1fr 90px}.cal-val,.cal-hdr-col:nth-child(n+6){display:none}}
+
+/* ── FLOATING AI CHAT WIDGET ── */
 #aiFloatBtn{position:fixed;bottom:110px;right:24px;z-index:99999;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#00b8a4,#9b5de5);border:none;cursor:pointer;font-size:24px;box-shadow:0 4px 20px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s}
 #aiFloatBtn:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(0,229,204,.4)}
 #aiFloatBtn .ai-notif{position:absolute;top:-3px;right:-3px;width:14px;height:14px;background:#ff4060;border-radius:50%;border:2px solid #060810;animation:pulse2 2s infinite}
@@ -377,7 +422,7 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 .ai-msgs::-webkit-scrollbar-thumb{background:rgba(128,128,128,.2);border-radius:2px}
 .ai-msg-row{display:flex;gap:7px;align-items:flex-start}
 .ai-msg-row.user{flex-direction:row-reverse}
-.ai-msg-ava{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.ai-msg-ava{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;overflow:hidden}
 .ai-msg-ava.bot{background:linear-gradient(135deg,#00b8a4,#9b5de5)}
 .ai-msg-ava.usr{background:rgba(255,255,255,.08);border:1px solid rgba(128,128,128,.2)}
 .ai-bubble{padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.6;max-width:82%}
@@ -640,7 +685,7 @@ function doForgotSubmit(){
       <div id="loginErr" style="display:none;background:rgba(255,64,96,.08);border:1px solid rgba(255,64,96,.2);border-radius:8px;padding:10px 13px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#ff4060;margin-bottom:16px"></div>
       <button id="loginBtn" onclick="doLogin()" style="width:100%;background:linear-gradient(135deg,#00b8a4,#7a40cc);border:none;color:#fff;border-radius:12px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans','Inter',sans-serif;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">→ Accedi</button>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><div style="flex:1;height:1px;background:#1e2840"></div><span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#3d4d78">NON HAI UN ACCOUNT?</span><div style="flex:1;height:1px;background:#1e2840"></div></div>
-      <button onclick="goToPurchase()" style="width:100%;background:#00c97a;border:none;border-radius:999px;padding:15px 0;color:#fff;font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px" onmouseover="this.style.background='#00e085'" onmouseout="this.style.background='#00c97a'">🔒 ACQUISTA LICENZA</button>
+      <button onclick="goToPurchase()" style="width:100%;background:#00c97a;border:none;border-radius:999px;padding:15px 0;color:#fff;font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px" onmouseover="this.style.background='#00e085'" onmouseout="this.style.background='#00c97a'">📝 REGISTRATI GRATIS</button>
     </div>
   </div>
   <div style="margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:9px;color:#3d4d78;text-align:center;position:relative;z-index:1">PropHedge · VISIONTRADING · di Russo Antonino Christian</div>
@@ -673,24 +718,47 @@ function doForgotSubmit(){
   </div>
 </div>
 
-<div id="purchasePage" style="display:none;opacity:0;position:fixed;inset:0;z-index:99991;background:#060810;align-items:flex-start;justify-content:center;padding:24px;transition:opacity .4s;flex-direction:column;overflow-y:auto">
-  <div style="width:100%;max-width:520px;margin:0 auto;position:relative;z-index:1;animation:spUp .5s ease forwards">
-    <button onclick="backToLogin()" style="background:none;border:1px solid #1e2840;color:#3d4d78;border-radius:8px;padding:7px 14px;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;margin-bottom:24px">← Torna al login</button>
-    <div style="text-align:center;margin-bottom:28px">
-      <div style="font-size:22px;font-weight:800;margin-bottom:6px"><span style="color:#00e5cc">P</span><span style="color:#eef0f8">rop</span><span style="color:#9b5de5">H</span><span style="color:#eef0f8">edge Pro</span></div>
-      <h2 style="font-size:20px;font-weight:700;color:#eef0f8;margin-bottom:6px">Scegli il tuo piano</h2>
-      <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8090b8">Accesso immediato dopo il pagamento · Licenza personale</p>
+<div id="purchasePage" style="display:none;opacity:0;position:fixed;inset:0;z-index:99991;background:#060810;align-items:center;justify-content:center;padding:24px;transition:opacity .4s;flex-direction:column">
+  <div style="background:#0c0f1a;border:1px solid #2a3560;border-radius:22px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.7);position:relative;z-index:1">
+    <div style="background:linear-gradient(135deg,rgba(0,229,204,.08),rgba(155,93,229,.1));border-bottom:1px solid #1e2840;padding:28px;text-align:center">
+      <div style="font-size:20px;color:#eef0f8;margin-bottom:6px;font-weight:700">Richiedi Accesso Gratuito</div>
+      <div style="font-size:12px;color:#8090b8;line-height:1.5">Crea un account. L'amministratore valuterà la tua richiesta per abilitarti.</div>
     </div>
-    <div style="background:linear-gradient(160deg,rgba(0,229,204,.06),rgba(155,93,229,.1));border:2px solid #00e5cc;border-radius:20px;padding:32px 28px;text-align:center;position:relative;margin-bottom:16px">
-      <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#00b8a4,#7a40cc);border-radius:20px;padding:4px 18px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#fff;white-space:nowrap">⭐ LICENZA PROFESSIONALE</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#00e5cc;text-transform:uppercase;letter-spacing:.16em;margin-bottom:16px;margin-top:8px">Accesso Annuale Completo</div>
-      <div style="font-size:56px;color:#eef0f8;line-height:1;margin-bottom:6px">€500</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8090b8;margin-bottom:28px">Rinnovo annuale · Licenza personale</div>
-      <button onclick="doRegister()" style="width:100%;background:linear-gradient(135deg,#00b8a4,#7a40cc);border:none;color:#fff;border-radius:12px;padding:16px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.1em;text-transform:uppercase">▶ Acquista ora</button>
+    <div style="padding:28px">
+      <div class="f" style="margin-bottom:12px">
+        <label style="font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.1em">Nome e Cognome</label>
+        <input type="text" id="regName" style="width:100%;background:#111628;border:1px solid #1e2840;color:#eef0f8;border-radius:10px;padding:12px;font-family:var(--fd);outline:none">
+      </div>
+      <div class="f" style="margin-bottom:12px">
+        <label style="font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.1em">Email</label>
+        <input type="email" id="regEmail" style="width:100%;background:#111628;border:1px solid #1e2840;color:#eef0f8;border-radius:10px;padding:12px;font-family:var(--fd);outline:none">
+      </div>
+      <div class="f" style="margin-bottom:20px">
+        <label style="font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.1em">Password</label>
+        <input type="password" id="regPass" style="width:100%;background:#111628;border:1px solid #1e2840;color:#eef0f8;border-radius:10px;padding:12px;font-family:var(--fd);outline:none">
+      </div>
+      <div id="regErr" style="display:none;background:rgba(255,64,96,.08);border:1px solid rgba(255,64,96,.2);border-radius:8px;padding:10px;font-family:var(--fd);font-size:11px;color:#ff4060;margin-bottom:16px"></div>
+      <div id="regSucc" style="display:none;background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.2);border-radius:8px;padding:10px;font-family:var(--fd);font-size:11px;color:#00d68f;margin-bottom:16px">✅ Richiesta inviata! Attendi l'autorizzazione dell'admin.</div>
+      <button id="regBtn" onclick="doRegisterFree()" style="width:100%;background:linear-gradient(135deg,#00b8a4,#7a40cc);border:none;color:#fff;border-radius:12px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:14px">Invia Richiesta</button>
+      <button onclick="backToLogin()" style="width:100%;background:none;border:1px solid #1e2840;color:#3d4d78;border-radius:10px;padding:11px;font-size:11px;cursor:pointer;font-family:var(--fd)">← Torna al login</button>
     </div>
   </div>
 </div>
-
+<script>
+function doRegisterFree(){
+  var name = document.getElementById('regName').value.trim();
+  var email = document.getElementById('regEmail').value.trim();
+  var pass = document.getElementById('regPass').value;
+  var err = document.getElementById('regErr'); var succ = document.getElementById('regSucc'); var btn = document.getElementById('regBtn');
+  err.style.display='none'; succ.style.display='none';
+  if(!email || !pass || !name) { err.textContent='Compila tutti i campi'; err.style.display='block'; return; }
+  btn.textContent='Invio...'; btn.disabled=true;
+  _sb.auth.signUp({ email: email, password: pass, options: { data: { first_name: name } } }).then(function(res){
+    if(res.error) { err.textContent=res.error.message; err.style.display='block'; btn.textContent='Invia Richiesta'; btn.disabled=false; }
+    else { succ.style.display='block'; btn.style.display='none'; }
+  });
+}
+</script>
 <div class="orb orb1"></div>
 <div class="orb orb2"></div>
 
@@ -962,7 +1030,7 @@ function doForgotSubmit(){
 
 <script>
 // ══════════════════════════════════════════════════════════
-// TUTTO IL CODICE DELL'APP
+// TUTTO IL CODICE JAVASCRIPT DELL'APP
 // ══════════════════════════════════════════════════════════
 
 var AFF={
@@ -1196,7 +1264,6 @@ function goTab(tab,el){
   closeAccDrop();render();
 }
 
-// ══ MARKET DATA ══════════════════════════════════════════════════
 var _mkCat='forex',_mkData={},_mkLoading=false;
 var MK_CATALOG={
   forex:['AUD/CAD','AUD/CHF','AUD/JPY','AUD/NZD','AUD/USD','CAD/CHF','CAD/JPY','CHF/JPY','EUR/AUD','EUR/CAD','EUR/CHF','EUR/GBP','EUR/JPY','EUR/NZD','EUR/USD','GBP/AUD','GBP/CAD','GBP/CHF','GBP/JPY','GBP/NZD','GBP/USD','NZD/CAD','NZD/CHF','NZD/JPY','NZD/USD','USD/CAD','USD/CHF','USD/JPY'],
@@ -1470,9 +1537,8 @@ function mkUpdateMainTicker(){
     tr.innerHTML=html+html;tr.style.animation='none';void tr.offsetHeight;tr.style.animation='tkLive 50s linear infinite';
   });
 }
-
 // ══ DASHBOARD ════════════════════════════════════════════════════
-  var dashDetailId=null;
+var dashDetailId=null;
 function openNewSfidaTab(el){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');openModal();}
 function openDashDetail(id){dashDetailId=id;goTab('dashdetail',null);}
 function closeDashDetail(){dashDetailId=null;goTab('dash',document.getElementById('tabDash'));}
@@ -1789,7 +1855,209 @@ function statCard(icon,label,value,sub,color){
   return'<div class="sc-s ai"><div class="sc-s-ic">'+icon+'</div><div class="sc-s-lb">'+label+'</div><div class="sc-s-v" style="color:'+(color||'var(--t)')+'">'+value+'</div><div class="sc-s-s">'+sub+'</div></div>';
 }
 
-// ══ PIATTAFORMA, ACCOUNT, CALENDARIO ════════════════════════════
+// ══ JOURNAL ══════════════════════════════════════════════════════
+var jrnl={sessions:[],activeIdx:0,showNewForm:false};
+function jrnlLoad(){try{var s=localStorage.getItem('ph_jrnl_v3');if(s){var d=JSON.parse(s);jrnl.sessions=d.sessions||[];jrnl.activeIdx=d.activeIdx||0;}}catch(e){}}
+function jrnlSave(){try{localStorage.setItem('ph_jrnl_v3',JSON.stringify({sessions:jrnl.sessions,activeIdx:jrnl.activeIdx}));}catch(e){}}
+function jrnlGetActive(){return jrnl.sessions[jrnl.activeIdx]||null;}
+function jrnlNewSession(name,linkedPropId){
+  jrnl.sessions.push({id:'j'+Date.now(),name:name||('Sfida '+(jrnl.sessions.length+1)),linkedPropId:linkedPropId||null,createdAt:new Date().toISOString(),propConn:{platform:'',label:'',token:'',accountId:'',env:'live',connected:false},brokerConn:{platform:'',label:'',token:'',accountId:'',env:'live',connected:false},propTrades:[],brokerTrades:[],concluded:false,concludedAt:null});
+  jrnl.activeIdx=jrnl.sessions.length-1;jrnlSave();
+}
+
+function jrnlInjectCSS(){
+  var el=document.getElementById('jrnl-css');if(el)el.remove();
+  el=document.createElement('style');el.id='jrnl-css';
+  el.textContent='.jw{display:flex;height:calc(100vh - 106px);overflow:hidden}.jsb{width:180px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}.jsb-hd{padding:12px 14px 6px;display:flex;align-items:center;justify-content:space-between}.jsb-hd span{font-size:9px;font-weight:700;font-family:var(--fd);color:var(--t3);letter-spacing:.1em;text-transform:uppercase}.jsb-new{background:linear-gradient(135deg,var(--teal2),var(--violet2));border:none;color:#fff;border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer}.jsb-item{padding:10px 14px;cursor:pointer;border-left:3px solid transparent;font-size:12px;font-weight:600;color:var(--t2);transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:6px}.jsb-item:hover{background:var(--bg3);color:var(--t)}.jsb-item.active{border-left-color:var(--teal);background:var(--teal-bg);color:var(--teal)}.jsb-del{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:0 2px;opacity:0;transition:opacity .15s}.jsb-item:hover .jsb-del{opacity:1}.jmain{flex:1;display:flex;flex-direction:column;overflow:hidden}.jpnl-chart{height:60px;background:var(--bg3);border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;flex-shrink:0}.jpnl-half{position:relative;overflow:hidden;padding:6px 14px 4px}.jpnl-half:first-child{border-right:5px solid var(--jdiv)}.jpnl-label{font-size:9px;font-family:var(--fd);color:var(--t3);text-transform:uppercase;letter-spacing:.08em}.jpnl-val{font-size:14px;font-weight:800;font-family:var(--fd);line-height:1.2}.jcols-hdr{display:grid;grid-template-columns:1fr 1fr;flex-shrink:0;border-bottom:2px solid var(--border2)}.jcol-hdr{padding:8px 14px;background:var(--bg2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}.jcol-hdr:first-child{border-right:5px solid var(--jdiv)}.jcol-title{font-size:10px;font-weight:700;font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em}.jcol-title.prop{color:var(--violet)}.jcol-title.broker{color:var(--teal)}.jstats{display:flex;gap:8px;flex-wrap:wrap}.jstat{font-size:10px;font-family:var(--fd);color:var(--t3)}.jstat b{font-weight:700}.jcols-outer{flex:1;display:flex;flex-direction:column;overflow:hidden}.jscroll{flex:1;overflow-y:auto}.jrow-hdr{display:grid;grid-template-columns:1fr 1fr;position:sticky;top:0;z-index:2;background:var(--bg3);border-bottom:1px solid var(--border)}.jcell-hdr{padding:7px 12px;font-size:9px;font-family:var(--fd);color:var(--t3);text-transform:uppercase;letter-spacing:.08em;display:flex;gap:10px}.jcell-hdr:first-child{border-right:5px solid var(--jdiv)}.jrow{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--jrow-line);min-height:36px;transition:background .1s}.jrow:nth-child(even){background:var(--jrow-even)}.jrow:hover{background:var(--jrow-hover)!important}.jcell{padding:7px 12px;font-size:11px;color:var(--t2);display:flex;align-items:center}.jcell:first-child{border-right:5px solid var(--jdiv)}.jdate-input{background:var(--bg2);border:1px solid var(--border);color:var(--t);border-radius:6px;padding:4px 8px;font-size:11px;font-family:var(--fd)}body:not(.light-theme) .jdate-input::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.2)!important}';
+  document.head.appendChild(el);
+}
+
+function renderJournal(){
+  var ct=document.getElementById('main');ct.style.padding='0';ct.style.maxWidth='none';
+  jrnlInjectCSS();
+  if(jrnl.showNewForm){ct.innerHTML='<div style="padding:0">'+jrnlRenderNewForm()+'</div>';return;}
+  if(!jrnl.sessions.length){ct.innerHTML=jrnlRenderEmpty();return;}
+  if(jrnl.activeIdx>=jrnl.sessions.length)jrnl.activeIdx=jrnl.sessions.length-1;
+  ct.innerHTML='<div class="jw">'+jrnlRenderSidebar()+'<div class="jmain" id="jmain">'+jrnlRenderMain()+'</div></div>';
+  setTimeout(function(){
+    document.querySelectorAll('[data-jconn-idx]').forEach(function(el){el.addEventListener('click',function(){jrnlOpenConn(parseInt(el.dataset.jconnIdx),el.dataset.jconnSide);});});
+  },50);
+}
+
+function jrnlRenderEmpty(){return'<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:16px;text-align:center;padding:20px"><div style="font-size:40px;opacity:.25">&#128202;</div><div style="font-size:16px;font-weight:700">Nessuna sfida nel Journal</div><div style="color:var(--t3);font-size:12px">Crea la tua prima sfida per iniziare</div><button class="btn-p" onclick="jrnlShowNewForm()">+ Nuova sfida Journal</button></div>';}
+
+function jrnlRenderSidebar(){
+  var html='<div class="jsb"><div class="jsb-hd"><span>Sfide</span><button class="jsb-new" onclick="jrnlShowNewForm()">+ Nuova</button></div>';
+  jrnl.sessions.forEach(function(s,i){
+    html+='<div class="jsb-item'+(jrnl.activeIdx===i?' active':'')+(s.concluded?' done':'')+'" onclick="jrnlSelect('+i+')">'
+      +'<div style="line-height:1.4">'+(s.concluded?'<span style="font-size:9px;color:var(--teal)">✅ </span>':'')+'Sfida '+(i+1)
+      +'<div style="font-size:10px;font-weight:400;opacity:.65;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.name+'</div></div>'
+      +'<button class="jsb-del" onclick="event.stopPropagation();jrnlDelete('+i+')" title="Elimina">&#10005;</button></div>';
+  });
+  return html+'</div>';
+}
+
+function jrnlRenderMain(){
+  var sess=jrnlGetActive();if(!sess)return'<div style="padding:30px;color:var(--t3)">Seleziona una sfida</div>';
+  var i=jrnl.activeIdx;
+  var pt=(sess.propTrades||[]).slice().sort(function(a,b){return new Date(b.open_time||b.opened_at||0)-new Date(a.open_time||a.opened_at||0);});
+  var bt=(sess.brokerTrades||[]).slice().sort(function(a,b){return new Date(b.open_time||b.opened_at||0)-new Date(a.open_time||a.opened_at||0);});
+  var ptPnl=pt.reduce(function(s,t){return s+parseFloat(t.profit||t.pnl_realized||0);},0);
+  var btPnl=bt.reduce(function(s,t){return s+parseFloat(t.profit||t.pnl_realized||0);},0);
+  var ptOpen=pt.filter(function(t){return t.status==='open';});var btOpen=bt.filter(function(t){return t.status==='open';});
+  var html='';
+  if(sess.concluded)html+='<div style="padding:7px 16px;font-size:11px;display:flex;align-items:center;gap:8px;background:rgba(255,64,96,.07);color:var(--red);border-bottom:1px solid rgba(255,64,96,.15);flex-shrink:0">🏁 Sfida conclusa — <a href="#" onclick="jrnlReset('+i+');return false" style="color:var(--teal);text-decoration:none">↺ Reimposta</a></div>';
+  html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg3);border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0">';
+  if(sess.propConn.connected&&!sess.concluded)html+='<button class="btn-g" style="padding:4px 8px;font-size:10px" data-jsync-idx="'+i+'" data-jsync-side="prop">🔄 Prop</button>';
+  if(sess.brokerConn.connected&&!sess.concluded)html+='<button class="btn-g" style="padding:4px 8px;font-size:10px" data-jsync-idx="'+i+'" data-jsync-side="broker">🔄 Broker</button>';
+  if(!sess.concluded)html+='<button class="btn-g" style="padding:4px 8px;font-size:10px;color:var(--amber)" data-jconclude="'+i+'">🏁 Conclusa</button>';
+  html+='</div>';
+  html+='<div class="jpnl-chart"><div class="jpnl-half"><div class="jpnl-label">🎯 Prop — P/L</div><div class="jpnl-val '+(ptPnl>=0?'v-green':'v-red')+'">'+(ptPnl>=0?'+':'')+ptPnl.toFixed(2)+'$</div></div>';
+  html+='<div class="jpnl-half"><div class="jpnl-label">💹 Broker — P/L</div><div class="jpnl-val '+(btPnl>=0?'v-green':'v-red')+'">'+(btPnl>=0?'+':'')+btPnl.toFixed(2)+'$</div></div></div>';
+  html+='<div class="jcols-outer"><div class="jcols-hdr">';
+  html+='<div class="jcol-hdr"><span class="jcol-title prop">🎯 Prop</span><div class="jstats"><div class="jstat">Aperti: <b style="color:var(--teal)">'+ptOpen.length+'</b></div></div>'+(sess.propConn.connected?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">● '+sess.propConn.label+'</span>':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="prop">🔗 Connetti</button>')+'</div>';
+  html+='<div class="jcol-hdr"><span class="jcol-title broker">💹 Broker</span><div class="jstats"><div class="jstat">Aperti: <b style="color:var(--teal)">'+btOpen.length+'</b></div></div>'+(sess.brokerConn.connected?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">● '+sess.brokerConn.label+'</span>':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="broker">🔗 Connetti</button>')+'</div>';
+  html+='</div>';
+  html+='<div class="jscroll"><div class="jrow-hdr"><div class="jcell-hdr"><span>Simbolo</span><span>Dir.</span><span>Lotti</span><span>P/L</span><span>Stato</span></div><div class="jcell-hdr"><span>Simbolo</span><span>Dir.</span><span>Lotti</span><span>P/L</span><span>Stato</span></div></div>';
+  var maxLen=Math.max(pt.length,bt.length);
+  if(!maxLen){
+    html+='<div class="jrow"><div class="jcell">'+jrnlEmptyCol('prop',sess,i)+'</div><div class="jcell">'+jrnlEmptyCol('broker',sess,i)+'</div></div>';
+  }else{
+    for(var r=0;r<maxLen;r++){html+='<div class="jrow"><div class="jcell">'+jrnlCell(pt[r]||null)+'</div><div class="jcell">'+jrnlCell(bt[r]||null)+'</div></div>';}
+  }
+  html+='</div></div></div>';
+  html+=jrnlConnModal();
+  return html;
+}
+
+function jrnlCell(t){
+  if(!t)return'<span style="color:var(--border2);font-size:10px">—</span>';
+  var pnl=parseFloat(t.profit||t.pnl_realized||0);
+  return'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><b style="font-size:11px">'+(t.symbol||'—')+'</b><b class="'+(t.direction==='BUY'?'v-green':'v-red')+'">'+(t.direction||'—')+'</b><span style="font-family:var(--fd)">'+parseFloat(t.volume||0).toFixed(2)+'</span><span class="'+(pnl>=0?'v-green':'v-red')+'" style="font-family:var(--fd);font-weight:700">'+(pnl>=0?'+':'')+pnl.toFixed(2)+'$</span>'+(t.status==='open'?'<span style="background:rgba(0,229,204,.1);color:var(--teal);padding:1px 6px;border-radius:6px;font-size:9px;font-weight:700">APERTO</span>':'<span style="background:rgba(255,255,255,.06);color:var(--t3);padding:1px 6px;border-radius:6px;font-size:9px">CHIUSO</span>')+'</div>';
+}
+
+function jrnlEmptyCol(side,sess,i){
+  var connected=side==='prop'?sess.propConn.connected:sess.brokerConn.connected;
+  if(connected)return'<div style="color:var(--border2);font-size:11px;padding:4px">Nessun trade</div>';
+  return'<div style="padding:12px;text-align:center"><div style="font-size:11px;color:var(--t3)">'+(side==='prop'?'🎯 Prop non connesso':'💹 Broker non connesso')+'</div>'+(sess.concluded?'':'<button class="btn-p" style="padding:4px 14px;font-size:11px;margin-top:6px" data-jconn-idx="'+i+'" data-jconn-side="'+side+'">🔗 Connetti</button>')+'</div>';
+}
+
+function jrnlRenderNewForm(){
+  var sfideHtml='';
+  if(props.length>0){sfideHtml='<div style="margin-bottom:16px"><div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Collega a sfida Dashboard</div><select id="jnf-prop" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px"><option value="">-- Nessun collegamento --</option>';props.forEach(function(p){var c2=calcChallenge(p);sfideHtml+='<option value="'+p.id+'">'+p.name+' — '+c2.propLots.toFixed(2)+' lot / '+c2.hedgeLots.toFixed(2)+' lot</option>';});sfideHtml+='</select></div>';}
+  return'<div style="padding:30px 24px;max-width:480px"><div style="font-size:16px;font-weight:700;margin-bottom:6px">+ Nuova sfida Journal</div><div class="f"><label>Nome sfida</label><input type="text" id="jnf-name" placeholder="Es. FTMO $100k Marzo 2026"></div>'+sfideHtml+'<div style="display:flex;gap:8px;margin-top:4px"><button class="btn-p" onclick="jrnlCreateNew()">Crea sfida</button><button class="btn-g" onclick="jrnlCancelNew()">Annulla</button></div></div>';
+}
+
+function jrnlConnModal(){
+  return'<div id="jConnMod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)jrnlCloseConn()"><div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:400px;padding:22px" onclick="event.stopPropagation()"><div style="font-size:14px;font-weight:700;margin-bottom:14px" id="jConnMod-title">Connetti conto</div><div class="f"><label>Piattaforma</label><select id="jConnMod-plat" onchange="jrnlConnPlatChange()"><option value="ctrader">cTrader</option><option value="mt4">MetaTrader 4</option><option value="mt5">MetaTrader 5</option><option value="manual">Manuale</option></select></div><div id="jConnMod-fields"></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn-p" onclick="jrnlSaveConn()">Salva</button><button class="btn-g" onclick="jrnlCloseConn()">Annulla</button></div></div></div>';
+}
+
+var _jConnSide='prop',_jConnIdx=0;
+function jrnlSelect(i){jrnl.activeIdx=i;jrnl.showNewForm=false;jrnlSave();renderJournal();}
+function jrnlShowNewForm(){jrnl.showNewForm=true;renderJournal();}
+function jrnlCancelNew(){jrnl.showNewForm=false;renderJournal();}
+function jrnlCreateNew(){
+  var name=(document.getElementById('jnf-name')||{value:''}).value.trim();
+  var linkedPropId=(document.getElementById('jnf-prop')||{value:''}).value;
+  if(!name){alert('Inserisci un nome per la sfida.');return;}
+  jrnlNewSession(name,linkedPropId);jrnl.showNewForm=false;jrnlSave();renderJournal();
+}
+function jrnlDelete(i){if(!confirm('Eliminare la sfida "'+jrnl.sessions[i].name+'"?'))return;jrnl.sessions.splice(i,1);if(jrnl.activeIdx>=jrnl.sessions.length)jrnl.activeIdx=Math.max(0,jrnl.sessions.length-1);jrnlSave();renderJournal();}
+function jrnlConclude(i){if(!confirm('Segna questa sfida come conclusa?'))return;jrnl.sessions[i].concluded=true;jrnl.sessions[i].concludedAt=new Date().toISOString();jrnlSave();renderJournal();}
+function jrnlReset(i){if(!confirm('Reimposta la sfida?'))return;var s=jrnl.sessions[i];s.propConn={platform:'',label:'',token:'',accountId:'',env:'live',connected:false};s.brokerConn={platform:'',label:'',token:'',accountId:'',env:'live',connected:false};s.propTrades=[];s.brokerTrades=[];s.concluded=false;s.concludedAt=null;jrnlSave();renderJournal();}
+
+function jrnlOpenConn(i,side){
+  _jConnIdx=i;_jConnSide=side;
+  var sess=jrnl.sessions[i];var conn=side==='prop'?sess.propConn:sess.brokerConn;
+  var mod=document.getElementById('jConnMod');if(!mod)return;
+  document.getElementById('jConnMod-title').innerHTML=side==='prop'?'🎯 Connetti Prop — '+sess.name:'💹 Connetti Broker — '+sess.name;
+  var sel=document.getElementById('jConnMod-plat');if(sel&&conn.platform)sel.value=conn.platform;
+  mod.style.display='flex';jrnlConnPlatChange();
+}
+function jrnlCloseConn(){var mod=document.getElementById('jConnMod');if(mod)mod.style.display='none';}
+
+function jrnlConnPlatChange(){
+  var plat=(document.getElementById('jConnMod-plat')||{value:'ctrader'}).value;
+  var sess=jrnl.sessions[_jConnIdx];var conn=_jConnSide==='prop'?sess.propConn:sess.brokerConn;
+  var fields=document.getElementById('jConnMod-fields');if(!fields)return;
+  if(plat==='ctrader'){
+    fields.innerHTML='<div class="f" style="margin-top:10px"><label>Access Token</label><input type="text" id="jConn-ct-token" value="'+(conn.token||'')+'" placeholder="Incolla token da connect.spotware.com" style="font-family:var(--fd);font-size:11px" onclick="this.select()"></div>'
+      +'<div class="f"><label>Account ID</label><input type="text" id="jConn-ct-accountid" value="'+(conn.accountId||'')+'" placeholder="Es. 12345678"></div>'
+      +'<div class="f"><label>Ambiente</label><select id="jConn-env"><option value="live"'+(conn.env==='live'?' selected':'')+'>Live</option><option value="demo"'+(conn.env==='demo'?' selected':'')+'>Demo</option></select></div>'
+      +'<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. IC Markets Live"></div>';
+  }else if(plat==='mt4'||plat==='mt5'){
+    var jrnlId=(jrnl.sessions[_jConnIdx]||{id:'—'}).id;
+    var apiKey='PH_2026_AXI_SECRET_KEY_VISIONTRADING';
+    fields.innerHTML='<div class="note note-teal" style="margin-top:10px;font-size:11px">Inserisci questi parametri nell\'EA:</div>'
+      +'<div class="f" style="margin-top:8px"><label>Email</label><div style="display:flex;gap:6px"><input type="text" id="jConn-email" value="'+(accountData.email||'')+'" readonly style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg)" onclick="this.select()"><button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-email\').value)" class="btn-g" style="padding:5px 10px;font-size:10px">Copia</button></div></div>'
+      +'<div class="f"><label>API Key</label><div style="display:flex;gap:6px"><input type="text" id="jConn-apikey" value="'+apiKey+'" readonly style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg)" onclick="this.select()"><button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-apikey\').value)" class="btn-g" style="padding:5px 10px;font-size:10px">Copia</button></div></div>'
+      +'<div class="f"><label>Journal ID</label><div style="display:flex;gap:6px"><input type="text" id="jConn-jrnlid" value="'+jrnlId+'" readonly style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg)" onclick="this.select()"><button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-jrnlid\').value)" class="btn-g" style="padding:5px 10px;font-size:10px">Copia</button></div></div>'
+      +'<div class="f"><label>AccountType</label><select id="jConn-actype"><option value="prop"'+(_jConnSide==='prop'?' selected':'')+'>prop</option><option value="broker"'+(_jConnSide==='broker'?' selected':'')+'>broker</option></select></div>'
+      +'<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. FTMO MT5 $100k"></div>';
+  }else{
+    fields.innerHTML='<div class="f" style="margin-top:10px"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Inserimento manuale"></div>';
+  }
+}
+
+async function jrnlSaveConn(){
+  var plat=(document.getElementById('jConnMod-plat')||{value:'manual'}).value;
+  var label=(document.getElementById('jConn-label')||{value:''}).value.trim()||plat.toUpperCase();
+  var env=(document.getElementById('jConn-env')||{value:'live'}).value;
+  var sess=jrnl.sessions[_jConnIdx];var key=_jConnSide==='prop'?'propConn':'brokerConn';
+  var connectedAt=new Date().toISOString();
+  if(plat==='ctrader'){
+    var token=(document.getElementById('jConn-ct-token')||{value:''}).value.trim();
+    var accountId=(document.getElementById('jConn-ct-accountid')||{value:''}).value.trim();
+    if(!token){alert('Inserisci il token cTrader.');return;}
+    sess[key]={platform:'ctrader',label:label||'cTrader',token:token,accountId:accountId,env:env,connected:true,connectedAt:connectedAt};
+    if(_jConnSide==='prop')sess.propTrades=[];else sess.brokerTrades=[];
+    jrnlSave();jrnlCloseConn();jrnlSync(_jConnIdx,_jConnSide);return;
+  }
+  if(plat==='mt4'||plat==='mt5'){
+    var actype=(document.getElementById('jConn-actype')||{value:_jConnSide}).value;
+    sess[key]={platform:plat,label:label,env:'live',connected:true,accountId:'',actype:actype,connectedAt:connectedAt};
+    jrnlSave();jrnlCloseConn();jrnlSyncMT(_jConnIdx,_jConnSide);return;
+  }
+  sess[key]={platform:plat,label:label,env:env,connected:true,accountId:'',connectedAt:connectedAt};
+  jrnlSave();jrnlCloseConn();renderJournal();
+}
+
+async function jrnlSync(i,side){
+  var sess=jrnl.sessions[i];var conn=side==='prop'?sess.propConn:sess.brokerConn;
+  if(!conn.connected||conn.platform!=='ctrader')return;
+  try{
+    var r=await fetch('/api/ctrader-positions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({access_token:conn.token,account_id:conn.accountId,env:conn.env,connected_at:conn.connectedAt||sess.createdAt||null})});
+    var d=await r.json();
+    var live=(d.positions||[]).map(function(p){return Object.assign(p,{status:'open'});});
+    var closed=(d.closed||[]).map(function(p){return Object.assign(p,{status:'closed'});});
+    if(side==='prop')sess.propTrades=live.concat(closed);else sess.brokerTrades=live.concat(closed);
+    jrnlSave();renderJournal();
+  }catch(e){console.error('jrnlSync:',e);}
+}
+
+async function jrnlSyncMT(i,side){
+  var sess=jrnl.sessions[i];var conn=side==='prop'?sess.propConn:sess.brokerConn;
+  if(!conn.connected||(conn.platform!=='mt4'&&conn.platform!=='mt5'))return;
+  try{
+    var res=await _sb.auth.getSession();var user=res&&res.data&&res.data.session&&res.data.session.user;if(!user)return;
+    var connectedAt=conn.connectedAt||sess.createdAt||null;
+    var query=_sb.from('trades').select('*').eq('user_id',user.id).eq('journal_id',sess.id).eq('account_type',conn.actype||side).order('open_time',{ascending:false}).limit(500);
+    if(connectedAt)query=query.gte('open_time',connectedAt);
+    var q=await query;if(q.error){console.error('jrnlSyncMT:',q.error.message);return;}
+    var trades=(q.data||[]).map(function(t){return{external_id:String(t.ticket),platform:t.platform||conn.platform,symbol:t.symbol,direction:t.direction,volume:parseFloat(t.volume||0),lots:parseFloat(t.volume||0),open_price:t.open_price,close_price:t.close_price,profit:parseFloat(t.profit||0),pnl_realized:parseFloat(t.profit||0),status:t.status||'open',open_time:t.open_time,close_time:t.close_time,opened_at:t.open_time,closed_at:t.close_time};});
+    if(side==='prop')sess.propTrades=trades;else sess.brokerTrades=trades;
+    jrnlSave();renderJournal();
+  }catch(e){console.error('jrnlSyncMT:',e);}
+}
+
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-jconn-idx]');if(el){jrnlOpenConn(parseInt(el.dataset.jconnIdx),el.dataset.jconnSide);return;}
+  var el2=e.target.closest('[data-jconclude]');if(el2){jrnlConclude(parseInt(el2.dataset.jconclude));return;}
+  var el3=e.target.closest('[data-jsync-idx]');
+  if(el3){var idx=parseInt(el3.dataset.jsyncIdx);var side=el3.dataset.jsyncSide;var sess=jrnl.sessions[idx];if(!sess)return;var conn=side==='prop'?sess.propConn:sess.brokerConn;if(conn.platform==='mt4'||conn.platform==='mt5')jrnlSyncMT(idx,side);else jrnlSync(idx,side);return;}
+});
+
+// ══ PIATTAFORMA E CALENDARIO ════════════════════════════════════
 var PH_TV_KEY='ph_tv_state_v3';
 function renderPlatform(){
   var ct=document.getElementById('main');if(!ct)return;
@@ -1817,201 +2085,6 @@ function _tvFallback(isDark,state){
   c.appendChild(iframe);
 }
 
-var accountData={photo:null,lang:'it',theme:'dark',name:'',email:'',firstName:'',lastName:''};
-
-function toggleAccDrop(e){
-  if(e)e.stopPropagation();
-  var panel=document.getElementById('accDropPanel'),overlay=document.getElementById('accDropOverlay');
-  if(!panel||!overlay)return;
-  if(panel.style.display==='none'||!panel.style.display){panel.innerHTML=renderAccountDrop();panel.style.display='block';overlay.style.display='block';document.getElementById('tabAccount').classList.add('active');}
-  else{closeAccDrop();}
-}
-function closeAccDrop(){
-  var panel=document.getElementById('accDropPanel'),overlay=document.getElementById('accDropOverlay');
-  if(panel)panel.style.display='none';if(overlay)overlay.style.display='none';
-  var tab=document.getElementById('tabAccount');if(tab)tab.classList.remove('active');
-}
-
-function renderAccountDrop() {
-  var displayName = ((accountData.firstName || '') + ' ' + (accountData.lastName || '')).trim() || accountData.email || 'Account';
-  var photoImg = accountData.photo ? '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">' : '👤';
-
-  return `<div style="padding:20px; width: 320px; max-height: 80vh; overflow-y: auto;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <div id="accDropAvatarBtn" onclick="document.getElementById('accPhotoInput').click()" style="width:54px;height:54px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;cursor:pointer;flex-shrink:0;" title="Clicca per cambiare foto">
-        ${photoImg}
-      </div>
-      <input type="file" id="accPhotoInput" style="display:none" accept="image/*" onchange="updateProfilePhoto(this)">
-      <div>
-        <div style="font-size:15px;font-weight:700">${displayName}</div>
-        <div style="font-size:12px;color:var(--t3);font-family:var(--fd)">${accountData.email}</div>
-      </div>
-    </div>
-
-    <div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">
-      <div style="font-size:11px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Dati Personali</div>
-      <input type="text" id="accFirstName" placeholder="Nome" value="${accountData.firstName||''}" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">
-      <input type="text" id="accLastName" placeholder="Cognome" value="${accountData.lastName||''}" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">
-      <button onclick="saveProfileData()" class="btn-p" style="width:100%; padding:8px; font-size:11px; justify-content:center;">💾 Salva Dati</button>
-    </div>
-
-    <div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">
-      <div style="font-size:11px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Sicurezza (Cambio Email/Pass)</div>
-      <input type="email" id="accNewEmail" placeholder="Nuova Email (opzionale)" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">
-      <input type="password" id="accNewPass" placeholder="Nuova Password (opzionale)" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">
-      <button onclick="updateSecurity()" class="btn-g" style="width:100%; padding:8px; font-size:11px;">🔒 Aggiorna Sicurezza</button>
-      <div id="accSecMsg" style="font-size:11px; margin-top:6px; color:var(--teal); display:none; font-family:var(--fd);"></div>
-    </div>
-
-    <div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">
-      <div style="font-size:11px; color:var(--t3); margin-bottom:4px; text-transform:uppercase; font-weight:700;">Lingua Applicazione</div>
-      <div id="google_translate_element"></div>
-    </div>
-
-    <div style="display:grid;gap:8px">
-      <button onclick="toggleTheme()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--t);cursor:pointer;font-size:13px"><span>🎨</span><span>Tema: ${accountData.theme==='light'?'Chiaro':'Scuro'}</span></button>
-      <button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(255,64,96,.2);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px"><span>🔓</span><span>Esci</span></button>
-    </div>
-  </div>`;
-}
-
-function saveProfileData() {
-  accountData.firstName = document.getElementById('accFirstName').value.trim();
-  accountData.lastName = document.getElementById('accLastName').value.trim();
-  localStorage.setItem('ph_account', JSON.stringify(accountData));
-  var tn = document.getElementById('tabAccountName');
-  if(tn) tn.textContent = ((accountData.firstName + ' ' + accountData.lastName).trim() || accountData.email.split('@')[0] || 'Account');
-  alert('Dati salvati!');
-  toggleAccDrop(); 
-  setTimeout(toggleAccDrop, 50); 
-}
-
-function updateProfilePhoto(input) {
-  if (input.files && input.files[0]) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      accountData.photo = e.target.result;
-      localStorage.setItem('ph_account', JSON.stringify(accountData));
-      var topPhoto = document.getElementById('tabAccountPhoto');
-      if(topPhoto) topPhoto.innerHTML = '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">';
-      var dropPhotoBtn = document.getElementById('accDropAvatarBtn');
-      if(dropPhotoBtn) dropPhotoBtn.innerHTML = '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">';
-    };
-    reader.readAsDataURL(input.files[0]);
-  }
-}
-
-function updateSecurity() {
-  var newEmail = document.getElementById('accNewEmail').value.trim();
-  var newPass = document.getElementById('accNewPass').value;
-  var msg = document.getElementById('accSecMsg');
-  if(!newEmail && !newPass) { msg.style.display = 'block'; msg.style.color = 'var(--amber)'; msg.textContent = 'Inserisci email o password.'; return; }
-  msg.style.display = 'block'; msg.style.color = 'var(--t3)'; msg.textContent = 'Aggiornamento...';
-  var updates = {};
-  if(newEmail) updates.email = newEmail;
-  if(newPass) updates.password = newPass;
-  _sb.auth.updateUser(updates).then(function(res){
-    if(res.error) { msg.style.color = 'var(--red)'; msg.textContent = 'Errore: ' + res.error.message; } 
-    else { msg.style.color = 'var(--green)'; msg.textContent = 'Fatto! Se hai cambiato email, controlla la posta.'; if(newEmail) accountData.email = newEmail; localStorage.setItem('ph_account', JSON.stringify(accountData)); document.getElementById('accNewEmail').value = ''; document.getElementById('accNewPass').value = ''; }
-  });
-}
-
-function toggleTheme(){
-  accountData.theme=accountData.theme==='light'?'dark':'light';
-  if(accountData.theme==='light')document.body.classList.add('light-theme');else document.body.classList.remove('light-theme');
-  try{localStorage.setItem('ph_account',JSON.stringify(accountData));}catch(e){}
-  var panel=document.getElementById('accDropPanel');if(panel&&panel.style.display!=='none')panel.innerHTML=renderAccountDrop();
-}
-
-function loadAccountData(){
-  try{var d=localStorage.getItem('ph_account');if(d)accountData=Object.assign(accountData,JSON.parse(d));}catch(e){}
-  if(accountData.theme==='light')document.body.classList.add('light-theme');
-  _sb.auth.getSession().then(function(res){
-    if(res.data&&res.data.session&&res.data.session.user){
-      var user=res.data.session.user;accountData.email=user.email||'';
-      var meta=user.user_metadata||{};accountData.firstName=meta.first_name||meta.firstName||'';accountData.lastName=meta.last_name||meta.lastName||'';
-      var tn=document.getElementById('tabAccountName');if(tn)tn.textContent=((accountData.firstName+' '+accountData.lastName).trim()||accountData.email.split('@')[0]||'Account');
-    }
-  });
-  if(accountData.photo) {
-    var topPhoto = document.getElementById('tabAccountPhoto');
-    if(topPhoto) topPhoto.innerHTML = '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">';
-  }
-}
-function showPolicy(){document.getElementById('policyModal').style.display='block';}
-function resetConsent(){try{localStorage.removeItem('ph_consent');}catch(e){}location.reload();}
-
-// ── Calendario economico (versione compatta) ─────────────────────
-var _calData=[],_calFilter='high',_calLoaded=false,_calTimer=null,_calDemoMode=false;
-var CAL_FLAGS={'USD':'us','EUR':'eu','GBP':'gb','JPY':'jp','AUD':'au','CAD':'ca','CHF':'ch','NZD':'nz','CNY':'cn','ALL':'un'};
-var CAL_IMP_LABEL={'High':'red','Medium':'orange','Low':'yellow','Holiday':'gray','high':'red','medium':'orange','low':'yellow'};
-function calFlag(currency){var code=CAL_FLAGS[currency];if(!code)return'<span style="font-size:13px;opacity:.4">🌐</span>';return'<img src="https://flagcdn.com/24x18/'+code+'.png" width="24" height="18" style="border-radius:2px;vertical-align:middle;object-fit:cover" alt="'+currency+'">';}
-function calSetFilter(f){_calFilter=f;calRender();}
-function calNow(){return new Date();}
-function calParseDate(dateStr,timeStr){if(!dateStr)return null;var parts=dateStr.split('-');if(parts.length!==3)return null;var base=new Date(parseInt(parts[2]),parseInt(parts[0])-1,parseInt(parts[1]),0,0,0);if(timeStr&&timeStr!=='All Day'&&timeStr!=='Tentative'){var m=timeStr.match(/(\d+):(\d+)(am|pm)/i);if(m){var h=parseInt(m[1]),min=parseInt(m[2]),ampm=m[3].toLowerCase();if(ampm==='pm'&&h!==12)h+=12;if(ampm==='am'&&h===12)h=0;base.setHours(h,min,0,0);}}return base;}
-function calCountdown(eventDate){if(!eventDate)return{txt:'—',cls:'past'};var now=calNow();var diff=eventDate-now;if(diff<0)return{txt:'Passato',cls:'past'};var h=Math.floor(diff/3600000);var m=Math.floor((diff%3600000)/60000);if(h>0)return{txt:h+'h '+m+'m',cls:h<3?'orange':''};return{txt:m+'m',cls:m<15?'red':'orange'};}
-
-async function calLoad(){
-  var FF_URL='https://nfs.faireconomy.media/ff_calendar_thisweek.json';var NOW=Date.now();
-  var attempts=[fetch(FF_URL+'?version='+NOW,{cache:'no-store',mode:'cors'}),fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(FF_URL+'?version='+NOW),{cache:'no-store'}),fetch('https://corsproxy.io/?'+encodeURIComponent(FF_URL),{cache:'no-store'})];
-  var winner=null;
-  try{var responses=await Promise.any(attempts.map(function(p){return p.then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r;});}));winner=responses;}catch(e){winner=null;}
-  if(winner){try{var data=await winner.json();if(Array.isArray(data)&&data.length>0){_calData=data;_calLoaded=true;calRender();return;}}catch(e){}}
-  _calData=calGenerateDemo();_calLoaded=true;_calDemoMode=true;calRender();
-}
-
-function calGenerateDemo(){
-  var now=new Date();var mon=new Date(now);mon.setDate(now.getDate()-now.getDay()+1);mon.setHours(0,0,0,0);
-  function dayEvs(d,evs){var dd=new Date(mon);dd.setDate(mon.getDate()+d);var dateStr=(dd.getMonth()+1).toString().padStart(2,'0')+'-'+dd.getDate().toString().padStart(2,'0')+'-'+dd.getFullYear();return evs.map(function(e){return Object.assign({date:dateStr},e);});}
-  return[].concat(
-    dayEvs(0,[{time:'8:30am',currency:'USD',impact:'High',title:'S&P Global Manufacturing PMI'},{time:'3:00pm',currency:'EUR',impact:'High',title:'ECB President Lagarde Speaks'}]),
-    dayEvs(1,[{time:'8:30am',currency:'USD',impact:'High',title:'JOLTS Job Openings'},{time:'10:00am',currency:'USD',impact:'Medium',title:'Factory Orders m/m'}]),
-    dayEvs(2,[{time:'8:15am',currency:'USD',impact:'High',title:'ADP Non-Farm Employment'},{time:'2:00pm',currency:'USD',impact:'High',title:'FOMC Meeting Minutes'}]),
-    dayEvs(3,[{time:'8:30am',currency:'USD',impact:'High',title:'Unemployment Claims'},{time:'8:30am',currency:'USD',impact:'High',title:'Trade Balance'}]),
-    dayEvs(4,[{time:'8:30am',currency:'USD',impact:'High',title:'Non-Farm Payrolls',forecast:'180K',previous:'151K'},{time:'8:30am',currency:'USD',impact:'High',title:'Unemployment Rate',forecast:'4.1%',previous:'4.1%'}])
-  );
-}
-
-function calRender(){
-  var ct=document.getElementById('main');if(!ct)return;
-  ct.style.padding='24px';ct.style.maxWidth='1400px';
-  var now=calNow();
-  var filtered=_calData.filter(function(ev){var imp=ev.impact||ev.importance||'';if(_calFilter==='high')return imp==='High'||imp==='high';if(_calFilter==='medium')return imp==='High'||imp==='high'||imp==='Medium'||imp==='medium';return true;});
-  var byDay={},dayOrder=[];
-  filtered.forEach(function(ev){var dateKey=ev.date||'';if(!byDay[dateKey]){byDay[dateKey]=[];dayOrder.push(dateKey);}byDay[dateKey].push(ev);});
-  var redSoon=0;_calData.forEach(function(ev){var imp=ev.impact||ev.importance||'';if(imp!=='High'&&imp!=='high')return;var eDate=calParseDate(ev.date,ev.time);if(!eDate)return;var diff=eDate-now;if(diff>0&&diff<2*3600000)redSoon++;});
-  var html='<div class="cal-wrap"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:17px;font-weight:800;font-family:var(--fh)">📅 Calendario Economico</div><div style="display:flex;gap:8px;align-items:center">'+(_calDemoMode?'<span style="font-size:10px;font-family:var(--fd);background:rgba(255,190,11,.15);color:#ffbe0b;padding:3px 10px;border-radius:5px">⚠ Dati demo</span>':'')+'<button class="btn-g" style="padding:4px 12px;font-size:10px" onclick="_calLoaded=false;_calDemoMode=false;_calData=[];renderCalendar()">🔄 Aggiorna</button></div></div>';
-  if(redSoon>0)html+='<div class="cal-alert-box show"><span style="font-size:20px">⚠️</span><span><strong>Attenzione:</strong> '+redSoon+' notizia ad ALTO IMPATTO nelle prossime 2 ore.</span></div>';
-  html+='<div class="cal-filter-bar"><span style="font-size:10px;font-family:var(--fh);color:var(--t3);letter-spacing:.1em">FILTRO:</span><button class="cal-filter-btn red-f'+(_calFilter==='high'?' active':'')+'" onclick="calSetFilter(\'high\')">🔴 Alto Impatto</button><button class="cal-filter-btn orange-f'+(_calFilter==='medium'?' active':'')+'" onclick="calSetFilter(\'medium\')">🟡 Alto + Medio</button><button class="cal-filter-btn all-f'+(_calFilter==='all'?' active':'')+'" onclick="calSetFilter(\'all\')">Tutti</button></div>';
-  if(!filtered.length){html+='<div style="text-align:center;padding:40px;color:var(--t3)">Nessuna notizia con questo filtro.</div>';}
-  else{
-    dayOrder.forEach(function(dateKey){
-      var evs=byDay[dateKey];if(!evs||!evs.length)return;
-      var d=calParseDate(dateKey,'');var dayLabel=d?d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'}):dateKey;
-      html+='<div class="cal-day-hdr">'+dayLabel.toUpperCase()+'</div>';
-      evs.forEach(function(ev){
-        var imp=ev.impact||ev.importance||'';var impCls=CAL_IMP_LABEL[imp]||'gray';
-        var currency=ev.currency||'—';var eDate=calParseDate(ev.date,ev.time);
-        var countdown=calCountdown(eDate);var isPast=eDate&&eDate<now;
-        var rowBg=impCls==='red'&&!isPast?'border-left:3px solid rgba(255,64,96,.3);':'border-left:3px solid transparent;';
-        html+='<div class="cal-row" style="'+rowBg+'cursor:pointer" onclick="window.open(\'https://www.forexfactory.com/calendar\',\'_blank\')">'
-          +'<div class="cal-time'+(isPast?' past':'')+'">'+(ev.time||'—')+'</div>'
-          +'<div class="cal-flag">'+calFlag(currency)+'</div>'
-          +'<div><div class="cal-imp '+impCls+'"></div></div>'
-          +'<div class="cal-event"><span style="color:var(--t)">'+(ev.title||ev.event||'—')+'</span><span class="cal-cur">'+currency+'</span></div>'
-          +(ev.forecast?'<div class="cal-val">'+ev.forecast+'</div>':'<div class="cal-val na">—</div>')
-          +(ev.previous?'<div class="cal-val">'+ev.previous+'</div>':'<div class="cal-val na">—</div>')
-          +(ev.actual?'<div class="cal-val actual">'+ev.actual+'</div>':'<div class="cal-val na">—</div>')
-          +'<div class="cal-countdown '+countdown.cls+'">'+countdown.txt+'</div>'
-          +'</div>';
-      });
-    });
-  }
-  html+='</div>';ct.innerHTML=html;
-  if(_calTimer)clearInterval(_calTimer);
-  _calTimer=setInterval(function(){if(currentTab==='calendar')calRender();},60000);
-}
-
 function renderCalendar(){
   var ct=document.getElementById('main');if(!ct)return;
   ct.style.padding='24px';ct.style.maxWidth='1400px';
@@ -2019,27 +2092,7 @@ function renderCalendar(){
   else{calRender();}
 }
 
-// ══ MAIN RENDER ══════════════════════════════════════════════════
-function render(){
-  var ct=document.getElementById('main');if(!ct)return;
-  ct.style.padding='24px';ct.style.maxWidth='1400px';
-  if(currentTab==='dash')ct.innerHTML=renderDash();
-  else if(currentTab==='dashdetail'){renderDashDetailPage();return;}
-  else if(currentTab==='calc')ct.innerHTML=renderCalc();
-  else if(currentTab==='proplist')ct.innerHTML=renderPropList();
-  else if(currentTab==='brokerlist')ct.innerHTML=renderBrokerList();
-  else if(currentTab==='guide')ct.innerHTML=renderGuide();
-  else if(currentTab==='support')ct.innerHTML=renderSupport();
-  else if(currentTab==='eadownload')ct.innerHTML=renderEADownload();
-  else if(currentTab==='calendar'){renderCalendar();return;}
-  else if(currentTab==='stats')ct.innerHTML=renderStats();
-  else if(currentTab==='broker')ct.innerHTML=renderBrokerList();
-  else if(currentTab==='platform'){renderPlatform();return;}
-  else if(currentTab==='journal'){renderJournal();return;}
-  else ct.innerHTML=renderGuide();
-}
-
-// ══ FLOATING AI CHAT — con supporto umano Telegram nascosto ══════
+// ══ FLOATING AI CHAT — BOT AGGIORNATO ════════════════════════════
 var _aiOpen=false,_aiHist=[],_aiGreeted=false;
 var _humanMode=false,_ticketId=null,_pollTimer=null,_lastMsgAt=null;
 
@@ -2055,10 +2108,16 @@ function toggleAIChat(){
 
 function aiFloatAddMsg(role,text){
   var msgs=document.getElementById('aiFloatMsgs');if(!msgs)return null;
-  var isBot=(role==='bot'||role==='support');
-  var row=document.createElement('div');row.className='ai-msg-row'+(isBot?'':' user');
-  var ava='<div class="ai-msg-ava '+(isBot?'bot':'usr')+'">'+(isBot?'🤖':'👤')+'</div>';
-  var bubble=document.createElement('div');bubble.className='ai-bubble '+(isBot?'bot':'usr');
+  var isBot=(role==='bot');
+  var isSupport=(role==='support');
+  var row=document.createElement('div');row.className='ai-msg-row'+((isBot||isSupport)?'':' user');
+  
+  // Se è supporto umano, mostriamo la faccia di un operatore (casuale o fissa). Se è il bot, mostriamo il robot.
+  var avaClass = (isBot||isSupport)?'bot':'usr';
+  var avaContent = isSupport ? '<img src="https://i.pravatar.cc/150?img=11" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">' : (isBot ? '🤖' : '👤');
+  var ava='<div class="ai-msg-ava '+avaClass+'">'+avaContent+'</div>';
+  
+  var bubble=document.createElement('div');bubble.className='ai-bubble '+((isBot||isSupport)?'bot':'usr');
   bubble.innerHTML=text.replace(/\n/g,'<br>');
   row.innerHTML=ava;row.appendChild(bubble);msgs.appendChild(row);msgs.scrollTop=msgs.scrollHeight;return bubble;
 }
@@ -2078,7 +2137,7 @@ function aiFloatRemoveTyping(){
   if(bub&&bub._timer)clearInterval(bub._timer);if(row)row.remove();
 }
 
-// ── Attiva supporto umano silenzioso (Telegram dietro le quinte) ─
+// Supporto umano 
 function switchToHumanSupport(){
   _humanMode=true;_ticketId=genTicketId();_lastMsgAt=new Date().toISOString();
   var hdrTitle=document.querySelector('#aiFloatPanel .ai-title');
@@ -2086,8 +2145,11 @@ function switchToHumanSupport(){
   if(hdrTitle)hdrTitle.textContent='Supporto PropHedge';
   if(hdrStatus)hdrStatus.innerHTML='<span class="ai-dot" style="background:#00d68f;animation:pu 1.5s infinite"></span> Team VisionTrading · In diretta';
   var qb=document.getElementById('aiQuickBtns');if(qb)qb.style.display='none';
-  aiFloatAddMsg('bot','Perfetto! Sei ora connesso direttamente con il team VisionTrading. 🎧\n\nScrivi il tuo messaggio, ti risponderemo qui a breve.');
-  var input=document.getElementById('aiFloatInput');if(input)input.placeholder='Scrivi al team di supporto...';
+  
+  // MESSAGGIO AGGIORNATO COME RICHIESTO:
+  aiFloatAddMsg('bot','Ti sto reindirizzando alla chat live. 🎧\n\nIn attesa che si colleghi un operatore, per favore scrivi qui sotto la tua email, nome e cognome per poterti identificare.');
+  
+  var input=document.getElementById('aiFloatInput');if(input)input.placeholder='Scrivi i tuoi dati...';
   startSupportPolling();
 }
 
@@ -2108,7 +2170,7 @@ async function pollSupportMessages(){
 async function sendToHumanSupport(text){
   var btn=document.getElementById('aiFloatSend');if(btn)btn.disabled=true;
   aiFloatAddMsg('usr',text);
-  aiFloatAddMsg('bot','✓ Messaggio consegnato. Risponderemo a breve.');
+  aiFloatAddMsg('support','✓ Messaggio consegnato. Un operatore risponderà a breve.');
   try{
     await fetch('/api/support-send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket_id:_ticketId,message:text,user_email:accountData.email||'',user_name:((accountData.firstName||'')+' '+(accountData.lastName||'')).trim()||'Utente'})});
   }catch(e){}
@@ -2119,9 +2181,9 @@ async function aiFloatSend(){
   var input=document.getElementById('aiFloatInput');var btn=document.getElementById('aiFloatSend');
   if(!input)return;var text=input.value.trim();if(!text)return;
   input.value='';if(input.style)input.style.height='auto';
-  // Se già in modalità supporto umano → invia a Telegram
+  // Se in modalità supporto, invia a Telegram/operatore
   if(_humanMode){await sendToHumanSupport(text);if(input)input.focus();return;}
-  // Altrimenti → AI normale
+  // Altrimenti, parla con AI
   if(btn)btn.disabled=true;
   aiFloatAddMsg('usr',text);_aiHist.push({role:'user',content:text});
   var qb=document.getElementById('aiQuickBtns');if(qb)qb.style.display='none';
@@ -2130,7 +2192,6 @@ async function aiFloatSend(){
     var resp=await fetch('/api/ai-support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:_aiHist})});
     var data=await resp.json();var reply=data.reply||'Non ho capito, puoi ripetere?';
     aiFloatRemoveTyping();
-    // L'AI ha deciso di passare al supporto umano
     if(reply.indexOf('###HUMAN_SUPPORT###')!==-1){switchToHumanSupport();}
     else{aiFloatAddMsg('bot',reply);_aiHist.push({role:'assistant',content:reply});if(_aiHist.length>20)_aiHist=_aiHist.slice(-20);}
   }catch(e){aiFloatRemoveTyping();aiFloatAddMsg('bot','Errore di connessione. Riprova tra qualche secondo. 🙏');}
@@ -2139,7 +2200,7 @@ async function aiFloatSend(){
 
 function aiFloatAsk(text){var input=document.getElementById('aiFloatInput');if(input){input.value=text;aiFloatSend();}}
 
-// ══ INIT ══════════════════════════════════════════════════════════
+// ══ INIT E CHIUSURA ══════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded',function(){
   loadAccountData();jrnlLoad();buildBot(BOT_ALL);loadFX();
   window.addEventListener('message',function(event){
@@ -2157,4 +2218,4 @@ window.addEventListener('DOMContentLoaded',function(){
 });
 </script>
 </body>
-</html>
+</html>  
