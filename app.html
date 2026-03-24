@@ -4240,12 +4240,7 @@ var translations = {
   }
 };
 
-function changeAppLang(lang) {
-  // Questa logica sostituisce i testi base senza ricaricare e senza Google Translate
-  alert("Lingua cambiata in " + lang + " (Sostituzione rapida attivata)");
-  // Nasconde la tendina
-  document.getElementById('langOptions').style.display='none';
-}
+
 
 
 async function aiFloatSend(){
@@ -4320,13 +4315,19 @@ function startSupportPolling() {
 
 
 function changeAppLang(c) {
-
   var s = document.querySelector('.goog-te-combo');
-
-  if(s) { s.value = c; s.dispatchEvent(new Event('change')); }
-
+  if(s) { 
+    s.value = c; 
+    s.dispatchEvent(new Event('change')); 
+    // Nasconde le tendine in automatico dopo il click
+    var langOpt = document.getElementById('langOptions');
+    if(langOpt) langOpt.style.display = 'none';
+    closeAccDrop(); 
+  } else {
+    alert("Il traduttore si sta ancora caricando, attendi un istante e riprova.");
+  }
 }
-
+  
 function saveProfileData() {
 
   accountData.firstName = document.getElementById('accFirstName').value.trim();
@@ -4889,14 +4890,22 @@ window.addEventListener('DOMContentLoaded',function(){
 
   render();
 
+ 
   function checkNet(){var w=document.getElementById('netWarn');if(w){if(!navigator.onLine||window._sbLoadError)w.style.display='block';else w.style.display='none';}}
-
   checkNet();window.addEventListener('online',checkNet);window.addEventListener('offline',checkNet);
-
 });
-
 </script>
 
-</body>
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'it', 
+    includedLanguages: 'it,en,es,fr,de', 
+    autoDisplay: false
+  }, 'google_translate_element');
+}
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
+</body>
 </html>
