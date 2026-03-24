@@ -4223,6 +4223,52 @@ function renderAccountDrop() {
 
   return html;
 }
+  function saveProfileData() {
+  var firstName = document.getElementById('accFirstName').value.trim();
+  var lastName = document.getElementById('accLastName').value.trim();
+
+  // Salva in locale
+  accountData.firstName = firstName;
+  accountData.lastName = lastName;
+  try{ localStorage.setItem('ph_account', JSON.stringify(accountData)); }catch(e){}
+  
+  // Aggiorna nome su Supabase
+  if(window._sb) {
+    _sb.auth.updateUser({ data: { first_name: firstName, last_name: lastName } });
+  }
+
+  var tn = document.getElementById('tabAccountName');
+  if(tn) tn.textContent = ((firstName + ' ' + lastName).trim() || accountData.email.split('@')[0] || 'Account');
+  alert('Dati salvati con successo!'); 
+  toggleAccDrop(); setTimeout(toggleAccDrop, 50); 
+}
+
+function resetUserPassword() {
+  if (confirm("Vuoi ricevere un'email con il link sicuro per reimpostare la tua password?")) {
+    _sb.auth.resetPasswordForEmail(accountData.email).then(function(res) {
+      if(res.error) {
+        alert("Errore: " + res.error.message);
+      } else {
+        alert("Email di reset inviata! Controlla la tua casella di posta (anche nella cartella Spam).");
+        toggleAccDrop();
+      }
+    });
+  }
+}
+
+function changeUserEmail() {
+  var newEmail = prompt("Inserisci la tua nuova email:");
+  if (newEmail && newEmail.trim() !== "") {
+    _sb.auth.updateUser({ email: newEmail.trim() }).then(function(res) {
+      if(res.error) {
+        alert("Errore: " + res.error.message);
+      } else {
+        alert("Richiesta inviata a Supabase! Per sicurezza, devi controllare ENTRAMBE le tue email (quella vecchia e quella nuova) e cliccare sui link di conferma.");
+        toggleAccDrop();
+      }
+    });
+  }
+}
 
 function setTheme(themeMode) {
   accountData.theme = themeMode;
@@ -4339,15 +4385,19 @@ function renderAccountDrop() {
   html += '<button onclick="setTheme(\'dark\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--t)\'">🌙 Tema Notte (Scuro)</button>';
   html += '</div></div>';
 
-  // 2. DATI PERSONALI
+ // 2. DATI PERSONALI E SICUREZZA
   html += '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">';
   html += '<div style="font-size:11px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Dati Personali</div>';
   html += '<input type="text" id="accFirstName" placeholder="Nome" value="' + (accountData.firstName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">';
   html += '<input type="text" id="accLastName" placeholder="Cognome" value="' + (accountData.lastName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">';
-  html += '<input type="email" id="accEmail" placeholder="Nuova Email" value="' + (accountData.email||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">';
-  html += '<input type="password" id="accPass" placeholder="Nuova Password" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">';
-  html += '<button onclick="saveProfileData()" class="btn-p" style="width:100%; padding:8px; font-size:11px; justify-content:center;">💾 Salva Dati</button></div>';
-
+  html += '<button onclick="saveProfileData()" class="btn-p" style="width:100%; padding:8px; font-size:11px; justify-content:center; margin-bottom:12px;">💾 Salva Dati</button>';
+  
+  // I LINK IN PICCOLO PER LA SICUREZZA
+  html += '<div style="font-size:11px; color:var(--t3); margin-bottom:8px; margin-top:12px; text-transform:uppercase; font-weight:700;">Sicurezza Account</div>';
+  html += '<div style="display:flex; justify-content:space-between; font-size:11px;">';
+  html += '<span onclick="changeUserEmail()" style="color:var(--teal); cursor:pointer; text-decoration:underline; font-weight:bold;">Cambia Email</span>';
+  html += '<span onclick="resetUserPassword()" style="color:var(--teal); cursor:pointer; text-decoration:underline; font-weight:bold;">Reset Password</span>';
+  html += '</div></div>';
   // 3. LINGUA
   html += '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">';
   html += '<button onclick="var e=document.getElementById(\'langOptions\'); e.style.display=(e.style.display===\'none\'?\'grid\':\'none\');" style="width:100%;background:linear-gradient(135deg,var(--teal2),var(--violet2));border:none;color:#fff;padding:10px;border-radius:10px;cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;box-shadow:0 4px 15px rgba(0,229,204,0.15);" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 20px rgba(0,229,204,0.4)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 4px 15px rgba(0,229,204,0.15)\'">🌐 CAMBIA LINGUA / LANGUAGE</button>';
