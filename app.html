@@ -7,7 +7,27 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+
+<script type="text/javascript">
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'it', 
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+  }, 'google_translate_element');
+}
+</script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
 <style>
+/* STILI WIDGET LINGUE */
+.goog-te-gadget { font-family: var(--fd) !important; color: var(--t3) !important; font-size: 11px !important; }
+.goog-te-gadget .goog-te-combo { background: var(--bg3); border: 1px solid var(--border); color: var(--t); padding: 6px; border-radius: 6px; outline: none; width: 100%; margin-top: 4px; }
+.goog-logo-link { display: none !important; }
+.goog-te-gadget span { display: none !important; }
+body { top: 0px !important; }
+.skiptranslate iframe { display: none !important; }
+
+/* STILI ORIGINALI */
 *{box-sizing:border-box;margin:0;padding:0}
 html{overflow-x:hidden;background:var(--bg);min-height:100%;min-height:100dvh}
 :root{
@@ -424,7 +444,6 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 </head>
 <body>
 
-<!-- ===== SPLASH ===== -->
 <div id="splashScreen" style="position:fixed;inset:0;z-index:999999;background:#060810;overflow:hidden;display:flex;align-items:center;justify-content:center">
   <div style="position:absolute;top:0;left:0;right:0;z-index:3;background:rgba(4,5,12,.98);border-bottom:1px solid #1e2840;overflow:hidden;height:32px;display:flex;align-items:center">
     <div style="flex-shrink:0;padding:0 12px;font-size:8px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#00e5cc;border-right:1px solid #1e2840;height:100%;display:flex;align-items:center;gap:5px;white-space:nowrap">
@@ -462,7 +481,6 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
   </div>
 </div>
 
-<!-- ===== CONSENT POPUP ===== -->
 <div id="consentOverlay" style="display:none;position:fixed;inset:0;z-index:9999999;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:20px">
   <div style="background:#0c0f1a;border:1px solid #2a3560;border-radius:20px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.8);animation:spUp .4s ease forwards">
     <div style="background:linear-gradient(135deg,rgba(0,229,204,.08),rgba(155,93,229,.08));border-bottom:1px solid #1e2840;padding:22px 24px 18px">
@@ -635,7 +653,6 @@ function doForgotSubmit(){
 }
 </script>
 
-<!-- ===== LOGIN PAGE ===== -->
 <div id="loginPage" style="display:none;opacity:1;position:fixed;inset:0;z-index:99990;background:#060810;align-items:center;justify-content:center;padding:24px;transition:opacity .4s;flex-direction:column">
   <div style="position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(155,93,229,.2) 0%,transparent 70%);top:-150px;right:-150px;pointer-events:none"></div>
   <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(0,229,204,.15) 0%,transparent 70%);bottom:-120px;left:-100px;pointer-events:none"></div>
@@ -674,7 +691,6 @@ function doForgotSubmit(){
   <div style="margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:9px;color:#3d4d78;text-align:center;position:relative;z-index:1">PropHedge · VISIONTRADING · di Russo Antonino Christian</div>
 </div>
 
-<!-- ===== FORGOT PASSWORD ===== -->
 <div id="forgotPage" style="display:none;opacity:0;position:fixed;inset:0;z-index:99992;background:#060810;align-items:center;justify-content:center;padding:24px;transition:opacity .4s;flex-direction:column">
   <div style="background:#0c0f1a;border:1px solid #2a3560;border-radius:22px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.7);animation:spUp .5s ease forwards;position:relative;z-index:1">
     <div style="background:linear-gradient(135deg,rgba(0,229,204,.08),rgba(155,93,229,.1));border-bottom:1px solid #1e2840;padding:28px 28px 22px;text-align:center">
@@ -702,7 +718,6 @@ function doForgotSubmit(){
   </div>
 </div>
 
-<!-- ===== PURCHASE PAGE ===== -->
 <div id="purchasePage" style="display:none;opacity:0;position:fixed;inset:0;z-index:99991;background:#060810;align-items:flex-start;justify-content:center;padding:24px;transition:opacity .4s;flex-direction:column;overflow-y:auto">
   <div style="width:100%;max-width:520px;margin:0 auto;position:relative;z-index:1;animation:spUp .5s ease forwards">
     <button onclick="backToLogin()" style="background:none;border:1px solid #1e2840;color:#3d4d78;border-radius:8px;padding:7px 14px;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;margin-bottom:24px">← Torna al login</button>
@@ -724,7 +739,6 @@ function doForgotSubmit(){
 <div class="orb orb1"></div>
 <div class="orb orb2"></div>
 
-<!-- PANNELLO MERCATI -->
 <div id="mkOverlay" onclick="closeMkPanel()"></div>
 <div id="jConnMod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)jrnlCloseConn()">
   <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:420px;padding:22px" onclick="event.stopPropagation()">
@@ -767,7 +781,6 @@ function doForgotSubmit(){
   </div>
 </div>
 
-<!-- LIVE TICKER -->
 <div class="tk-wrap" id="tkWrapBar" onclick="openMkPanel()" title="Clicca per aprire il pannello mercati">
   <div class="tk-label"><div class="tk-ld"></div>LIVE</div>
   <div class="tk-scroll">
@@ -780,7 +793,6 @@ function doForgotSubmit(){
   </div>
 </div>
 
-<!-- HEADER -->
 <div class="hdr">
   <div class="logo-box">
     <div class="logo-icon">
@@ -807,7 +819,6 @@ function doForgotSubmit(){
   </div>
 </div>
 
-<!-- TABS -->
 <div class="tabs">
   <div class="tab active" onclick="goTab('dash',this)" id="tabDash">Dashboard</div>
   <div class="tab" onclick="goTab('platform',this)" id="tabPlatform">Piattaforma</div>
@@ -830,11 +841,10 @@ function doForgotSubmit(){
 </div>
 
 <div id="accDropOverlay" style="display:none;position:fixed;inset:0;z-index:88888" onclick="closeAccDrop()"></div>
-<div id="accDropPanel" style="display:none;position:fixed;top:54px;right:12px;z-index:88889;width:min(420px,calc(100vw - 24px));max-height:calc(100vh - 70px);overflow-y:auto;background:var(--bg2);border:1px solid var(--border2);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.6);padding:0" onclick="event.stopPropagation()"></div>
+<div id="accDropPanel" style="display:none;position:fixed;top:54px;right:12px;z-index:88889;max-height:calc(100vh - 70px);overflow-y:auto;background:var(--bg2);border:1px solid var(--border2);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.6);padding:0" onclick="event.stopPropagation()"></div>
 
 <div class="content" id="main"></div>
 
-<!-- BOTTOM BANNER -->
 <div class="bot-wrap" id="botWrap">
   <div style="flex-shrink:0;padding:0 13px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-right:1px solid var(--border);min-width:68px">
     <span style="font-size:8px;font-weight:700;font-family:var(--fd);letter-spacing:.12em;color:var(--teal)">PROP</span>
@@ -844,7 +854,6 @@ function doForgotSubmit(){
   <button class="bot-close" onclick="document.getElementById('botWrap').style.display='none'">✕</button>
 </div>
 
-<!-- POLICY BAR -->
 <div id="policyBar" style="position:fixed;bottom:0;left:0;right:0;z-index:9998;background:rgba(6,8,16,.97);border-top:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px 20px">
   <div style="display:flex;align-items:center;gap:20px">
     <a href="#" onclick="showPolicy();return false;" style="color:#1e90ff;text-decoration:none;font-size:10px;font-family:var(--fd)">🔒 Privacy Policy</a>
@@ -856,7 +865,6 @@ function doForgotSubmit(){
   <div style="font-size:8px;color:var(--t3);font-family:var(--fd);opacity:.5">PropHedge · VISIONTRADING · di Russo Antonino Christian · calcoli indicativi</div>
 </div>
 
-<!-- MODAL NUOVA SFIDA -->
 <div class="mov" id="modalOv" style="display:none" onclick="if(event.target===this)closeModal()">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="mh">
@@ -952,7 +960,6 @@ function doForgotSubmit(){
   </div>
 </div>
 
-<!-- PRIVACY POLICY MODAL -->
 <div id="policyModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.92);overflow-y:auto;padding:20px">
   <div style="max-width:760px;margin:0 auto;background:#0c0f1a;border:1px solid #2a3560;border-radius:16px;padding:32px;position:relative">
     <button onclick="document.getElementById('policyModal').style.display='none'" style="float:right;background:none;border:1px solid #2a3560;color:#8090b8;border-radius:7px;padding:6px 14px;font-size:12px;cursor:pointer;margin-bottom:16px">✕ Chiudi</button>
@@ -969,9 +976,6 @@ function doForgotSubmit(){
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     FLOATING AI CHAT WIDGET
-══════════════════════════════════════════════════════════ -->
 <button id="aiFloatBtn" onclick="toggleAIChat()" title="Assistente AI PropHedge">
   🤖
   <span class="ai-notif"></span>
@@ -1003,8 +1007,7 @@ function doForgotSubmit(){
 
 <script>
 // ══════════════════════════════════════════════════════════
-// TUTTO IL CODICE DELL'APP — invariato rispetto all'originale
-// (mercati, journal, dashboard, statistiche, ecc.)
+// TUTTO IL CODICE DELL'APP
 // ══════════════════════════════════════════════════════════
 
 var AFF={
@@ -1762,7 +1765,6 @@ function renderEADownload(){
     +'<div style="font-size:11px;color:var(--t2);line-height:2">1. Scarica l\'EA per la tua piattaforma<br>2. MT4/MT5 → File → Apri cartella dati → MQL4/Experts (o MQL5/Experts) → copia il file<br>3. Strumenti → Opzioni → Expert Advisor → spunta "Consenti WebRequest" → aggiungi: <code style="background:var(--bg3);padding:2px 6px;border-radius:4px">https://prophedge-iota.vercel.app</code><br>4. Riavvia MT4/MT5, trascina EA sul grafico EURUSD M1<br>5. Nei parametri EA inserisci Email, API Key e Journal ID dal dialog "Connetti" del Journal</div></div></div></div>';
 }
 
-// ══ SUPPORTO — pagina semplice con hint alla chat ════════════════
 function renderSupport(){
   return'<div style="max-width:600px;margin:0 auto;padding:20px 0">'
     +'<div style="text-align:center;padding:24px 0 28px"><div style="font-size:44px;margin-bottom:10px">🎧</div>'
@@ -1797,7 +1799,6 @@ function faqItem(q,a){
     +'</div>';
 }
 
-// ══ STATISTICHE ══════════════════════════════════════════════════
 function renderStats(){
   var allTrades=[];
   jrnl.sessions.forEach(function(sess){
@@ -1832,7 +1833,6 @@ function statCard(icon,label,value,sub,color){
   return'<div class="sc-s ai"><div class="sc-s-ic">'+icon+'</div><div class="sc-s-lb">'+label+'</div><div class="sc-s-v" style="color:'+(color||'var(--t)')+'">'+value+'</div><div class="sc-s-s">'+sub+'</div></div>';
 }
 
-// ══ JOURNAL (versione compatta) ══════════════════════════════════
 var jrnl={sessions:[],activeIdx:0,showNewForm:false};
 function jrnlLoad(){try{var s=localStorage.getItem('ph_jrnl_v3');if(s){var d=JSON.parse(s);jrnl.sessions=d.sessions||[];jrnl.activeIdx=d.activeIdx||0;}}catch(e){}}
 function jrnlSave(){try{localStorage.setItem('ph_jrnl_v3',JSON.stringify({sessions:jrnl.sessions,activeIdx:jrnl.activeIdx}));}catch(e){}}
@@ -1922,398 +1922,4 @@ function jrnlEmptyCol(side,sess,i){
 function jrnlRenderNewForm(){
   var sfideHtml='';
   if(props.length>0){sfideHtml='<div style="margin-bottom:16px"><div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Collega a sfida Dashboard</div><select id="jnf-prop" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px"><option value="">-- Nessun collegamento --</option>';props.forEach(function(p){var c2=calcChallenge(p);sfideHtml+='<option value="'+p.id+'">'+p.name+' — '+c2.propLots.toFixed(2)+' lot / '+c2.hedgeLots.toFixed(2)+' lot</option>';});sfideHtml+='</select></div>';}
-  return'<div style="padding:30px 24px;max-width:480px"><div style="font-size:16px;font-weight:700;margin-bottom:6px">+ Nuova sfida Journal</div><div class="f"><label>Nome sfida</label><input type="text" id="jnf-name" placeholder="Es. FTMO $100k Marzo 2026"></div>'+sfideHtml+'<div style="display:flex;gap:8px;margin-top:4px"><button class="btn-p" onclick="jrnlCreateNew()">Crea sfida</button><button class="btn-g" onclick="jrnlCancelNew()">Annulla</button></div></div>';
-}
-
-function jrnlConnModal(){
-  return'<div id="jConnMod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)jrnlCloseConn()"><div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:400px;padding:22px" onclick="event.stopPropagation()"><div style="font-size:14px;font-weight:700;margin-bottom:14px" id="jConnMod-title">Connetti conto</div><div class="f"><label>Piattaforma</label><select id="jConnMod-plat" onchange="jrnlConnPlatChange()"><option value="ctrader">cTrader</option><option value="mt4">MetaTrader 4</option><option value="mt5">MetaTrader 5</option><option value="manual">Manuale</option></select></div><div id="jConnMod-fields"></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn-p" onclick="jrnlSaveConn()">Salva</button><button class="btn-g" onclick="jrnlCloseConn()">Annulla</button></div></div></div>';
-}
-
-var _jConnSide='prop',_jConnIdx=0;
-function jrnlSelect(i){jrnl.activeIdx=i;jrnl.showNewForm=false;jrnlSave();renderJournal();}
-function jrnlShowNewForm(){jrnl.showNewForm=true;renderJournal();}
-function jrnlCancelNew(){jrnl.showNewForm=false;renderJournal();}
-function jrnlCreateNew(){
-  var name=(document.getElementById('jnf-name')||{value:''}).value.trim();
-  var linkedPropId=(document.getElementById('jnf-prop')||{value:''}).value;
-  if(!name){alert('Inserisci un nome per la sfida.');return;}
-  jrnlNewSession(name,linkedPropId);jrnl.showNewForm=false;jrnlSave();renderJournal();
-}
-function jrnlDelete(i){if(!confirm('Eliminare la sfida "'+jrnl.sessions[i].name+'"?'))return;jrnl.sessions.splice(i,1);if(jrnl.activeIdx>=jrnl.sessions.length)jrnl.activeIdx=Math.max(0,jrnl.sessions.length-1);jrnlSave();renderJournal();}
-function jrnlConclude(i){if(!confirm('Segna questa sfida come conclusa?'))return;jrnl.sessions[i].concluded=true;jrnl.sessions[i].concludedAt=new Date().toISOString();jrnlSave();renderJournal();}
-function jrnlReset(i){if(!confirm('Reimposta la sfida?'))return;var s=jrnl.sessions[i];s.propConn={platform:'',label:'',token:'',accountId:'',env:'live',connected:false};s.brokerConn={platform:'',label:'',token:'',accountId:'',env:'live',connected:false};s.propTrades=[];s.brokerTrades=[];s.concluded=false;s.concludedAt=null;jrnlSave();renderJournal();}
-
-function jrnlOpenConn(i,side){
-  _jConnIdx=i;_jConnSide=side;
-  var sess=jrnl.sessions[i];var conn=side==='prop'?sess.propConn:sess.brokerConn;
-  var mod=document.getElementById('jConnMod');if(!mod)return;
-  document.getElementById('jConnMod-title').innerHTML=side==='prop'?'🎯 Connetti Prop — '+sess.name:'💹 Connetti Broker — '+sess.name;
-  var sel=document.getElementById('jConnMod-plat');if(sel&&conn.platform)sel.value=conn.platform;
-  mod.style.display='flex';jrnlConnPlatChange();
-}
-function jrnlCloseConn(){var mod=document.getElementById('jConnMod');if(mod)mod.style.display='none';}
-
-function jrnlConnPlatChange(){
-  var plat=(document.getElementById('jConnMod-plat')||{value:'ctrader'}).value;
-  var sess=jrnl.sessions[_jConnIdx];var conn=_jConnSide==='prop'?sess.propConn:sess.brokerConn;
-  var fields=document.getElementById('jConnMod-fields');if(!fields)return;
-  if(plat==='ctrader'){
-    fields.innerHTML='<div class="f" style="margin-top:10px"><label>Access Token</label><input type="text" id="jConn-ct-token" value="'+(conn.token||'')+'" placeholder="Incolla token da connect.spotware.com" style="font-family:var(--fd);font-size:11px" onclick="this.select()"></div>'
-      +'<div class="f"><label>Account ID</label><input type="text" id="jConn-ct-accountid" value="'+(conn.accountId||'')+'" placeholder="Es. 12345678"></div>'
-      +'<div class="f"><label>Ambiente</label><select id="jConn-env"><option value="live"'+(conn.env==='live'?' selected':'')+'>Live</option><option value="demo"'+(conn.env==='demo'?' selected':'')+'>Demo</option></select></div>'
-      +'<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. IC Markets Live"></div>';
-  }else if(plat==='mt4'||plat==='mt5'){
-    var jrnlId=(jrnl.sessions[_jConnIdx]||{id:'—'}).id;
-    var apiKey='PH_2026_AXI_SECRET_KEY_VISIONTRADING';
-    fields.innerHTML='<div class="note note-teal" style="margin-top:10px;font-size:11px">Inserisci questi parametri nell\'EA:</div>'
-      +'<div class="f" style="margin-top:8px"><label>Email</label><div style="display:flex;gap:6px"><input type="text" id="jConn-email" value="'+(accountData.email||'')+'" readonly style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg)" onclick="this.select()"><button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-email\').value)" class="btn-g" style="padding:5px 10px;font-size:10px">Copia</button></div></div>'
-      +'<div class="f"><label>API Key</label><div style="display:flex;gap:6px"><input type="text" id="jConn-apikey" value="'+apiKey+'" readonly style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg)" onclick="this.select()"><button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-apikey\').value)" class="btn-g" style="padding:5px 10px;font-size:10px">Copia</button></div></div>'
-      +'<div class="f"><label>Journal ID</label><div style="display:flex;gap:6px"><input type="text" id="jConn-jrnlid" value="'+jrnlId+'" readonly style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg)" onclick="this.select()"><button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-jrnlid\').value)" class="btn-g" style="padding:5px 10px;font-size:10px">Copia</button></div></div>'
-      +'<div class="f"><label>AccountType</label><select id="jConn-actype"><option value="prop"'+(_jConnSide==='prop'?' selected':'')+'>prop</option><option value="broker"'+(_jConnSide==='broker'?' selected':'')+'>broker</option></select></div>'
-      +'<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. FTMO MT5 $100k"></div>';
-  }else{
-    fields.innerHTML='<div class="f" style="margin-top:10px"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Inserimento manuale"></div>';
-  }
-}
-
-async function jrnlSaveConn(){
-  var plat=(document.getElementById('jConnMod-plat')||{value:'manual'}).value;
-  var label=(document.getElementById('jConn-label')||{value:''}).value.trim()||plat.toUpperCase();
-  var env=(document.getElementById('jConn-env')||{value:'live'}).value;
-  var sess=jrnl.sessions[_jConnIdx];var key=_jConnSide==='prop'?'propConn':'brokerConn';
-  var connectedAt=new Date().toISOString();
-  if(plat==='ctrader'){
-    var token=(document.getElementById('jConn-ct-token')||{value:''}).value.trim();
-    var accountId=(document.getElementById('jConn-ct-accountid')||{value:''}).value.trim();
-    if(!token){alert('Inserisci il token cTrader.');return;}
-    sess[key]={platform:'ctrader',label:label||'cTrader',token:token,accountId:accountId,env:env,connected:true,connectedAt:connectedAt};
-    if(_jConnSide==='prop')sess.propTrades=[];else sess.brokerTrades=[];
-    jrnlSave();jrnlCloseConn();jrnlSync(_jConnIdx,_jConnSide);return;
-  }
-  if(plat==='mt4'||plat==='mt5'){
-    var actype=(document.getElementById('jConn-actype')||{value:_jConnSide}).value;
-    sess[key]={platform:plat,label:label,env:'live',connected:true,accountId:'',actype:actype,connectedAt:connectedAt};
-    jrnlSave();jrnlCloseConn();jrnlSyncMT(_jConnIdx,_jConnSide);return;
-  }
-  sess[key]={platform:plat,label:label,env:env,connected:true,accountId:'',connectedAt:connectedAt};
-  jrnlSave();jrnlCloseConn();renderJournal();
-}
-
-async function jrnlSync(i,side){
-  var sess=jrnl.sessions[i];var conn=side==='prop'?sess.propConn:sess.brokerConn;
-  if(!conn.connected||conn.platform!=='ctrader')return;
-  try{
-    var r=await fetch('/api/ctrader-positions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({access_token:conn.token,account_id:conn.accountId,env:conn.env,connected_at:conn.connectedAt||sess.createdAt||null})});
-    var d=await r.json();
-    var live=(d.positions||[]).map(function(p){return Object.assign(p,{status:'open'});});
-    var closed=(d.closed||[]).map(function(p){return Object.assign(p,{status:'closed'});});
-    if(side==='prop')sess.propTrades=live.concat(closed);else sess.brokerTrades=live.concat(closed);
-    jrnlSave();renderJournal();
-  }catch(e){console.error('jrnlSync:',e);}
-}
-
-async function jrnlSyncMT(i,side){
-  var sess=jrnl.sessions[i];var conn=side==='prop'?sess.propConn:sess.brokerConn;
-  if(!conn.connected||(conn.platform!=='mt4'&&conn.platform!=='mt5'))return;
-  try{
-    var res=await _sb.auth.getSession();var user=res&&res.data&&res.data.session&&res.data.session.user;if(!user)return;
-    var connectedAt=conn.connectedAt||sess.createdAt||null;
-    var query=_sb.from('trades').select('*').eq('user_id',user.id).eq('journal_id',sess.id).eq('account_type',conn.actype||side).order('open_time',{ascending:false}).limit(500);
-    if(connectedAt)query=query.gte('open_time',connectedAt);
-    var q=await query;if(q.error){console.error('jrnlSyncMT:',q.error.message);return;}
-    var trades=(q.data||[]).map(function(t){return{external_id:String(t.ticket),platform:t.platform||conn.platform,symbol:t.symbol,direction:t.direction,volume:parseFloat(t.volume||0),lots:parseFloat(t.volume||0),open_price:t.open_price,close_price:t.close_price,profit:parseFloat(t.profit||0),pnl_realized:parseFloat(t.profit||0),status:t.status||'open',open_time:t.open_time,close_time:t.close_time,opened_at:t.open_time,closed_at:t.close_time};});
-    if(side==='prop')sess.propTrades=trades;else sess.brokerTrades=trades;
-    jrnlSave();renderJournal();
-  }catch(e){console.error('jrnlSyncMT:',e);}
-}
-
-document.addEventListener('click',function(e){
-  var el=e.target.closest('[data-jconn-idx]');if(el){jrnlOpenConn(parseInt(el.dataset.jconnIdx),el.dataset.jconnSide);return;}
-  var el2=e.target.closest('[data-jconclude]');if(el2){jrnlConclude(parseInt(el2.dataset.jconclude));return;}
-  var el3=e.target.closest('[data-jsync-idx]');
-  if(el3){var idx=parseInt(el3.dataset.jsyncIdx);var side=el3.dataset.jsyncSide;var sess=jrnl.sessions[idx];if(!sess)return;var conn=side==='prop'?sess.propConn:sess.brokerConn;if(conn.platform==='mt4'||conn.platform==='mt5')jrnlSyncMT(idx,side);else jrnlSync(idx,side);return;}
-});
-
-// ══ PIATTAFORMA, ACCOUNT, CALENDARIO ════════════════════════════
-var PH_TV_KEY='ph_tv_state_v3';
-function renderPlatform(){
-  var ct=document.getElementById('main');if(!ct)return;
-  ct.innerHTML='';ct.style.padding='0';ct.style.maxWidth='100%';
-  var isDark=!document.body.classList.contains('light-theme');
-  var state;try{state=JSON.parse(localStorage.getItem(PH_TV_KEY)||'{}')}catch(e){state={};}
-  var wrapper=document.createElement('div');
-  wrapper.style.cssText='display:flex;flex-direction:column;height:calc(100vh - 158px);min-height:620px;background:'+(isDark?'#060810':'#f0f2f8')+';position:relative;overflow:hidden';
-  var chartContainer=document.createElement('div');chartContainer.id='tv_chart_container';chartContainer.style.cssText='flex:1;width:100%;height:100%;position:relative';
-  var loading=document.createElement('div');loading.id='tvLoading';loading.style.cssText='position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;background:'+(isDark?'#060810':'#f0f2f8')+';gap:14px';
-  loading.innerHTML='<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="17" stroke="#1e2840" stroke-width="2.5"/><path d="M20 3 a17 17 0 0 1 17 17" stroke="#00e5cc" stroke-width="3" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 20 20" to="360 20 20" dur=".85s" repeatCount="indefinite"/></path></svg><span style="font-family:\'JetBrains Mono\',monospace;font-size:11px;color:#3d4d78">Caricamento piattaforma...</span>';
-  chartContainer.appendChild(loading);wrapper.appendChild(chartContainer);ct.appendChild(wrapper);
-  if(window.TradingView){_initTV(isDark,state);}else{var sc=document.createElement('script');sc.src='https://s3.tradingview.com/tv.js';sc.onload=function(){_initTV(isDark,state);};sc.onerror=function(){_tvFallback(isDark,state);};document.head.appendChild(sc);}
-}
-function _initTV(isDark,state){
-  try{new TradingView.widget({container_id:'tv_chart_container',autosize:true,symbol:state.symbol||'FX:EURUSD',interval:state.interval||'D',timezone:'Europe/Rome',theme:isDark?'dark':'light',style:'1',locale:'it',enable_publishing:false,allow_symbol_change:true,save_image:true,loading_screen:{backgroundColor:isDark?'#060810':'#f0f2f8',foregroundColor:'#00e5cc'},onready:function(){var ld=document.getElementById('tvLoading');if(ld){ld.style.transition='opacity .5s';ld.style.opacity='0';setTimeout(function(){if(ld)ld.style.display='none';},500);}},});}catch(e){_tvFallback(isDark,state);}
-}
-function _tvFallback(isDark,state){
-  var c=document.getElementById('tv_chart_container');if(!c)return;
-  var ld=document.getElementById('tvLoading');
-  var iframe=document.createElement('iframe');
-  iframe.src='https://s.tradingview.com/widgetembed/?symbol='+(state.symbol||'FX:EURUSD')+'&interval='+(state.interval||'D')+'&theme='+(isDark?'dark':'light')+'&style=1&locale=it&timezone=Europe%2FRome&withdateranges=1&hidesidetoolbar=0';
-  iframe.style.cssText='position:absolute;inset:0;width:100%;height:100%;border:none;';
-  iframe.onload=function(){if(ld){ld.style.opacity='0';setTimeout(function(){if(ld)ld.style.display='none';},400);}};
-  c.appendChild(iframe);
-}
-
-var accountData={photo:null,lang:'it',theme:'dark',name:'',email:'',firstName:'',lastName:''};
-
-function toggleAccDrop(e){
-  if(e)e.stopPropagation();
-  var panel=document.getElementById('accDropPanel'),overlay=document.getElementById('accDropOverlay');
-  if(!panel||!overlay)return;
-  if(panel.style.display==='none'||!panel.style.display){panel.innerHTML=renderAccountDrop();panel.style.display='block';overlay.style.display='block';document.getElementById('tabAccount').classList.add('active');}
-  else{closeAccDrop();}
-}
-function closeAccDrop(){
-  var panel=document.getElementById('accDropPanel'),overlay=document.getElementById('accDropOverlay');
-  if(panel)panel.style.display='none';if(overlay)overlay.style.display='none';
-  var tab=document.getElementById('tabAccount');if(tab)tab.classList.remove('active');
-}
-function renderAccountDrop(){
-  var displayName=((accountData.firstName||'')+(accountData.lastName?' '+accountData.lastName:'')).trim()||accountData.email||'Account';
-  return'<div style="padding:20px"><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div style="width:48px;height:48px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:18px">👤</div><div><div style="font-size:15px;font-weight:700">'+displayName+'</div><div style="font-size:12px;color:var(--t3);font-family:var(--fd)">'+accountData.email+'</div></div></div><div style="display:grid;gap:8px"><button onclick="toggleTheme()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--t);cursor:pointer;font-size:13px"><span>🎨</span><span>Tema: '+(accountData.theme==='light'?'Chiaro':'Scuro')+'</span></button><button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(255,64,96,.2);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px"><span>🔓</span><span>Esci</span></button></div></div>';
-}
-function toggleTheme(){
-  accountData.theme=accountData.theme==='light'?'dark':'light';
-  if(accountData.theme==='light')document.body.classList.add('light-theme');else document.body.classList.remove('light-theme');
-  try{localStorage.setItem('ph_account',JSON.stringify(accountData));}catch(e){}
-  var panel=document.getElementById('accDropPanel');if(panel&&panel.style.display!=='none')panel.innerHTML=renderAccountDrop();
-}
-function loadAccountData(){
-  try{var d=localStorage.getItem('ph_account');if(d)accountData=Object.assign(accountData,JSON.parse(d));}catch(e){}
-  if(accountData.theme==='light')document.body.classList.add('light-theme');
-  _sb.auth.getSession().then(function(res){
-    if(res.data&&res.data.session&&res.data.session.user){
-      var user=res.data.session.user;accountData.email=user.email||'';
-      var meta=user.user_metadata||{};accountData.firstName=meta.first_name||meta.firstName||'';accountData.lastName=meta.last_name||meta.lastName||'';
-      var tn=document.getElementById('tabAccountName');if(tn)tn.textContent=((accountData.firstName+' '+accountData.lastName).trim()||accountData.email.split('@')[0]||'Account');
-    }
-  });
-}
-function showPolicy(){document.getElementById('policyModal').style.display='block';}
-function resetConsent(){try{localStorage.removeItem('ph_consent');}catch(e){}location.reload();}
-
-// ── Calendario economico (versione compatta) ─────────────────────
-var _calData=[],_calFilter='high',_calLoaded=false,_calTimer=null,_calDemoMode=false;
-var CAL_FLAGS={'USD':'us','EUR':'eu','GBP':'gb','JPY':'jp','AUD':'au','CAD':'ca','CHF':'ch','NZD':'nz','CNY':'cn','ALL':'un'};
-var CAL_IMP_LABEL={'High':'red','Medium':'orange','Low':'yellow','Holiday':'gray','high':'red','medium':'orange','low':'yellow'};
-function calFlag(currency){var code=CAL_FLAGS[currency];if(!code)return'<span style="font-size:13px;opacity:.4">🌐</span>';return'<img src="https://flagcdn.com/24x18/'+code+'.png" width="24" height="18" style="border-radius:2px;vertical-align:middle;object-fit:cover" alt="'+currency+'">';}
-function calSetFilter(f){_calFilter=f;calRender();}
-function calNow(){return new Date();}
-function calParseDate(dateStr,timeStr){if(!dateStr)return null;var parts=dateStr.split('-');if(parts.length!==3)return null;var base=new Date(parseInt(parts[2]),parseInt(parts[0])-1,parseInt(parts[1]),0,0,0);if(timeStr&&timeStr!=='All Day'&&timeStr!=='Tentative'){var m=timeStr.match(/(\d+):(\d+)(am|pm)/i);if(m){var h=parseInt(m[1]),min=parseInt(m[2]),ampm=m[3].toLowerCase();if(ampm==='pm'&&h!==12)h+=12;if(ampm==='am'&&h===12)h=0;base.setHours(h,min,0,0);}}return base;}
-function calCountdown(eventDate){if(!eventDate)return{txt:'—',cls:'past'};var now=calNow();var diff=eventDate-now;if(diff<0)return{txt:'Passato',cls:'past'};var h=Math.floor(diff/3600000);var m=Math.floor((diff%3600000)/60000);if(h>0)return{txt:h+'h '+m+'m',cls:h<3?'orange':''};return{txt:m+'m',cls:m<15?'red':'orange'};}
-
-async function calLoad(){
-  var FF_URL='https://nfs.faireconomy.media/ff_calendar_thisweek.json';var NOW=Date.now();
-  var attempts=[fetch(FF_URL+'?version='+NOW,{cache:'no-store',mode:'cors'}),fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(FF_URL+'?version='+NOW),{cache:'no-store'}),fetch('https://corsproxy.io/?'+encodeURIComponent(FF_URL),{cache:'no-store'})];
-  var winner=null;
-  try{var responses=await Promise.any(attempts.map(function(p){return p.then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r;});}));winner=responses;}catch(e){winner=null;}
-  if(winner){try{var data=await winner.json();if(Array.isArray(data)&&data.length>0){_calData=data;_calLoaded=true;calRender();return;}}catch(e){}}
-  _calData=calGenerateDemo();_calLoaded=true;_calDemoMode=true;calRender();
-}
-
-function calGenerateDemo(){
-  var now=new Date();var mon=new Date(now);mon.setDate(now.getDate()-now.getDay()+1);mon.setHours(0,0,0,0);
-  function dayEvs(d,evs){var dd=new Date(mon);dd.setDate(mon.getDate()+d);var dateStr=(dd.getMonth()+1).toString().padStart(2,'0')+'-'+dd.getDate().toString().padStart(2,'0')+'-'+dd.getFullYear();return evs.map(function(e){return Object.assign({date:dateStr},e);});}
-  return[].concat(
-    dayEvs(0,[{time:'8:30am',currency:'USD',impact:'High',title:'S&P Global Manufacturing PMI'},{time:'3:00pm',currency:'EUR',impact:'High',title:'ECB President Lagarde Speaks'}]),
-    dayEvs(1,[{time:'8:30am',currency:'USD',impact:'High',title:'JOLTS Job Openings'},{time:'10:00am',currency:'USD',impact:'Medium',title:'Factory Orders m/m'}]),
-    dayEvs(2,[{time:'8:15am',currency:'USD',impact:'High',title:'ADP Non-Farm Employment'},{time:'2:00pm',currency:'USD',impact:'High',title:'FOMC Meeting Minutes'}]),
-    dayEvs(3,[{time:'8:30am',currency:'USD',impact:'High',title:'Unemployment Claims'},{time:'8:30am',currency:'USD',impact:'High',title:'Trade Balance'}]),
-    dayEvs(4,[{time:'8:30am',currency:'USD',impact:'High',title:'Non-Farm Payrolls',forecast:'180K',previous:'151K'},{time:'8:30am',currency:'USD',impact:'High',title:'Unemployment Rate',forecast:'4.1%',previous:'4.1%'}])
-  );
-}
-
-function calRender(){
-  var ct=document.getElementById('main');if(!ct)return;
-  ct.style.padding='24px';ct.style.maxWidth='1400px';
-  var now=calNow();
-  var filtered=_calData.filter(function(ev){var imp=ev.impact||ev.importance||'';if(_calFilter==='high')return imp==='High'||imp==='high';if(_calFilter==='medium')return imp==='High'||imp==='high'||imp==='Medium'||imp==='medium';return true;});
-  var byDay={},dayOrder=[];
-  filtered.forEach(function(ev){var dateKey=ev.date||'';if(!byDay[dateKey]){byDay[dateKey]=[];dayOrder.push(dateKey);}byDay[dateKey].push(ev);});
-  var redSoon=0;_calData.forEach(function(ev){var imp=ev.impact||ev.importance||'';if(imp!=='High'&&imp!=='high')return;var eDate=calParseDate(ev.date,ev.time);if(!eDate)return;var diff=eDate-now;if(diff>0&&diff<2*3600000)redSoon++;});
-  var html='<div class="cal-wrap"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:17px;font-weight:800;font-family:var(--fh)">📅 Calendario Economico</div><div style="display:flex;gap:8px;align-items:center">'+(_calDemoMode?'<span style="font-size:10px;font-family:var(--fd);background:rgba(255,190,11,.15);color:#ffbe0b;padding:3px 10px;border-radius:5px">⚠ Dati demo</span>':'')+'<button class="btn-g" style="padding:4px 12px;font-size:10px" onclick="_calLoaded=false;_calDemoMode=false;_calData=[];renderCalendar()">🔄 Aggiorna</button></div></div>';
-  if(redSoon>0)html+='<div class="cal-alert-box show"><span style="font-size:20px">⚠️</span><span><strong>Attenzione:</strong> '+redSoon+' notizia ad ALTO IMPATTO nelle prossime 2 ore.</span></div>';
-  html+='<div class="cal-filter-bar"><span style="font-size:10px;font-family:var(--fh);color:var(--t3);letter-spacing:.1em">FILTRO:</span><button class="cal-filter-btn red-f'+(_calFilter==='high'?' active':'')+'" onclick="calSetFilter(\'high\')">🔴 Alto Impatto</button><button class="cal-filter-btn orange-f'+(_calFilter==='medium'?' active':'')+'" onclick="calSetFilter(\'medium\')">🟡 Alto + Medio</button><button class="cal-filter-btn all-f'+(_calFilter==='all'?' active':'')+'" onclick="calSetFilter(\'all\')">Tutti</button></div>';
-  if(!filtered.length){html+='<div style="text-align:center;padding:40px;color:var(--t3)">Nessuna notizia con questo filtro.</div>';}
-  else{
-    dayOrder.forEach(function(dateKey){
-      var evs=byDay[dateKey];if(!evs||!evs.length)return;
-      var d=calParseDate(dateKey,'');var dayLabel=d?d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'}):dateKey;
-      html+='<div class="cal-day-hdr">'+dayLabel.toUpperCase()+'</div>';
-      evs.forEach(function(ev){
-        var imp=ev.impact||ev.importance||'';var impCls=CAL_IMP_LABEL[imp]||'gray';
-        var currency=ev.currency||'—';var eDate=calParseDate(ev.date,ev.time);
-        var countdown=calCountdown(eDate);var isPast=eDate&&eDate<now;
-        var rowBg=impCls==='red'&&!isPast?'border-left:3px solid rgba(255,64,96,.3);':'border-left:3px solid transparent;';
-        html+='<div class="cal-row" style="'+rowBg+'cursor:pointer" onclick="window.open(\'https://www.forexfactory.com/calendar\',\'_blank\')">'
-          +'<div class="cal-time'+(isPast?' past':'')+'">'+(ev.time||'—')+'</div>'
-          +'<div class="cal-flag">'+calFlag(currency)+'</div>'
-          +'<div><div class="cal-imp '+impCls+'"></div></div>'
-          +'<div class="cal-event"><span style="color:var(--t)">'+(ev.title||ev.event||'—')+'</span><span class="cal-cur">'+currency+'</span></div>'
-          +(ev.forecast?'<div class="cal-val">'+ev.forecast+'</div>':'<div class="cal-val na">—</div>')
-          +(ev.previous?'<div class="cal-val">'+ev.previous+'</div>':'<div class="cal-val na">—</div>')
-          +(ev.actual?'<div class="cal-val actual">'+ev.actual+'</div>':'<div class="cal-val na">—</div>')
-          +'<div class="cal-countdown '+countdown.cls+'">'+countdown.txt+'</div>'
-          +'</div>';
-      });
-    });
-  }
-  html+='</div>';ct.innerHTML=html;
-  if(_calTimer)clearInterval(_calTimer);
-  _calTimer=setInterval(function(){if(currentTab==='calendar')calRender();},60000);
-}
-
-function renderCalendar(){
-  var ct=document.getElementById('main');if(!ct)return;
-  ct.style.padding='24px';ct.style.maxWidth='1400px';
-  if(!_calLoaded){ct.innerHTML='<div class="cal-wrap"><div style="text-align:center;padding:60px;font-size:13px;color:var(--t3)"><div style="font-size:40px;margin-bottom:16px">📅</div><div style="font-size:16px;font-weight:700;color:var(--t);margin-bottom:8px">Calendario Economico</div>Caricamento da ForexFactory...</div></div>';calLoad();}
-  else{calRender();}
-}
-
-// ══ MAIN RENDER ══════════════════════════════════════════════════
-function render(){
-  var ct=document.getElementById('main');if(!ct)return;
-  ct.style.padding='24px';ct.style.maxWidth='1400px';
-  if(currentTab==='dash')ct.innerHTML=renderDash();
-  else if(currentTab==='dashdetail'){renderDashDetailPage();return;}
-  else if(currentTab==='calc')ct.innerHTML=renderCalc();
-  else if(currentTab==='proplist')ct.innerHTML=renderPropList();
-  else if(currentTab==='brokerlist')ct.innerHTML=renderBrokerList();
-  else if(currentTab==='guide')ct.innerHTML=renderGuide();
-  else if(currentTab==='support')ct.innerHTML=renderSupport();
-  else if(currentTab==='eadownload')ct.innerHTML=renderEADownload();
-  else if(currentTab==='calendar'){renderCalendar();return;}
-  else if(currentTab==='stats')ct.innerHTML=renderStats();
-  else if(currentTab==='broker')ct.innerHTML=renderBrokerList();
-  else if(currentTab==='platform'){renderPlatform();return;}
-  else if(currentTab==='journal'){renderJournal();return;}
-  else ct.innerHTML=renderGuide();
-}
-
-// ══ FLOATING AI CHAT — con supporto umano Telegram nascosto ══════
-var _aiOpen=false,_aiHist=[],_aiGreeted=false;
-var _humanMode=false,_ticketId=null,_pollTimer=null,_lastMsgAt=null;
-
-function genTicketId(){return'ticket_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
-
-function toggleAIChat(){
-  _aiOpen=!_aiOpen;
-  var panel=document.getElementById('aiFloatPanel');if(panel)panel.classList.toggle('open',_aiOpen);
-  var notif=document.querySelector('#aiFloatBtn .ai-notif');if(notif)notif.style.display='none';
-  if(_aiOpen&&!_aiGreeted){_aiGreeted=true;aiFloatAddMsg('bot','Ciao! 👋 Sono l\'assistente AI di PropHedge.\n\nPosso aiutarti su qualsiasi funzione del software: calcolo lotti, connessione broker, journal, calendario economico e altro.\n\nCome posso aiutarti?');}
-  if(_aiOpen&&_humanMode&&!_pollTimer)startSupportPolling();
-}
-
-function aiFloatAddMsg(role,text){
-  var msgs=document.getElementById('aiFloatMsgs');if(!msgs)return null;
-  var isBot=(role==='bot'||role==='support');
-  var row=document.createElement('div');row.className='ai-msg-row'+(isBot?'':' user');
-  var ava='<div class="ai-msg-ava '+(isBot?'bot':'usr')+'">'+(isBot?'🤖':'👤')+'</div>';
-  var bubble=document.createElement('div');bubble.className='ai-bubble '+(isBot?'bot':'usr');
-  bubble.innerHTML=text.replace(/\n/g,'<br>');
-  row.innerHTML=ava;row.appendChild(bubble);msgs.appendChild(row);msgs.scrollTop=msgs.scrollHeight;return bubble;
-}
-
-function aiFloatAddTyping(){
-  var msgs=document.getElementById('aiFloatMsgs');if(!msgs)return null;
-  var row=document.createElement('div');row.className='ai-msg-row';row.id='aiTypingRow';
-  row.innerHTML='<div class="ai-msg-ava bot">🤖</div>';
-  var bubble=document.createElement('div');bubble.className='ai-bubble bot';bubble.id='aiTypingBubble';
-  bubble.innerHTML='<span id="aiTypingDots">●</span>';
-  var t=0;bubble._timer=setInterval(function(){t=(t+1)%3;var el=document.getElementById('aiTypingDots');if(el)el.textContent='●'.repeat(t+1);},400);
-  row.appendChild(bubble);msgs.appendChild(row);msgs.scrollTop=msgs.scrollHeight;return bubble;
-}
-
-function aiFloatRemoveTyping(){
-  var row=document.getElementById('aiTypingRow');var bub=document.getElementById('aiTypingBubble');
-  if(bub&&bub._timer)clearInterval(bub._timer);if(row)row.remove();
-}
-
-// ── Attiva supporto umano silenzioso (Telegram dietro le quinte) ─
-function switchToHumanSupport(){
-  _humanMode=true;_ticketId=genTicketId();_lastMsgAt=new Date().toISOString();
-  var hdrTitle=document.querySelector('#aiFloatPanel .ai-title');
-  var hdrStatus=document.querySelector('#aiFloatPanel .ai-status');
-  if(hdrTitle)hdrTitle.textContent='Supporto PropHedge';
-  if(hdrStatus)hdrStatus.innerHTML='<span class="ai-dot" style="background:#00d68f;animation:pu 1.5s infinite"></span> Team VisionTrading · In diretta';
-  var qb=document.getElementById('aiQuickBtns');if(qb)qb.style.display='none';
-  aiFloatAddMsg('bot','Perfetto! Sei ora connesso direttamente con il team VisionTrading. 🎧\n\nScrivi il tuo messaggio, ti risponderemo qui a breve.');
-  var input=document.getElementById('aiFloatInput');if(input)input.placeholder='Scrivi al team di supporto...';
-  startSupportPolling();
-}
-
-function startSupportPolling(){if(_pollTimer)clearInterval(_pollTimer);_pollTimer=setInterval(pollSupportMessages,5000);}
-
-async function pollSupportMessages(){
-  if(!_ticketId)return;
-  try{
-    var url='/api/support-messages?ticket_id='+encodeURIComponent(_ticketId);
-    if(_lastMsgAt)url+='&after='+encodeURIComponent(_lastMsgAt);
-    var r=await fetch(url);var d=await r.json();
-    if(d.messages&&d.messages.length>0){
-      d.messages.forEach(function(m){aiFloatAddMsg('support',m.content);_lastMsgAt=m.created_at;});
-    }
-  }catch(e){}
-}
-
-async function sendToHumanSupport(text){
-  var btn=document.getElementById('aiFloatSend');if(btn)btn.disabled=true;
-  aiFloatAddMsg('usr',text);
-  aiFloatAddMsg('bot','✓ Messaggio consegnato. Risponderemo a breve.');
-  try{
-    await fetch('/api/support-send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket_id:_ticketId,message:text,user_email:accountData.email||'',user_name:((accountData.firstName||'')+' '+(accountData.lastName||'')).trim()||'Utente'})});
-  }catch(e){}
-  if(btn)btn.disabled=false;
-}
-
-async function aiFloatSend(){
-  var input=document.getElementById('aiFloatInput');var btn=document.getElementById('aiFloatSend');
-  if(!input)return;var text=input.value.trim();if(!text)return;
-  input.value='';if(input.style)input.style.height='auto';
-  // Se già in modalità supporto umano → invia a Telegram
-  if(_humanMode){await sendToHumanSupport(text);if(input)input.focus();return;}
-  // Altrimenti → AI normale
-  if(btn)btn.disabled=true;
-  aiFloatAddMsg('usr',text);_aiHist.push({role:'user',content:text});
-  var qb=document.getElementById('aiQuickBtns');if(qb)qb.style.display='none';
-  aiFloatAddTyping();
-  try{
-    var resp=await fetch('/api/ai-support',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:_aiHist})});
-    var data=await resp.json();var reply=data.reply||'Non ho capito, puoi ripetere?';
-    aiFloatRemoveTyping();
-    // L'AI ha deciso di passare al supporto umano
-    if(reply.indexOf('###HUMAN_SUPPORT###')!==-1){switchToHumanSupport();}
-    else{aiFloatAddMsg('bot',reply);_aiHist.push({role:'assistant',content:reply});if(_aiHist.length>20)_aiHist=_aiHist.slice(-20);}
-  }catch(e){aiFloatRemoveTyping();aiFloatAddMsg('bot','Errore di connessione. Riprova tra qualche secondo. 🙏');}
-  if(btn)btn.disabled=false;if(input)input.focus();
-}
-
-function aiFloatAsk(text){var input=document.getElementById('aiFloatInput');if(input){input.value=text;aiFloatSend();}}
-
-// ══ INIT ══════════════════════════════════════════════════════════
-window.addEventListener('DOMContentLoaded',function(){
-  loadAccountData();jrnlLoad();buildBot(BOT_ALL);loadFX();
-  window.addEventListener('message',function(event){
-    if(event.origin!==window.location.origin)return;
-    if(!event.data||event.data.type!=='ctrader_callback')return;
-  });
-  var urlParams=new URLSearchParams(window.location.search);
-  var authCode=urlParams.get('code');
-  if(authCode){var jPending=null;try{jPending=JSON.parse(localStorage.getItem('ph_jconn_pending')||'null');}catch(e){}
-    if(jPending){goTab('journal',document.getElementById('tabJournal'));}
-  }
-  render();
-  function checkNet(){var w=document.getElementById('netWarn');if(w){if(!navigator.onLine||window._sbLoadError)w.style.display='block';else w.style.display='none';}}
-  checkNet();window.addEventListener('online',checkNet);window.addEventListener('offline',checkNet);
-});
-</script>
-</body>
-</html>
+  return'<div style="padding:30px 24px;max-width:480px"><div style="font-size:16
