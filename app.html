@@ -7,27 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
-
-<script type="text/javascript">
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({
-    pageLanguage: 'it', 
-    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-  }, 'google_translate_element');
-}
-</script>
-<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
 <style>
-/* STILI WIDGET LINGUE */
-.goog-te-gadget { font-family: var(--fd) !important; color: var(--t3) !important; font-size: 11px !important; }
-.goog-te-gadget .goog-te-combo { background: var(--bg3); border: 1px solid var(--border); color: var(--t); padding: 6px; border-radius: 6px; outline: none; width: 100%; margin-top: 4px; }
-.goog-logo-link { display: none !important; }
-.goog-te-gadget span { display: none !important; }
-body { top: 0px !important; }
-.skiptranslate iframe { display: none !important; }
-
-/* STILI ORIGINALI */
 *{box-sizing:border-box;margin:0;padding:0}
 html{overflow-x:hidden;background:var(--bg);min-height:100%;min-height:100dvh}
 :root{
@@ -69,6 +49,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;opacity:.18}
 .orb1{width:500px;height:500px;background:var(--violet);top:-150px;right:-150px}
 .orb2{width:350px;height:350px;background:var(--teal);bottom:-120px;left:-80px}
+
+/* LIVE ASSET TICKER */
 .tk-wrap{background:var(--bg3);border-bottom:1px solid var(--border);overflow:hidden;height:34px;display:flex;align-items:center;position:relative;z-index:101;cursor:pointer}
 .tk-label{flex-shrink:0;padding:0 13px;font-size:8px;font-weight:700;color:var(--teal);font-family:var(--fd);letter-spacing:.16em;text-transform:uppercase;border-right:1px solid var(--border);height:100%;display:flex;align-items:center;gap:6px;white-space:nowrap}
 .tk-ld{width:5px;height:5px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal);animation:pu 2s infinite;flex-shrink:0}
@@ -84,6 +66,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .tk-dn{color:var(--red);background:rgba(255,64,96,.1)}
 .tk-na{color:var(--t3)}
 .tk-wait{display:inline-flex;align-items:center;padding:0 20px;font-size:10px;color:var(--t3);font-family:var(--fd);gap:8px;height:34px}
+
+/* HEADER */
 .hdr{position:sticky;top:0;z-index:100;background:var(--bg-hdr,rgba(6,8,16,.95));backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;gap:14px}
 .logo-box{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:6px 14px 6px 8px}
 .logo-icon{width:36px;height:36px;flex-shrink:0;border-radius:8px;overflow:hidden;background:#0c1428;display:flex;align-items:center;justify-content:center}
@@ -99,18 +83,25 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .lt-est{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(255,190,11,.2)}
 .btn-rf{background:none;border:1px solid var(--border2);color:var(--t2);border-radius:5px;padding:3px 9px;font-size:11px;cursor:pointer;transition:all .15s}
 .btn-rf:hover{border-color:var(--teal);color:var(--teal)}
+
+/* TABS */
 .tabs{position:sticky;top:58px;z-index:99;background:rgba(6,8,16,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center;gap:2px}
 .tab{padding:8px 15px;font-size:10.5px;font-weight:600;font-family:var(--fh);color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;white-space:nowrap;letter-spacing:.1em;text-transform:uppercase;border-radius:8px;margin:5px 2px}
 .tab:hover{color:#fff;background:linear-gradient(135deg,rgba(0,229,204,.16),rgba(155,93,229,.16));box-shadow:0 0 0 1px rgba(0,229,204,.22),0 4px 16px rgba(0,229,204,.1);border-bottom-color:transparent}
 .tab.active{color:var(--teal);background:linear-gradient(135deg,rgba(0,229,204,.11),rgba(155,93,229,.11));border-bottom-color:var(--teal);box-shadow:0 0 0 1px rgba(0,229,204,.25)}
+
 .content{padding:24px;max-width:1400px;margin:0 auto;position:relative;z-index:1;flex:1;width:100%}
 .c2{display:grid;grid-template-columns:380px 1fr;gap:14px;align-items:start}
 @media(max-width:900px){.c2{grid-template-columns:1fr}}
+
+/* PANELS */
 .panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px}
 .ph{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .ph h3{font-size:10px;text-transform:uppercase;letter-spacing:.14em;color:var(--t2);font-family:var(--fh);font-weight:600;display:flex;align-items:center;gap:8px}
 .ph h3::before{content:'';width:3px;height:11px;background:linear-gradient(var(--teal),var(--violet));border-radius:2px;flex-shrink:0}
 .pb{padding:18px}
+
+/* FORM */
 .f{margin-bottom:12px}
 .f label{display:block;font-size:9.5px;color:var(--t3);margin-bottom:5px;font-family:var(--fh);text-transform:uppercase;letter-spacing:.12em;font-weight:600}
 .f input,.f select{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fd);font-weight:400;outline:none;transition:all .2s;-moz-appearance:textfield}
@@ -121,6 +112,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .fr2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
 .sect{font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:var(--t3);font-family:var(--fh);font-weight:700;margin:14px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+
+/* ACCOUNT CARDS */
 .acct-split{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
 .ac{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:15px;position:relative;overflow:hidden}
 .ac::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
@@ -136,6 +129,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .ac-row.same{background:rgba(0,229,204,.05);border-radius:6px;padding:6px 8px;margin:3px 0;border:none}
 .ac-row.same span:first-child{color:var(--teal);font-size:10px}
 .v-teal{color:var(--teal)}.v-violet{color:var(--violet)}.v-amber{color:var(--amber)}.v-red{color:var(--red)}.v-green{color:var(--green)}
+
+/* ROI */
 .roi-box{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .roi-card{border-radius:12px;padding:14px;border:1px solid;text-align:center}
 .roi-a{background:var(--red-bg);border-color:rgba(255,64,96,.2)}
@@ -143,17 +138,23 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .roi-lbl{font-size:9.5px;color:var(--t3);font-family:var(--fh);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;font-weight:600}
 .roi-val{font-size:26px;font-weight:700;font-family:var(--fd);margin-bottom:2px;letter-spacing:.02em}
 .roi-sub{font-size:11px;color:var(--t3);font-family:var(--fd);line-height:1.6;font-weight:300}
+
+/* TABLE */
 .pt{width:100%;border-collapse:collapse}
 .pt th{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);font-family:var(--fd);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3)}
 .pt td{padding:10px;font-size:13px;border-bottom:1px solid var(--border)}
 .pt td:last-child,.pt td:nth-child(2){text-align:right;font-family:var(--fd);font-weight:600}
 .pt tr:last-child td{border-bottom:none}
 .pt tr.hi td{background:rgba(0,229,204,.04)}
+
+/* BADGES / NOTES */
 .badge{font-size:10px;padding:3px 9px;border-radius:5px;font-family:var(--fd);font-weight:600}
 .b-teal{background:var(--teal-bg);color:var(--teal);border:1px solid rgba(0,229,204,.2)}
 .note{border-radius:8px;padding:10px 13px;font-size:12px;line-height:1.6;margin-bottom:8px;border:1px solid}
 .note-teal{background:var(--teal-bg);border-color:rgba(0,229,204,.15);color:rgba(0,229,204,.85)}
 .note-amber{background:var(--amber-bg);border-color:rgba(255,190,11,.15);color:rgba(255,190,11,.85)}
+
+/* RULE ROWS */
 .rr{display:flex;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:6px}
 .rr-ok{background:var(--green-bg);border:1px solid rgba(0,214,143,.15)}
 .rr-warn{background:var(--amber-bg);border:1px solid rgba(255,190,11,.15)}
@@ -162,6 +163,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .rr-ok .rr-t{color:var(--green)}.rr-warn .rr-t{color:var(--amber)}
 .rr-d{font-size:11px}
 .rr-ok .rr-d{color:rgba(0,214,143,.7)}.rr-warn .rr-d{color:rgba(255,190,11,.7)}
+
+/* STAT CARDS */
 .sg{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
 @media(max-width:800px){.sg{grid-template-columns:1fr 1fr}}
 .sc-s{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;transition:all .2s;cursor:default}
@@ -170,6 +173,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .sc-s-lb{font-size:9px;color:var(--t3);font-family:var(--fh);text-transform:uppercase;letter-spacing:.14em;margin-bottom:5px;font-weight:600}
 .sc-s-v{font-size:22px;font-weight:700;font-family:var(--fd);letter-spacing:.02em}
 .sc-s-s{font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:3px;font-weight:300}
+
+/* PROP CARDS */
 .pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:13px}
 .pc{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:17px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden}
 .pc:hover{border-color:var(--border2);transform:translateY(-2px)}
@@ -186,10 +191,14 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .pst{background:var(--bg3);border-radius:8px;padding:8px;text-align:center;border:1px solid var(--border)}
 .pst-l{font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:3px}
 .pst-v{font-size:13px;font-weight:600;font-family:var(--fd)}
+
+/* BUTTONS */
 .btn-p{background:linear-gradient(135deg,var(--teal2),var(--violet2));border:none;color:#fff;border-radius:9px;padding:10px 20px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--fm);letter-spacing:.06em;text-transform:uppercase;display:inline-flex;align-items:center;gap:7px;transition:all .2s}
 .btn-p:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,184,164,.25)}
 .btn-g{background:none;border:1px solid var(--border2);color:var(--t2);border-radius:8px;padding:9px 16px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--fm);transition:all .15s;text-transform:uppercase;letter-spacing:.04em}
 .btn-g:hover{border-color:var(--teal);color:var(--teal)}
+
+/* MODAL */
 .mov{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)}
 .modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:480px;max-height:88vh;max-height:88dvh;overflow-y:auto;display:flex;flex-direction:column}
 .mh{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;flex-shrink:0;position:sticky;top:0;background:var(--bg2);z-index:2}
@@ -203,12 +212,16 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .si:last-child{border-bottom:none}
 .si-logo{width:26px;height:26px;border-radius:6px;overflow:hidden;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px;font-weight:700}
 .si-logo img{width:100%;height:100%;object-fit:cover;border-radius:5px}
+
+/* PREVIEW */
 .prev{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px;margin-top:12px}
 .prev-g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .pv{background:var(--bg2);border-radius:8px;padding:10px;border:1px solid var(--border)}
 .pv-lb{font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
 .pv-v{font-size:18px;font-weight:700;font-family:var(--fd)}
 .pv-s{font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:2px}
+
+/* BROKER */
 .bk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .bk-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px}
 .bk-card:hover{border-color:var(--border2)}
@@ -229,6 +242,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .ai-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
 .ai-lb{font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
 .ai-v{font-size:16px;font-weight:700;font-family:var(--fd)}
+
+/* BOTTOM BANNER */
 .bot-wrap{position:fixed!important;bottom:36px!important;left:0!important;right:0!important;z-index:9999!important;background:var(--bg2);border-top:1px solid var(--border2);height:54px;display:flex!important;align-items:center;overflow:hidden}
 .bot-scroll{overflow:hidden;flex:1}
 .bot-track{display:flex;white-space:nowrap;animation:botTk 26s linear infinite}
@@ -245,6 +260,8 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .bt-b{background:var(--violet-bg);color:var(--violet);border:1px solid rgba(155,93,229,.2)}
 .bot-close{flex-shrink:0;background:none;border:none;color:var(--t3);cursor:pointer;padding:0 14px;font-size:16px;height:100%;transition:color .15s;border-left:1px solid var(--border)}
 .bot-close:hover{color:var(--t)}
+
+/* JOURNAL */
 .jw{display:flex;height:calc(100vh - 106px);overflow:hidden}
 .jsb{width:180px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
 .jsb-hd{padding:12px 14px 6px;display:flex;align-items:center;justify-content:space-between}
@@ -263,12 +280,16 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .jcell{padding:7px 12px;font-size:11px;color:var(--t2);display:flex;align-items:center;border-right:1px solid rgba(255,255,255,.1)}
 input[type=date]{background:var(--bg2);border:1px solid var(--border);color:var(--t);border-radius:6px;padding:4px 8px;font-size:11px;font-family:var(--fd)}
 body:not(.light-theme) input[type=date]::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.5)!important;opacity:.9}
+
+/* EMPTY */
 .empty{text-align:center;padding:70px 20px}
 .empty p{font-size:14px;color:var(--t2);line-height:1.7;margin-bottom:20px}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .ai{animation:fadeUp .3s ease forwards}
 @keyframes spUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
 @keyframes logoPulse{0%,100%{box-shadow:0 0 36px rgba(0,229,204,.22)}50%{box-shadow:0 0 60px rgba(0,229,204,.5),0 0 100px rgba(155,93,229,.2)}}
+
+/* ====== PANNELLO MERCATI FULLSCREEN ====== */
 #mkOverlay{display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.7);backdrop-filter:blur(4px)}
 #mkPanel{display:none;position:fixed;inset:0;z-index:10001;flex-direction:column;overflow:hidden;background:#080d1c;font-family:'Plus Jakarta Sans','Inter',sans-serif;color:#eef0f8}
 body.light-theme #mkPanel{background:#f0f2f8;color:#0c1428}
@@ -323,6 +344,8 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 .mks-na{color:#3d4d78;border:1px solid rgba(61,77,120,.2)}
 @media(max-width:900px){.mk-grid{--c1:160px;--c2:110px}.mk-col-hdr span:last-child,.mk-row .mk-period:last-child{display:none}}
 @media(max-width:600px){.mk-grid{--c1:130px;--c2:95px;grid-template-columns:var(--c1) var(--c2) 1fr 1fr}.mk-col-hdr span:nth-child(4),.mk-col-hdr span:nth-child(5){display:none}.mk-row .mk-period:nth-child(4),.mk-row .mk-period:nth-child(5){display:none}}
+
+/* ECONOMIC CALENDAR */
 .cal-wrap{max-width:1100px;margin:0 auto}
 .cal-day-hdr{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;font-family:var(--fh);color:var(--t3);padding:18px 0 8px;border-bottom:2px solid var(--border2);margin-bottom:4px}
 .cal-row{display:grid;grid-template-columns:80px 36px 36px 1fr 120px 90px 90px 90px;align-items:center;gap:0;padding:10px 12px;border-bottom:1px solid rgba(128,128,128,.06);border-radius:6px;transition:background .12s;cursor:default}
@@ -358,6 +381,8 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 .cal-alert-box{background:rgba(255,64,96,.08);border:1px solid rgba(255,64,96,.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--t2);display:none}
 .cal-alert-box.show{display:flex}
 @media(max-width:800px){.cal-row{grid-template-columns:70px 28px 28px 1fr 90px}.cal-val,.cal-hdr-col:nth-child(n+6){display:none}}
+
+/* ── FLOATING AI CHAT WIDGET ── */
 #aiFloatBtn{position:fixed;bottom:110px;right:24px;z-index:99999;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#00b8a4,#9b5de5);border:none;cursor:pointer;font-size:24px;box-shadow:0 4px 20px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s}
 #aiFloatBtn:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(0,229,204,.4)}
 #aiFloatBtn .ai-notif{position:absolute;top:-3px;right:-3px;width:14px;height:14px;background:#ff4060;border-radius:50%;border:2px solid #060810;animation:pulse2 2s infinite}
@@ -399,6 +424,7 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 </head>
 <body>
 
+<!-- ===== SPLASH ===== -->
 <div id="splashScreen" style="position:fixed;inset:0;z-index:999999;background:#060810;overflow:hidden;display:flex;align-items:center;justify-content:center">
   <div style="position:absolute;top:0;left:0;right:0;z-index:3;background:rgba(4,5,12,.98);border-bottom:1px solid #1e2840;overflow:hidden;height:32px;display:flex;align-items:center">
     <div style="flex-shrink:0;padding:0 12px;font-size:8px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#00e5cc;border-right:1px solid #1e2840;height:100%;display:flex;align-items:center;gap:5px;white-space:nowrap">
@@ -436,6 +462,7 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
   </div>
 </div>
 
+<!-- ===== CONSENT POPUP ===== -->
 <div id="consentOverlay" style="display:none;position:fixed;inset:0;z-index:9999999;background:rgba(0,0,0,.85);backdrop-filter:blur(10px);align-items:center;justify-content:center;padding:20px">
   <div style="background:#0c0f1a;border:1px solid #2a3560;border-radius:20px;width:100%;max-width:420px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.8);animation:spUp .4s ease forwards">
     <div style="background:linear-gradient(135deg,rgba(0,229,204,.08),rgba(155,93,229,.08));border-bottom:1px solid #1e2840;padding:22px 24px 18px">
@@ -608,6 +635,7 @@ function doForgotSubmit(){
 }
 </script>
 
+<!-- ===== LOGIN PAGE ===== -->
 <div id="loginPage" style="display:none;opacity:1;position:fixed;inset:0;z-index:99990;background:#060810;align-items:center;justify-content:center;padding:24px;transition:opacity .4s;flex-direction:column">
   <div style="position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(155,93,229,.2) 0%,transparent 70%);top:-150px;right:-150px;pointer-events:none"></div>
   <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(0,229,204,.15) 0%,transparent 70%);bottom:-120px;left:-100px;pointer-events:none"></div>
@@ -646,6 +674,7 @@ function doForgotSubmit(){
   <div style="margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:9px;color:#3d4d78;text-align:center;position:relative;z-index:1">PropHedge · VISIONTRADING · di Russo Antonino Christian</div>
 </div>
 
+<!-- ===== FORGOT PASSWORD ===== -->
 <div id="forgotPage" style="display:none;opacity:0;position:fixed;inset:0;z-index:99992;background:#060810;align-items:center;justify-content:center;padding:24px;transition:opacity .4s;flex-direction:column">
   <div style="background:#0c0f1a;border:1px solid #2a3560;border-radius:22px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.7);animation:spUp .5s ease forwards;position:relative;z-index:1">
     <div style="background:linear-gradient(135deg,rgba(0,229,204,.08),rgba(155,93,229,.1));border-bottom:1px solid #1e2840;padding:28px 28px 22px;text-align:center">
@@ -673,6 +702,7 @@ function doForgotSubmit(){
   </div>
 </div>
 
+<!-- ===== PURCHASE PAGE ===== -->
 <div id="purchasePage" style="display:none;opacity:0;position:fixed;inset:0;z-index:99991;background:#060810;align-items:flex-start;justify-content:center;padding:24px;transition:opacity .4s;flex-direction:column;overflow-y:auto">
   <div style="width:100%;max-width:520px;margin:0 auto;position:relative;z-index:1;animation:spUp .5s ease forwards">
     <button onclick="backToLogin()" style="background:none;border:1px solid #1e2840;color:#3d4d78;border-radius:8px;padding:7px 14px;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;margin-bottom:24px">← Torna al login</button>
@@ -694,6 +724,7 @@ function doForgotSubmit(){
 <div class="orb orb1"></div>
 <div class="orb orb2"></div>
 
+<!-- PANNELLO MERCATI -->
 <div id="mkOverlay" onclick="closeMkPanel()"></div>
 <div id="jConnMod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)jrnlCloseConn()">
   <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:420px;padding:22px" onclick="event.stopPropagation()">
@@ -736,6 +767,7 @@ function doForgotSubmit(){
   </div>
 </div>
 
+<!-- LIVE TICKER -->
 <div class="tk-wrap" id="tkWrapBar" onclick="openMkPanel()" title="Clicca per aprire il pannello mercati">
   <div class="tk-label"><div class="tk-ld"></div>LIVE</div>
   <div class="tk-scroll">
@@ -748,6 +780,7 @@ function doForgotSubmit(){
   </div>
 </div>
 
+<!-- HEADER -->
 <div class="hdr">
   <div class="logo-box">
     <div class="logo-icon">
@@ -774,6 +807,7 @@ function doForgotSubmit(){
   </div>
 </div>
 
+<!-- TABS -->
 <div class="tabs">
   <div class="tab active" onclick="goTab('dash',this)" id="tabDash">Dashboard</div>
   <div class="tab" onclick="goTab('platform',this)" id="tabPlatform">Piattaforma</div>
@@ -796,10 +830,11 @@ function doForgotSubmit(){
 </div>
 
 <div id="accDropOverlay" style="display:none;position:fixed;inset:0;z-index:88888" onclick="closeAccDrop()"></div>
-<div id="accDropPanel" style="display:none;position:fixed;top:54px;right:12px;z-index:88889;max-height:calc(100vh - 70px);overflow-y:auto;background:var(--bg2);border:1px solid var(--border2);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.6);padding:0" onclick="event.stopPropagation()"></div>
+<div id="accDropPanel" style="display:none;position:fixed;top:54px;right:12px;z-index:88889;width:min(420px,calc(100vw - 24px));max-height:calc(100vh - 70px);overflow-y:auto;background:var(--bg2);border:1px solid var(--border2);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.6);padding:0" onclick="event.stopPropagation()"></div>
 
 <div class="content" id="main"></div>
 
+<!-- BOTTOM BANNER -->
 <div class="bot-wrap" id="botWrap">
   <div style="flex-shrink:0;padding:0 13px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border-right:1px solid var(--border);min-width:68px">
     <span style="font-size:8px;font-weight:700;font-family:var(--fd);letter-spacing:.12em;color:var(--teal)">PROP</span>
@@ -809,6 +844,7 @@ function doForgotSubmit(){
   <button class="bot-close" onclick="document.getElementById('botWrap').style.display='none'">✕</button>
 </div>
 
+<!-- POLICY BAR -->
 <div id="policyBar" style="position:fixed;bottom:0;left:0;right:0;z-index:9998;background:rgba(6,8,16,.97);border-top:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px 20px">
   <div style="display:flex;align-items:center;gap:20px">
     <a href="#" onclick="showPolicy();return false;" style="color:#1e90ff;text-decoration:none;font-size:10px;font-family:var(--fd)">🔒 Privacy Policy</a>
@@ -820,6 +856,7 @@ function doForgotSubmit(){
   <div style="font-size:8px;color:var(--t3);font-family:var(--fd);opacity:.5">PropHedge · VISIONTRADING · di Russo Antonino Christian · calcoli indicativi</div>
 </div>
 
+<!-- MODAL NUOVA SFIDA -->
 <div class="mov" id="modalOv" style="display:none" onclick="if(event.target===this)closeModal()">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="mh">
@@ -915,6 +952,7 @@ function doForgotSubmit(){
   </div>
 </div>
 
+<!-- PRIVACY POLICY MODAL -->
 <div id="policyModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.92);overflow-y:auto;padding:20px">
   <div style="max-width:760px;margin:0 auto;background:#0c0f1a;border:1px solid #2a3560;border-radius:16px;padding:32px;position:relative">
     <button onclick="document.getElementById('policyModal').style.display='none'" style="float:right;background:none;border:1px solid #2a3560;color:#8090b8;border-radius:7px;padding:6px 14px;font-size:12px;cursor:pointer;margin-bottom:16px">✕ Chiudi</button>
@@ -931,6 +969,9 @@ function doForgotSubmit(){
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════
+     FLOATING AI CHAT WIDGET
+══════════════════════════════════════════════════════════ -->
 <button id="aiFloatBtn" onclick="toggleAIChat()" title="Assistente AI PropHedge">
   🤖
   <span class="ai-notif"></span>
@@ -962,7 +1003,8 @@ function doForgotSubmit(){
 
 <script>
 // ══════════════════════════════════════════════════════════
-// TUTTO IL CODICE DELL'APP
+// TUTTO IL CODICE DELL'APP — invariato rispetto all'originale
+// (mercati, journal, dashboard, statistiche, ecc.)
 // ══════════════════════════════════════════════════════════
 
 var AFF={
@@ -1472,7 +1514,7 @@ function mkUpdateMainTicker(){
 }
 
 // ══ DASHBOARD ════════════════════════════════════════════════════
-  var dashDetailId=null;
+var dashDetailId=null;
 function openNewSfidaTab(el){document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');openModal();}
 function openDashDetail(id){dashDetailId=id;goTab('dashdetail',null);}
 function closeDashDetail(){dashDetailId=null;goTab('dash',document.getElementById('tabDash'));}
@@ -1720,6 +1762,7 @@ function renderEADownload(){
     +'<div style="font-size:11px;color:var(--t2);line-height:2">1. Scarica l\'EA per la tua piattaforma<br>2. MT4/MT5 → File → Apri cartella dati → MQL4/Experts (o MQL5/Experts) → copia il file<br>3. Strumenti → Opzioni → Expert Advisor → spunta "Consenti WebRequest" → aggiungi: <code style="background:var(--bg3);padding:2px 6px;border-radius:4px">https://prophedge-iota.vercel.app</code><br>4. Riavvia MT4/MT5, trascina EA sul grafico EURUSD M1<br>5. Nei parametri EA inserisci Email, API Key e Journal ID dal dialog "Connetti" del Journal</div></div></div></div>';
 }
 
+// ══ SUPPORTO — pagina semplice con hint alla chat ════════════════
 function renderSupport(){
   return'<div style="max-width:600px;margin:0 auto;padding:20px 0">'
     +'<div style="text-align:center;padding:24px 0 28px"><div style="font-size:44px;margin-bottom:10px">🎧</div>'
@@ -1789,6 +1832,208 @@ function statCard(icon,label,value,sub,color){
   return'<div class="sc-s ai"><div class="sc-s-ic">'+icon+'</div><div class="sc-s-lb">'+label+'</div><div class="sc-s-v" style="color:'+(color||'var(--t)')+'">'+value+'</div><div class="sc-s-s">'+sub+'</div></div>';
 }
 
+// ══ JOURNAL (versione compatta) ══════════════════════════════════
+var jrnl={sessions:[],activeIdx:0,showNewForm:false};
+function jrnlLoad(){try{var s=localStorage.getItem('ph_jrnl_v3');if(s){var d=JSON.parse(s);jrnl.sessions=d.sessions||[];jrnl.activeIdx=d.activeIdx||0;}}catch(e){}}
+function jrnlSave(){try{localStorage.setItem('ph_jrnl_v3',JSON.stringify({sessions:jrnl.sessions,activeIdx:jrnl.activeIdx}));}catch(e){}}
+function jrnlGetActive(){return jrnl.sessions[jrnl.activeIdx]||null;}
+function jrnlNewSession(name,linkedPropId){
+  jrnl.sessions.push({id:'j'+Date.now(),name:name||('Sfida '+(jrnl.sessions.length+1)),linkedPropId:linkedPropId||null,createdAt:new Date().toISOString(),propConn:{platform:'',label:'',token:'',accountId:'',env:'live',connected:false},brokerConn:{platform:'',label:'',token:'',accountId:'',env:'live',connected:false},propTrades:[],brokerTrades:[],concluded:false,concludedAt:null});
+  jrnl.activeIdx=jrnl.sessions.length-1;jrnlSave();
+}
+
+function jrnlInjectCSS(){
+  var el=document.getElementById('jrnl-css');if(el)el.remove();
+  el=document.createElement('style');el.id='jrnl-css';
+  el.textContent='.jw{display:flex;height:calc(100vh - 106px);overflow:hidden}.jsb{width:180px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}.jsb-hd{padding:12px 14px 6px;display:flex;align-items:center;justify-content:space-between}.jsb-hd span{font-size:9px;font-weight:700;font-family:var(--fd);color:var(--t3);letter-spacing:.1em;text-transform:uppercase}.jsb-new{background:linear-gradient(135deg,var(--teal2),var(--violet2));border:none;color:#fff;border-radius:8px;padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer}.jsb-item{padding:10px 14px;cursor:pointer;border-left:3px solid transparent;font-size:12px;font-weight:600;color:var(--t2);transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:6px}.jsb-item:hover{background:var(--bg3);color:var(--t)}.jsb-item.active{border-left-color:var(--teal);background:var(--teal-bg);color:var(--teal)}.jsb-del{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:0 2px;opacity:0;transition:opacity .15s}.jsb-item:hover .jsb-del{opacity:1}.jmain{flex:1;display:flex;flex-direction:column;overflow:hidden}.jpnl-chart{height:60px;background:var(--bg3);border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;flex-shrink:0}.jpnl-half{position:relative;overflow:hidden;padding:6px 14px 4px}.jpnl-half:first-child{border-right:5px solid var(--jdiv)}.jpnl-label{font-size:9px;font-family:var(--fd);color:var(--t3);text-transform:uppercase;letter-spacing:.08em}.jpnl-val{font-size:14px;font-weight:800;font-family:var(--fd);line-height:1.2}.jcols-hdr{display:grid;grid-template-columns:1fr 1fr;flex-shrink:0;border-bottom:2px solid var(--border2)}.jcol-hdr{padding:8px 14px;background:var(--bg2);display:flex;align-items:center;gap:6px;flex-wrap:wrap}.jcol-hdr:first-child{border-right:5px solid var(--jdiv)}.jcol-title{font-size:10px;font-weight:700;font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em}.jcol-title.prop{color:var(--violet)}.jcol-title.broker{color:var(--teal)}.jstats{display:flex;gap:8px;flex-wrap:wrap}.jstat{font-size:10px;font-family:var(--fd);color:var(--t3)}.jstat b{font-weight:700}.jcols-outer{flex:1;display:flex;flex-direction:column;overflow:hidden}.jscroll{flex:1;overflow-y:auto}.jrow-hdr{display:grid;grid-template-columns:1fr 1fr;position:sticky;top:0;z-index:2;background:var(--bg3);border-bottom:1px solid var(--border)}.jcell-hdr{padding:7px 12px;font-size:9px;font-family:var(--fd);color:var(--t3);text-transform:uppercase;letter-spacing:.08em;display:flex;gap:10px}.jcell-hdr:first-child{border-right:5px solid var(--jdiv)}.jrow{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--jrow-line);min-height:36px;transition:background .1s}.jrow:nth-child(even){background:var(--jrow-even)}.jrow:hover{background:var(--jrow-hover)!important}.jcell{padding:7px 12px;font-size:11px;color:var(--t2);display:flex;align-items:center}.jcell:first-child{border-right:5px solid var(--jdiv)}.jdate-input{background:var(--bg2);border:1px solid var(--border);color:var(--t);border-radius:6px;padding:4px 8px;font-size:11px;font-family:var(--fd)}body:not(.light-theme) .jdate-input::-webkit-calendar-picker-indicator{filter:invert(1) brightness(1.2)!important}';
+  document.head.appendChild(el);
+}
+
+function renderJournal(){
+  var ct=document.getElementById('main');ct.style.padding='0';ct.style.maxWidth='none';
+  jrnlInjectCSS();
+  if(jrnl.showNewForm){ct.innerHTML='<div style="padding:0">'+jrnlRenderNewForm()+'</div>';return;}
+  if(!jrnl.sessions.length){ct.innerHTML=jrnlRenderEmpty();return;}
+  if(jrnl.activeIdx>=jrnl.sessions.length)jrnl.activeIdx=jrnl.sessions.length-1;
+  ct.innerHTML='<div class="jw">'+jrnlRenderSidebar()+'<div class="jmain" id="jmain">'+jrnlRenderMain()+'</div></div>';
+  setTimeout(function(){
+    document.querySelectorAll('[data-jconn-idx]').forEach(function(el){el.addEventListener('click',function(){jrnlOpenConn(parseInt(el.dataset.jconnIdx),el.dataset.jconnSide);});});
+  },50);
+}
+
+function jrnlRenderEmpty(){return'<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:16px;text-align:center;padding:20px"><div style="font-size:40px;opacity:.25">&#128202;</div><div style="font-size:16px;font-weight:700">Nessuna sfida nel Journal</div><div style="color:var(--t3);font-size:12px">Crea la tua prima sfida per iniziare</div><button class="btn-p" onclick="jrnlShowNewForm()">+ Nuova sfida Journal</button></div>';}
+
+function jrnlRenderSidebar(){
+  var html='<div class="jsb"><div class="jsb-hd"><span>Sfide</span><button class="jsb-new" onclick="jrnlShowNewForm()">+ Nuova</button></div>';
+  jrnl.sessions.forEach(function(s,i){
+    html+='<div class="jsb-item'+(jrnl.activeIdx===i?' active':'')+(s.concluded?' done':'')+'" onclick="jrnlSelect('+i+')">'
+      +'<div style="line-height:1.4">'+(s.concluded?'<span style="font-size:9px;color:var(--teal)">✅ </span>':'')+'Sfida '+(i+1)
+      +'<div style="font-size:10px;font-weight:400;opacity:.65;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.name+'</div></div>'
+      +'<button class="jsb-del" onclick="event.stopPropagation();jrnlDelete('+i+')" title="Elimina">&#10005;</button></div>';
+  });
+  return html+'</div>';
+}
+
+function jrnlRenderMain(){
+  var sess=jrnlGetActive();if(!sess)return'<div style="padding:30px;color:var(--t3)">Seleziona una sfida</div>';
+  var i=jrnl.activeIdx;
+  var pt=(sess.propTrades||[]).slice().sort(function(a,b){return new Date(b.open_time||b.opened_at||0)-new Date(a.open_time||a.opened_at||0);});
+  var bt=(sess.brokerTrades||[]).slice().sort(function(a,b){return new Date(b.open_time||b.opened_at||0)-new Date(a.open_time||a.opened_at||0);});
+  var ptPnl=pt.reduce(function(s,t){return s+parseFloat(t.profit||t.pnl_realized||0);},0);
+  var btPnl=bt.reduce(function(s,t){return s+parseFloat(t.profit||t.pnl_realized||0);},0);
+  var ptOpen=pt.filter(function(t){return t.status==='open';});var btOpen=bt.filter(function(t){return t.status==='open';});
+  var html='';
+  if(sess.concluded)html+='<div style="padding:7px 16px;font-size:11px;display:flex;align-items:center;gap:8px;background:rgba(255,64,96,.07);color:var(--red);border-bottom:1px solid rgba(255,64,96,.15);flex-shrink:0">🏁 Sfida conclusa — <a href="#" onclick="jrnlReset('+i+');return false" style="color:var(--teal);text-decoration:none">↺ Reimposta</a></div>';
+  html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg3);border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0">';
+  if(sess.propConn.connected&&!sess.concluded)html+='<button class="btn-g" style="padding:4px 8px;font-size:10px" data-jsync-idx="'+i+'" data-jsync-side="prop">🔄 Prop</button>';
+  if(sess.brokerConn.connected&&!sess.concluded)html+='<button class="btn-g" style="padding:4px 8px;font-size:10px" data-jsync-idx="'+i+'" data-jsync-side="broker">🔄 Broker</button>';
+  if(!sess.concluded)html+='<button class="btn-g" style="padding:4px 8px;font-size:10px;color:var(--amber)" data-jconclude="'+i+'">🏁 Conclusa</button>';
+  html+='</div>';
+  html+='<div class="jpnl-chart"><div class="jpnl-half"><div class="jpnl-label">🎯 Prop — P/L</div><div class="jpnl-val '+(ptPnl>=0?'v-green':'v-red')+'">'+(ptPnl>=0?'+':'')+ptPnl.toFixed(2)+'$</div></div>';
+  html+='<div class="jpnl-half"><div class="jpnl-label">💹 Broker — P/L</div><div class="jpnl-val '+(btPnl>=0?'v-green':'v-red')+'">'+(btPnl>=0?'+':'')+btPnl.toFixed(2)+'$</div></div></div>';
+  html+='<div class="jcols-outer"><div class="jcols-hdr">';
+  html+='<div class="jcol-hdr"><span class="jcol-title prop">🎯 Prop</span><div class="jstats"><div class="jstat">Aperti: <b style="color:var(--teal)">'+ptOpen.length+'</b></div></div>'+(sess.propConn.connected?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">● '+sess.propConn.label+'</span>':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="prop">🔗 Connetti</button>')+'</div>';
+  html+='<div class="jcol-hdr"><span class="jcol-title broker">💹 Broker</span><div class="jstats"><div class="jstat">Aperti: <b style="color:var(--teal)">'+btOpen.length+'</b></div></div>'+(sess.brokerConn.connected?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">● '+sess.brokerConn.label+'</span>':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="broker">🔗 Connetti</button>')+'</div>';
+  html+='</div>';
+  html+='<div class="jscroll"><div class="jrow-hdr"><div class="jcell-hdr"><span>Simbolo</span><span>Dir.</span><span>Lotti</span><span>P/L</span><span>Stato</span></div><div class="jcell-hdr"><span>Simbolo</span><span>Dir.</span><span>Lotti</span><span>P/L</span><span>Stato</span></div></div>';
+  var maxLen=Math.max(pt.length,bt.length);
+  if(!maxLen){
+    html+='<div class="jrow"><div class="jcell">'+jrnlEmptyCol('prop',sess,i)+'</div><div class="jcell">'+jrnlEmptyCol('broker',sess,i)+'</div></div>';
+  }else{
+    for(var r=0;r<maxLen;r++){html+='<div class="jrow"><div class="jcell">'+jrnlCell(pt[r]||null)+'</div><div class="jcell">'+jrnlCell(bt[r]||null)+'</div></div>';}
+  }
+  html+='</div></div></div>';
+  html+=jrnlConnModal();
+  return html;
+}
+
+function jrnlCell(t){
+  if(!t)return'<span style="color:var(--border2);font-size:10px">—</span>';
+  var pnl=parseFloat(t.profit||t.pnl_realized||0);
+  return'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"><b style="font-size:11px">'+(t.symbol||'—')+'</b><b class="'+(t.direction==='BUY'?'v-green':'v-red')+'">'+(t.direction||'—')+'</b><span style="font-family:var(--fd)">'+parseFloat(t.volume||0).toFixed(2)+'</span><span class="'+(pnl>=0?'v-green':'v-red')+'" style="font-family:var(--fd);font-weight:700">'+(pnl>=0?'+':'')+pnl.toFixed(2)+'$</span>'+(t.status==='open'?'<span style="background:rgba(0,229,204,.1);color:var(--teal);padding:1px 6px;border-radius:6px;font-size:9px;font-weight:700">APERTO</span>':'<span style="background:rgba(255,255,255,.06);color:var(--t3);padding:1px 6px;border-radius:6px;font-size:9px">CHIUSO</span>')+'</div>';
+}
+
+function jrnlEmptyCol(side,sess,i){
+  var connected=side==='prop'?sess.propConn.connected:sess.brokerConn.connected;
+  if(connected)return'<div style="color:var(--border2);font-size:11px;padding:4px">Nessun trade</div>';
+  return'<div style="padding:12px;text-align:center"><div style="font-size:11px;color:var(--t3)">'+(side==='prop'?'🎯 Prop non connesso':'💹 Broker non connesso')+'</div>'+(sess.concluded?'':'<button class="btn-p" style="padding:4px 14px;font-size:11px;margin-top:6px" data-jconn-idx="'+i+'" data-jconn-side="'+side+'">🔗 Connetti</button>')+'</div>';
+}
+
+function jrnlRenderNewForm(){
+  var sfideHtml='';
+  if(props.length>0){sfideHtml='<div style="margin-bottom:16px"><div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Collega a sfida Dashboard</div><select id="jnf-prop" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px"><option value="">-- Nessun collegamento --</option>';props.forEach(function(p){var c2=calcChallenge(p);sfideHtml+='<option value="'+p.id+'">'+p.name+' — '+c2.propLots.toFixed(2)+' lot / '+c2.hedgeLots.toFixed(2)+' lot</option>';});sfideHtml+='</select></div>';}
+  return'<div style="padding:30px 24px;max-width:480px"><div style="font-size:16px;font-weight:700;margin-bottom:6px">+ Nuova sfida Journal</div><div class="f"><label>Nome sfida</label><input type="text" id="jnf-name" placeholder="Es. FTMO $100k Marzo 2026"></div>'+sfideHtml+'<div style="display:flex;gap:8px;margin-top:4px"><button class="btn-p" onclick="jrnlCreateNew()">Crea sfida</button><button class="btn-g" onclick="jrnlCancelNew()">Annulla</button></div></div>';
+}
+
+function jrnlConnModal(){
+  return'<div id="jConnMod" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)jrnlCloseConn()"><div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:400px;padding:22px" onclick="event.stopPropagation()"><div style="font-size:14px;font-weight:700;margin-bottom:14px" id="jConnMod-title">Connetti conto</div><div class="f"><label>Piattaforma</label><select id="jConnMod-plat" onchange="jrnlConnPlatChange()"><option value="ctrader">cTrader</option><option value="mt4">MetaTrader 4</option><option value="mt5">MetaTrader 5</option><option value="manual">Manuale</option></select></div><div id="jConnMod-fields"></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn-p" onclick="jrnlSaveConn()">Salva</button><button class="btn-g" onclick="jrnlCloseConn()">Annulla</button></div></div></div>';
+}
+
+var _jConnSide='prop',_jConnIdx=0;
+function jrnlSelect(i){jrnl.activeIdx=i;jrnl.showNewForm=false;jrnlSave();renderJournal();}
+function jrnlShowNewForm(){jrnl.showNewForm=true;renderJournal();}
+function jrnlCancelNew(){jrnl.showNewForm=false;renderJournal();}
+function jrnlCreateNew(){
+  var name=(document.getElementById('jnf-name')||{value:''}).value.trim();
+  var linkedPropId=(document.getElementById('jnf-prop')||{value:''}).value;
+  if(!name){alert('Inserisci un nome per la sfida.');return;}
+  jrnlNewSession(name,linkedPropId);jrnl.showNewForm=false;jrnlSave();renderJournal();
+}
+function jrnlDelete(i){if(!confirm('Eliminare la sfida "'+jrnl.sessions[i].name+'"?'))return;jrnl.sessions.splice(i,1);if(jrnl.activeIdx>=jrnl.sessions.length)jrnl.activeIdx=Math.max(0,jrnl.sessions.length-1);jrnlSave();renderJournal();}
+function jrnlConclude(i){if(!confirm('Segna questa sfida come conclusa?'))return;jrnl.sessions[i].concluded=true;jrnl.sessions[i].concludedAt=new Date().toISOString();jrnlSave();renderJournal();}
+function jrnlReset(i){if(!confirm('Reimposta la sfida?'))return;var s=jrnl.sessions[i];s.propConn={platform:'',label:'',token:'',accountId:'',env:'live',connected:false};s.brokerConn={platform:'',label:'',token:'',accountId:'',env:'live',connected:false};s.propTrades=[];s.brokerTrades=[];s.concluded=false;s.concludedAt=null;jrnlSave();renderJournal();}
+
+function jrnlOpenConn(i,side){
+  _jConnIdx=i;_jConnSide=side;
+  var sess=jrnl.sessions[i];var conn=side==='prop'?sess.propConn:sess.brokerConn;
+  var mod=document.getElementById('jConnMod');if(!mod)return;
+  document.getElementById('jConnMod-title').innerHTML=side==='prop'?'🎯 Connetti Prop — '+sess.name:'💹 Connetti Broker — '+sess.name;
+  var sel=document.getElementById('jConnMod-plat');if(sel&&conn.platform)sel.value=conn.platform;
+  mod.style.display='flex';jrnlConnPlatChange();
+}
+function jrnlCloseConn(){var mod=document.getElementById('jConnMod');if(mod)mod.style.display='none';}
+
+function jrnlConnPlatChange(){
+  var plat=(document.getElementById('jConnMod-plat')||{value:'ctrader'}).value;
+  var sess=jrnl.sessions[_jConnIdx];var conn=_jConnSide==='prop'?sess.propConn:sess.brokerConn;
+  var fields=document.getElementById('jConnMod-fields');if(!fields)return;
+  if(plat==='ctrader'){
+    fields.innerHTML='<div class="f" style="margin-top:10px"><label>Access Token</label><input type="text" id="jConn-ct-token" value="'+(conn.token||'')+'" placeholder="Incolla token da connect.spotware.com" style="font-family:var(--fd);font-size:11px" onclick="this.select()"></div>'
+      +'<div class="f"><label>Account ID</label><input type="text" id="jConn-ct-accountid" value="'+(conn.accountId||'')+'" placeholder="Es. 12345678"></div>'
+      +'<div class="f"><label>Ambiente</label><select id="jConn-env"><option value="live"'+(conn.env==='live'?' selected':'')+'>Live</option><option value="demo"'+(conn.env==='demo'?' selected':'')+'>Demo</option></select></div>'
+      +'<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. IC Markets Live"></div>';
+  }else if(plat==='mt4'||plat==='mt5'){
+    var jrnlId=(jrnl.sessions[_jConnIdx]||{id:'—'}).id;
+    var apiKey='PH_2026_AXI_SECRET_KEY_VISIONTRADING';
+    fields.innerHTML='<div class="note note-teal" style="margin-top:10px;font-size:11px">Inserisci questi parametri nell\'EA:</div>'
+      +'<div class="f" style="margin-top:8px"><label>Email</label><div style="display:flex;gap:6px"><input type="text" id="jConn-email" value="'+(accountData.email||'')+'" readonly style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg)" onclick="this.select()"><button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-email\').value)" class="btn-g" style="padding:5px 10px;font-size:10px">Copia</button></div></div>'
+      +'<div class="f"><label>API Key</label><div style="display:flex;gap:6px"><input type="text" id="jConn-apikey" value="'+apiKey+'" readonly style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg)" onclick="this.select()"><button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-apikey\').value)" class="btn-g" style="padding:5px 10px;font-size:10px">Copia</button></div></div>'
+      +'<div class="f"><label>Journal ID</label><div style="display:flex;gap:6px"><input type="text" id="jConn-jrnlid" value="'+jrnlId+'" readonly style="flex:1;font-family:var(--fd);font-size:11px;background:var(--bg)" onclick="this.select()"><button onclick="navigator.clipboard.writeText(document.getElementById(\'jConn-jrnlid\').value)" class="btn-g" style="padding:5px 10px;font-size:10px">Copia</button></div></div>'
+      +'<div class="f"><label>AccountType</label><select id="jConn-actype"><option value="prop"'+(_jConnSide==='prop'?' selected':'')+'>prop</option><option value="broker"'+(_jConnSide==='broker'?' selected':'')+'>broker</option></select></div>'
+      +'<div class="f"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Es. FTMO MT5 $100k"></div>';
+  }else{
+    fields.innerHTML='<div class="f" style="margin-top:10px"><label>Nome conto</label><input type="text" id="jConn-label" value="'+(conn.label||'')+'" placeholder="Inserimento manuale"></div>';
+  }
+}
+
+async function jrnlSaveConn(){
+  var plat=(document.getElementById('jConnMod-plat')||{value:'manual'}).value;
+  var label=(document.getElementById('jConn-label')||{value:''}).value.trim()||plat.toUpperCase();
+  var env=(document.getElementById('jConn-env')||{value:'live'}).value;
+  var sess=jrnl.sessions[_jConnIdx];var key=_jConnSide==='prop'?'propConn':'brokerConn';
+  var connectedAt=new Date().toISOString();
+  if(plat==='ctrader'){
+    var token=(document.getElementById('jConn-ct-token')||{value:''}).value.trim();
+    var accountId=(document.getElementById('jConn-ct-accountid')||{value:''}).value.trim();
+    if(!token){alert('Inserisci il token cTrader.');return;}
+    sess[key]={platform:'ctrader',label:label||'cTrader',token:token,accountId:accountId,env:env,connected:true,connectedAt:connectedAt};
+    if(_jConnSide==='prop')sess.propTrades=[];else sess.brokerTrades=[];
+    jrnlSave();jrnlCloseConn();jrnlSync(_jConnIdx,_jConnSide);return;
+  }
+  if(plat==='mt4'||plat==='mt5'){
+    var actype=(document.getElementById('jConn-actype')||{value:_jConnSide}).value;
+    sess[key]={platform:plat,label:label,env:'live',connected:true,accountId:'',actype:actype,connectedAt:connectedAt};
+    jrnlSave();jrnlCloseConn();jrnlSyncMT(_jConnIdx,_jConnSide);return;
+  }
+  sess[key]={platform:plat,label:label,env:env,connected:true,accountId:'',connectedAt:connectedAt};
+  jrnlSave();jrnlCloseConn();renderJournal();
+}
+
+async function jrnlSync(i,side){
+  var sess=jrnl.sessions[i];var conn=side==='prop'?sess.propConn:sess.brokerConn;
+  if(!conn.connected||conn.platform!=='ctrader')return;
+  try{
+    var r=await fetch('/api/ctrader-positions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({access_token:conn.token,account_id:conn.accountId,env:conn.env,connected_at:conn.connectedAt||sess.createdAt||null})});
+    var d=await r.json();
+    var live=(d.positions||[]).map(function(p){return Object.assign(p,{status:'open'});});
+    var closed=(d.closed||[]).map(function(p){return Object.assign(p,{status:'closed'});});
+    if(side==='prop')sess.propTrades=live.concat(closed);else sess.brokerTrades=live.concat(closed);
+    jrnlSave();renderJournal();
+  }catch(e){console.error('jrnlSync:',e);}
+}
+
+async function jrnlSyncMT(i,side){
+  var sess=jrnl.sessions[i];var conn=side==='prop'?sess.propConn:sess.brokerConn;
+  if(!conn.connected||(conn.platform!=='mt4'&&conn.platform!=='mt5'))return;
+  try{
+    var res=await _sb.auth.getSession();var user=res&&res.data&&res.data.session&&res.data.session.user;if(!user)return;
+    var connectedAt=conn.connectedAt||sess.createdAt||null;
+    var query=_sb.from('trades').select('*').eq('user_id',user.id).eq('journal_id',sess.id).eq('account_type',conn.actype||side).order('open_time',{ascending:false}).limit(500);
+    if(connectedAt)query=query.gte('open_time',connectedAt);
+    var q=await query;if(q.error){console.error('jrnlSyncMT:',q.error.message);return;}
+    var trades=(q.data||[]).map(function(t){return{external_id:String(t.ticket),platform:t.platform||conn.platform,symbol:t.symbol,direction:t.direction,volume:parseFloat(t.volume||0),lots:parseFloat(t.volume||0),open_price:t.open_price,close_price:t.close_price,profit:parseFloat(t.profit||0),pnl_realized:parseFloat(t.profit||0),status:t.status||'open',open_time:t.open_time,close_time:t.close_time,opened_at:t.open_time,closed_at:t.close_time};});
+    if(side==='prop')sess.propTrades=trades;else sess.brokerTrades=trades;
+    jrnlSave();renderJournal();
+  }catch(e){console.error('jrnlSyncMT:',e);}
+}
+
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-jconn-idx]');if(el){jrnlOpenConn(parseInt(el.dataset.jconnIdx),el.dataset.jconnSide);return;}
+  var el2=e.target.closest('[data-jconclude]');if(el2){jrnlConclude(parseInt(el2.dataset.jconclude));return;}
+  var el3=e.target.closest('[data-jsync-idx]');
+  if(el3){var idx=parseInt(el3.dataset.jsyncIdx);var side=el3.dataset.jsyncSide;var sess=jrnl.sessions[idx];if(!sess)return;var conn=side==='prop'?sess.propConn:sess.brokerConn;if(conn.platform==='mt4'||conn.platform==='mt5')jrnlSyncMT(idx,side);else jrnlSync(idx,side);return;}
+});
+
 // ══ PIATTAFORMA, ACCOUNT, CALENDARIO ════════════════════════════
 var PH_TV_KEY='ph_tv_state_v3';
 function renderPlatform(){
@@ -1831,98 +2076,16 @@ function closeAccDrop(){
   if(panel)panel.style.display='none';if(overlay)overlay.style.display='none';
   var tab=document.getElementById('tabAccount');if(tab)tab.classList.remove('active');
 }
-
-function renderAccountDrop() {
-  var displayName = ((accountData.firstName || '') + ' ' + (accountData.lastName || '')).trim() || accountData.email || 'Account';
-  var photoImg = accountData.photo ? '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">' : '👤';
-
-  return `<div style="padding:20px; width: 320px; max-height: 80vh; overflow-y: auto;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <div id="accDropAvatarBtn" onclick="document.getElementById('accPhotoInput').click()" style="width:54px;height:54px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;cursor:pointer;flex-shrink:0;" title="Clicca per cambiare foto">
-        ${photoImg}
-      </div>
-      <input type="file" id="accPhotoInput" style="display:none" accept="image/*" onchange="updateProfilePhoto(this)">
-      <div>
-        <div style="font-size:15px;font-weight:700">${displayName}</div>
-        <div style="font-size:12px;color:var(--t3);font-family:var(--fd)">${accountData.email}</div>
-      </div>
-    </div>
-
-    <div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">
-      <div style="font-size:11px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Dati Personali</div>
-      <input type="text" id="accFirstName" placeholder="Nome" value="${accountData.firstName||''}" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">
-      <input type="text" id="accLastName" placeholder="Cognome" value="${accountData.lastName||''}" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">
-      <button onclick="saveProfileData()" class="btn-p" style="width:100%; padding:8px; font-size:11px; justify-content:center;">💾 Salva Dati</button>
-    </div>
-
-    <div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">
-      <div style="font-size:11px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Sicurezza (Cambio Email/Pass)</div>
-      <input type="email" id="accNewEmail" placeholder="Nuova Email (opzionale)" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">
-      <input type="password" id="accNewPass" placeholder="Nuova Password (opzionale)" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">
-      <button onclick="updateSecurity()" class="btn-g" style="width:100%; padding:8px; font-size:11px;">🔒 Aggiorna Sicurezza</button>
-      <div id="accSecMsg" style="font-size:11px; margin-top:6px; color:var(--teal); display:none; font-family:var(--fd);"></div>
-    </div>
-
-    <div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">
-      <div style="font-size:11px; color:var(--t3); margin-bottom:4px; text-transform:uppercase; font-weight:700;">Lingua Applicazione</div>
-      <div id="google_translate_element"></div>
-    </div>
-
-    <div style="display:grid;gap:8px">
-      <button onclick="toggleTheme()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--t);cursor:pointer;font-size:13px"><span>🎨</span><span>Tema: ${accountData.theme==='light'?'Chiaro':'Scuro'}</span></button>
-      <button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(255,64,96,.2);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px"><span>🔓</span><span>Esci</span></button>
-    </div>
-  </div>`;
+function renderAccountDrop(){
+  var displayName=((accountData.firstName||'')+(accountData.lastName?' '+accountData.lastName:'')).trim()||accountData.email||'Account';
+  return'<div style="padding:20px"><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div style="width:48px;height:48px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:18px">👤</div><div><div style="font-size:15px;font-weight:700">'+displayName+'</div><div style="font-size:12px;color:var(--t3);font-family:var(--fd)">'+accountData.email+'</div></div></div><div style="display:grid;gap:8px"><button onclick="toggleTheme()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--t);cursor:pointer;font-size:13px"><span>🎨</span><span>Tema: '+(accountData.theme==='light'?'Chiaro':'Scuro')+'</span></button><button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(255,64,96,.2);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px"><span>🔓</span><span>Esci</span></button></div></div>';
 }
-
-function saveProfileData() {
-  accountData.firstName = document.getElementById('accFirstName').value.trim();
-  accountData.lastName = document.getElementById('accLastName').value.trim();
-  localStorage.setItem('ph_account', JSON.stringify(accountData));
-  var tn = document.getElementById('tabAccountName');
-  if(tn) tn.textContent = ((accountData.firstName + ' ' + accountData.lastName).trim() || accountData.email.split('@')[0] || 'Account');
-  alert('Dati salvati!');
-  toggleAccDrop(); 
-  setTimeout(toggleAccDrop, 50); 
-}
-
-function updateProfilePhoto(input) {
-  if (input.files && input.files[0]) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      accountData.photo = e.target.result;
-      localStorage.setItem('ph_account', JSON.stringify(accountData));
-      var topPhoto = document.getElementById('tabAccountPhoto');
-      if(topPhoto) topPhoto.innerHTML = '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">';
-      var dropPhotoBtn = document.getElementById('accDropAvatarBtn');
-      if(dropPhotoBtn) dropPhotoBtn.innerHTML = '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">';
-    };
-    reader.readAsDataURL(input.files[0]);
-  }
-}
-
-function updateSecurity() {
-  var newEmail = document.getElementById('accNewEmail').value.trim();
-  var newPass = document.getElementById('accNewPass').value;
-  var msg = document.getElementById('accSecMsg');
-  if(!newEmail && !newPass) { msg.style.display = 'block'; msg.style.color = 'var(--amber)'; msg.textContent = 'Inserisci email o password.'; return; }
-  msg.style.display = 'block'; msg.style.color = 'var(--t3)'; msg.textContent = 'Aggiornamento...';
-  var updates = {};
-  if(newEmail) updates.email = newEmail;
-  if(newPass) updates.password = newPass;
-  _sb.auth.updateUser(updates).then(function(res){
-    if(res.error) { msg.style.color = 'var(--red)'; msg.textContent = 'Errore: ' + res.error.message; } 
-    else { msg.style.color = 'var(--green)'; msg.textContent = 'Fatto! Se hai cambiato email, controlla la posta.'; if(newEmail) accountData.email = newEmail; localStorage.setItem('ph_account', JSON.stringify(accountData)); document.getElementById('accNewEmail').value = ''; document.getElementById('accNewPass').value = ''; }
-  });
-}
-
 function toggleTheme(){
   accountData.theme=accountData.theme==='light'?'dark':'light';
   if(accountData.theme==='light')document.body.classList.add('light-theme');else document.body.classList.remove('light-theme');
   try{localStorage.setItem('ph_account',JSON.stringify(accountData));}catch(e){}
   var panel=document.getElementById('accDropPanel');if(panel&&panel.style.display!=='none')panel.innerHTML=renderAccountDrop();
 }
-
 function loadAccountData(){
   try{var d=localStorage.getItem('ph_account');if(d)accountData=Object.assign(accountData,JSON.parse(d));}catch(e){}
   if(accountData.theme==='light')document.body.classList.add('light-theme');
@@ -1933,10 +2096,6 @@ function loadAccountData(){
       var tn=document.getElementById('tabAccountName');if(tn)tn.textContent=((accountData.firstName+' '+accountData.lastName).trim()||accountData.email.split('@')[0]||'Account');
     }
   });
-  if(accountData.photo) {
-    var topPhoto = document.getElementById('tabAccountPhoto');
-    if(topPhoto) topPhoto.innerHTML = '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">';
-  }
 }
 function showPolicy(){document.getElementById('policyModal').style.display='block';}
 function resetConsent(){try{localStorage.removeItem('ph_consent');}catch(e){}location.reload();}
