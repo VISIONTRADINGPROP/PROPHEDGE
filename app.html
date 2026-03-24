@@ -703,24 +703,47 @@ function doForgotSubmit(){
 </div>
 
 <!-- ===== PURCHASE PAGE ===== -->
-<div id="purchasePage" style="display:none;opacity:0;position:fixed;inset:0;z-index:99991;background:#060810;align-items:flex-start;justify-content:center;padding:24px;transition:opacity .4s;flex-direction:column;overflow-y:auto">
-  <div style="width:100%;max-width:520px;margin:0 auto;position:relative;z-index:1;animation:spUp .5s ease forwards">
-    <button onclick="backToLogin()" style="background:none;border:1px solid #1e2840;color:#3d4d78;border-radius:8px;padding:7px 14px;font-size:11px;cursor:pointer;font-family:'JetBrains Mono',monospace;margin-bottom:24px">← Torna al login</button>
-    <div style="text-align:center;margin-bottom:28px">
-      <div style="font-size:22px;font-weight:800;margin-bottom:6px"><span style="color:#00e5cc">P</span><span style="color:#eef0f8">rop</span><span style="color:#9b5de5">H</span><span style="color:#eef0f8">edge Pro</span></div>
-      <h2 style="font-size:20px;font-weight:700;color:#eef0f8;margin-bottom:6px">Scegli il tuo piano</h2>
-      <p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8090b8">Accesso immediato dopo il pagamento · Licenza personale</p>
+<div id="purchasePage" style="display:none;opacity:0;position:fixed;inset:0;z-index:99991;background:#060810;align-items:center;justify-content:center;padding:24px;transition:opacity .4s;flex-direction:column">
+  <div style="background:#0c0f1a;border:1px solid #2a3560;border-radius:22px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.7);position:relative;z-index:1">
+    <div style="background:linear-gradient(135deg,rgba(0,229,204,.08),rgba(155,93,229,.08));border-bottom:1px solid #1e2840;padding:28px;text-align:center">
+      <div style="font-size:20px;color:#eef0f8;margin-bottom:6px;font-weight:700">Richiedi Accesso Gratuito</div>
+      <div style="font-size:12px;color:#8090b8;line-height:1.5">Crea un account. L'amministratore valuterà la tua richiesta per abilitarti.</div>
     </div>
-    <div style="background:linear-gradient(160deg,rgba(0,229,204,.06),rgba(155,93,229,.1));border:2px solid #00e5cc;border-radius:20px;padding:32px 28px;text-align:center;position:relative;margin-bottom:16px">
-      <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#00b8a4,#7a40cc);border-radius:20px;padding:4px 18px;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:#fff;white-space:nowrap">⭐ LICENZA PROFESSIONALE</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#00e5cc;text-transform:uppercase;letter-spacing:.16em;margin-bottom:16px;margin-top:8px">Accesso Annuale Completo</div>
-      <div style="font-size:56px;color:#eef0f8;line-height:1;margin-bottom:6px">€500</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8090b8;margin-bottom:28px">Rinnovo annuale · Licenza personale</div>
-      <button onclick="doRegister()" style="width:100%;background:linear-gradient(135deg,#00b8a4,#7a40cc);border:none;color:#fff;border-radius:12px;padding:16px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.1em;text-transform:uppercase">▶ Acquista ora</button>
+    <div style="padding:28px">
+      <div class="f" style="margin-bottom:12px">
+        <label style="font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.1em">Nome e Cognome</label>
+        <input type="text" id="regName" style="width:100%;background:#111628;border:1px solid #1e2840;color:#eef0f8;border-radius:10px;padding:12px;font-family:var(--fd);outline:none">
+      </div>
+      <div class="f" style="margin-bottom:12px">
+        <label style="font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.1em">Email</label>
+        <input type="email" id="regEmail" style="width:100%;background:#111628;border:1px solid #1e2840;color:#eef0f8;border-radius:10px;padding:12px;font-family:var(--fd);outline:none">
+      </div>
+      <div class="f" style="margin-bottom:20px">
+        <label style="font-size:9px;color:#3d4d78;text-transform:uppercase;letter-spacing:.1em">Password</label>
+        <input type="password" id="regPass" style="width:100%;background:#111628;border:1px solid #1e2840;color:#eef0f8;border-radius:10px;padding:12px;font-family:var(--fd);outline:none">
+      </div>
+      <div id="regErr" style="display:none;background:rgba(255,64,96,.08);border:1px solid rgba(255,64,96,.2);border-radius:8px;padding:10px;font-family:var(--fd);font-size:11px;color:#ff4060;margin-bottom:16px"></div>
+      <div id="regSucc" style="display:none;background:rgba(0,214,143,.08);border:1px solid rgba(0,214,143,.2);border-radius:8px;padding:10px;font-family:var(--fd);font-size:11px;color:#00d68f;margin-bottom:16px">✅ Richiesta inviata! Attendi l'autorizzazione dell'admin.</div>
+      <button id="regBtn" onclick="doRegisterFree()" style="width:100%;background:linear-gradient(135deg,#00b8a4,#7a40cc);border:none;color:#fff;border-radius:12px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:14px">Invia Richiesta</button>
+      <button onclick="backToLogin()" style="width:100%;background:none;border:1px solid #1e2840;color:#3d4d78;border-radius:10px;padding:11px;font-size:11px;cursor:pointer;font-family:var(--fd)">← Torna al login</button>
     </div>
   </div>
 </div>
-
+<script>
+function doRegisterFree(){
+  var name = document.getElementById('regName').value.trim();
+  var email = document.getElementById('regEmail').value.trim();
+  var pass = document.getElementById('regPass').value;
+  var err = document.getElementById('regErr'); var succ = document.getElementById('regSucc'); var btn = document.getElementById('regBtn');
+  err.style.display='none'; succ.style.display='none';
+  if(!email || !pass || !name) { err.textContent='Compila tutti i campi'; err.style.display='block'; return; }
+  btn.textContent='Invio...'; btn.disabled=true;
+  _sb.auth.signUp({ email: email, password: pass, options: { data: { first_name: name } } }).then(function(res){
+    if(res.error) { err.textContent=res.error.message; err.style.display='block'; btn.textContent='Invia Richiesta'; btn.disabled=false; }
+    else { succ.style.display='block'; btn.style.display='none'; }
+  });
+}
+</script>
 <div class="orb orb1"></div>
 <div class="orb orb2"></div>
 
@@ -2076,9 +2099,64 @@ function closeAccDrop(){
   if(panel)panel.style.display='none';if(overlay)overlay.style.display='none';
   var tab=document.getElementById('tabAccount');if(tab)tab.classList.remove('active');
 }
-function renderAccountDrop(){
-  var displayName=((accountData.firstName||'')+(accountData.lastName?' '+accountData.lastName:'')).trim()||accountData.email||'Account';
-  return'<div style="padding:20px"><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div style="width:48px;height:48px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:18px">👤</div><div><div style="font-size:15px;font-weight:700">'+displayName+'</div><div style="font-size:12px;color:var(--t3);font-family:var(--fd)">'+accountData.email+'</div></div></div><div style="display:grid;gap:8px"><button onclick="toggleTheme()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--t);cursor:pointer;font-size:13px"><span>🎨</span><span>Tema: '+(accountData.theme==='light'?'Chiaro':'Scuro')+'</span></button><button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(255,64,96,.2);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px"><span>🔓</span><span>Esci</span></button></div></div>';
+function renderAccountDrop() {
+  var displayName = ((accountData.firstName || '') + ' ' + (accountData.lastName || '')).trim() || accountData.email || 'Account';
+  var photoImg = accountData.photo ? '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">' : '👤';
+
+  return '<div style="padding:20px; width: 320px; max-height: 80vh; overflow-y: auto;">'
+    + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
+    + '<div id="accDropAvatarBtn" onclick="document.getElementById(\'accPhotoInput\').click()" style="width:54px;height:54px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;cursor:pointer;flex-shrink:0;" title="Clicca per cambiare foto">' + photoImg + '</div>'
+    + '<input type="file" id="accPhotoInput" style="display:none" accept="image/*" onchange="updateProfilePhoto(this)">'
+    + '<div><div style="font-size:15px;font-weight:700">' + displayName + '</div><div style="font-size:12px;color:var(--t3);font-family:var(--fd)">' + accountData.email + '</div></div></div>'
+    + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
+    + '<div style="font-size:11px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Dati Personali</div>'
+    + '<input type="text" id="accFirstName" placeholder="Nome" value="' + (accountData.firstName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
+    + '<input type="text" id="accLastName" placeholder="Cognome" value="' + (accountData.lastName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
+    + '<button onclick="saveProfileData()" class="btn-p" style="width:100%; padding:8px; font-size:11px; justify-content:center;">💾 Salva Dati</button></div>'
+    + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
+    + '<div style="font-size:11px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Sicurezza</div>'
+    + '<input type="password" id="accNewPass" placeholder="Nuova Password" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
+    + '<button onclick="updateSecurity()" class="btn-g" style="width:100%; padding:8px; font-size:11px;">🔒 Aggiorna Password</button>'
+    + '<div id="accSecMsg" style="font-size:11px; margin-top:6px; color:var(--teal); display:none; font-family:var(--fd);"></div></div>'
+    + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
+    + '<div style="font-size:11px; color:var(--t3); margin-bottom:4px; text-transform:uppercase; font-weight:700;">Lingua Applicazione</div>'
+    + '<div id="google_translate_element"></div></div>'
+    + '<div style="display:grid;gap:8px">'
+    + '<button onclick="toggleTheme()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--t);cursor:pointer;font-size:13px"><span>🎨</span><span>Tema: ' + (accountData.theme==='light'?'Chiaro':'Scuro') + '</span></button>'
+    + '<button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(255,64,96,.2);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px"><span>🔓</span><span>Esci</span></button>'
+    + '</div></div>';
+}
+function saveProfileData() {
+  accountData.firstName = document.getElementById('accFirstName').value.trim();
+  accountData.lastName = document.getElementById('accLastName').value.trim();
+  localStorage.setItem('ph_account', JSON.stringify(accountData));
+  var tn = document.getElementById('tabAccountName');
+  if(tn) tn.textContent = ((accountData.firstName + ' ' + accountData.lastName).trim() || accountData.email.split('@')[0] || 'Account');
+  alert('Dati salvati!'); toggleAccDrop(); setTimeout(toggleAccDrop, 50); 
+}
+function updateProfilePhoto(input) {
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      accountData.photo = e.target.result;
+      localStorage.setItem('ph_account', JSON.stringify(accountData));
+      var topPhoto = document.getElementById('tabAccountPhoto');
+      if(topPhoto) topPhoto.innerHTML = '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">';
+      var dropPhotoBtn = document.getElementById('accDropAvatarBtn');
+      if(dropPhotoBtn) dropPhotoBtn.innerHTML = '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+function updateSecurity() {
+  var newPass = document.getElementById('accNewPass').value;
+  var msg = document.getElementById('accSecMsg');
+  if(!newPass) { msg.style.display = 'block'; msg.style.color = 'var(--amber)'; msg.textContent = 'Inserisci password.'; return; }
+  msg.style.display = 'block'; msg.style.color = 'var(--t3)'; msg.textContent = 'Aggiornamento...';
+  _sb.auth.updateUser({password: newPass}).then(function(res){
+    if(res.error) { msg.style.color = 'var(--red)'; msg.textContent = 'Errore: ' + res.error.message; } 
+    else { msg.style.color = 'var(--green)'; msg.textContent = 'Password aggiornata con successo!'; document.getElementById('accNewPass').value = ''; }
+  });
 }
 function toggleTheme(){
   accountData.theme=accountData.theme==='light'?'dark':'light';
