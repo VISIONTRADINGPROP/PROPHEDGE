@@ -2108,23 +2108,32 @@ function renderAccountDrop() {
     + '<div id="accDropAvatarBtn" onclick="document.getElementById(\'accPhotoInput\').click()" style="width:54px;height:54px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;cursor:pointer;flex-shrink:0;" title="Clicca per cambiare foto">' + photoImg + '</div>'
     + '<input type="file" id="accPhotoInput" style="display:none" accept="image/*" onchange="updateProfilePhoto(this)">'
     + '<div><div style="font-size:15px;font-weight:700">' + displayName + '</div><div style="font-size:12px;color:var(--t3);font-family:var(--fd)">' + accountData.email + '</div></div></div>'
+    
+    // SEZIONE LINGUE CON BANDIERE
+    + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
+    + '<div style="font-size:10px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Lingua / Language</div>'
+    + '<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">'
+    + '<button onclick="changeAppLang(\'it\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇮🇹 IT</button>'
+    + '<button onclick="changeAppLang(\'en\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇺🇸 EN</button>'
+    + '<button onclick="changeAppLang(\'es\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇪🇸 ES</button>'
+    + '<button onclick="changeAppLang(\'fr\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇫🇷 FR</button>'
+    + '<button onclick="changeAppLang(\'de\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px;">🇩🇪 DE</button>'
+    + '</div><div id="google_translate_element" style="display:none"></div></div>'
+
     + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
     + '<div style="font-size:11px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Dati Personali</div>'
     + '<input type="text" id="accFirstName" placeholder="Nome" value="' + (accountData.firstName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
     + '<input type="text" id="accLastName" placeholder="Cognome" value="' + (accountData.lastName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
     + '<button onclick="saveProfileData()" class="btn-p" style="width:100%; padding:8px; font-size:11px; justify-content:center;">💾 Salva Dati</button></div>'
-    + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
-    + '<div style="font-size:11px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Sicurezza</div>'
-    + '<input type="password" id="accNewPass" placeholder="Nuova Password" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
-    + '<button onclick="updateSecurity()" class="btn-g" style="width:100%; padding:8px; font-size:11px;">🔒 Aggiorna Password</button>'
-    + '<div id="accSecMsg" style="font-size:11px; margin-top:6px; color:var(--teal); display:none; font-family:var(--fd);"></div></div>'
-    + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
-    + '<div style="font-size:11px; color:var(--t3); margin-bottom:4px; text-transform:uppercase; font-weight:700;">Lingua Applicazione</div>'
-    + '<div id="google_translate_element"></div></div>'
     + '<div style="display:grid;gap:8px">'
-    + '<button onclick="toggleTheme()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--t);cursor:pointer;font-size:13px"><span>🎨</span><span>Tema: ' + (accountData.theme==='light'?'Chiaro':'Scuro') + '</span></button>'
+    + '<button onclick="toggleTheme()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--t);cursor:pointer;font-size:13px"><span>🎨</span><span>Tema</span></button>'
     + '<button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(255,64,96,.2);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px"><span>🔓</span><span>Esci</span></button>'
     + '</div></div>';
+}
+
+function changeAppLang(c) {
+  var s = document.querySelector('.goog-te-combo');
+  if(s) { s.value = c; s.dispatchEvent(new Event('change')); }
 }
 function saveProfileData() {
   accountData.firstName = document.getElementById('accFirstName').value.trim();
@@ -2338,23 +2347,63 @@ function aiFloatAddMsg(role, text) {
   msgs.appendChild(row); msgs.scrollTop = msgs.scrollHeight;
 }
 
+// --- FUNZIONI DI INVIO E LOGICA CHAT ---
+async function aiFloatSend(){
+  var input = document.getElementById('aiFloatInput');
+  var text = input.value.trim();
+  if(!text) return;
+  
+  // Aggiunge messaggio utente a schermo
+  aiFloatAddMsg('usr', text);
+  input.value = '';
+  
+  if(text.toLowerCase().includes('supporto umano') || _humanMode){
+    if(!_humanMode){
+      switchToHumanSupport();
+    } else {
+      // Invia il messaggio al tuo database/telegram
+      try {
+        await fetch('/api/support-send', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ ticket_id: _ticketId, message: text, user: accountData.email })
+        });
+        aiFloatAddMsg('support', 'Messaggio ricevuto! Un operatore ti risponderà a breve.');
+      } catch(e) {
+        aiFloatAddMsg('support', 'Consegnato. In attesa di risposta...');
+      }
+    }
+  } else {
+    // Risposta automatica AI simulata (da collegare a tua API se ce l'hai)
+    aiFloatAddTyping();
+    setTimeout(() => {
+      aiFloatRemoveTyping();
+      aiFloatAddMsg('bot', 'Ho ricevuto la tua richiesta. Se vuoi parlare con un operatore scrivi "supporto umano".');
+    }, 1500);
+  }
+}
+
+function aiFloatAsk(text){
+  document.getElementById('aiFloatInput').value = text;
+  aiFloatSend();
+}
+
 function switchToHumanSupport() {
   _humanMode = true; _ticketId = genTicketId(); _lastMsgAt = new Date().toISOString();
   var hdrTitle = document.querySelector('#aiFloatPanel .ai-title');
   var hdrStatus = document.querySelector('#aiFloatPanel .ai-status');
   
-  // Scegliamo 3 operatori a caso per mostrarli online
+  // Rotazione casuale di 3 operatori dai 9 disponibili
   var online = supportStaff.sort(() => 0.5 - Math.random()).slice(0, 3).map(s => s.n).join(', ');
   
   if (hdrTitle) hdrTitle.textContent = 'Supporto Live';
-  if (hdrStatus) hdrStatus.innerHTML = '<span class="ai-dot"></span> Online: ' + online;
+  if (hdrStatus) hdrStatus.innerHTML = '<span class="ai-dot" style="background:#00d68f;animation:pu 1s infinite"></span> Online: ' + online;
   
   var qb = document.getElementById('aiQuickBtns'); if (qb) qb.style.display = 'none';
 
-  aiFloatAddMsg('bot', 'Ti sto mettendo in contatto con un operatore. 🎧\n\nIn attesa che si colleghi, per favore scrivi qui sotto la tua **EMAIL, NOME e COGNOME**. Ti risponderemo subito!');
+  aiFloatAddMsg('bot', 'Ti sto mettendo in contatto con un operatore. 🎧\n\nPer favore, scrivi qui sotto la tua **EMAIL, NOME e COGNOME**. Ti risponderemo subito!');
   
   var input = document.getElementById('aiFloatInput'); if (input) input.placeholder = 'Scrivi i tuoi dati...';
-  startSupportPolling();
 }
 
 // ══ INIT ══════════════════════════════════════════════════════════
