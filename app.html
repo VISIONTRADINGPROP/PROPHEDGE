@@ -2105,19 +2105,19 @@ function renderAccountDrop() {
 
   return '<div style="padding:20px; width: 320px; max-height: 80vh; overflow-y: auto;">'
     + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
-    + '<div id="accDropAvatarBtn" onclick="document.getElementById(\'accPhotoInput\').click()" style="width:54px;height:54px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;cursor:pointer;flex-shrink:0;" title="Clicca per cambiare foto">' + photoImg + '</div>'
+    + '<div id="accDropAvatarBtn" onclick="document.getElementById(\'accPhotoInput\').click()" style="width:54px;height:54px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;cursor:pointer;flex-shrink:0;">' + photoImg + '</div>'
     + '<input type="file" id="accPhotoInput" style="display:none" accept="image/*" onchange="updateProfilePhoto(this)">'
     + '<div><div style="font-size:15px;font-weight:700">' + displayName + '</div><div style="font-size:12px;color:var(--t3);font-family:var(--fd)">' + accountData.email + '</div></div></div>'
     
-    // SEZIONE CAMBIA LINGUA CON BANDIERE
+    // NUOVO PULSANTE LINGUA A COMPARSA
     + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
-    + '<div style="font-size:10px; color:var(--t2); margin-bottom:10px; text-transform:uppercase; font-weight:700; letter-spacing:1px;">🌐 Cambia Lingua / Language</div>'
-    + '<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">'
-    + '<button onclick="changeAppLang(\'it\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; gap:8px;"> <img src="https://flagcdn.com/w20/it.png" width="20"> ITALIA</button>'
-    + '<button onclick="changeAppLang(\'en\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; gap:8px;"> <img src="https://flagcdn.com/w20/gb.png" width="20"> INGLESE</button>'
-    + '<button onclick="changeAppLang(\'es\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; gap:8px;"> <img src="https://flagcdn.com/w20/es.png" width="20"> SPAGNA</button>'
-    + '<button onclick="changeAppLang(\'fr\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; gap:8px;"> <img src="https://flagcdn.com/w20/fr.png" width="20"> FRANCIA</button>'
-    + '<button onclick="changeAppLang(\'de\')" style="background:var(--bg3); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; gap:8px;"> <img src="https://flagcdn.com/w20/de.png" width="20"> GERMANIA</button>'
+    + '<button onclick="document.getElementById(\'langOptions\').style.display=document.getElementById(\'langOptions\').style.display===\'none\'?\'grid\':\'none\'" style="width:100%;background:var(--bg3);border:1px solid var(--teal);color:var(--t);padding:10px;border-radius:10px;cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;gap:10px">🌐 CAMBIA LINGUA / LANGUAGE</button>'
+    + '<div id="langOptions" style="display:none; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px;">'
+    + '<button onclick="changeAppLang(\'it\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px; justify-content:center;"><img src="https://flagcdn.com/w20/it.png" width="18"> ITALIA</button>'
+    + '<button onclick="changeAppLang(\'en\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px; justify-content:center;"><img src="https://flagcdn.com/w20/gb.png" width="18"> INGLESE</button>'
+    + '<button onclick="changeAppLang(\'es\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px; justify-content:center;"><img src="https://flagcdn.com/w20/es.png" width="18"> SPAGNA</button>'
+    + '<button onclick="changeAppLang(\'fr\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px; justify-content:center;"><img src="https://flagcdn.com/w20/fr.png" width="18"> FRANCIA</button>'
+    + '<button onclick="changeAppLang(\'de\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:5px; justify-content:center;"><img src="https://flagcdn.com/w20/de.png" width="18"> GERMANIA</button>'
     + '</div><div id="google_translate_element" style="display:none"></div></div>'
 
     + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
@@ -2126,9 +2126,19 @@ function renderAccountDrop() {
     + '<input type="text" id="accLastName" placeholder="Cognome" value="' + (accountData.lastName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
     + '<button onclick="saveProfileData()" class="btn-p" style="width:100%; padding:8px; font-size:11px; justify-content:center;">💾 Salva Dati</button></div>'
     + '<div style="display:grid;gap:8px">'
-    + '<button onclick="toggleTheme()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--t);cursor:pointer;font-size:13px"><span>🎨</span><span>Tema</span></button>'
+    + '<button onclick="toggleTheme()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--t);cursor:pointer;font-size:13px"><span>🎨</span><span>Cambia Tema</span></button>'
     + '<button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(255,64,96,.2);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px"><span>🔓</span><span>Esci</span></button>'
     + '</div></div>';
+}
+
+function changeAppLang(c) {
+  var s = document.querySelector('.goog-te-combo');
+  if(s) { 
+    s.value = c; 
+    s.dispatchEvent(new Event('change')); 
+  } else {
+    alert("Traduttore in caricamento, riprova tra 2 secondi...");
+  }
 }
  function changeAppLang(c) {
   var s = document.querySelector('.goog-te-combo');
@@ -2170,6 +2180,23 @@ async function aiFloatSend(){
       aiFloatAddMsg('bot', 'Ho ricevuto la tua richiesta. Per parlare con un umano scrivi "supporto umano".');
     }, 1500);
   }
+} 
+  var _pollTimer = null;
+function startSupportPolling() {
+  if(_pollTimer) clearInterval(_pollTimer);
+  _pollTimer = setInterval(async function() {
+    if(!_ticketId || !_aiOpen) return;
+    try {
+      var r = await fetch('/api/support-get?ticket_id=' + _ticketId + '&last_msg=' + _lastMsgAt);
+      var d = await r.json();
+      if(d.messages && d.messages.length > 0) {
+        d.messages.forEach(m => {
+          aiFloatAddMsg('support', m.text);
+          _lastMsgAt = m.created_at;
+        });
+      }
+    } catch(e) {}
+  }, 4000); 
 }
 
 function changeAppLang(c) {
