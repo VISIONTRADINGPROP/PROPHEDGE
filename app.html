@@ -6,248 +6,200 @@
 <title>PropHedge - VISIONTRADING</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Barlow:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;700&family=Barlow:wght@400;700&family=DM+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 <script type="text/javascript">
 function googleTranslateElementInit() {
   new google.translate.TranslateElement({pageLanguage: 'it', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
 }
 </script>
-<script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 <style>
-.goog-te-gadget { font-family: var(--fd) !important; color: var(--t3) !important; font-size: 11px !important; }
-.goog-te-gadget .goog-te-combo { background: var(--bg3); border: 1px solid var(--border); color: var(--t); padding: 6px; border-radius: 6px; outline: none; width: 100%; margin-top: 4px; }
-.goog-logo-link { display: none !important; }
-.goog-te-gadget span { display: none !important; }
-body { top: 0px !important; }
-.skiptranslate iframe { display: none !important; }
-*{box-sizing:border-box;margin:0;padding:0}
-html{overflow-x:hidden;background:var(--bg);min-height:100%;min-height:100dvh}
-:root{
-  --bg:#060810;--bg2:#0c0f1a;--bg3:#111628;--border:#1e2840;--border2:#2a3560;
-  --t:#eef0f8;--t2:#8090b8;--t3:#3d4d78;--teal:#00e5cc;--teal2:#00b8a4;--teal-bg:rgba(0,229,204,0.07);
-  --violet:#9b5de5;--violet2:#7a40cc;--violet-bg:rgba(155,93,229,0.07);--amber:#ffbe0b;--amber-bg:rgba(255,190,11,0.08);
-  --red:#ff4060;--red-bg:rgba(255,64,96,0.08);--green:#00d68f;--green-bg:rgba(0,214,143,0.08);
-  --fm:'Barlow',sans-serif;--fd:'DM Mono',monospace;--fh:'Chakra Petch',sans-serif;
+:root {
+  --bg:#060810; --bg2:#0c0f1a; --border:#1e2840; --t:#eef0f8; --t3:#3d4d78;
+  --teal:#00e5cc; --teal2:#00b8a4; --violet:#9b5de5; --red:#ff4060; --green:#00d68f;
 }
-body.light-theme{--bg:#f0f2f8;--bg2:#ffffff;--bg3:#e8ecf5;--border:#d0d8ee;--border2:#b0bedd;--t:#0c1428;--t2:#3a4a6a;--t3:#8090b8;--teal:#009980;--violet:#7a40cc;--amber:#d4940a;--red:#d42040;--green:#00a868;}
-body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;padding-bottom:130px;display:flex;flex-direction:column}
-.orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0;opacity:.18}
-.orb1{width:500px;height:500px;background:var(--violet);top:-150px;right:-150px}
-.orb2{width:350px;height:350px;background:var(--teal);bottom:-120px;left:-80px}
-.tk-wrap{background:var(--bg3);border-bottom:1px solid var(--border);overflow:hidden;height:34px;display:flex;align-items:center;position:relative;z-index:101;cursor:pointer}
-.tk-label{flex-shrink:0;padding:0 13px;font-size:8px;font-weight:700;color:var(--teal);font-family:var(--fd);letter-spacing:.16em;text-transform:uppercase;border-right:1px solid var(--border);height:100%;display:flex;align-items:center;gap:6px}
-.tk-scroll{overflow:hidden;flex:1;height:100%}
-.tk-track{display:inline-flex;white-space:nowrap;animation:tkLive 26s linear infinite;height:100%}
-@keyframes tkLive{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.tk-item{display:inline-flex;align-items:center;gap:8px;padding:0 18px;height:34px;border-right:1px solid var(--border);white-space:nowrap}
-.hdr{position:sticky;top:0;z-index:100;background:rgba(6,8,16,.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;gap:14px}
-.logo-box{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:6px 14px}
-.logo-nm{font-family:var(--fh);font-size:17px;font-weight:600}.logo-nm .p{color:var(--teal)}.logo-nm .h{color:var(--violet)}
-.tabs{position:sticky;top:58px;z-index:99;background:rgba(6,8,16,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 12px;display:flex;align-items:center}
-.tab{padding:8px 15px;font-size:10.5px;font-weight:600;font-family:var(--fh);color:var(--t3);cursor:pointer;border-radius:8px;margin:5px 2px;text-transform:uppercase;letter-spacing:.1em}
-.tab.active{color:var(--teal);background:linear-gradient(135deg,rgba(0,229,204,.11),rgba(155,93,229,.11));border-bottom:2px solid var(--teal)}
-.content{padding:24px;max-width:1400px;margin:0 auto;position:relative;z-index:1;flex:1;width:100%}
-.panel{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px}
-.f input,.f select{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--t);border-radius:8px;padding:9px 12px;font-size:13px;font-family:var(--fd);outline:none}
-.btn-p{background:linear-gradient(135deg,var(--teal2),var(--violet2));border:none;color:#fff;border-radius:9px;padding:10px 20px;font-size:11px;font-weight:700;cursor:pointer;text-transform:uppercase}
-.btn-g{background:none;border:1px solid var(--border2);color:var(--t2);border-radius:8px;padding:9px 16px;font-size:11px;cursor:pointer}
-#aiFloatBtn{position:fixed;bottom:110px;right:24px;z-index:99999;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#00b8a4,#9b5de5);border:none;cursor:pointer;font-size:24px;box-shadow:0 4px 20px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
-#aiFloatPanel{position:fixed;bottom:176px;right:24px;z-index:99998;width:360px;max-width:calc(100vw - 32px);background:#0a0c18;border:1px solid rgba(0,229,204,.3);border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,.6);display:none;flex-direction:column;overflow:hidden}
-#aiFloatPanel.open{display:flex}
-.ai-panel-hdr{background:linear-gradient(135deg,rgba(0,229,204,.15),rgba(155,93,229,.1));padding:12px 16px;border-bottom:1px solid rgba(128,128,128,.1);display:flex;align-items:center;gap:10px}
-.ai-msgs{height:300px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
-.ai-msg-row{display:flex;gap:7px;align-items:flex-start}
-.ai-msg-row.user{flex-direction:row-reverse}
-.ai-msg-ava{width:30px;height:30px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:14px}
-.ai-bubble{padding:8px 12px;border-radius:10px;font-size:12px;line-height:1.5;max-width:80%}
-.ai-bubble.bot{background:#13162a;color:#c8d0e8;border-bottom-left-radius:2px}
-.ai-bubble.usr{background:rgba(0,229,204,.15);color:#fff;border-bottom-right-radius:2px}
-.ai-input-row{padding:10px 12px;border-top:1px solid rgba(128,128,128,.1);display:flex;gap:6px}
-#aiFloatInput{flex:1;background:#13162a;border:1px solid rgba(128,128,128,.2);color:#fff;border-radius:9px;padding:8px 10px;font-size:12px;resize:none;outline:none}
-#aiFloatSend{padding:0 12px;background:var(--teal2);border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer}
+body { background:var(--bg); color:var(--t); font-family:'Barlow', sans-serif; margin:0; padding-bottom:100px; }
+.hdr { height:60px; background:rgba(6,8,16,0.95); display:flex; align-items:center; padding:0 20px; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+.logo { font-family:'Chakra Petch'; font-size:20px; font-weight:700; }
+.tabs { display:flex; background:var(--bg2); border-bottom:1px solid var(--border); padding:5px 10px; }
+.tab { padding:10px 15px; cursor:pointer; font-size:12px; font-weight:700; color:var(--t3); text-transform:uppercase; }
+.tab.active { color:var(--teal); border-bottom:2px solid var(--teal); }
+.content { padding:20px; max-width:1200px; margin:0 auto; }
+.panel { background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:20px; }
+.btn-p { background:linear-gradient(135deg, var(--teal2), var(--violet)); border:none; color:#fff; padding:12px 20px; border-radius:8px; cursor:pointer; font-weight:700; }
+.btn-g { background:none; border:1px solid var(--border); color:var(--t); padding:10px 15px; border-radius:8px; cursor:pointer; }
+input { width:100%; padding:10px; margin-top:5px; background:#111628; border:1px solid var(--border); color:#fff; border-radius:6px; box-sizing:border-box; }
+#aiFloatBtn { position:fixed; bottom:30px; right:30px; width:60px; height:60px; border-radius:50%; background:var(--teal); border:none; font-size:30px; cursor:pointer; z-index:1000; box-shadow:0 5px 15px rgba(0,0,0,0.3); }
+#aiFloatPanel { position:fixed; bottom:100px; right:30px; width:350px; background:#0a0c18; border:1px solid var(--teal); border-radius:15px; display:none; flex-direction:column; z-index:1000; overflow:hidden; }
+.ai-msg-row { display:flex; gap:10px; padding:10px; align-items:flex-start; }
+.ai-msg-row.user { flex-direction:row-reverse; }
+.ai-bubble { padding:10px; border-radius:10px; font-size:13px; max-width:80%; line-height:1.4; }
+.ai-bubble.bot { background:var(--bg2); color:#c8d0e8; }
+.ai-bubble.usr { background:var(--teal2); color:#fff; }
+.ai-msg-ava { width:30px; height:30px; border-radius:50%; overflow:hidden; background:var(--bg); flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+.skiptranslate iframe { display:none !important; }
+body { top:0px !important; }
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div id="loginPage" style="position:fixed;inset:0;z-index:99990;background:#060810;display:flex;align-items:center;justify-content:center;flex-direction:column">
-  <div style="background:#0c0f1a;border:1px solid #1e2840;padding:40px;border-radius:20px;width:100%;max-width:400px;text-align:center">
-    <h2 style="color:#fff;margin-bottom:20px">PropHedge Pro</h2>
-    <input id="loginEmail" type="email" placeholder="Email" style="width:100%;padding:12px;margin-bottom:10px;background:#111628;border:1px solid #1e2840;color:#fff;border-radius:8px">
-    <input id="loginPass" type="password" placeholder="Password" style="width:100%;padding:12px;margin-bottom:20px;background:#111628;border:1px solid #1e2840;color:#fff;border-radius:8px">
-    <button onclick="doLogin()" class="btn-p" style="width:100%;padding:14px">→ Accedi</button>
-    <div style="margin:20px 0;color:#3d4d78">--- oppure ---</div>
-    <button onclick="goToPurchase()" class="btn-g" style="width:100%">📝 REGISTRATI GRATIS</button>
+
+<div id="loginPage" style="position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;align-items:center;justify-content:center;">
+  <div class="panel" style="width:350px;text-align:center">
+    <h2>PropHedge Pro</h2>
+    <input id="l_email" type="email" placeholder="Email">
+    <input id="l_pass" type="password" placeholder="Password" style="margin-top:10px">
+    <button onclick="doLogin()" class="btn-p" style="width:100%;margin-top:20px">ACCEDI</button>
+    <button onclick="document.getElementById('loginPage').style.display='none';document.getElementById('purchasePage').style.display='flex'" class="btn-g" style="width:100%;margin-top:10px">REGISTRATI GRATIS</button>
   </div>
 </div>
 
-<div id="purchasePage" style="display:none;position:fixed;inset:0;z-index:99991;background:#060810;align-items:center;justify-content:center;flex-direction:column">
-  <div style="background:#0c0f1a;border:1px solid #1e2840;padding:30px;border-radius:20px;width:100%;max-width:400px">
-    <h3 style="color:#fff;margin-bottom:10px">Richiedi Accesso</h3>
-    <p style="font-size:12px;color:#8090b8;margin-bottom:20px">Inserisci i dati, l'admin ti abiliterà manualmente.</p>
-    <input id="regName" type="text" placeholder="Nome e Cognome" style="width:100%;padding:12px;margin-bottom:10px;background:#111628;border:1px solid #1e2840;color:#fff;border-radius:8px">
-    <input id="regEmail" type="email" placeholder="Email" style="width:100%;padding:12px;margin-bottom:10px;background:#111628;border:1px solid #1e2840;color:#fff;border-radius:8px">
-    <input id="regPass" type="password" placeholder="Password" style="width:100%;padding:12px;margin-bottom:20px;background:#111628;border:1px solid #1e2840;color:#fff;border-radius:8px">
-    <button onclick="doRegisterFree()" class="btn-p" style="width:100%;margin-bottom:10px">Invia Richiesta</button>
-    <button onclick="location.reload()" class="btn-g" style="width:100%">Torna al Login</button>
+<div id="purchasePage" style="position:fixed;inset:0;background:var(--bg);z-index:1001;display:none;align-items:center;justify-content:center;">
+  <div class="panel" style="width:350px">
+    <h3>Richiedi Accesso</h3>
+    <input id="r_name" type="text" placeholder="Nome e Cognome">
+    <input id="r_email" type="email" placeholder="Email" style="margin-top:10px">
+    <input id="r_pass" type="password" placeholder="Password" style="margin-top:10px">
+    <button onclick="doRegister()" class="btn-p" style="width:100%;margin-top:20px">INVIA RICHIESTA</button>
+    <button onclick="location.reload()" class="btn-g" style="width:100%;margin-top:10px">ANNULLA</button>
   </div>
 </div>
 
 <div class="hdr">
-  <div class="logo-box"><span class="logo-nm"><span class="p">Prop</span><span class="h">Hedge</span></span></div>
-  <div id="google_translate_element" style="margin-left:auto"></div>
-  <div class="tab" onclick="toggleAccDrop(event)" id="tabAccount" style="display:flex;align-items:center;gap:10px;background:var(--bg2);padding:5px 15px;border-radius:10px;border:1px solid var(--border)">
-    <div id="tabAccountPhoto" style="width:24px;height:24px;border-radius:50%;background:#3d4d78;overflow:hidden">👤</div>
-    <span id="tabAccountName">Account</span>
+  <div class="logo"><span style="color:var(--teal)">Prop</span><span style="color:var(--violet)">Hedge</span></div>
+  <div id="google_translate_element" style="margin-left:auto;margin-right:20px"></div>
+  <div onclick="toggleAcc(event)" style="cursor:pointer; display:flex; align-items:center; gap:8px">
+    <div id="nav_photo" style="width:30px;height:30px;border-radius:50%;background:#3d4d78;overflow:hidden">👤</div>
+    <span id="nav_name">Account</span>
   </div>
 </div>
 
-<div id="accDropPanel" style="display:none;position:fixed;top:60px;right:20px;z-index:200;background:var(--bg2);border:1px solid var(--border2);border-radius:15px;width:300px;box-shadow:0 10px 30px rgba(0,0,0,.5);padding:20px"></div>
+<div id="accPanel" style="display:none;position:fixed;top:70px;right:20px;width:280px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,0.5)">
+  <div style="text-align:center">
+    <div onclick="document.getElementById('f_up').click()" style="width:60px;height:60px;border-radius:50%;background:#1e2840;margin:0 auto 10px;overflow:hidden;border:2px solid var(--teal);cursor:pointer">
+      <div id="p_photo">👤</div>
+    </div>
+    <input type="file" id="f_up" style="display:none" onchange="uploadP(this)">
+    <input id="p_fn" placeholder="Nome" style="margin-bottom:5px">
+    <input id="p_ln" placeholder="Cognome">
+    <button onclick="saveP()" class="btn-p" style="width:100%;margin-top:15px">SALVA DATI</button>
+    <button onclick="location.reload()" class="btn-g" style="width:100%;margin-top:5px;color:var(--red)">ESCI</button>
+  </div>
+</div>
 
 <div class="tabs">
   <div class="tab active" onclick="goTab('dash',this)">Dashboard</div>
   <div class="tab" onclick="goTab('journal',this)">Journal</div>
   <div class="tab" onclick="goTab('stats',this)">Statistiche</div>
-  <div class="tab" onclick="goTab('support',this)">Supporto</div>
 </div>
-<div id="main" class="content"></div>
 
-<button id="aiFloatBtn" onclick="toggleAIChat()">🤖</button>
+<div id="main" class="content">
+  <div class="panel">
+    <h3>Dashboard Challenge</h3>
+    <p>Benvenuto in PropHedge. Configura la tua sfida per iniziare il calcolo dei lotti.</p>
+    <button class="btn-p">+ NUOVA SFIDA</button>
+  </div>
+</div>
+
+<button id="aiFloatBtn" onclick="toggleChat()">🤖</button>
 <div id="aiFloatPanel">
-  <div class="ai-panel-hdr">
-    <div class="ai-avatar">🤖</div>
-    <div><div style="font-size:12px;font-weight:700;color:#fff">Supporto Live</div><div id="aiOnlineStatus" style="font-size:10px;color:#00d68f">● Online</div></div>
-    <button onclick="toggleAIChat()" style="margin-left:auto;background:none;border:none;color:#8090b8;cursor:pointer">✕</button>
+  <div style="background:var(--teal2);padding:15px;color:#fff;display:flex;justify-content:space-between;align-items:center">
+    <span id="chat_status">● Online</span>
+    <span onclick="toggleChat()" style="cursor:pointer">✕</span>
   </div>
-  <div class="ai-msgs" id="aiFloatMsgs"></div>
-  <div class="ai-input-row">
-    <textarea id="aiFloatInput" rows="1" placeholder="Scrivi qui..."></textarea>
-    <button id="aiFloatSend" onclick="aiFloatSend()">↗</button>
+  <div id="chat_msgs" style="height:300px;overflow-y:auto;padding:10px;background:var(--bg);display:flex;flex-direction:column;gap:10px"></div>
+  <div style="padding:10px;border-top:1px solid var(--border);display:flex;gap:5px">
+    <textarea id="chat_in" rows="1" style="flex:1;background:var(--bg2);border:1px solid var(--border);color:#fff;padding:8px;border-radius:5px;resize:none" placeholder="Scrivi..."></textarea>
+    <button onclick="sendMsg()" style="background:var(--teal);border:none;border-radius:5px;padding:0 15px;cursor:pointer">↗</button>
   </div>
 </div>
 
- <script>
-// --- CONFIGURAZIONE E STATO ---
-var currentTab = 'dash';
-var accountData = {firstName:'', lastName:'', email:'', photo:null, theme:'dark'};
-var props = [];
-var _sb = supabase.createClient('https://kvvrvhkomdpdikohvcsv.supabase.co','sb_publishable_289bMctZ8BjEG_gZn5dJ5A_7aJZRjpx');
-
-// --- LOGICA LOGIN E REGISTRAZIONE ---
-function goToPurchase(){ document.getElementById('loginPage').style.display='none'; document.getElementById('purchasePage').style.display='flex'; }
+<script>
+const _sb = supabase.createClient('https://kvvrvhkomdpdikohvcsv.supabase.co','sb_publishable_289bMctZ8BjEG_gZn5dJ5A_7aJZRjpx');
+let accountData = {fn:'', ln:'', photo:null};
 
 function doLogin(){
-  var email = document.getElementById('loginEmail').value;
-  var pass = document.getElementById('loginPass').value;
-  _sb.auth.signInWithPassword({email:email, password:pass}).then(res => {
-    if(res.error) alert("Errore: " + res.error.message);
-    else { document.getElementById('loginPage').style.display='none'; loadAccountData(); render(); }
-  });
+  _sb.auth.signInWithPassword({email:document.getElementById('l_email').value, password:document.getElementById('l_pass').value})
+  .then(res => { if(res.error) alert(res.error.message); else { document.getElementById('loginPage').style.display='none'; loadP(); } });
 }
 
-function doRegisterFree(){
-  var email = document.getElementById('regEmail').value;
-  var pass = document.getElementById('regPass').value;
-  var name = document.getElementById('regName').value;
-  _sb.auth.signUp({email:email, password:pass, options:{data:{first_name:name}}}).then(res => {
-    if(res.error) alert(res.error.message);
-    else alert("Richiesta inviata! Attendi l'abilitazione dall'admin.");
-  });
+function doRegister(){
+  _sb.auth.signUp({email:document.getElementById('r_email').value, password:document.getElementById('r_pass').value, options:{data:{first_name:document.getElementById('r_name').value}}})
+  .then(res => { if(res.error) alert(res.error.message); else alert("Richiesta Inviata! L'admin ti abiliterà a breve."); });
 }
 
-// --- GESTIONE ACCOUNT ---
-function toggleAccDrop(e){
-  e.stopPropagation();
-  var p = document.getElementById('accDropPanel');
-  if(p.style.display === 'none' || !p.style.display){
-    p.innerHTML = renderAccountDrop();
-    p.style.display = 'block';
-  } else { p.style.display = 'none'; }
+function goTab(t, el){
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  const m = document.getElementById('main');
+  if(t==='dash') m.innerHTML = '<div class="panel"><h3>Dashboard</h3><p>Nessuna sfida attiva.</p></div>';
+  if(t==='journal') m.innerHTML = '<div class="panel"><h3>Journal</h3><p>Collega MT4/MT5 per vedere i trade.</p></div>';
+  if(t==='stats') m.innerHTML = '<div class="panel"><h3>Statistiche</h3><p>Dati non disponibili.</p></div>';
 }
 
-function renderAccountDrop(){
-  var name = (accountData.firstName + ' ' + accountData.lastName).trim() || 'Utente';
-  var img = accountData.photo ? '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">' : '👤';
-  return '<div style="text-align:center;margin-bottom:15px"><div style="width:60px;height:60px;border-radius:50%;background:#1e2840;margin:0 auto 10px;overflow:hidden;border:2px solid var(--teal);cursor:pointer" onclick="document.getElementById(\'upAva\').click()">'+img+'</div>'
-    + '<input type="file" id="upAva" style="display:none" onchange="updatePhoto(this)">'
-    + '<div style="font-weight:700;color:#fff">'+name+'</div><div style="font-size:11px;color:var(--t3)">'+accountData.email+'</div></div>'
-    + '<div class="f"><label>Nome</label><input type="text" id="fn" value="'+accountData.firstName+'"></div>'
-    + '<div class="f"><label>Cognome</label><input type="text" id="ln" value="'+accountData.lastName+'"></div>'
-    + '<button onclick="saveAcc()" class="btn-p" style="width:100%;margin-top:10px">💾 Salva Dati</button>'
-    + '<button onclick="location.reload()" class="btn-g" style="width:100%;margin-top:5px">🔓 Esci</button>';
+function toggleAcc(e){ e.stopPropagation(); const p=document.getElementById('accPanel'); p.style.display = p.style.display==='none'?'block':'none'; }
+function saveP(){
+  accountData.fn = document.getElementById('p_fn').value; accountData.ln = document.getElementById('p_ln').value;
+  localStorage.setItem('ph_user', JSON.stringify(accountData));
+  document.getElementById('nav_name').textContent = accountData.fn || 'Account';
+  alert("Profilo aggiornato!");
 }
-
-function saveAcc(){
-  accountData.firstName = document.getElementById('fn').value;
-  accountData.lastName = document.getElementById('ln').value;
-  localStorage.setItem('ph_acc', JSON.stringify(accountData));
-  document.getElementById('tabAccountName').textContent = accountData.firstName || 'Account';
-  alert("Dati Salvati!");
-}
-
-function updatePhoto(input){
-  if(input.files && input.files[0]){
-    var reader = new FileReader();
-    reader.onload = function(e){
+function uploadP(i){
+  if(i.files && i.files[0]){
+    const r = new FileReader();
+    r.onload = e => {
       accountData.photo = e.target.result;
-      document.getElementById('tabAccountPhoto').innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover">';
-      localStorage.setItem('ph_acc', JSON.stringify(accountData));
+      document.getElementById('p_photo').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+      document.getElementById('nav_photo').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
+      localStorage.setItem('ph_user', JSON.stringify(accountData));
     };
-    reader.readAsDataURL(input.files[0]);
+    r.readAsDataURL(i.files[0]);
+  }
+}
+function loadP(){
+  const s = localStorage.getItem('ph_user');
+  if(s){
+    accountData = JSON.parse(s);
+    document.getElementById('p_fn').value = accountData.fn; document.getElementById('p_ln').value = accountData.ln;
+    document.getElementById('nav_name').textContent = accountData.fn || 'Account';
+    if(accountData.photo){
+      document.getElementById('p_photo').innerHTML = `<img src="${accountData.photo}" style="width:100%;height:100%;object-fit:cover">`;
+      document.getElementById('nav_photo').innerHTML = `<img src="${accountData.photo}" style="width:100%;height:100%;object-fit:cover">`;
+    }
   }
 }
 
-function loadAccountData(){
-  var saved = localStorage.getItem('ph_acc');
-  if(saved) { accountData = JSON.parse(saved); document.getElementById('tabAccountName').textContent = accountData.firstName || 'Account'; if(accountData.photo) document.getElementById('tabAccountPhoto').innerHTML = '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">'; }
-}
-
-// --- CHAT LIVE CON OPERATORI ---
-var supportStaff = [
-  {n:'Marco', img:'https://i.pravatar.cc/150?img=11'}, {n:'Laura', img:'https://i.pravatar.cc/150?img=5'}, 
-  {n:'Alessio', img:'https://i.pravatar.cc/150?img=12'}, {n:'Giulia', img:'https://i.pravatar.cc/150?img=9'},
-  {n:'Roberto', img:'https://i.pravatar.cc/150?img=13'}, {n:'Elena', img:'https://i.pravatar.cc/150?img=10'},
-  {n:'Fabio', img:'https://i.pravatar.cc/150?img=14'}, {n:'Chiara', img:'https://i.pravatar.cc/150?img=16'},
-  {n:'Davide', img:'https://i.pravatar.cc/150?img=18'}
+// CHAT LOGIC
+const staff = [
+  {n:'Marco', img:'11'}, {n:'Laura', img:'5'}, {n:'Alessio', img:'12'}, {n:'Giulia', img:'9'},
+  {n:'Roberto', img:'13'}, {n:'Elena', img:'10'}, {n:'Fabio', img:'14'}, {n:'Chiara', img:'16'}, {n:'Davide', img:'18'}
 ];
-var _aiOpen=false, _humanMode=false, _ticketId=null;
+let human = false;
 
-function toggleAIChat(){
-  _aiOpen=!_aiOpen;
-  document.getElementById('aiFloatPanel').classList.toggle('open', _aiOpen);
-  if(_aiOpen && document.getElementById('aiFloatMsgs').children.length === 0) aiFloatAddMsg('bot', 'Ciao! Come posso aiutarti? Se cerchi supporto umano scrivi "supporto umano".');
+function toggleChat(){ const p=document.getElementById('aiFloatPanel'); p.style.display=p.style.display==='none'?'flex':'none'; if(p.style.display==='flex' && !document.getElementById('chat_msgs').innerHTML) addMsg('bot', 'Ciao! Come posso aiutarti? Se cerchi supporto umano scrivi "supporto umano".'); }
+function addMsg(role, txt){
+  const m = document.getElementById('chat_msgs');
+  const row = document.createElement('div'); row.className = 'ai-msg-row' + (role==='usr'?' user':'');
+  const s = staff[Math.floor(Math.random()*staff.length)];
+  const ava = role==='bot' ? '🤖' : (role==='support' ? `<img src="https://i.pravatar.cc/150?img=${s.img}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '👤');
+  row.innerHTML = `<div class="ai-msg-ava">${ava}</div><div class="ai-bubble ${role==='usr'?'usr':'bot'}">${txt}</div>`;
+  m.appendChild(row); m.scrollTop = m.scrollHeight;
+}
+function sendMsg(){
+  const i = document.getElementById('chat_in'); const txt = i.value.trim(); if(!txt) return;
+  addMsg('usr', txt); i.value = '';
+  if(txt.toLowerCase().includes('supporto umano') && !human){
+    human = true;
+    const online = staff.sort(()=>.5-Math.random()).slice(0,3).map(x=>x.n).join(', ');
+    document.getElementById('chat_status').innerHTML = '● Online: ' + online;
+    addMsg('bot', 'Ti sto mettendo in contatto con un operatore. 🎧\nPer favore scrivici la tua **EMAIL e NOME** per procedere.');
+  } else if(human) {
+    addMsg('support', 'Messaggio ricevuto! Un operatore ti risponderà qui a breve.');
+  } else { setTimeout(()=> addMsg('bot', 'Sto analizzando la tua richiesta...'), 1000); }
 }
 
-function aiFloatAddMsg(role, text) {
-  var msgs = document.getElementById('aiFloatMsgs');
-  var isBot = (role === 'bot' || role === 'support');
-  var row = document.createElement('div'); row.className = 'ai-msg-row' + (isBot ? '' : ' user');
-  var staff = supportStaff[Math.floor(Math.random() * supportStaff.length)];
-  var ava = isBot ? (role==='support' ? '<img src="'+staff.img+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">' : '🤖') : '👤';
-  row.innerHTML = '<div class="ai-msg-ava">'+ava+'</div><div class="ai-bubble '+(isBot?'bot':'usr')+'">'+text+'</div>';
-  msgs.appendChild(row); msgs.scrollTop = msgs.scrollHeight;
-}
-
-function aiFloatSend(){
-  var inp = document.getElementById('aiFloatInput'); var txt = inp.value.trim(); if(!txt) return;
-  aiFloatAddMsg('usr', txt); inp.value = '';
-  if(txt.toLowerCase().includes('supporto umano') && !_humanMode){
-    _humanMode = true; _ticketId = 'TKT-'+Date.now();
-    var online = supportStaff.sort(() => .5 - Math.random()).slice(0,3).map(s=>s.n).join(', ');
-    document.getElementById('aiOnlineStatus').innerHTML = '● Operatori: ' + online;
-    aiFloatAddMsg('bot', 'Ti stiamo mettendo in contatto con un operatore. 🎧\nPer favore scrivici la tua **EMAIL e NOME** per aprire il ticket.');
-  } else if(_humanMode) {
-    aiFloatAddMsg('support', 'Messaggio ricevuto! Riceverai una notifica non appena un operatore risponderà al ticket '+_ticketId);
-  } else { setTimeout(()=> aiFloatAddMsg('bot', 'Sto elaborando la tua richiesta...'), 1000); }
-}
-
-// --- RENDER GENERALE ---
-function goTab(t, el){
-  currentTab = t;
-  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-  el.classList.add('active'); render();
-}
-
-function render(){
-  var m = document.getElementById('main');
-  if(currentTab === 'dash') m.innerHTML = '<div class="panel" style="padding:20px"><h3>Dashboard Challenge</h3><p>Nessuna sfida attiva. Clicca su Nuova Sfida.</p></div>';
-  if(currentTab === 'journal') m.innerHTML = '<div class="panel" style="padding:20 
+window.onload = loadP;
+document.addEventListener('click', () => { document.getElementById('accPanel').style.display='none'; });
+</script>
+</body>
+</html>
