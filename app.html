@@ -4174,48 +4174,18 @@ function closeAccDrop(){
 
 }
 
-function renderAccountDrop() {
-  var displayName = ((accountData.firstName || '') + ' ' + (accountData.lastName || '')).trim() || accountData.email || 'Account';
-  var photoImg = accountData.photo ? '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">' : '👤';
-
-  return '<div style="padding:20px; width: 340px; max-height: 85vh; overflow-y: auto;">'
-    + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
-    + '<div id="accDropAvatarBtn" onclick="document.getElementById(\'accPhotoInput\').click()" style="width:54px;height:54px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;cursor:pointer;flex-shrink:0;">' + photoImg + '</div>'
-    + '<input type="file" id="accPhotoInput" style="display:none" accept="image/*" onchange="updateProfilePhoto(this)">'
-    + '<div><div style="font-size:15px;font-weight:700">' + displayName + '</div><div style="font-size:12px;color:var(--t3);font-family:var(--fd)">' + accountData.email + '</div></div></div>'
-
-    // 1. TEMA
-    + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
-    + '<button onclick="document.getElementById(\'themeOptions\').style.display=document.getElementById(\'themeOptions\').style.display===\'none\'?\'grid\':\'none\'" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--t);padding:10px;border-radius:10px;cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.boxShadow=\'0 4px 15px rgba(0,229,204,0.15)\'" onmouseout="this.style.borderColor=\'var(--border2)\';this.style.boxShadow=\'none\'">🎨 CAMBIA TEMA</button>'
-    + '<div id="themeOptions" style="display:none; grid-template-columns: 1fr; gap:8px; margin-top:10px;">'
-    + '<button onclick="setTheme(\'light\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px;">☀️ Tema Giorno (Chiaro)</button>'
-    + '<button onclick="setTheme(\'dark\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px;">🌙 Tema Notte (Scuro)</button>'
-    + '</div></div>'
-
-    // 2. DATI PERSONALI
-    + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
-    + '<div style="font-size:11px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Dati Personali</div>'
-    + '<input type="text" id="accFirstName" placeholder="Nome" value="' + (accountData.firstName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
-    + '<input type="text" id="accLastName" placeholder="Cognome" value="' + (accountData.lastName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
-    + '<input type="email" id="accEmail" placeholder="Nuova Email" value="' + (accountData.email||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
-    + '<input type="password" id="accPass" placeholder="Nuova Password" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">'
-    + '<button onclick="saveProfileData()" class="btn-p" style="width:100%; padding:8px; font-size:11px; justify-content:center;">💾 Salva Dati</button></div>'
-
-    // 3. LINGUA (Posizionata sopra "Esci", Pulsante Luminoso)
-    + '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">'
-    + '<button onclick="document.getElementById(\'langOptions\').style.display=document.getElementById(\'langOptions\').style.display===\'none\'?\'grid\':\'none\'" style="width:100%;background:linear-gradient(135deg,var(--teal2),var(--violet2));border:none;color:#fff;padding:10px;border-radius:10px;cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 20px rgba(0,184,164,.4)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'none\'">🌐 CAMBIA LINGUA / LANGUAGE</button>'
-    + '<div id="langOptions" style="display:none; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px;">'
-    + '<button onclick="changeAppLang(\'it\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px;">🇮🇹 Italiano</button>'
-    + '<button onclick="changeAppLang(\'en\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px;">🇬🇧 English</button>'
-    + '<button onclick="changeAppLang(\'es\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px;">🇪🇸 Español</button>'
-    + '<button onclick="changeAppLang(\'de\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px;">🇩🇪 Deutsch</button>'
-    + '<button onclick="changeAppLang(\'fr\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px;">🇫🇷 Français</button>'
-    + '</div><div id="google_translate_element" style="display:none;"></div></div>'
-
-    // 4. ESCI
-    + '<div style="display:grid;gap:8px">'
-    + '<button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(255,64,96,.2);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px;justify-content:center"><span>🔓</span><span>Esci</span></button>'
-    + '</div></div>';
+function changeAppLang(langCode) {
+  // Se sceglie italiano, rimuove il cookie di traduzione e torna alla lingua originale
+  if (langCode === 'it') {
+    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + location.hostname;
+  } else {
+    // Imposta il cookie di Google Translate per forzare la lingua scelta
+    document.cookie = "googtrans=/it/" + langCode + "; path=/;";
+    document.cookie = "googtrans=/it/" + langCode + "; path=/; domain=" + location.hostname;
+  }
+  // Ricarica la pagina per applicare istantaneamente la traduzione su tutte le 5000 righe
+  location.reload();
 }
 
 function setTheme(themeMode) {
