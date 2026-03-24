@@ -810,6 +810,50 @@ function acceptAndEnter(){
   setTimeout(function(){s.style.display='none';showLoginPage();},650);
 }
 function showLoginPage(){document.getElementById('loginPage').style.display='flex';}
+
+// --- CONNESSIONE DATABASE E LOGIN SUPABASE ---
+var _sb = supabase.createClient('https://kvvrvhkomdpdikohvcsv.supabase.co','sb_publishable_289bMctZ8BjEG_gZn5dJ5A_7aJZRjpx');
+
+_sb.auth.getSession().then(function(res){
+  if(res.data && res.data.session){
+    var splash=document.getElementById('splashScreen');
+    var login=document.getElementById('loginPage');
+    if(splash) splash.style.display='none';
+    if(login) login.style.display='none';
+    goToApp();
+  }
+});
+
+function doLogin(){
+  var email = document.getElementById('loginEmail').value.trim();
+  var pass = document.getElementById('loginPass').value;
+  var err = document.getElementById('loginErr'); 
+  var btn = document.getElementById('loginBtn');
+  
+  if(!email || !pass){ err.textContent = 'Inserisci email e password.'; err.style.display = 'block'; return; }
+  if(window._sbLoadError){ err.style.color = '#ffbe0b'; err.innerHTML = '⚠️ Connessione bloccata.'; err.style.display = 'block'; return; }
+  
+  err.style.display = 'none'; btn.textContent = 'Accesso...'; btn.disabled = true;
+  
+  _sb.auth.signInWithPassword({email: email, password: pass}).then(function(res){
+    if(res.error){
+      var msg = res.error.message || '';
+      if(msg.indexOf('fetch') !== -1 || msg.indexOf('network') !== -1) msg = '⚠️ Errore di rete.';
+      else if(msg.indexOf('Invalid login') !== -1 || msg.indexOf('invalid_credentials') !== -1) msg = '❌ Email o password errati.';
+      err.textContent = msg; err.style.display = 'block'; btn.textContent = '→ Accedi'; btn.disabled = false;
+    } else {
+      btn.textContent = '✓ Accesso effettuato!';
+      accountData.email = email;
+      setTimeout(function(){ goToApp(); }, 600);
+    }
+  }).catch(function(e){
+    err.textContent = '⚠️ Errore imprevisto.'; err.style.display = 'block'; btn.textContent = '→ Accedi'; btn.disabled = false;
+  });
+}
+
+function goToPurchase() { window.open('https://visiontrading.it', '_blank'); }
+function showForgotPanel() { alert("Contatta l'assistenza per recuperare la password."); }
+
 function goToApp(){document.getElementById('loginPage').style.display='none'; document.body.style.overflow=''; render();}
 function doLogout(){location.reload();}
 function showPolicy(){document.getElementById('policyModal').style.display='block';}
