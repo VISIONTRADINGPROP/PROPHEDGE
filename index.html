@@ -716,7 +716,7 @@ function doForgotSubmit(){
       <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#00e5cc;text-transform:uppercase;letter-spacing:.16em;margin-bottom:16px;margin-top:8px">Accesso Annuale Completo</div>
       <div style="font-size:56px;color:#eef0f8;line-height:1;margin-bottom:6px">€500</div>
       <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8090b8;margin-bottom:28px">Rinnovo annuale · Licenza personale</div>
-      <button onclick="doRegister()" style="width:100%;background:linear-gradient(135deg,#00b8a4,#7a40cc);border:none;color:#fff;border-radius:12px;padding:16px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.1em;text-transform:uppercase">▶ Acquista ora</button>
+      <button onclick="buyPlan('Annuale')" style="width:100%;background:linear-gradient(135deg,#00b8a4,#7a40cc);border:none;color:#fff;border-radius:12px;padding:16px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.1em;text-transform:uppercase">▶ Acquista ora</button>
     </div>
   </div>
 </div>
@@ -2310,6 +2310,25 @@ window.addEventListener('DOMContentLoaded',function(){
   function checkNet(){var w=document.getElementById('netWarn');if(w){if(!navigator.onLine||window._sbLoadError)w.style.display='block';else w.style.display='none';}}
   checkNet();window.addEventListener('online',checkNet);window.addEventListener('offline',checkNet);
 });
+  // ... altre funzioni esistenti ...
+
+async function buyPlan(tipo) {
+  var plan = (tipo === 'Mensile') ? 'monthly' : 'yearly';
+  try {
+    var res = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ plan: plan, email: accountData.email })
+    });
+    var data = await res.json();
+    if (data.url) window.location.href = data.url;
+    else alert('Errore: ' + (data.error || 'Riprova'));
+  } catch(e) {
+    alert('Errore di connessione. Riprova.');
+  }
+}
+
 </script>
 </body>
 </html>
+
