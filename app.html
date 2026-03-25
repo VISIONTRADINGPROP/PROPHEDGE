@@ -416,6 +416,17 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 #aiFloatInput:focus{border-color:rgba(0,229,204,.4)}
 #aiFloatSend{padding:8px 14px;background:linear-gradient(135deg,#00b8a4,#9b5de5);color:#fff;border:none;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer}
 #aiFloatSend:disabled{opacity:.5;cursor:not-allowed}
+  /* ══ BANNER SCADENZA LICENZA ══ */
+#licenzaBanner{display:none;position:fixed;top:0;left:0;right:0;z-index:99999;padding:10px 20px;font-family:var(--fd);font-size:12px;align-items:center;gap:12px;justify-content:center;animation:slideDown .4s ease}
+@keyframes slideDown{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+#licenzaBanner.warn{background:rgba(255,190,11,.15);border-bottom:1px solid rgba(255,190,11,.3);color:#ffbe0b;display:flex}
+#licenzaBanner.expired{background:rgba(255,64,96,.15);border-bottom:1px solid rgba(255,64,96,.3);color:#ff4060;display:flex}
+#licenzaBanner .lic-badge{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:2px 8px;border-radius:4px;flex-shrink:0}
+#licenzaBanner.warn .lic-badge{background:rgba(255,190,11,.2);border:1px solid rgba(255,190,11,.3)}
+#licenzaBanner.expired .lic-badge{background:rgba(255,64,96,.2);border:1px solid rgba(255,64,96,.3)}
+#licenzaBanner .lic-btn{padding:5px 14px;border-radius:7px;font-size:10px;font-weight:700;cursor:pointer;border:none;text-transform:uppercase;letter-spacing:.08em;font-family:var(--fd)}
+#licenzaBanner.warn .lic-btn{background:#ffbe0b;color:#000}
+#licenzaBanner.expired .lic-btn{background:#ff4060;color:#fff}
 </style>
 <script>window._sbLoadError=false;</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
