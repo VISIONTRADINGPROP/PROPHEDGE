@@ -4185,7 +4185,7 @@ function renderAccountDrop() {
   html += '<input type="file" id="accPhotoInput" style="display:none" accept="image/*" onchange="updateProfilePhoto(this)">';
   html += '<div><div style="font-size:15px;font-weight:700">' + displayName + '</div><div style="font-size:12px;color:var(--t3);font-family:var(--fd)">' + accountData.email + '</div></div></div>';
 
-  // 1. TEMA
+// 1. TEMA
   html += '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">';
   html += '<button onclick="var e=document.getElementById(\'themeOptions\'); e.style.display=(e.style.display===\'none\'?\'grid\':\'none\');" style="width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--t);padding:10px;border-radius:10px;cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.boxShadow=\'0 4px 15px rgba(0,229,204,0.15)\'" onmouseout="this.style.borderColor=\'var(--border2)\';this.style.boxShadow=\'none\'">🎨 CAMBIA TEMA</button>';
   html += '<div id="themeOptions" style="display:none; grid-template-columns: 1fr; gap:8px; margin-top:10px;">';
@@ -4193,35 +4193,51 @@ function renderAccountDrop() {
   html += '<button onclick="setTheme(\'dark\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--t)\'">🌙 Tema Notte (Scuro)</button>';
   html += '</div></div>';
 
- // 2. DATI PERSONALI E SICUREZZA
+  // 2. DATI PERSONALI
   html += '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">';
-  html += '<div style="font-size:11px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Dati Personali e Sicurezza</div>';
+  html += '<div style="font-size:11px; color:var(--t3); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Dati Personali</div>';
   html += '<input type="text" id="accFirstName" placeholder="Nome" value="' + (accountData.firstName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">';
   html += '<input type="text" id="accLastName" placeholder="Cognome" value="' + (accountData.lastName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">';
-  html += '<div style="font-size:10px; color:var(--amber); margin-bottom:4px; margin-top:8px;">Modifica Accesso (Lascia vuoto se non vuoi cambiare)</div>';
-  html += '<input type="email" id="accEmail" placeholder="Nuova Email" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">';
-  html += '<input type="password" id="accPass" placeholder="Nuova Password" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">';
-  html += '<button onclick="saveProfileData()" class="btn-p" style="width:100%; padding:8px; font-size:11px; justify-content:center;">💾 Salva Dati e Sicurezza</button>';
-  html += '<div id="accUpdateMsg" style="font-size:11px; font-weight:700; margin-top:8px; text-align:center; display:none;"></div>';
-  html += '</div>';
+  html += '<button onclick="saveProfileData()" class="btn-p" style="width:100%; padding:8px; font-size:11px; justify-content:center; margin-bottom:12px;">💾 Salva Dati</button>';
+  
+  // SICUREZZA ACCOUNT (I link piccoli che volevi)
+  html += '<div style="display:flex; justify-content:space-between; font-size:11px; margin-top:5px;">';
+  html += '<span onclick="changeUserEmail()" style="color:var(--teal); cursor:pointer; text-decoration:underline; font-weight:bold;">Cambia Email</span>';
+  html += '<span onclick="resetUserPassword()" style="color:var(--teal); cursor:pointer; text-decoration:underline; font-weight:bold;">Reset Password</span>';
+  html += '</div></div>';
 
-  // 3. LINGUA
+  // 3. GESTIONE ABBONAMENTO (Nuova sezione con i tuoi prezzi)
+  var scadenza = accountData.expiry || "Non attivo";
   html += '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">';
-  html += '<button onclick="var e=document.getElementById(\'langOptions\'); e.style.display=(e.style.display===\'none\'?\'grid\':\'none\');" style="width:100%;background:linear-gradient(135deg,var(--teal2),var(--violet2));border:none;color:#fff;padding:10px;border-radius:10px;cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;box-shadow:0 4px 15px rgba(0,229,204,0.15);" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 20px rgba(0,229,204,0.4)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 4px 15px rgba(0,229,204,0.15)\'">🌐 CAMBIA LINGUA / LANGUAGE</button>';
+  html += '<div style="font-size:11px; color:var(--amber); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Abbonamento PropHedge</div>';
+  html += '<div style="font-size:12px; margin-bottom:10px; color:var(--t);">Scadenza: <b style="color:var(--teal);">' + scadenza + '</b></div>';
+  html += '<div style="display:grid; gap:8px;">';
+  html += '<button onclick="buyPlan(\'Mensile\')" style="width:100%; background:var(--bg3); border:1px solid var(--border2); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; transition:0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\'">Mese: 20€</button>';
+  html += '<button onclick="buyPlan(\'Annuale\')" style="width:100%; background:var(--bg3); border:1px solid var(--border2); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; transition:0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\'">Annuale: 200€</button>';
+  html += '<button onclick="buyPlan(\'Triennale\')" style="width:100%; background:var(--bg3); border:1px solid var(--border2); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; transition:0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\'">3 Anni: 500€</button>';
+  html += '</div></div>';
+
+  // 4. LINGUA
+  html += '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">';
+  html += '<button onclick="var e=document.getElementById(\'langOptions\'); e.style.display=(e.style.display===\'none\'?\'grid\':\'none\');" style="width:100%;background:linear-gradient(135deg,var(--teal2),var(--violet2));border:none;color:#fff;padding:10px;border-radius:10px;cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;gap:10px;">🌐 LINGUA / LANGUAGE</button>';
   html += '<div id="langOptions" style="display:none; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px;">';
-  html += '<button onclick="changeAppLang(\'it\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:6px; justify-content:center; transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\';this.style.background=\'var(--teal-bg)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--t)\';this.style.background=\'var(--bg2)\'"><img src="https://flagcdn.com/w20/it.png" style="width:16px;border-radius:2px;"> Italiano</button>';
-  html += '<button onclick="changeAppLang(\'en\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:6px; justify-content:center; transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\';this.style.background=\'var(--teal-bg)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--t)\';this.style.background=\'var(--bg2)\'"><img src="https://flagcdn.com/w20/gb.png" style="width:16px;border-radius:2px;"> English</button>';
-  html += '<button onclick="changeAppLang(\'es\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:6px; justify-content:center; transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\';this.style.background=\'var(--teal-bg)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--t)\';this.style.background=\'var(--bg2)\'"><img src="https://flagcdn.com/w20/es.png" style="width:16px;border-radius:2px;"> Español</button>';
-  html += '<button onclick="changeAppLang(\'de\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:6px; justify-content:center; transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\';this.style.background=\'var(--teal-bg)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--t)\';this.style.background=\'var(--bg2)\'"><img src="https://flagcdn.com/w20/de.png" style="width:16px;border-radius:2px;"> Deutsch</button>';
-  html += '<button onclick="changeAppLang(\'fr\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:6px; justify-content:center; transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\';this.style.background=\'var(--teal-bg)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--t)\';this.style.background=\'var(--bg2)\'"><img src="https://flagcdn.com/w20/fr.png" style="width:16px;border-radius:2px;"> Français</button>';
+  html += '<button onclick="changeAppLang(\'it\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:10px; display:flex; align-items:center; gap:5px;"><img src="https://flagcdn.com/w20/it.png" width="14"> IT</button>';
+  html += '<button onclick="changeAppLang(\'en\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:10px; display:flex; align-items:center; gap:5px;"><img src="https://flagcdn.com/w20/gb.png" width="14"> EN</button>';
+  html += '<button onclick="changeAppLang(\'es\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:6px; border-radius:6px; cursor:pointer; font-size:10px; display:flex; align-items:center; gap:5px;"><img src="https://flagcdn.com/w20/es.png" width="14"> ES</button>';
   html += '</div></div>';
 
-  // 4. ESCI
+  // 5. ESCI
   html += '<div style="display:grid;gap:8px">';
-  html += '<button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg2);border:1px solid rgba(255,64,96,.4);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background=\'var(--red-bg)\';this.style.borderColor=\'var(--red)\'" onmouseout="this.style.background=\'var(--bg2)\';this.style.borderColor=\'rgba(255,64,96,.4)\'"><span>🔓</span><span>Esci dal Profilo</span></button>';
+  html += '<button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px;background:var(--bg2);border:1px solid rgba(255,64,96,.4);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px;justify-content:center;">🔓 Esci dal Profilo</button>';
   html += '</div></div>';
-
   return html;
+}
+  function buyPlan(tipo) {
+  var messaggio = "Ciao! Vorrei acquistare l'abbonamento " + tipo + " per PropHedge. La mia email è: " + accountData.email;
+  var linkWhatsApp = "https://wa.me/39XXXXXXXXXX?text=" + encodeURIComponent(messaggio); 
+  
+  // Apri WhatsApp in una nuova scheda
+  window.open(linkWhatsApp, '_blank');
 }
   function saveProfileData() {
   var firstName = document.getElementById('accFirstName').value.trim();
@@ -4399,27 +4415,41 @@ function renderAccountDrop() {
   html += '<input type="text" id="accLastName" placeholder="Cognome" value="' + (accountData.lastName||'') + '" style="width:100%; margin-bottom:8px; background:var(--bg); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:6px; font-size:12px; font-family:var(--fd);">';
   html += '<button onclick="saveProfileData()" class="btn-p" style="width:100%; padding:8px; font-size:11px; justify-content:center; margin-bottom:12px;">💾 Salva Dati</button>';
   
-  // I LINK IN PICCOLO PER LA SICUREZZA
-  html += '<div style="font-size:11px; color:var(--t3); margin-bottom:8px; margin-top:12px; text-transform:uppercase; font-weight:700;">Sicurezza Account</div>';
-  html += '<div style="display:flex; justify-content:space-between; font-size:11px;">';
+  html += '<div style="display:flex; justify-content:space-between; font-size:11px; margin-top:5px;">';
   html += '<span onclick="changeUserEmail()" style="color:var(--teal); cursor:pointer; text-decoration:underline; font-weight:bold;">Cambia Email</span>';
   html += '<span onclick="resetUserPassword()" style="color:var(--teal); cursor:pointer; text-decoration:underline; font-weight:bold;">Reset Password</span>';
   html += '</div></div>';
-  // 3. LINGUA
+
+  // 3. PIANI E ABBONAMENTI
+  var scadenza = accountData.expiry || "Nessun piano attivo";
   html += '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">';
-  html += '<button onclick="var e=document.getElementById(\'langOptions\'); e.style.display=(e.style.display===\'none\'?\'grid\':\'none\');" style="width:100%;background:linear-gradient(135deg,var(--teal2),var(--violet2));border:none;color:#fff;padding:10px;border-radius:10px;cursor:pointer;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;box-shadow:0 4px 15px rgba(0,229,204,0.15);" onmouseover="this.style.transform=\'translateY(-2px)\';this.style.boxShadow=\'0 6px 20px rgba(0,229,204,0.4)\'" onmouseout="this.style.transform=\'none\';this.style.boxShadow=\'0 4px 15px rgba(0,229,204,0.15)\'">🌐 CAMBIA LINGUA / LANGUAGE</button>';
-  html += '<div id="langOptions" style="display:none; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px;">';
-  html += '<button onclick="changeAppLang(\'it\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:6px; justify-content:center; transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\';this.style.background=\'var(--teal-bg)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--t)\';this.style.background=\'var(--bg2)\'"><img src="https://flagcdn.com/w20/it.png" style="width:16px;border-radius:2px;"> Italiano</button>';
-  html += '<button onclick="changeAppLang(\'en\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:6px; justify-content:center; transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\';this.style.background=\'var(--teal-bg)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--t)\';this.style.background=\'var(--bg2)\'"><img src="https://flagcdn.com/w20/gb.png" style="width:16px;border-radius:2px;"> English</button>';
-  html += '<button onclick="changeAppLang(\'es\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:6px; justify-content:center; transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\';this.style.background=\'var(--teal-bg)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--t)\';this.style.background=\'var(--bg2)\'"><img src="https://flagcdn.com/w20/es.png" style="width:16px;border-radius:2px;"> Español</button>';
-  html += '<button onclick="changeAppLang(\'de\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:6px; justify-content:center; transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\';this.style.background=\'var(--teal-bg)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--t)\';this.style.background=\'var(--bg2)\'"><img src="https://flagcdn.com/w20/de.png" style="width:16px;border-radius:2px;"> Deutsch</button>';
-  html += '<button onclick="changeAppLang(\'fr\')" style="background:var(--bg2); border:1px solid var(--border); color:var(--t); padding:8px; border-radius:8px; cursor:pointer; font-size:11px; display:flex; align-items:center; gap:6px; justify-content:center; transition:all 0.2s;" onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\';this.style.background=\'var(--teal-bg)\'" onmouseout="this.style.borderColor=\'var(--border)\';this.style.color=\'var(--t)\';this.style.background=\'var(--bg2)\'"><img src="https://flagcdn.com/w20/fr.png" style="width:16px;border-radius:2px;"> Français</button>';
+  html += '<div style="font-size:11px; color:var(--amber); margin-bottom:8px; text-transform:uppercase; font-weight:700;">Abbonamento PropHedge</div>';
+  html += '<div style="font-size:12px; margin-bottom:12px; color:var(--t);">Scadenza: <b style="color:var(--teal);">' + scadenza + '</b></div>';
+  
+  html += '<div style="display:grid; gap:10px;">';
+  // MENSILE
+  html += '<button onclick="buyPlan(\'Mensile\')" style="width:100%; background:var(--bg3); border:1px solid var(--border2); color:var(--t); padding:10px; border-radius:8px; cursor:pointer; font-size:11px;">🌙 MENSILE: 20€</button>';
+  // ANNUALE
+  html += '<div style="position:relative;">';
+  html += '<div style="position:absolute; top:-8px; right:5px; background:var(--teal); color:#000; font-size:9px; font-weight:bold; padding:2px 6px; border-radius:4px; z-index:1;">RISPARMIA 40€</div>';
+  html += '<button onclick="buyPlan(\'Annuale\')" style="width:100%; background:var(--bg3); border:2px solid var(--teal); color:var(--t); padding:10px; border-radius:8px; cursor:pointer; font-size:11px; font-weight:bold;">📅 ANNUALE: 200€</button>';
+  html += '</div>';
+  // LIFETIME
+  html += '<button onclick="buyPlan(\'Lifetime\')" style="width:100%; background:linear-gradient(135deg, #1a1a1a, #2d2d2d); border:1px solid #FFD700; color:#FFD700; padding:10px; border-radius:8px; cursor:pointer; font-size:11px; font-weight:bold;">💎 LICENZA A VITA: 500€</button>';
   html += '</div></div>';
 
-  // 4. ESCI
-  html += '<div style="display:grid;gap:8px">';
-  html += '<button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg2);border:1px solid rgba(255,64,96,.4);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background=\'var(--red-bg)\';this.style.borderColor=\'var(--red)\'" onmouseout="this.style.background=\'var(--bg2)\';this.style.borderColor=\'rgba(255,64,96,.4)\'"><span>🔓</span><span>Esci dal Profilo</span></button>';
+  // 4. LINGUA (Versione compatta)
+  html += '<div style="margin-bottom:16px; border-bottom:1px solid var(--border); padding-bottom:16px;">';
+  html += '<button onclick="var e=document.getElementById(\'langOptions\'); e.style.display=(e.style.display===\'none\'?\'grid\':\'none\');" style="width:100%;background:var(--bg2);border:1px solid var(--border2);color:var(--t3);padding:8px;border-radius:10px;cursor:pointer;font-size:11px;">🌐 Lingua / Language</button>';
+  html += '<div id="langOptions" style="display:none; grid-template-columns: 1fr 1fr 1fr; gap:5px; margin-top:8px;">';
+  html += '<button onclick="changeAppLang(\'it\')" style="background:var(--bg); border:1px solid var(--border); color:var(--t); padding:5px; border-radius:5px; font-size:10px; cursor:pointer;">IT</button>';
+  html += '<button onclick="changeAppLang(\'en\')" style="background:var(--bg); border:1px solid var(--border); color:var(--t); padding:5px; border-radius:5px; font-size:10px; cursor:pointer;">EN</button>';
+  html += '<button onclick="changeAppLang(\'es\')" style="background:var(--bg); border:1px solid var(--border); color:var(--t); padding:5px; border-radius:5px; font-size:10px; cursor:pointer;">ES</button>';
   html += '</div></div>';
+
+  // 5. ESCI
+  html += '<button onclick="doLogout()" style="width:100%;padding:10px;background:var(--bg2);border:1px solid rgba(255,64,96,.4);border-radius:10px;color:var(--red);cursor:pointer;font-size:12px;">🔓 Esci dal Profilo</button>';
+  html += '</div>';
 
   return html;
 }
