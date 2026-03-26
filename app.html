@@ -2251,29 +2251,37 @@ function setMode(m){
 
 
 
+/* ==========================================================================
+   CUORE DEL SOFTWARE: LOGICA, ANTEPRIMA E GESTIONE SFIDE
+   ========================================================================== */
+
 function calcChallenge(p) {
+  // 1. Configurazione Asset: Valore Pip/Punto e Spread Medio
   let pipV = p.pipV || 10;
   let avgSpread = 1.0; 
+  const assetName = p.asset ? p.asset.toUpperCase() : "";
 
-  // Valori Pip e Spread automatici
-  if (p.asset.includes('GOLD') || p.asset.includes('XAU')) { pipV = 1; avgSpread = 2.0; }
-  else if (p.asset.includes('EUR') || p.asset.includes('GBP')) { pipV = 10; avgSpread = 0.8; }
-  else if (p.asset.includes('NAS') || p.asset.includes('US30')) { pipV = 1; avgSpread = 1.5; }
-  else if (p.asset.includes('ES_FUTURE')) { pipV = 50; avgSpread = 0.25; }
-  else if (p.asset.includes('NQ_FUTURE')) { pipV = 20; avgSpread = 0.50; }
+  if (assetName.includes('GOLD') || assetName.includes('XAU')) { pipV = 1; avgSpread = 2.0; }
+  else if (assetName.includes('EUR') || assetName.includes('GBP')) { pipV = 10; avgSpread = 0.8; }
+  else if (assetName.includes('NAS') || assetName.includes('US30') || assetName.includes('SP500')) { pipV = 1; avgSpread = 1.5; }
+  else if (assetName.includes('ES_FUTURE')) { pipV = 50; avgSpread = 0.25; }
+  else if (assetName.includes('NQ_FUTURE')) { pipV = 20; avgSpread = 0.50; }
 
+  // 2. Parametri di Base
   const targetVal = p.size * (p.tgtPct / 100);
   const dailyLossVal = p.size * (p.ddd / 100);
-  const consistencyPct = p.consistency || 30; 
+  const consistencyPct = p.consistency || 30;
 
-  const riskPerTrade = dailyLossVal / 2; 
-  const propLots = riskPerTrade / (p.slPips * pipV);
+  // 3. Calcolo Lotti (Prop su Drawdown, Hedge su recupero Costo)
+  const propLots = (dailyLossVal / 2) / (p.slPips * pipV);
   const hedgeLots = p.cost / (p.tpPips * pipV);
 
-  const totalSpreadCost = (propLots + hedgeLots) * avgSpread * pipV;
+  // 4. Analisi Consistenza e Spread
   const maxSingleProfit = targetVal * (consistencyPct / 100);
   const minTrades = Math.ceil(targetVal / maxSingleProfit);
+  const totalSpreadCost = (propLots + hedgeLots) * avgSpread * pipV;
 
+  // 5. Scenari Post-Costi Reali
   const sA_net = (hedgeLots * p.tpPips * pipV) - p.cost - (hedgeLots * avgSpread * pipV);
   const sB_net = (targetVal * (p.pay / 100)) - (hedgeLots * p.slPips * pipV) - p.cost - totalSpreadCost;
 
@@ -2281,222 +2289,108 @@ function calcChallenge(p) {
     propLots: +propLots.toFixed(2),
     hedgeLots: +hedgeLots.toFixed(2),
     minTrades: minTrades,
-    maxSingleProfit: +maxSingleTradeProfit.toFixed(2),
-    sA_net: +sA_net.toFixed(2),
-    sB_net: +sB_net.toFixed(2),
-    spreadImpact: +totalSpreadCost.toFixed(2),
-    recAcc: +((p.cost + (hedgeLots * p.slPips * pipV)) * 1.5).toFixed(2)
+    maxSingleProfit: maxSingleProfit,
+    sA_net: sA_net,
+    sB_net: sB_net,
+    spreadImpact: totalSpreadCost,
+    recAcc: (p.cost + (hedgeLots * p.slPips * pipV)) * 1.5
   };
 }
 
+function calcPreview() {
+  const size = parseFloat(document.getElementById('mSize').value) || 0;
+  const cost = parseFloat(document.getElementById('mCost').value) || 0;
+  const maxDD = parseFloat(document.getElementById('mDD').value) || 0;
+  const ddd = parseFloat(document.getElementById('mDDD').value) || 3;
+  const tgtPct = parseFloat(document.getElementById('mTgt').value) || 0;
+  const pay = parseFloat(document.getElementById('mPay').value) || 80;
+  const slPips = parseFloat(document.getElementById('mSlPips').value) || 50;
+  const tpPips = parseFloat(document.getElementById('mTpPips').value) || 50;
+  const assetStr = document.getElementById('mAsset').value;
+  // Legge il campo consistenza che abbiamo aggiunto nell'HTML
+  const consistency = parseFloat(document.getElementById('mConsistency')?.value) || 30;
 
-function openModal(){
+  if(document.getElementById('mSizeEur')) document.getElementById('mSizeEur').textContent = '~ ' + eF(size);
+  if(document.getElementById('mCostEur')) document.getElementById('mCostEur').textContent = '~ ' + eF(cost);
 
-  stratMode='personal';setMode('personal');
+  const p = {
+    size: size, cost: cost, maxDD: maxDD, ddd: ddd, tgtPct: tgtPct, 
+    pay: pay, slPips: slPips, tpPips: tpPips, 
+    asset: assetStr.split(':')[0], consistency: consistency, mode: stratMode
+  };
 
-  var ov=document.getElementById('modalOv');ov.style.display='flex';
+  const c = calcChallenge(p);
+  const box = document.getElementById('mPreview');
+  if (!box || !size) return;
 
-  var modal=ov.querySelector('.modal');if(modal)modal.scrollTop=0;
-
-  calcPreview();
-
-}
-
-function closeModal(){document.getElementById('modalOv').style.display='none';}
-
-
-
-function onAssetChange(val){
-
-  var parts=val.split(':');document.getElementById('mPipV').value=parseFloat(parts[1])||10;calcPreview();
-
-}
-
-function findBrand(v){var q=v.toLowerCase().trim();if(!q)return null;return BRANDS.find(function(b){return b.name.toLowerCase().indexOf(q)!==-1;})||null;}
-
-function searchBrands(q){if(!q||q.length<2)return[];var ql=q.toLowerCase();return BRANDS.filter(function(b){return b.name.toLowerCase().indexOf(ql)!==-1;}).slice(0,6);}
-
-function setLogoPreview(b){var el=document.getElementById('mLogo');if(!el)return;if(b){el.innerHTML='<img src="'+logoUrl(b.domain)+'" style="width:100%;height:100%;object-fit:cover;border-radius:7px" data-try="1" onerror="logoErr(this,\''+b.domain+'\',\''+b.name+'\')" alt="">';el.style.border='1px solid '+b.color+'40';}else{el.innerHTML='?';el.style.border='1px solid var(--border)';}}
-
-function onName(v){
-
-  var b=findBrand(v);setLogoPreview(b);document.getElementById('mDomain').value=b?b.domain:'';
-
-  if(b&&b.maxDD>0){document.getElementById('mDD').value=b.maxDD;document.getElementById('mDDD').value=b.ddd;document.getElementById('mTgt').value=b.tgt||b.maxDD;document.getElementById('mPay').value=b.pay;if(b.cost)document.getElementById('mCost').value=b.cost;}
-
-  var sugg=document.getElementById('mSugg'),items=searchBrands(v);
-
-  if(items.length){sugg.style.display='block';var h='';items.forEach(function(b){h+='<div class="si" onclick="pickBrand(\''+b.name.replace(/'/g,'\\u0027')+'\')">'+'<div class="si-logo"><img src="'+logoUrl(b.domain)+'" data-try="1" onerror="logoErr(this,\''+b.domain+'\',\''+b.name+'\')" alt=""></div>'+'<div><div style="font-size:13px;font-weight:600">'+b.name+'</div>'+'<div style="font-size:10px;color:var(--t3);font-family:var(--fd)">DD '+b.maxDD+'% - payout '+b.pay+'%</div></div></div>';});sugg.innerHTML=h;}
-
-  else sugg.style.display='none';
-
-  calcPreview();
-
-}
-
-function pickBrand(name){
-
-  var b=BRANDS.find(function(x){return x.name===name;});if(!b)return;
-
-  document.getElementById('mName').value=name;document.getElementById('mDomain').value=b.domain;setLogoPreview(b);
-
-  if(b.maxDD>0){document.getElementById('mDD').value=b.maxDD;document.getElementById('mDDD').value=b.ddd;document.getElementById('mTgt').value=b.tgt||b.maxDD;document.getElementById('mPay').value=b.pay;if(b.cost)document.getElementById('mCost').value=b.cost;}
-
-  document.getElementById('mSugg').style.display='none';calcPreview();
-
-}
-
-document.addEventListener('click',function(e){var s=document.getElementById('mSugg');if(s&&!e.target.closest('#mSugg')&&!e.target.closest('#mName'))s.style.display='none';});
-
-
-
-function calcPreview(){
-
-  var size=parseFloat(document.getElementById('mSize').value)||0;
-
-  var cost=parseFloat(document.getElementById('mCost').value)||0;
-
-  var maxDD=parseFloat(document.getElementById('mDD').value)||0;
-
-  var ddd=parseFloat(document.getElementById('mDDD').value)||0;
-
-  var tgtPct=parseFloat(document.getElementById('mTgt').value)||0;
-
-  var days=parseFloat(document.getElementById('mDays').value)||1;
-
-  var pay=parseFloat(document.getElementById('mPay').value)||80;
-
-  var pipV=parseFloat(document.getElementById('mPipV').value)||10;
-
-  var slPips=parseFloat(document.getElementById('mSlPips').value)||50;
-
-  var tpPips=parseFloat(document.getElementById('mTpPips').value)||slPips;
-
-  var se=document.getElementById('mSizeEur');if(se)se.textContent=size?('~ '+eF(size)):'';
-
-  var ce=document.getElementById('mCostEur');if(ce)ce.textContent=cost?('~ '+eF(cost)):'';
-
-  var box=document.getElementById('mPreview');if(!box||!size||!maxDD||!cost)return;
-
-  var size2=stratMode==='prop2'?(parseFloat((document.getElementById('mSize2')||{value:''}).value)||10000):0;
-
-  var cost2=stratMode==='prop2'?(parseFloat((document.getElementById('mCost2')||{value:''}).value)||100):0;
-
-  var dd2=stratMode==='prop2'?(parseFloat((document.getElementById('mDD2')||{value:''}).value)||6):0;
-
-  var p={size:size,cost:cost,maxDD:maxDD,ddd:ddd||3,tgtPct:tgtPct||maxDD,days:days,pay:pay,pipV:pipV,slPips:slPips,tpPips:tpPips,mode:stratMode,size2:size2,cost2:cost2,dd2:dd2};
-
-  var c=calcChallenge(p);
-
-  // --- NUOVA LOGICA DI CALCOLO INTEGRATA ---
-  const targetVal = p.size * (p.tgtPct / 100);
-  // Prende la consistenza dal nuovo campo che aggiungeremo, o usa 30% come base
-  const consistencyPct = parseFloat(document.getElementById('mConsistency')?.value) || 30;
-  const maxSingleProfit = targetVal * (consistencyPct / 100);
-  const minTrades = Math.ceil(targetVal / maxSingleProfit);
-  
-  // Rilevamento automatico valore PIP per Asset (Forex, Oro o Futures)
-  let vPip = p.pipV;
-  if (p.asset.includes('GOLD') || p.asset.includes('XAU')) vPip = 1;
-  if (p.asset.includes('ES_FUTURE')) vPip = 50; // S&P500 Future
-  if (p.asset.includes('NQ_FUTURE')) vPip = 20; // Nasdaq Future
-
-  // Calcolo Lotti Prop (rischio basato su drawdown giornaliero)
-  const pLots = (p.size * (p.ddd / 100) / 2) / (p.slPips * vPip);
-  // Calcolo Lotti Hedge (basato sul recupero del costo sfida)
-  const hLots = p.cost / (p.tpPips * vPip);
-
-  // Calcolo Scenari Netto
-  const sA_net = (hLots * p.tpPips * vPip) - p.cost;
-  const sB_net = (targetVal * (p.pay / 100)) - (hLots * p.slPips * vPip) - p.cost;
-
-  // --- NUOVA INTERFACCIA ANTEPRIMA ---
-  box.innerHTML = '<div class="prev"><div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Analisi Strategia Reale (Inc. Consistenza)</div>'
+  box.innerHTML = '<div class="prev"><div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Analisi Reale (Spread + Consistenza)</div>'
     + '<div class="prev-g">'
-    + '<div class="pv" style="border-color:rgba(0,229,204,.2)"><div class="pv-lb">LOTTI PROP</div><div class="pv-v v-teal">'+pLots.toFixed(2)+' lot</div><div class="pv-s">Max Profit/Trade: '+uF(maxSingleProfit)+'</div></div>'
-    + '<div class="pv" style="border-color:rgba(155,93,229,.2)"><div class="pv-lb">LOTTI HEDGE</div><div class="pv-v v-violet">'+hLots.toFixed(2)+' lot</div><div class="pv-s">Min. Operazioni: '+minTrades+'</div></div>'
-    + '<div class="pv"><div class="pv-lb">SCENARIO A (FALL.)</div><div class="pv-v '+(sA_net>=0?'v-green':'v-red')+'">'+uF(sA_net)+'</div><div class="pv-s">Profitto se la prop fallisce</div></div>'
-    + '<div class="pv"><div class="pv-lb">SCENARIO B (PASS.)</div><div class="pv-v '+(sB_net>=0?'v-green':'v-red')+'">'+uF(sB_net)+'</div><div class="pv-s">Payout netto post-hedge</div></div>'
+    + '<div class="pv" style="border-color:rgba(0,229,204,.2)"><div class="pv-lb">LOTTI PROP</div><div class="pv-v v-teal">'+c.propLots+' lot</div><div class="pv-s">Max Profit: '+uF(c.maxSingleProfit)+'</div></div>'
+    + '<div class="pv" style="border-color:rgba(155,93,229,.2)"><div class="pv-lb">LOTTI HEDGE</div><div class="pv-v v-violet">'+c.hedgeLots+' lot</div><div class="pv-s">Min. Trade: '+c.minTrades+'</div></div>'
+    + '<div class="pv"><div class="pv-lb">SCENARIO A (FALL.)</div><div class="pv-v '+(c.sA_net>=0?'v-green':'v-red')+'">'+uF(c.sA_net)+'</div><div class="pv-s">Se la prop fallisce</div></div>'
+    + '<div class="pv"><div class="pv-lb">SCENARIO B (PASS.)</div><div class="pv-v '+(c.sB_net>=0?'v-green':'v-red')+'">'+uF(c.sB_net)+'</div><div class="pv-s">Netto post-spread</div></div>'
     + '</div>'
-    + '<div style="margin-top:10px; font-size:10px; color:var(--t3); text-align:center">Asset: '+p.asset+' | Conteggio lotti basato su Pip/Tick Value reale</div></div>';
+    + '<div style="margin-top:10px; font-size:10px; color:var(--t3); text-align:center">Impatto Spread stimato: -'+uF(c.spreadImpact)+' | Asset: '+p.asset+'</div></div>';
 }
 
+function doAdd() {
+  const name = document.getElementById('mName').value.trim() || ('Sfida ' + (props.length + 1));
+  const assetVal = document.getElementById('mAsset').value;
+  const consistency = parseFloat(document.getElementById('mConsistency')?.value) || 30;
+  const pid = Date.now();
 
-
-function doAdd(){
-
-  var name=document.getElementById('mName').value.trim()||('Sfida '+(props.length+1));
-
-  var av=document.getElementById('mAsset').value;
-
-  var sl=parseFloat(document.getElementById('mSlPips').value)||50;
-
-  var tp=parseFloat(document.getElementById('mTpPips').value)||sl;
-
-  var pid=Date.now();
-
-  var p={id:pid,name:name,domain:document.getElementById('mDomain').value,mode:stratMode,
-
-    size:parseFloat(document.getElementById('mSize').value)||100000,
-
-    cost:parseFloat(document.getElementById('mCost').value)||500,
-
-    maxDD:parseFloat(document.getElementById('mDD').value)||6,
-
-    ddd:parseFloat(document.getElementById('mDDD').value)||3,
-
-    tgtPct:parseFloat(document.getElementById('mTgt').value)||6,
-
-    days:parseFloat(document.getElementById('mDays').value)||14,
-
-    pay:parseFloat(document.getElementById('mPay').value)||80,
-
-    pipV:parseFloat(document.getElementById('mPipV').value)||10,
-
-    slPips:sl,tpPips:tp,asset:av.split(':')[0],
-
-    createdAt:new Date().toISOString(),
-
-    size2:stratMode==='prop2'?(parseFloat(document.getElementById('mSize2').value)||10000):0,
-
-    cost2:stratMode==='prop2'?(parseFloat(document.getElementById('mCost2').value)||100):0,
-
-    dd2:stratMode==='prop2'?(parseFloat(document.getElementById('mDD2').value)||6):0};
+  const p = {
+    id: pid, name: name, domain: document.getElementById('mDomain').value, mode: stratMode,
+    size: parseFloat(document.getElementById('mSize').value) || 100000,
+    cost: parseFloat(document.getElementById('mCost').value) || 500,
+    maxDD: parseFloat(document.getElementById('mDD').value) || 6,
+    ddd: parseFloat(document.getElementById('mDDD').value) || 3,
+    tgtPct: parseFloat(document.getElementById('mTgt').value) || 6,
+    days: parseFloat(document.getElementById('mDays').value) || 14,
+    pay: parseFloat(document.getElementById('mPay').value) || 80,
+    pipV: parseFloat(document.getElementById('mPipV').value) || 10,
+    slPips: parseFloat(document.getElementById('mSlPips').value) || 50,
+    tpPips: parseFloat(document.getElementById('mTpPips').value) || 50,
+    asset: assetVal.split(':')[0],
+    consistency: consistency,
+    createdAt: new Date().toISOString()
+  };
 
   props.push(p);
-
   jrnlNewSession(name, pid);
-
-  var sess = jrnl.sessions[jrnl.sessions.length-1];
-
-  sess.linkedPropId = pid;
-
   jrnlSave();
-
-  closeModal();activeId=p.id;goTab('dash',document.getElementById('tabDash'));
-
+  closeModal();
+  activeId = p.id;
+  goTab('dash', document.getElementById('tabDash'));
 }
 
-function delProp(id){props=props.filter(function(p){return p.id!==id;});if(activeId===id)activeId=props.length?props[0].id:null;render();}
+function delProp(id) {
+  props = props.filter(p => p.id !== id);
+  if (activeId === id) activeId = props.length ? props[0].id : null;
+  render();
+}
 
-function selProp(id){activeId=id;goTab('calc',document.getElementById('tabCalc'));}
+function selProp(id) {
+  activeId = id;
+  goTab('calc', document.getElementById('tabCalc'));
+}
 
-function updP(id,key,val){var p=props.find(function(x){return x.id===id;});if(p){p[key]=parseFloat(val)||0;render();}}
+function updP(id, key, val) {
+  const p = props.find(x => x.id === id);
+  if (p) { p[key] = parseFloat(val) || 0; render(); }
+}
 
-function updS(id,key,val){var p=props.find(function(x){return x.id===id;});if(p){p[key]=val;render();}}
+function updS(id, key, val) {
+  const p = props.find(x => x.id === id);
+  if (p) { p[key] = val; render(); }
+}
 
-
-
-function goTab(tab,el){
-
-  currentTab=tab;
-
-  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
-
-  if(el)el.classList.add('active');
-
-  closeAccDrop();render();
-
+function goTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  closeAccDrop();
+  render();
 }
 
 
