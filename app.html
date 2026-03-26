@@ -2260,32 +2260,27 @@ function setMode(m){
    ========================================================================== */
 
 function calcChallenge(p) {
-  // 1. Configurazione Asset: Valore Pip/Punto e Spread Medio
   let pipV = p.pipV || 10;
   let avgSpread = 1.0; 
   const assetName = p.asset ? p.asset.toUpperCase() : "";
 
   if (assetName.includes('GOLD') || assetName.includes('XAU')) { pipV = 1; avgSpread = 2.0; }
   else if (assetName.includes('EUR') || assetName.includes('GBP')) { pipV = 10; avgSpread = 0.8; }
-  else if (assetName.includes('NAS') || assetName.includes('US30') || assetName.includes('SP500')) { pipV = 1; avgSpread = 1.5; }
-  else if (assetName.includes('ES_FUTURE')) { pipV = 50; avgSpread = 0.25; }
-  else if (assetName.includes('NQ_FUTURE')) { pipV = 20; avgSpread = 0.50; }
+  else if (assetName.includes('NAS') || assetName.includes('US30')) { pipV = 1; avgSpread = 1.5; }
+  else if (assetName === 'ES_FUTURE') { pipV = 50; avgSpread = 0.25; }
+  else if (assetName === 'NQ_FUTURE') { pipV = 20; avgSpread = 0.50; }
 
-  // 2. Parametri di Base
   const targetVal = p.size * (p.tgtPct / 100);
   const dailyLossVal = p.size * (p.ddd / 100);
   const consistencyPct = p.consistency || 30;
 
-  // 3. Calcolo Lotti (Prop su Drawdown, Hedge su recupero Costo)
   const propLots = (dailyLossVal / 2) / (p.slPips * pipV);
   const hedgeLots = p.cost / (p.tpPips * pipV);
 
-  // 4. Analisi Consistenza e Spread
   const maxSingleProfit = targetVal * (consistencyPct / 100);
   const minTrades = Math.ceil(targetVal / maxSingleProfit);
   const totalSpreadCost = (propLots + hedgeLots) * avgSpread * pipV;
 
-  // 5. Scenari Post-Costi Reali
   const sA_net = (hedgeLots * p.tpPips * pipV) - p.cost - (hedgeLots * avgSpread * pipV);
   const sB_net = (targetVal * (p.pay / 100)) - (hedgeLots * p.slPips * pipV) - p.cost - totalSpreadCost;
 
@@ -2311,13 +2306,9 @@ function calcPreview() {
   const slPips = parseFloat(document.getElementById('mSlPips').value) || 50;
   const tpPips = parseFloat(document.getElementById('mTpPips').value) || 50;
   const assetStr = document.getElementById('mAsset').value;
-  // Legge il campo consistenza che abbiamo aggiunto nell'HTML
   const consistency = parseFloat(document.getElementById('mConsistency')?.value) || 30;
 
-  if(document.getElementById('mSizeEur')) document.getElementById('mSizeEur').textContent = '~ ' + eF(size);
-  if(document.getElementById('mCostEur')) document.getElementById('mCostEur').textContent = '~ ' + eF(cost);
-
-const p = {
+  const p = {
     size: size, cost: cost, maxDD: maxDD, ddd: ddd, tgtPct: tgtPct, 
     pay: pay, slPips: slPips, tpPips: tpPips, 
     asset: assetStr.split(':')[0], consistency: consistency, mode: stratMode
@@ -2327,12 +2318,12 @@ const p = {
   const box = document.getElementById('mPreview');
   if (!box || !size) return;
 
-  box.innerHTML = '<div class="prev"><div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Analisi Reale (Spread + Consistenza)</div>'
+  box.innerHTML = '<div class="prev"><div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Analisi Strategia Reale</div>'
     + '<div class="prev-g">'
     + '<div class="pv" style="border-color:rgba(0,229,204,.2)"><div class="pv-lb">LOTTI PROP</div><div class="pv-v v-teal">'+c.propLots+' lot</div><div class="pv-s">Max Profit: '+uF(c.maxSingleProfit)+'</div></div>'
     + '<div class="pv" style="border-color:rgba(155,93,229,.2)"><div class="pv-lb">LOTTI HEDGE</div><div class="pv-v v-violet">'+c.hedgeLots+' lot</div><div class="pv-s">Min. Trade: '+c.minTrades+'</div></div>'
-    + '<div class="pv"><div class="pv-lb">SCENARIO A (FALL.)</div><div class="pv-v '+(c.sA_net>=0?'v-green':'v-red')+'">'+uF(c.sA_net)+'</div><div class="pv-s">Se la prop fallisce</div></div>'
-    + '<div class="pv"><div class="pv-lb">SCENARIO B (PASS.)</div><div class="pv-v '+(c.sB_net>=0?'v-green':'v-red')+'">'+uF(c.sB_net)+'</div><div class="pv-s">Netto post-spread</div></div>'
+    + '<div class="pv"><div class="pv-lb">SCENARIO A</div><div class="pv-v '+(c.sA_net>=0?'v-green':'v-red')+'">'+uF(c.sA_net)+'</div><div class="pv-s">Se la prop fallisce</div></div>'
+    + '<div class="pv"><div class="pv-lb">SCENARIO B</div><div class="pv-v '+(c.sB_net>=0?'v-green':'v-red')+'">'+uF(c.sB_net)+'</div><div class="pv-s">Payout netto post-hedge</div></div>'
     + '</div>'
     + '<div style="margin-top:10px; font-size:10px; color:var(--t3); text-align:center">Impatto Spread stimato: -'+uF(c.spreadImpact)+' | Asset: '+p.asset+'</div></div>';
 }
