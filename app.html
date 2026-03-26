@@ -1855,6 +1855,10 @@ function doRegisterFree(){
         <div class="f"><label>Payout (%)</label><input id="mPay" type="number" value="80" step="5" oninput="calcPreview()"></div>
 
       </div>
+      <div class="f">
+  <label>Consistenza Prop (%)</label>
+  <input id="mConsistency" type="number" value="30" step="5" oninput="calcPreview()">
+</div>
 
       <div id="prop2Fields" style="display:none">
 
@@ -2313,7 +2317,7 @@ function calcPreview() {
   if(document.getElementById('mSizeEur')) document.getElementById('mSizeEur').textContent = '~ ' + eF(size);
   if(document.getElementById('mCostEur')) document.getElementById('mCostEur').textContent = '~ ' + eF(cost);
 
-  const p = {
+const p = {
     size: size, cost: cost, maxDD: maxDD, ddd: ddd, tgtPct: tgtPct, 
     pay: pay, slPips: slPips, tpPips: tpPips, 
     asset: assetStr.split(':')[0], consistency: consistency, mode: stratMode
