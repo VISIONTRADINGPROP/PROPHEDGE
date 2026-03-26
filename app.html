@@ -3518,47 +3518,220 @@ function faqItem(q,a){
 
 
 // ══ STATISTICHE ══════════════════════════════════════════════════
-
 function renderStats(){
 
   var allTrades=[];
+  var allCycles=[];
 
   jrnl.sessions.forEach(function(sess){
-
-    (sess.propTrades||[]).forEach(function(t){allTrades.push(Object.assign({},t,{sessName:sess.name,side:'prop'}));});
-
-    (sess.brokerTrades||[]).forEach(function(t){allTrades.push(Object.assign({},t,{sessName:sess.name,side:'broker'}));});
-
+    var propTrades=sess.propTrades||[];
+    var brokerTrades=sess.brokerTrades||[];
+    var propPnl=propTrades.reduce(function(s,t){return s+parseFloat(t.profit||t.pnl_realized||0);},0);
+    var brokerPnl=brokerTrades.reduce(function(s,t){return s+parseFloat(t.profit||t.pnl_realized||0);},0);
+    allCycles.push({name:sess.name,concluded:!!sess.concluded,net:propPnl+brokerPnl,propPnl:propPnl,brokerPnl:brokerPnl,propCount:propTrades.length,brokerCount:brokerTrades.length});
+    propTrades.forEach(function(t){allTrades.push(Object.assign({},t,{sessName:sess.name,side:'prop'}));});
+    brokerTrades.forEach(function(t){allTrades.push(Object.assign({},t,{sessName:sess.name,side:'broker'}));});
   });
 
-  if(!allTrades.length)return'<div class="empty ai"><div style="font-size:44px;margin-bottom:14px;opacity:.3">📊</div><p>Nessun trade nel Journal.<br>Connetti un conto dalla tab Journal per vedere le statistiche.</p><button class="btn-p" onclick="goTab(\'journal\',document.getElementById(\'tabJournal\'))">Vai al Journal</button></div>';
+  if(!allTrades.length&&!allCycles.length){
+    return'<div class="empty ai"><div style="font-size:44px;margin-bottom:14px;opacity:.3">📊</div><p>Nessun dato statistico.<br>Connetti i conti dal <strong>Journal</strong> per vedere le statistiche.</p><button class="btn-p" onclick="goTab(\'journal\',document.getElementById(\'tabJournal\'))">Vai al Journal</button></div>';
+  }
 
-  var closedAll=allTrades.filter(function(t){return t.status==='closed';});
+  var closedTrades=allTrades.filter(function(t){return t.status==='closed';});
+  var gs=calcTradeStats(closedTrades);
+  var cyclesClosed=allCycles.filter(function(c){return c.concluded;}).length;
+  var totalPnl=allCycles.reduce(function(s,c){return s+c.net;},0);
 
-  var globalStats=calcTradeStats(closedAll,'Globale',-1);
+  var bestCycle={net:-Infinity,name:'—'};
+  var worstCycle={net:Infinity,name:'—'};
+  allCycles.forEach(function(c){
+    if(c.net>bestCycle.net)bestCycle=c;
+    if(c.net<worstCycle.net)worstCycle=c;
+  });
 
-  var html='<div style="max-width:1200px">'
+  var monthlyData=_statsMonthly(closedTrades);
+  var annualData=_statsAnnual(closedTrades);
 
-    +'<div style="margin-bottom:22px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--t3);font-family:var(--fd);margin-bottom:14px">📊 Riepilogo Globale</div>'
+  if(!document.getElementById('stats-css')){
+    var s=document.createElement('style');
+    s.id='stats-css';
+    s.textContent='.st-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px}.st-grid2{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}.st-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;transition:all .2s;cursor:default}.st-card:hover{border-color:var(--border2);transform:translateY(-2px)}.st-ic{font-size:16px;margin-bottom:8px}.st-lb{font-size:9px;color:var(--t3);font-family:var(--fh);text-transform:uppercase;letter-spacing:.14em;font-weight:600;margin-bottom:4px}.st-vl{font-size:20px;font-weight:700;font-family:var(--fd);letter-spacing:.02em}.st-sb{font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:2px}.st-tabs{display:flex;gap:6px;margin-bottom:12px}.st-tab{padding:5px 14px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--t2);font-size:10px;font-weight:700;cursor:pointer;font-family:var(--fh);letter-spacing:.08em;transition:all .15s}.st-tab.active{background:var(--teal);border-color:var(--teal);color:#000}.st-chart-wrap{position:relative;height:240px}.cyc-table{width:100%;border-collapse:collapse}.cyc-table th{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);font-family:var(--fd);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg3)}.cyc-table td{padding:10px;font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle}.cyc-table tr:last-child td{border-bottom:none}.cyc-table tr.cyc-pos td{background:rgba(0,214,143,.02)}.bw-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.bw-card{border-radius:12px;padding:14px;border:1px solid}.bw-best{background:rgba(0,214,143,.06);border-color:rgba(0,214,143,.2)}.bw-worst{background:rgba(255,64,96,.06);border-color:rgba(255,64,96,.2)}';
+    document.head.appendChild(s);
+  }
 
-    +'<div class="sg">'
+  var html='<div style="max-width:1200px">';
 
-    +statCard('🎯','Trade Totali',globalStats.totalTrades,'chiusi')
+  html+='<div class="st-grid">';
+  html+=_stCard('◇','Cicli Totali',allCycles.length,'challenges create','var(--violet)');
+  html+=_stCard('✅','Cicli Chiusi',cyclesClosed,'completati su '+allCycles.length,'var(--teal)');
+  html+=_stCard('🎯','Trade Totali',gs.totalTrades,gs.wins+' vinte / '+gs.losses+' perse','var(--t)');
+  html+=_stCard('⚡','Win Rate',gs.winRate.toFixed(1)+'%','tasso vincite trade',gs.winRate>=50?'var(--green)':'var(--red)');
+  html+=_stCard('💰','P/L Netto Totale',(totalPnl>=0?'+':'')+totalPnl.toFixed(2)+'$','tutti i cicli',totalPnl>=0?'var(--green)':'var(--red)');
+  html+='</div>';
 
-    +statCard('✅','Win Rate',globalStats.winRate.toFixed(1)+'%',globalStats.wins+'W / '+globalStats.losses+'L',globalStats.winRate>=50?'var(--green)':'var(--red)')
+  html+='<div class="st-grid2">';
+  html+=_stCard('📈','Profit Factor',gs.profitFactor===Infinity?'∞':gs.profitFactor.toFixed(2),'guadagni ÷ perdite',gs.profitFactor>=1?'var(--green)':'var(--red)');
+  html+=_stCard('💚','Avg Vincente','+'+gs.avgWin.toFixed(2)+'$','media profit per trade','var(--green)');
+  html+=_stCard('🔴','Avg Perdente','-'+gs.avgLoss.toFixed(2)+'$','media loss per trade','var(--red)');
+  html+=_stCard('⚡','Expectancy',(gs.avgTrade>=0?'+':'')+gs.avgTrade.toFixed(2)+'$','attesa statistica',gs.avgTrade>=0?'var(--green)':'var(--red)');
+  html+='</div>';
 
-    +statCard('💰','P/L Totale',(globalStats.totalPnl>=0?'+':'')+globalStats.totalPnl.toFixed(2)+'$','profitto netto',globalStats.totalPnl>=0?'var(--green)':'var(--red)')
+  html+='<div class="panel ai" style="margin-bottom:14px">'
+    +'<div class="ph"><h3>Andamento P&amp;L</h3>'
+    +'<div style="display:flex;gap:6px;margin-left:auto">'
+    +'<button class="st-tab active" id="stTabM" onclick="_stShowChart(\'M\')">📈 Mensile</button>'
+    +'<button class="st-tab" id="stTabA" onclick="_stShowChart(\'A\')">📊 Annuale</button>'
+    +'</div></div>'
+    +'<div class="pb">'
+    +(monthlyData.labels.length||annualData.labels.length
+      ?'<div class="st-chart-wrap"><canvas id="stChart"></canvas></div>'
+      :'<div style="text-align:center;padding:40px;color:var(--t3);font-size:12px"><div style="font-size:32px;margin-bottom:10px;opacity:.3">📊</div>Nessun trade con data. Connetti i conti dal Journal.</div>')
+    +'</div></div>';
 
-    +statCard('⚡','Profit Factor',globalStats.profitFactor===Infinity?'∞':globalStats.profitFactor.toFixed(2),'guadagni / perdite',globalStats.profitFactor>=1?'var(--green)':'var(--red)')
+  html+='<div class="panel ai" style="margin-bottom:14px">'
+    +'<div class="ph"><h3>Dettaglio Cicli ('+allCycles.length+')</h3></div>'
+    +'<div class="pb" style="padding:0"><table class="cyc-table"><thead><tr>'
+    +'<th>Sfida</th><th style="text-align:center">Stato</th>'
+    +'<th style="text-align:right">Trade Prop</th><th style="text-align:right">Trade Broker</th>'
+    +'<th style="text-align:right">P/L Prop</th><th style="text-align:right">P/L Broker</th>'
+    +'<th style="text-align:right">P/L NETTO</th>'
+    +'</tr></thead><tbody>';
 
-    +'</div></div></div>';
+  allCycles.forEach(function(c){
+    var nc=c.net>=0?'v-green':'v-red';
+    var pc=c.propPnl>=0?'v-green':'v-red';
+    var bc=c.brokerPnl>=0?'v-green':'v-red';
+    html+='<tr class="'+(c.net>0?'cyc-pos':'')+'">'
+      +'<td style="font-weight:600">'+c.name+'</td>'
+      +'<td style="text-align:center">'+(c.concluded?'<span class="badge b-teal">✓ Chiuso</span>':'<span style="color:var(--amber);font-size:10px;font-family:var(--fd)">● In corso</span>')+'</td>'
+      +'<td style="text-align:right;font-family:var(--fd)">'+c.propCount+'</td>'
+      +'<td style="text-align:right;font-family:var(--fd)">'+c.brokerCount+'</td>'
+      +'<td style="text-align:right;font-family:var(--fd)" class="'+pc+'">'+(c.propPnl>=0?'+':'')+c.propPnl.toFixed(2)+'$</td>'
+      +'<td style="text-align:right;font-family:var(--fd)" class="'+bc+'">'+(c.brokerPnl>=0?'+':'')+c.brokerPnl.toFixed(2)+'$</td>'
+      +'<td style="text-align:right;font-family:var(--fd);font-size:15px;font-weight:700" class="'+nc+'">'+(c.net>=0?'+':'')+c.net.toFixed(2)+'$</td>'
+      +'</tr>';
+  });
+
+  html+='</tbody></table></div></div>';
+
+  if(allCycles.length>1){
+    html+='<div class="bw-grid">'
+      +'<div class="bw-card bw-best"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">🏆 Miglior Ciclo</div>'
+      +'<div style="font-size:14px;font-weight:700;margin-bottom:2px">'+bestCycle.name+'</div>'
+      +'<div style="font-size:22px;font-weight:800;font-family:var(--fd);color:var(--green)">+'+(bestCycle.net||0).toFixed(2)+'$</div></div>'
+      +'<div class="bw-card bw-worst"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">📉 Peggior Ciclo</div>'
+      +'<div style="font-size:14px;font-weight:700;margin-bottom:2px">'+worstCycle.name+'</div>'
+      +'<div style="font-size:22px;font-weight:800;font-family:var(--fd);color:var(--red)">'+(worstCycle.net||0).toFixed(2)+'$</div></div>'
+      +'</div>';
+  }
+
+  html+='</div>';
+
+  setTimeout(function(){
+    _stLoadChartJs(function(){
+      window._stMonthly=monthlyData;
+      window._stAnnual=annualData;
+      _stShowChart('M');
+    });
+  },80);
 
   return html;
-
 }
 
+function _stCard(icon,label,value,sub,color){
+  return'<div class="st-card ai"><div class="st-ic">'+icon+'</div><div class="st-lb">'+label+'</div><div class="st-vl" style="color:'+(color||'var(--t)')+'">'+value+'</div><div class="st-sb">'+sub+'</div></div>';
+}
 
+function _statsMonthly(trades){
+  var m={};
+  trades.forEach(function(t){
+    var d=new Date(t.open_time||t.opened_at||t.close_time||t.closed_at||'');
+    if(isNaN(d.getTime()))return;
+    var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    m[k]=(m[k]||0)+parseFloat(t.profit||t.pnl_realized||0);
+  });
+  var keys=Object.keys(m).sort();
+  var mesi=['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+  return{labels:keys.map(function(k){var p=k.split('-');return mesi[parseInt(p[1])-1]+' '+p[0].slice(2);}),values:keys.map(function(k){return+m[k].toFixed(2);})};
+}
 
+function _statsAnnual(trades){
+  var y={};
+  trades.forEach(function(t){
+    var d=new Date(t.open_time||t.opened_at||t.close_time||t.closed_at||'');
+    if(isNaN(d.getTime()))return;
+    var k=String(d.getFullYear());
+    y[k]=(y[k]||0)+parseFloat(t.profit||t.pnl_realized||0);
+  });
+  var keys=Object.keys(y).sort();
+  return{labels:keys,values:keys.map(function(k){return+y[k].toFixed(2);})};
+}
+
+var _stChartJsLoading=false;
+var _stChartJsCbs=[];
+function _stLoadChartJs(cb){
+  if(window.Chart){cb();return;}
+  _stChartJsCbs.push(cb);
+  if(_stChartJsLoading)return;
+  _stChartJsLoading=true;
+  var sc=document.createElement('script');
+  sc.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
+  sc.onload=function(){_stChartJsCbs.forEach(function(fn){fn();});_stChartJsCbs=[];};
+  document.head.appendChild(sc);
+}
+
+var _stCurrentChart=null;
+function _stShowChart(tab){
+  var tabM=document.getElementById('stTabM');
+  var tabA=document.getElementById('stTabA');
+  if(tabM)tabM.classList.toggle('active',tab==='M');
+  if(tabA)tabA.classList.toggle('active',tab==='A');
+  var data=tab==='M'?(window._stMonthly||{labels:[],values:[]}):(window._stAnnual||{labels:[],values:[]});
+  _stLoadChartJs(function(){_stDraw(data,tab==='A');});
+}
+
+function _stDraw(data,isLine){
+  var ctx=document.getElementById('stChart');
+  if(!ctx)return;
+  if(_stCurrentChart){_stCurrentChart.destroy();_stCurrentChart=null;}
+  var isDark=!document.body.classList.contains('light-theme');
+  var gridCol=isDark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)';
+  var tickCol=isDark?'#3d4d78':'#8090b8';
+  var barColors=data.values.map(function(v){return v>=0?'rgba(0,214,143,.8)':'rgba(255,64,96,.8)';});
+  var ptColors=data.values.map(function(v){return v>=0?'#00d68f':'#ff4060';});
+  _stCurrentChart=new Chart(ctx,{
+    type:isLine?'line':'bar',
+    data:{labels:data.labels,datasets:[{
+      label:'P&L ($)',data:data.values,
+      backgroundColor:isLine?'rgba(0,229,204,.08)':barColors,
+      borderColor:isLine?'#00e5cc':barColors,
+      borderWidth:isLine?2.5:1,borderRadius:6,
+      fill:isLine,tension:0.4,
+      pointRadius:isLine?5:0,
+      pointBackgroundColor:ptColors,
+      pointBorderColor:'transparent',
+      pointHoverRadius:7,
+    }]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      animation:{duration:500,easing:'easeOutQuart'},
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{label:function(c){return'  '+(c.raw>=0?'+':'')+c.raw.toFixed(2)+'$';}},
+          backgroundColor:isDark?'#0c0f1a':'#ffffff',
+          borderColor:isDark?'#2a3560':'#d0d8ee',
+          borderWidth:1,titleColor:tickCol,
+          bodyColor:isDark?'#eef0f8':'#0c1428',padding:10,
+        }
+      },
+      scales:{
+        x:{grid:{color:gridCol,drawBorder:false},ticks:{color:tickCol,font:{size:10,family:"'DM Mono',monospace"},maxRotation:45,autoSkip:false},border:{color:'transparent'}},
+        y:{grid:{color:gridCol,drawBorder:false},ticks:{color:tickCol,font:{size:10,family:"'DM Mono',monospace"},callback:function(v){return(v>=0?'+':'')+v.toLocaleString('it-IT')+'$';}},border:{color:'transparent'}}
+      }
+    }
+  });
+}
 function calcTradeStats(trades,name,idx){
 
   var closed=trades.filter(function(t){return t.status==='closed';});
