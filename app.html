@@ -620,6 +620,21 @@ function doLogin(){
     }else{btn.textContent='✓ Accesso effettuato!';setTimeout(function(){goToApp();},600);}
   }).catch(function(e){err.textContent='⚠️ Errore: '+(e&&e.message?e.message:'Riprova.');err.style.display='block';btn.textContent='→ Accedi';btn.disabled=false;});
 }
+  async function buyPlan(tipo) {
+  var plan = (tipo === 'Mensile') ? 'monthly' : 'yearly';
+  try {
+    var res = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ plan: plan, email: '' })
+    });
+    var data = await res.json();
+    if (data.url) window.location.href = data.url;
+    else alert('Errore: ' + (data.error || 'Riprova'));
+  } catch(e) {
+    alert('Errore di connessione. Riprova.');
+  }
+}
 function doLogout(){_sb.auth.signOut().then(function(){location.reload();});}
 function doRegister(){window.open('https://visiontrading.it','_blank');}
 function showForgotPanel(){document.getElementById('forgotPage').style.display='flex';setTimeout(function(){document.getElementById('forgotPage').style.opacity='1';},20);}
