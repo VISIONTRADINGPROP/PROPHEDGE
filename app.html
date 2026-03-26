@@ -2233,85 +2233,58 @@ function buildBot(items){
 
 
 
-var stratMode='personal';
-
-function setMode(m){
-
-  stratMode=m;
-
-  var p1=document.getElementById('modePersonal'),p2=document.getElementById('modeProp2');
-
-  var p2f=document.getElementById('prop2Fields');
-
-  if(!p1||!p2)return;
-
-  if(m==='personal'){p1.style.background='var(--teal-bg)';p1.style.borderColor='var(--teal)';p2.style.background='var(--bg3)';p2.style.borderColor='var(--border)';if(p2f)p2f.style.display='none';}
-
-  else{p2.style.background='var(--violet-bg)';p2.style.borderColor='var(--violet)';p1.style.background='var(--bg3)';p1.style.borderColor='var(--border)';if(p2f)p2f.style.display='block';}
-
+var stratMode = 'personal';
+function setMode(m) {
+  stratMode = m;
+  var p1 = document.getElementById('modePersonal'), p2 = document.getElementById('modeProp2');
+  var p2f = document.getElementById('prop2Fields');
+  if (!p1 || !p2) return;
+  if (m === 'personal') { p1.style.background = 'var(--teal-bg)'; p1.style.borderColor = 'var(--teal)'; p2.style.background = 'var(--bg3)'; p2.style.borderColor = 'var(--border)'; if (p2f) p2f.style.display = 'none'; }
+  else { p2.style.background = 'var(--violet-bg)'; p2.style.borderColor = 'var(--violet)'; p1.style.background = 'var(--bg3)'; p1.style.borderColor = 'var(--border)'; if (p2f) p2f.style.display = 'block'; }
   calcPreview();
-
 }
-
-
-
-/* ==========================================================================
-   CUORE DEL SOFTWARE: LOGICA, ANTEPRIMA E GESTIONE SFIDE
-   ========================================================================== */
 
 function calcChallenge(p) {
   let pipV = p.pipV || 10;
   let avgSpread = 1.0; 
   const assetName = p.asset ? p.asset.toUpperCase() : "";
-
   if (assetName.includes('GOLD') || assetName.includes('XAU')) { pipV = 1; avgSpread = 2.0; }
   else if (assetName.includes('EUR') || assetName.includes('GBP')) { pipV = 10; avgSpread = 0.8; }
-  else if (assetName.includes('NAS') || assetName.includes('US30')) { pipV = 1; avgSpread = 1.5; }
-  else if (assetName === 'ES_FUTURE') { pipV = 50; avgSpread = 0.25; }
-  else if (assetName === 'NQ_FUTURE') { pipV = 20; avgSpread = 0.50; }
+  else if (assetName.includes('NAS') || assetName.includes('US30') || assetName.includes('SP500')) { pipV = 1; avgSpread = 1.5; }
+  else if (assetName.includes('FUTURE')) { pipV = assetName.includes('ES') ? 50 : 20; avgSpread = 0.25; }
 
   const targetVal = p.size * (p.tgtPct / 100);
   const dailyLossVal = p.size * (p.ddd / 100);
   const consistencyPct = p.consistency || 30;
-
   const propLots = (dailyLossVal / 2) / (p.slPips * pipV);
   const hedgeLots = p.cost / (p.tpPips * pipV);
-
   const maxSingleProfit = targetVal * (consistencyPct / 100);
   const minTrades = Math.ceil(targetVal / maxSingleProfit);
   const totalSpreadCost = (propLots + hedgeLots) * avgSpread * pipV;
-
   const sA_net = (hedgeLots * p.tpPips * pipV) - p.cost - (hedgeLots * avgSpread * pipV);
   const sB_net = (targetVal * (p.pay / 100)) - (hedgeLots * p.slPips * pipV) - p.cost - totalSpreadCost;
 
   return {
-    propLots: +propLots.toFixed(2),
-    hedgeLots: +hedgeLots.toFixed(2),
-    minTrades: minTrades,
-    maxSingleProfit: maxSingleProfit,
-    sA_net: sA_net,
-    sB_net: sB_net,
-    spreadImpact: totalSpreadCost,
-    recAcc: (p.cost + (hedgeLots * p.slPips * pipV)) * 1.5
+    propLots: +propLots.toFixed(2), hedgeLots: +hedgeLots.toFixed(2), minTrades: minTrades,
+    maxSingleProfit: maxSingleProfit, sA_net: sA_net, sB_net: sB_net,
+    spreadImpact: totalSpreadCost, recAcc: (p.cost + (hedgeLots * p.slPips * pipV)) * 1.5
   };
 }
 
 function calcPreview() {
   const size = parseFloat(document.getElementById('mSize').value) || 0;
   const cost = parseFloat(document.getElementById('mCost').value) || 0;
-  const maxDD = parseFloat(document.getElementById('mDD').value) || 0;
-  const ddd = parseFloat(document.getElementById('mDDD').value) || 3;
   const tgtPct = parseFloat(document.getElementById('mTgt').value) || 0;
-  const pay = parseFloat(document.getElementById('mPay').value) || 80;
-  const slPips = parseFloat(document.getElementById('mSlPips').value) || 50;
-  const tpPips = parseFloat(document.getElementById('mTpPips').value) || 50;
+  const ddd = parseFloat(document.getElementById('mDDD').value) || 3;
   const assetStr = document.getElementById('mAsset').value;
   const consistency = parseFloat(document.getElementById('mConsistency')?.value) || 30;
-
+  
   const p = {
-    size: size, cost: cost, maxDD: maxDD, ddd: ddd, tgtPct: tgtPct, 
-    pay: pay, slPips: slPips, tpPips: tpPips, 
-    asset: assetStr.split(':')[0], consistency: consistency, mode: stratMode
+    size: size, cost: cost, ddd: ddd, tgtPct: tgtPct,
+    pay: parseFloat(document.getElementById('mPay').value) || 80,
+    slPips: parseFloat(document.getElementById('mSlPips').value) || 50,
+    tpPips: parseFloat(document.getElementById('mTpPips').value) || 50,
+    asset: assetStr.split(':')[0], consistency: consistency
   };
 
   const c = calcChallenge(p);
@@ -2323,63 +2296,33 @@ function calcPreview() {
     + '<div class="pv" style="border-color:rgba(0,229,204,.2)"><div class="pv-lb">LOTTI PROP</div><div class="pv-v v-teal">'+c.propLots+' lot</div><div class="pv-s">Max Profit: '+uF(c.maxSingleProfit)+'</div></div>'
     + '<div class="pv" style="border-color:rgba(155,93,229,.2)"><div class="pv-lb">LOTTI HEDGE</div><div class="pv-v v-violet">'+c.hedgeLots+' lot</div><div class="pv-s">Min. Trade: '+c.minTrades+'</div></div>'
     + '<div class="pv"><div class="pv-lb">SCENARIO A</div><div class="pv-v '+(c.sA_net>=0?'v-green':'v-red')+'">'+uF(c.sA_net)+'</div><div class="pv-s">Se la prop fallisce</div></div>'
-    + '<div class="pv"><div class="pv-lb">SCENARIO B</div><div class="pv-v '+(c.sB_net>=0?'v-green':'v-red')+'">'+uF(c.sB_net)+'</div><div class="pv-s">Payout netto post-hedge</div></div>'
-    + '</div>'
-    + '<div style="margin-top:10px; font-size:10px; color:var(--t3); text-align:center">Impatto Spread stimato: -'+uF(c.spreadImpact)+' | Asset: '+p.asset+'</div></div>';
+    + '<div class="pv"><div class="pv-lb">SCENARIO B</div><div class="pv-v '+(c.sB_net>=0?'v-green':'v-red')+'">'+uF(c.sB_net)+'</div><div class="pv-s">Payout Netto Reale</div></div>'
+    + '</div></div>';
 }
+
+function openModal(){ document.getElementById('modalOv').style.display='flex'; calcPreview(); }
+function closeModal(){ document.getElementById('modalOv').style.display='none'; }
 
 function doAdd() {
-  const name = document.getElementById('mName').value.trim() || ('Sfida ' + (props.length + 1));
   const assetVal = document.getElementById('mAsset').value;
-  const consistency = parseFloat(document.getElementById('mConsistency')?.value) || 30;
-  const pid = Date.now();
-
   const p = {
-    id: pid, name: name, domain: document.getElementById('mDomain').value, mode: stratMode,
-    size: parseFloat(document.getElementById('mSize').value) || 100000,
-    cost: parseFloat(document.getElementById('mCost').value) || 500,
-    maxDD: parseFloat(document.getElementById('mDD').value) || 6,
+    id: Date.now(), name: document.getElementById('mName').value.trim() || 'Sfida',
+    size: parseFloat(document.getElementById('mSize').value) || 0,
+    cost: parseFloat(document.getElementById('mCost').value) || 0,
     ddd: parseFloat(document.getElementById('mDDD').value) || 3,
-    tgtPct: parseFloat(document.getElementById('mTgt').value) || 6,
-    days: parseFloat(document.getElementById('mDays').value) || 14,
+    tgtPct: parseFloat(document.getElementById('mTgt').value) || 0,
     pay: parseFloat(document.getElementById('mPay').value) || 80,
-    pipV: parseFloat(document.getElementById('mPipV').value) || 10,
     slPips: parseFloat(document.getElementById('mSlPips').value) || 50,
     tpPips: parseFloat(document.getElementById('mTpPips').value) || 50,
-    asset: assetVal.split(':')[0],
-    consistency: consistency,
-    createdAt: new Date().toISOString()
+    asset: assetVal.split(':')[0], consistency: parseFloat(document.getElementById('mConsistency')?.value) || 30
   };
-
-  props.push(p);
-  jrnlNewSession(name, pid);
-  jrnlSave();
-  closeModal();
-  activeId = p.id;
-  goTab('dash', document.getElementById('tabDash'));
+  props.push(p); jrnlNewSession(p.name, p.id); jrnlSave(); closeModal(); activeId = p.id; goTab('dash', document.getElementById('tabDash'));
 }
 
-function delProp(id) {
-  props = props.filter(p => p.id !== id);
-  if (activeId === id) activeId = props.length ? props[0].id : null;
-  render();
-}
-
-function selProp(id) {
-  activeId = id;
-  goTab('calc', document.getElementById('tabCalc'));
-}
-
-function updP(id, key, val) {
-  const p = props.find(x => x.id === id);
-  if (p) { p[key] = parseFloat(val) || 0; render(); }
-}
-
-function updS(id, key, val) {
-  const p = props.find(x => x.id === id);
-  if (p) { p[key] = val; render(); }
-}
-
+function delProp(id) { props = props.filter(p => p.id !== id); if (activeId === id) activeId = props.length ? props[0].id : null; render(); }
+function selProp(id) { activeId = id; goTab('calc', document.getElementById('tabCalc')); }
+function updP(id, key, val) { const p = props.find(x => x.id === id); if (p) { p[key] = parseFloat(val) || 0; render(); } }
+function updS(id, key, val) { const p = props.find(x => x.id === id); if (p) { p[key] = val; render(); } }
 function goTab(tab, el) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
