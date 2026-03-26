@@ -1886,45 +1886,22 @@ function doRegisterFree(){
 
           <label>Asset</label>
 
-          <select id="mAsset" onchange="onAssetChange(this.value)">
-
-            <optgroup label="Forex">
-
-              <option value="EUR/USD:10">EUR/USD - $10/pip</option>
-
-              <option value="GBP/USD:10">GBP/USD - $10/pip</option>
-
-              <option value="USD/JPY:9.1">USD/JPY - $9/pip</option>
-
-              <option value="EUR/JPY:9.1">EUR/JPY - $9/pip</option>
-
-              <option value="AUD/USD:10">AUD/USD - $10/pip</option>
-
-            </optgroup>
-
-            <optgroup label="Materie Prime">
-
-              <option value="GOLD:1">GOLD XAU/USD - $1/pip</option>
-
-              <option value="SILVER:5">SILVER - $5/pip</option>
-
-              <option value="WTI:10">WTI Oil - $10/pip</option>
-
-            </optgroup>
-
-            <optgroup label="Indici">
-
-              <option value="US30:5">US30 Dow Jones - $5/pip</option>
-
-              <option value="SP500:5">SP500 - $5/pip</option>
-
-              <option value="NAS100:2">NAS100 - $2/pip</option>
-
-              <option value="DAX:2">DAX GER40 - $2/pip</option>
-
-            </optgroup>
-
-          </select>
+      <select id="mAsset" onchange="onAssetChange(this.value)">
+    <optgroup label="Forex">
+        <option value="EUR/USD:10">EUR/USD - $10/pip</option>
+        <option value="GBP/USD:10">GBP/USD - $10/pip</option>
+        <option value="USD/JPY:9.1">USD/JPY - $9/pip</option>
+    </optgroup>
+    <optgroup label="Metalli / Indici CFD">
+        <option value="GOLD:1">GOLD (XAU) - $1/pip</option>
+        <option value="NAS100:1">NASDAQ 100 - $1/punto</option>
+        <option value="US30:1">DOW JONES (US30) - $1/punto</option>
+    </optgroup>
+    <optgroup label="Prop Futures">
+        <option value="ES_FUTURE:50">S&P 500 (ES) - $50/punto</option>
+        <option value="NQ_FUTURE:20">NASDAQ (NQ) - $20/punto</option>
+    </optgroup>
+</select>
 
           <div class="hint" id="mAssetHint">$10 per pip per lotto std</div>
 
@@ -2274,60 +2251,43 @@ function setMode(m){
 
 
 
-function calcChallenge(p){
+function calcChallenge(p) {
+  let pipV = p.pipV || 10;
+  let avgSpread = 1.0; 
 
-  var slPips=p.slPips||50,tpPips=p.tpPips||slPips,pipV=p.pipV||10;
+  // Valori Pip e Spread automatici
+  if (p.asset.includes('GOLD') || p.asset.includes('XAU')) { pipV = 1; avgSpread = 2.0; }
+  else if (p.asset.includes('EUR') || p.asset.includes('GBP')) { pipV = 10; avgSpread = 0.8; }
+  else if (p.asset.includes('NAS') || p.asset.includes('US30')) { pipV = 1; avgSpread = 1.5; }
+  else if (p.asset.includes('ES_FUTURE')) { pipV = 50; avgSpread = 0.25; }
+  else if (p.asset.includes('NQ_FUTURE')) { pipV = 20; avgSpread = 0.50; }
 
-  var maxLoss=p.size*p.maxDD/100,maxProfit=p.size*p.tgtPct/100,dayLoss=p.size*p.ddd/100;
+  const targetVal = p.size * (p.tgtPct / 100);
+  const dailyLossVal = p.size * (p.ddd / 100);
+  const consistencyPct = p.consistency || 30; 
 
-  var riskPerTrade=Math.min(maxLoss/p.days,dayLoss);
+  const riskPerTrade = dailyLossVal / 2; 
+  const propLots = riskPerTrade / (p.slPips * pipV);
+  const hedgeLots = p.cost / (p.tpPips * pipV);
 
-  var slPerLot=slPips*pipV,tpPerLot=tpPips*pipV;
+  const totalSpreadCost = (propLots + hedgeLots) * avgSpread * pipV;
+  const maxSingleProfit = targetVal * (consistencyPct / 100);
+  const minTrades = Math.ceil(targetVal / maxSingleProfit);
 
-  var propLots=riskPerTrade/slPerLot;
+  const sA_net = (hedgeLots * p.tpPips * pipV) - p.cost - (hedgeLots * avgSpread * pipV);
+  const sB_net = (targetVal * (p.pay / 100)) - (hedgeLots * p.slPips * pipV) - p.cost - totalSpreadCost;
 
-  var propSL=propLots*slPerLot,propTP=propLots*tpPerLot;
-
-  var maxTrDD=Math.floor(dayLoss/propSL),trTarget=Math.ceil(maxProfit/propTP);
-
-  var daily=Math.min(maxProfit/p.days,maxProfit*0.30);
-
-  var consOk=(maxProfit/p.days)<=(maxProfit*0.30);
-
-  var trPerDay=Math.ceil(daily/propTP);
-
-  var hedgeLots=(p.cost/(slPerLot*p.days))*1.3;
-
-  if(p.mode==='prop2'&&p.size2>0&&p.dd2>0){var maxLoss2=p.size2*p.dd2/100;hedgeLots=Math.min(hedgeLots,maxLoss2/(slPerLot*p.days));}
-
-  var hedgeSL=hedgeLots*slPerLot,hedgeTP=hedgeLots*tpPerLot;
-
-  var maxHedgeLoss=hedgeLots*tpPerLot*trTarget;
-
-  var margin=hedgeLots*(100000*1.08/100);
-
-  var minAcc=(margin+maxHedgeLoss)*1.3,recAcc=minAcc*1.5;
-
-  var sA_gain=hedgeLots*slPerLot*p.days,sA_net=sA_gain-p.cost;
-
-  var sB_pay=maxProfit*p.pay/100,sB_los=hedgeLots*tpPerLot*trTarget,sB_net=sB_pay-sB_los;
-
-  var invested=p.cost+recAcc;
-
-  return{maxLoss:maxLoss,maxProfit:maxProfit,dayLoss:dayLoss,riskPerTrade:+riskPerTrade.toFixed(2),daily:daily,consOk:consOk,trPerDay:trPerDay,
-
-    propLots:+propLots.toFixed(2),propSL:+propSL.toFixed(2),propTP:+propTP.toFixed(2),slPips:slPips,tpPips:tpPips,maxTrDD:maxTrDD,trTarget:trTarget,
-
-    hedgeLots:+hedgeLots.toFixed(2),hedgeSL:+hedgeSL.toFixed(2),hedgeTP:+hedgeTP.toFixed(2),margin:+margin.toFixed(2),maxHedgeLoss:+maxHedgeLoss.toFixed(2),
-
-    minAcc:+minAcc.toFixed(2),recAcc:+recAcc.toFixed(2),sA_gain:+sA_gain.toFixed(2),sA_net:+sA_net.toFixed(2),
-
-    sB_pay:+sB_pay.toFixed(2),sB_los:+sB_los.toFixed(2),sB_net:+sB_net.toFixed(2),
-
-    roiA:+((sA_net/invested)*100).toFixed(1),roiB:+((sB_net/invested)*100).toFixed(1)};
-
+  return {
+    propLots: +propLots.toFixed(2),
+    hedgeLots: +hedgeLots.toFixed(2),
+    minTrades: minTrades,
+    maxSingleProfit: +maxSingleTradeProfit.toFixed(2),
+    sA_net: +sA_net.toFixed(2),
+    sB_net: +sB_net.toFixed(2),
+    spreadImpact: +totalSpreadCost.toFixed(2),
+    recAcc: +((p.cost + (hedgeLots * p.slPips * pipV)) * 1.5).toFixed(2)
+  };
 }
-
 
 
 function openModal(){
@@ -2428,20 +2388,37 @@ function calcPreview(){
 
   var c=calcChallenge(p);
 
-  box.innerHTML='<div class="prev"><div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Anteprima automatica</div>'
+  // --- NUOVA LOGICA DI CALCOLO INTEGRATA ---
+  const targetVal = p.size * (p.tgtPct / 100);
+  // Prende la consistenza dal nuovo campo che aggiungeremo, o usa 30% come base
+  const consistencyPct = parseFloat(document.getElementById('mConsistency')?.value) || 30;
+  const maxSingleProfit = targetVal * (consistencyPct / 100);
+  const minTrades = Math.ceil(targetVal / maxSingleProfit);
+  
+  // Rilevamento automatico valore PIP per Asset (Forex, Oro o Futures)
+  let vPip = p.pipV;
+  if (p.asset.includes('GOLD') || p.asset.includes('XAU')) vPip = 1;
+  if (p.asset.includes('ES_FUTURE')) vPip = 50; // S&P500 Future
+  if (p.asset.includes('NQ_FUTURE')) vPip = 20; // Nasdaq Future
 
-    +'<div class="prev-g">'
+  // Calcolo Lotti Prop (rischio basato su drawdown giornaliero)
+  const pLots = (p.size * (p.ddd / 100) / 2) / (p.slPips * vPip);
+  // Calcolo Lotti Hedge (basato sul recupero del costo sfida)
+  const hLots = p.cost / (p.tpPips * vPip);
 
-    +'<div class="pv" style="border-color:rgba(0,229,204,.2)"><div class="pv-lb">Lotti PROP</div><div class="pv-v v-teal">'+c.propLots+' lot</div><div class="pv-s">SL '+uF(c.propSL)+' TP '+uF(c.propTP)+'</div></div>'
+  // Calcolo Scenari Netto
+  const sA_net = (hLots * p.tpPips * vPip) - p.cost;
+  const sB_net = (targetVal * (p.pay / 100)) - (hLots * p.slPips * vPip) - p.cost;
 
-    +'<div class="pv" style="border-color:rgba(155,93,229,.2)"><div class="pv-lb">Lotti PERSONALE</div><div class="pv-v v-violet">'+c.hedgeLots+' lot</div><div class="pv-s">SL '+uF(c.hedgeSL)+' TP '+uF(c.hedgeTP)+'</div></div>'
-
-    +'<div class="pv"><div class="pv-lb">Conto personale</div><div class="pv-v v-amber">'+uF(c.recAcc)+'</div><div class="pv-s">min: '+uF(c.minAcc)+'</div></div>'
-
-    +'<div class="pv"><div class="pv-lb">Netto scenario B</div><div class="pv-v '+col(c.sB_net)+'">'+sgn(c.sB_net)+uF(c.sB_net)+'</div><div class="pv-s">ROI '+c.roiB+'%</div></div>'
-
-    +'</div></div>';
-
+  // --- NUOVA INTERFACCIA ANTEPRIMA ---
+  box.innerHTML = '<div class="prev"><div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Analisi Strategia Reale (Inc. Consistenza)</div>'
+    + '<div class="prev-g">'
+    + '<div class="pv" style="border-color:rgba(0,229,204,.2)"><div class="pv-lb">LOTTI PROP</div><div class="pv-v v-teal">'+pLots.toFixed(2)+' lot</div><div class="pv-s">Max Profit/Trade: '+uF(maxSingleProfit)+'</div></div>'
+    + '<div class="pv" style="border-color:rgba(155,93,229,.2)"><div class="pv-lb">LOTTI HEDGE</div><div class="pv-v v-violet">'+hLots.toFixed(2)+' lot</div><div class="pv-s">Min. Operazioni: '+minTrades+'</div></div>'
+    + '<div class="pv"><div class="pv-lb">SCENARIO A (FALL.)</div><div class="pv-v '+(sA_net>=0?'v-green':'v-red')+'">'+uF(sA_net)+'</div><div class="pv-s">Profitto se la prop fallisce</div></div>'
+    + '<div class="pv"><div class="pv-lb">SCENARIO B (PASS.)</div><div class="pv-v '+(sB_net>=0?'v-green':'v-red')+'">'+uF(sB_net)+'</div><div class="pv-s">Payout netto post-hedge</div></div>'
+    + '</div>'
+    + '<div style="margin-top:10px; font-size:10px; color:var(--t3); text-align:center">Asset: '+p.asset+' | Conteggio lotti basato su Pip/Tick Value reale</div></div>';
 }
 
 
