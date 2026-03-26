@@ -1,5 +1,4 @@
 import Stripe from 'stripe';
-
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
@@ -12,17 +11,22 @@ export default async function handler(req, res) {
     : process.env.STRIPE_PRICE_YEARLY;
 
   try {
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams = {
       mode: 'subscription',
       payment_method_types: ['card'],
-      customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
       allow_promotion_codes: true,
       phone_number_collection: { enabled: true },
       success_url: process.env.APP_URL + '/?stripe_success=1&plan=' + plan,
       cancel_url: process.env.APP_URL + '/?stripe_cancel=1',
       locale: 'it',
-    });
+    };
+
+    if (email && email.includes('@')) {
+      sessionParams.customer_email = email;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
     res.json({ url: session.url });
   } catch(e) {
     res.status(500).json({ error: e.message });
