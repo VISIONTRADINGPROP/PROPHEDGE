@@ -2245,78 +2245,241 @@ function setMode(m) {
 }
 
 function calcChallenge(p) {
-  // 1. Identificazione valore Asset (Pip Value)
-  let pipV = p.pipV || 10;
-  const assetName = p.asset ? p.asset.toUpperCase() : "";
-  if (assetName.includes('GOLD') || assetName.includes('XAU')) pipV = 1;
-  if (assetName.includes('NAS') || assetName.includes('US30')) pipV = 1;
-  if (assetName.includes('ES_FUTURE')) pipV = 50; 
-  if (assetName.includes('NQ_FUTURE')) pipV = 20;
 
-  // 2. LOGICA HEDGE MATEMATICO: Lotti identici per coprire il costo
-  // Formula: Lotti = Costo Challenge / (TP Pips * Valore Pip)
-  // Questo assicura che se il conto personale vince, incassi esattamente il costo della sfida + un piccolo margine
-  const identicalLots = p.cost / (p.tpPips * pipV);
-  const safeLots = +identicalLots.toFixed(2);
+  // ── PIP VALUE AUTOMATICO per asset ──
+  var pipVal = 10; // default EUR/USD
+  var asset = (p.asset||'').toUpperCase().replace('/','').replace('_','');
 
-  // 3. Verifica Drawdown: Quanto perdiamo se lo SL viene preso sulla Prop?
-  const lossOnProp = safeLots * p.slPips * pipV;
-  const maxDailyLossAllowed = p.size * (p.ddd / 100);
-  
-  // 4. Calcolo Scenari (Al netto dei costi)
-  // Scenario A (Vince Personale): Pareggio dei costi o piccolo profitto
-  const sA_net = (safeLots * p.tpPips * pipV) - p.cost;
-  
-  // Scenario B (Vince Prop): Payout Prop - Perdita sul Personale - Costo Iniziale
-  const targetVal = p.size * (p.tgtPct / 100);
-  const payoutLordo = targetVal * (p.pay / 100);
-  const perditaPersonale = safeLots * p.slPips * pipV;
-  const sB_net = payoutLordo - perditaPersonale - p.cost;
+  if(asset==='EURUSD'||asset==='GBPUSD'||asset==='AUDUSD'||asset==='NZDUSD') pipVal=10;
+  else if(asset==='USDJPY'||asset==='EURJPY'||asset==='GBPJPY'||asset==='AUDJPY'||asset==='CADJPY'||asset==='CHFJPY') pipVal=9.1;
+  else if(asset==='USDCHF'||asset==='EURCHF'||asset==='GBPCHF'||asset==='AUDCHF') pipVal=10.2;
+  else if(asset==='USDCAD'||asset==='EURCAD'||asset==='GBPCAD'||asset==='AUDCAD'||asset==='NZDCAD') pipVal=7.6;
+  else if(asset==='EURGBP') pipVal=12.5;
+  else if(asset==='GBPAUD'||asset==='EURAUD'||asset==='AUDNZD'||asset==='EURNZD'||asset==='GBPNZD') pipVal=6.5;
+  else if(asset==='GOLD'||asset==='XAUUSD'||asset==='XAU') pipVal=1;
+  else if(asset==='SILVER'||asset==='XAGUSD') pipVal=5;
+  else if(asset==='NAS100'||asset==='NASDAQ'||asset==='US30'||asset==='DOW'||asset==='US500'||asset==='SP500'||asset==='GER40'||asset==='DAX') pipVal=1;
+  else if(asset==='ESFUTURE'||asset==='ES') pipVal=50;
+  else if(asset==='NQFUTURE'||asset==='NQ') pipVal=20;
+  else if(asset==='MESFUTURE'||asset==='MES') pipVal=5;
+  else if(asset==='MNQFUTURE'||asset==='MNQ') pipVal=2;
+  else if(asset==='CLFUTURE'||asset==='CL') pipVal=10;
+  else if(asset==='GCFUTURE'||asset==='GC') pipVal=10;
 
-  // 5. Liquidità necessaria sul Personale (Il Buffer per reggere lo SL)
-  // Ti servono i soldi per coprire lo Stop Loss + un 20% di margine per spread/sicurezza
-  const marginBuffer = (perditaPersonale * 1.2);
+  // Se l'utente ha inserito manualmente un pip value, usalo
+  if(p.pipV && parseFloat(p.pipV)>0) pipVal=parseFloat(p.pipV);
+
+  var sl     = Math.max(parseFloat(p.slPips)||1, 0.01);
+  var tp     = Math.max(parseFloat(p.tpPips)||1, 0.01);
+  var size   = parseFloat(p.size)   || 0;
+  var cost   = parseFloat(p.cost)   || 0;
+  var maxDD  = parseFloat(p.maxDD)  || 6;
+  var ddd    = parseFloat(p.ddd)    || 3;
+  var tgtPct = parseFloat(p.tgtPct) || maxDD;
+  var pay    = parseFloat(p.pay)    || 80;
+  var cons   = Math.max(parseFloat(p.consistency)||30, 1);
+  var days   = Math.max(parseFloat(p.days)||14, 1);
+  var spread = Math.max(parseFloat(p.spread)||0, 0);
+
+  // ── Valori monetari prop ──
+  var propTarget  = size * (tgtPct / 100); // es. $6000
+  var maxDDAmount = size * (maxDD   / 100); // es. $6000
+  var dailyDD     = size * (ddd     / 100); // es. $3000
+
+  // ── Regola consistenza ──
+  // Max guadagno per singolo trade = cons% del target
+  var maxPerTrade = propTarget * (cons / 100); // es. 30% di $6000 = $1800
+  var minTrades   = Math.ceil(100 / cons);     // es. ceil(100/30) = 4 trade minimi
+
+  // ── LOTTI PROP (BUY) ──
+  // Quanti lotti posso aprire per guadagnare maxPerTrade con TP pip?
+  // propLots = maxPerTrade / (tp * pipVal)
+  // Limite: lo SL non deve superare il DD giornaliero
+  var propLots_byConsistency = maxPerTrade / (tp * pipVal);
+  var propLots_byDailyDD     = dailyDD     / (sl * pipVal);
+  var propLots = Math.min(propLots_byConsistency, propLots_byDailyDD);
+  propLots = Math.floor(propLots * 100) / 100;
+  if(propLots < 0.01) propLots = 0.01;
+
+  var propTP_dollar = propLots * tp * pipVal; // guadagno se TP colpito
+  var propSL_dollar = propLots * sl * pipVal; // perdita se SL colpito
+
+  // ── LOTTI HEDGE (SELL sul personale) ──
+  // Obiettivo: se la prop FALLISCE e il prezzo va contro di lei,
+  // il conto personale (che ha fatto SELL) guadagna.
+  // Quanti lotti mi servono per coprire il costo challenge col TP?
+  // hedgeLots = cost / (tp * pipVal)
+  var hedgeLots = cost / (tp * pipVal);
+  hedgeLots = Math.ceil(hedgeLots * 100) / 100;
+  if(hedgeLots < 0.01) hedgeLots = 0.01;
+
+  var hedgeTP_dollar = hedgeLots * tp * pipVal; // guadagno hedge se prop fallisce
+  var hedgeSL_dollar = hedgeLots * sl * pipVal; // perdita hedge se prop vince
+
+  // ── Costo spread (opzionale) ──
+  var spreadCostProp  = propLots  * spread * pipVal; // spread per trade prop
+  var spreadCostHedge = hedgeLots * spread * pipVal; // spread per trade hedge
+  var spreadTotale    = (spreadCostProp * minTrades) + spreadCostHedge;
+
+  // ── SCENARIO A — Prop fallisce (prezzo scende, hedge SELL vince) ──
+  // Guadagno hedge TP - costo challenge - spread hedge
+  var sA_gain = hedgeTP_dollar;
+  var sA_net  = sA_gain - cost - spreadCostHedge;
+
+  // ── SCENARIO B — Prop vince (payout incassato, hedge SELL perde) ──
+  var payoutGross = propTarget * (pay / 100);
+  var sB_net = payoutGross - hedgeSL_dollar - cost - (spreadCostProp * minTrades);
+
+  // ── Capitale minimo conto personale ──
+  // Deve coprire: margine hedge + eventuale SL hedge + 30% buffer
+  var hedgeSL_withBuffer = hedgeSL_dollar * 1.3;
+  var minCapPersonale = hedgeSL_withBuffer;
+
+  // ── Costo totale ciclo ──
+  var totalCycleCost = cost + minCapPersonale;
+
+  // ── ROI ──
+  var roiA = totalCycleCost>0 ? ((sA_net/totalCycleCost)*100).toFixed(1) : '0.0';
+  var roiB = totalCycleCost>0 ? ((sB_net/totalCycleCost)*100).toFixed(1) : '0.0';
+
+  // ── Check regole ──
+  var consOk   = propTP_dollar <= maxPerTrade * 1.05;
+  var trPerDay = Math.ceil(minTrades / days);
+  var maxTrDD  = propSL_dollar>0 ? Math.floor(dailyDD/propSL_dollar) : 999;
 
   return {
-    propLots: safeLots,
-    hedgeLots: safeLots, // LOTTI IDENTICI
-    sA_net: +sA_net.toFixed(2),
-    sB_net: +sB_net.toFixed(2),
-    recAcc: +marginBuffer.toFixed(2), // Soldi necessari sul conto personale
-    maxSingleProfit: targetVal * (p.consistency / 100),
-    minTrades: Math.ceil(targetVal / (targetVal * (p.consistency / 100)))
+    pipVal, propLots, hedgeLots,
+    propTP: propTP_dollar, propSL: propSL_dollar,
+    hedgeTP: hedgeTP_dollar, hedgeSL: hedgeSL_dollar,
+    propTarget, maxDDAmount, dailyDD, maxPerTrade, minTrades,
+    sA_net, sA_gain,
+    sB_net, sB_pay: payoutGross, sB_los: hedgeSL_dollar,
+    recAcc: minCapPersonale,
+    totalCycleCost,
+    spreadCostProp, spreadCostHedge, spreadTotale,
+    roiA, roiB, consOk, trPerDay, maxTrDD, days,
+    maxProfit: propTarget,
+    // compatibilità con il resto del codice
+    hedgeLots: hedgeLots,
+    propLots: propLots,
   };
 }
 function calcPreview() {
-  const size = parseFloat(document.getElementById('mSize').value) || 0;
-  const cost = parseFloat(document.getElementById('mCost').value) || 0;
-  const ddd = parseFloat(document.getElementById('mDDD').value) || 3;
-  const tgtPct = parseFloat(document.getElementById('mTgt').value) || 0;
-  const pay = parseFloat(document.getElementById('mPay').value) || 80;
-  const slPips = parseFloat(document.getElementById('mSlPips').value) || 50;
-  const tpPips = parseFloat(document.getElementById('mTpPips').value) || 50;
-  const assetStr = document.getElementById('mAsset').value;
-  const consistency = parseFloat(document.getElementById('mConsistency')?.value) || 30;
+  var size   = parseFloat(document.getElementById('mSize')?.value)        || 0;
+  var cost   = parseFloat(document.getElementById('mCost')?.value)        || 0;
+  var maxDD  = parseFloat(document.getElementById('mDD')?.value)          || 6;
+  var ddd    = parseFloat(document.getElementById('mDDD')?.value)         || 3;
+  var tgtPct = parseFloat(document.getElementById('mTgt')?.value)         || maxDD;
+  var pay    = parseFloat(document.getElementById('mPay')?.value)         || 80;
+  var sl     = parseFloat(document.getElementById('mSlPips')?.value)      || 50;
+  var tp     = parseFloat(document.getElementById('mTpPips')?.value)      || 50;
+  var cons   = parseFloat(document.getElementById('mConsistency')?.value) || 30;
+  var days   = parseFloat(document.getElementById('mDays')?.value)        || 14;
+  var spread = parseFloat(document.getElementById('mSpread')?.value)      || 0;
+  var assetEl= document.getElementById('mAsset');
+  var asset  = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
 
-  const p = {
-    size: size, cost: cost, ddd: ddd, tgtPct: tgtPct, 
-    pay: pay, slPips: slPips, tpPips: tpPips, 
-    asset: assetStr.split(':')[0], consistency: consistency
-  };
+  var p = {size,cost,maxDD,ddd,tgtPct,pay,slPips:sl,tpPips:tp,
+            asset,consistency:cons,spread,days,pipV:0};
+  var c = calcChallenge(p);
 
-  const c = calcChallenge(p);
-  const box = document.getElementById('mPreview');
-  if (!box || !size) return;
+  var box = document.getElementById('mPreview');
+  if(!box || !size) return;
 
-  box.innerHTML = '<div class="prev">'
-    + '<div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Strategia Hedge Bilanciata (Lotti Identici)</div>'
-    + '<div class="prev-g">'
-    + '<div class="pv" style="border-color:var(--teal)"><div class="pv-lb">LOTTI (ENTRAMBI I CONTI)</div><div class="pv-v v-teal">'+c.propLots+' lot</div><div class="pv-s">Copertura costo assicurata</div></div>'
-    + '<div class="pv" style="border-color:var(--amber)"><div class="pv-lb">LIQUIDITÀ PERSONALE</div><div class="pv-v v-amber">'+uF(c.recAcc)+'</div><div class="pv-s">Capitale minimo per operare</div></div>'
-    + '<div class="pv"><div class="pv-lb">SCENARIO A (RECUPERO)</div><div class="pv-v '+(c.sA_net>=0?'v-green':'v-red')+'">'+uF(c.sA_net)+'</div><div class="pv-s">Se fallisci la prop</div></div>'
-    + '<div class="pv"><div class="pv-lb">SCENARIO B (PROFITTO)</div><div class="pv-v '+(c.sB_net>=0?'v-green':'v-red')+'">'+uF(c.sB_net)+'</div><div class="pv-s">Payout netto finale</div></div>'
-    + '</div>'
-    + '<div style="margin-top:10px; font-size:10px; color:var(--t3); text-align:center">Regola Consistenza: Max '+uF(c.maxSingleProfit)+' per trade</div></div>';
+  var spreadRiga = spread>0
+    ? '<div style="font-size:10px;color:var(--amber);margin-top:6px">Costo spread totale ciclo: <strong>$'+c.spreadTotale.toFixed(2)+'</strong></div>'
+    : '<div style="font-size:10px;color:var(--t3);margin-top:6px">Spread non inserito — calcolo senza costo spread</div>';
+
+  box.innerHTML =
+  '<div class="prev">'
+
+  // Asset e pip value auto
+  +'<div style="background:rgba(0,229,204,.05);border:1px solid rgba(0,229,204,.1);border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">'
+  +'<span style="font-size:10px;color:var(--t3);font-family:var(--fd)">Asset selezionato</span>'
+  +'<span style="font-size:12px;font-weight:700;font-family:var(--fd);color:var(--teal)">'+asset+' — $'+c.pipVal.toFixed(2)+'/pip (automatico)</span>'
+  +'</div>'
+
+  // Valori prop
+  +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+  +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px;text-align:center">'
+  +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:3px">TARGET PROP</div>'
+  +'<div style="font-size:16px;font-weight:700;font-family:var(--fd);color:var(--teal)">$'+c.propTarget.toFixed(0)+'</div>'
+  +'</div>'
+  +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px;text-align:center">'
+  +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:3px">MAX DD</div>'
+  +'<div style="font-size:16px;font-weight:700;font-family:var(--fd);color:var(--red)">$'+c.maxDDAmount.toFixed(0)+'</div>'
+  +'</div>'
+  +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px;text-align:center">'
+  +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:3px">DD GIORNALIERO</div>'
+  +'<div style="font-size:16px;font-weight:700;font-family:var(--fd);color:var(--amber)">$'+c.dailyDD.toFixed(0)+'</div>'
+  +'</div>'
+  +'</div>'
+
+  // Lotti — la parte chiave — DIVERSI tra prop e hedge
+  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+
+  // Prop
+  +'<div style="background:var(--bg3);border:2px solid rgba(155,93,229,.4);border-radius:10px;padding:12px">'
+  +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">🎯 PROP — BUY</div>'
+  +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+c.propLots+' lot</div>'
+  +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+  +'TP: <span style="color:var(--green)">+$'+c.propTP.toFixed(2)+'</span><br>'
+  +'SL: <span style="color:var(--red)">-$'+c.propSL.toFixed(2)+'</span><br>'
+  +'Max/trade: <span style="color:var(--teal)">$'+c.maxPerTrade.toFixed(2)+'</span>'
+  +'</div>'
+  +'</div>'
+
+  // Hedge personale
+  +'<div style="background:var(--bg3);border:2px solid rgba(0,229,204,.4);border-radius:10px;padding:12px">'
+  +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">💹 PERSONALE — SELL</div>'
+  +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+c.hedgeLots+' lot</div>'
+  +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+  +'TP: <span style="color:var(--green)">+$'+c.hedgeTP.toFixed(2)+'</span><br>'
+  +'SL: <span style="color:var(--red)">-$'+c.hedgeSL.toFixed(2)+'</span><br>'
+  +'Copre costo challenge'
+  +'</div>'
+  +'</div>'
+  +'</div>'
+
+  // Nota lotti diversi
+  +(c.propLots!==c.hedgeLots
+    ?'<div style="background:rgba(155,93,229,.07);border:1px solid rgba(155,93,229,.2);border-radius:6px;padding:7px 10px;font-size:10px;color:rgba(155,93,229,.9);margin-bottom:10px;font-family:var(--fd)">ℹ Lotti diversi — Prop ottimizzato per profitto, Hedge minimo per coprire il costo</div>'
+    :'')
+
+  // Regole
+  +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;margin-bottom:10px;display:flex;gap:16px;flex-wrap:wrap">'
+  +'<div style="font-size:11px"><span style="color:var(--t3)">Trade minimi: </span><strong style="color:var(--violet)">'+c.minTrades+'</strong></div>'
+  +'<div style="font-size:11px"><span style="color:var(--t3)">Max/trade: </span><strong style="color:var(--teal)">$'+c.maxPerTrade.toFixed(0)+'</strong></div>'
+  +'<div style="font-size:11px"><span style="color:var(--t3)">Trade/gg: </span><strong style="color:'+(c.trPerDay<=c.maxTrDD?'var(--green)':'var(--amber)')+'">'+c.trPerDay+'</strong></div>'
+  +'<div style="font-size:11px"><span style="color:var(--t3)">Pip value: </span><strong style="color:var(--teal)">$'+c.pipVal.toFixed(2)+'</strong></div>'
+  +'</div>'
+
+  // Scenari
+  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+  +'<div style="background:rgba(255,64,96,.05);border:1px solid rgba(255,64,96,.2);border-radius:9px;padding:11px">'
+  +'<div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">SCENARIO A — Prop fallisce</div>'
+  +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+(c.sA_net>=0?'var(--green)':'var(--red)')+'">'+( c.sA_net>=0?'+':'')+c.sA_net.toFixed(2)+'$</div>'
+  +'<div style="font-size:10px;color:var(--t3);margin-top:4px;line-height:1.6">Hedge TP +$'+c.sA_gain.toFixed(2)+'<br>− Costo $'+cost.toFixed(2)+'<br><span style="color:var(--amber)">ROI '+c.roiA+'%</span></div>'
+  +'</div>'
+  +'<div style="background:rgba(0,214,143,.05);border:1px solid rgba(0,214,143,.2);border-radius:9px;padding:11px">'
+  +'<div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">SCENARIO B — Payout incassato</div>'
+  +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+(c.sB_net>=0?'var(--green)':'var(--red)')+'">'+( c.sB_net>=0?'+':'')+c.sB_net.toFixed(2)+'$</div>'
+  +'<div style="font-size:10px;color:var(--t3);margin-top:4px;line-height:1.6">Payout +$'+c.sB_pay.toFixed(2)+'<br>− Hedge SL $'+c.sB_los.toFixed(2)+'<br><span style="color:var(--amber)">ROI '+c.roiB+'%</span></div>'
+  +'</div>'
+  +'</div>'
+
+  // Costo totale ciclo
+  +'<div style="background:rgba(255,190,11,.06);border:1px solid rgba(255,190,11,.2);border-radius:9px;padding:12px">'
+  +'<div style="font-size:9px;color:var(--amber);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:8px">💰 Spesa totale 1 ciclo completo</div>'
+  +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+  +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd)">Costo challenge</div><div style="font-size:15px;font-weight:700;font-family:var(--fd);color:var(--amber)">$'+cost.toFixed(0)+'</div></div>'
+  +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd)">Capitale hedge min</div><div style="font-size:15px;font-weight:700;font-family:var(--fd)">$'+c.recAcc.toFixed(0)+'</div></div>'
+  +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);font-weight:800">TOTALE</div><div style="font-size:22px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+c.totalCycleCost.toFixed(0)+'</div></div>'
+  +'</div>'
+  +spreadRiga
+  +'</div>'
+
+  +'</div>';
 }
 
 function openModal(){ document.getElementById('modalOv').style.display='flex'; calcPreview(); }
