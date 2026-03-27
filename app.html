@@ -2334,8 +2334,7 @@ var hedgeLots = (hedgeTarget / (tp * pipVal)) / days;
   // ── SCENARIO A — Prop fallisce (prezzo scende, hedge SELL vince) ──
   // Guadagno hedge TP - costo challenge - spread hedge
 var sA_gain = hedgeTP_dollar;
-var sA_net = sA_gain - cost - spreadCostHedge;
-
+var sA_net = sA_gain - spreadCostHedge;
   // ── SCENARIO B — Prop vince (payout incassato, hedge SELL perde) ──
   var payoutGross = propTarget * (pay / 100);
   var sB_net = payoutGross - hedgeSL_dollar - cost - (spreadCostProp * minTrades) + cost;
