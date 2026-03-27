@@ -2340,7 +2340,7 @@ var propLots_byTotalDD = maxDDAmount / (sl * pipVal * minTrades);
   // Quanti lotti mi servono per coprire il costo challenge col TP?
   // hedgeLots = cost / (tp * pipVal)
 var hedgeTarget = cost * 1.30;
-var hedgeLots = (hedgeTarget / (tp * pipVal)) / days;
+var hedgeLots = (hedgeTarget / (sl * pipValHedge)) / days;
   hedgeLots = Math.ceil(hedgeLots * 100) / 100;
   if(hedgeLots < 0.01) hedgeLots = 0.01;
   var hedgeTP_dollar = hedgeLots * tp * pipValHedge;
