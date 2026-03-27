@@ -2545,7 +2545,15 @@ var c = calcChallenge(p);
   +'</div>';
 }
 
-function openModal(){ document.getElementById('modalOv').style.display='flex'; setTimeout(function(){calcPreview();},50); }
+function openModal(){ 
+  var m=document.getElementById('modalOv'); 
+  m.style.display='flex'; 
+  setTimeout(function(){
+    var s=document.getElementById('mSize');
+    if(s&&!s.value)s.value='100000';
+    calcPreview();
+  },100); 
+}
 function closeModal(){ document.getElementById('modalOv').style.display='none'; }
 
 function doAdd() {
