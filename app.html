@@ -2499,7 +2499,7 @@ var c = calcChallenge(p);
   // Prop
   +'<div style="background:var(--bg3);border:2px solid rgba(155,93,229,.4);border-radius:10px;padding:12px">'
   +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">CONTO PERSONALE — LOTTI</div>'
-  +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+c.propLots+' lot</div>'
+  +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+c.hedgeLots+' lot</div>
   +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
   +'TP: <span style="color:var(--green)">+$'+c.propTP.toFixed(2)+'</span><br>'
   +'SL: <span style="color:var(--red)">-$'+c.propSL.toFixed(2)+'</span><br>'
@@ -2510,7 +2510,7 @@ var c = calcChallenge(p);
   // Hedge personale
   +'<div style="background:var(--bg3);border:2px solid rgba(0,229,204,.4);border-radius:10px;padding:12px">'
   +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">CONTO PROP</div>'
-  +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+c.hedgeLots+' lot</div>'
+  +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+c.propLots+' lot</div>
   +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
   +'TP: <span style="color:var(--green)">+$'+c.hedgeTP.toFixed(2)+'</span><br>'
   +'SL: <span style="color:var(--red)">-$'+c.hedgeSL.toFixed(2)+'</span><br>'
