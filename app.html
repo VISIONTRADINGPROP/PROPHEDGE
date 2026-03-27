@@ -405,7 +405,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .mh h2{font-size:15px;font-weight:600}
 .mclose{background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer;line-height:1}
 .mclose:hover{color:var(--red)}
-.mb{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 60px);overflow:hidden}
+.mb{display:grid;grid-template-columns:1fr 1fr;flex:1;min-height:0;overflow:hidden}
 .mb-left{overflow-y:auto;padding:20px;border-right:1px solid var(--border)}
 .mb-right{overflow-y:auto;padding:20px;background:var(--bg3)}
 .msugg{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;z-index:300;box-shadow:0 8px 28px rgba(0,0,0,.6);max-height:220px;overflow-y:auto}
