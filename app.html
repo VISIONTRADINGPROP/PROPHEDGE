@@ -1766,183 +1766,169 @@ function doRegisterFree(){
 
   <div class="modal" onclick="event.stopPropagation()">
 
+    <div class="mh">
 
+      <h2>Nuova sfida prop</h2>
 
-<div class="mb" style="padding:24px;display:flex;flex-direction:column;gap:0">
+      <div style="display:flex;gap:8px;margin-left:auto;margin-right:10px">
 
-  <!-- NOME PROP -->
-  <div style="margin-bottom:20px">
-    <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:8px">Nome Prop Firm</label>
-    <div style="display:flex;align-items:center;gap:10px;position:relative">
-      <div id="mLogo" style="width:44px;height:44px;border-radius:10px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--t3);flex-shrink:0;overflow:hidden">?</div>
-      <div style="flex:1;position:relative">
-        <input id="mName" placeholder="es. FundedElite, FTMO, FTUK..." oninput="onName(this.value)" autocomplete="off" style="width:100%;padding:12px 14px;font-size:14px">
-        <div class="msugg" id="mSugg"></div>
+        <button class="btn-g" onclick="closeModal()">Annulla</button>
+
+        <button class="btn-p" onclick="doAdd()">+ Aggiungi sfida</button>
+
       </div>
-    </div>
-  </div>
-  <input type="hidden" id="mDomain">
 
-  <!-- TIPO STRATEGIA -->
-  <div style="margin-bottom:20px">
-    <div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:10px">Tipo di Strategia</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div onclick="setMode('personal')" id="modePersonal" style="background:var(--teal-bg);border:2px solid var(--teal);border-radius:12px;padding:14px;cursor:pointer;text-align:center">
-        <div style="font-size:15px;font-weight:700;color:var(--teal);margin-bottom:4px">Prop + Personale</div>
-        <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">Conto prop + Conto personale</div>
-      </div>
-      <div onclick="setMode('prop2')" id="modeProp2" style="background:var(--bg3);border:2px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;text-align:center">
-        <div style="font-size:15px;font-weight:700;color:var(--violet);margin-bottom:4px">Prop + Prop</div>
-        <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">Due conti prop opposti</div>
-      </div>
-    </div>
-  </div>
+      <button class="mclose" onclick="closeModal()">✕</button>
 
-  <!-- SEZIONE PROP -->
-  <div style="background:rgba(155,93,229,.05);border:1px solid rgba(155,93,229,.2);border-radius:14px;padding:18px;margin-bottom:16px">
-    <div style="font-size:10px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.14em;margin-bottom:14px;font-family:var(--fd)">🎯 Parametri Conto Prop</div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">Dimensione ($)</label>
-        <input id="mSize" type="number" value="100000" step="10000" oninput="calcPreview()" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">Costo Challenge ($)</label>
-        <input id="mCost" type="number" value="1090" step="50" oninput="calcPreview()" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">DD Totale (%)</label>
-        <input id="mDD" type="number" value="6" step="0.5" oninput="calcPreview()" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">DD Giornaliero (%)</label>
-        <input id="mDDD" type="number" value="3" step="0.5" oninput="calcPreview()" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">Profit Target (%)</label>
-        <input id="mTgt" type="number" value="6" step="0.5" oninput="calcPreview()" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
-    </div>
+    <div class="mb">
 
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">Giorni Challenge</label>
-        <input id="mDays" type="number" value="14" step="1" min="1" oninput="calcPreview()" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">Payout (%)</label>
-        <input id="mPay" type="number" value="80" step="5" oninput="calcPreview()" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">Consistenza (%)</label>
-        <input id="mConsistency" type="number" value="30" step="5" oninput="calcPreview()" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
-    </div>
-  </div>
+      <div class="f" style="margin-bottom:14px">
 
-  <!-- SEZIONE ASSET -->
-  <div style="background:rgba(0,229,204,.04);border:1px solid rgba(0,229,204,.15);border-radius:14px;padding:18px;margin-bottom:16px">
-    <div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.14em;margin-bottom:14px;font-family:var(--fd)">📊 Asset e Pip</div>
+        <label>Nome prop firm</label>
 
-    <div style="margin-bottom:12px">
-      <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">Asset</label>
-      <select id="mAsset" onchange="onAssetChange(this.value)" style="width:100%;padding:11px 13px;font-size:14px">
-        <optgroup label="── FOREX PRINCIPALI ──">
-          <option value="EUR/USD">EUR/USD — $10/pip</option>
-          <option value="GBP/USD">GBP/USD — $10/pip</option>
-          <option value="USD/JPY">USD/JPY — ~$9.1/pip</option>
-          <option value="AUD/USD">AUD/USD — $10/pip</option>
-          <option value="NZD/USD">NZD/USD — $10/pip</option>
-          <option value="USD/CHF">USD/CHF — ~$10.2/pip</option>
-          <option value="USD/CAD">USD/CAD — ~$7.6/pip</option>
-        </optgroup>
-        <optgroup label="── FOREX CROSSES ──">
-          <option value="EUR/JPY">EUR/JPY — ~$9.1/pip</option>
-          <option value="GBP/JPY">GBP/JPY — ~$9.1/pip</option>
-          <option value="AUD/JPY">AUD/JPY — ~$9.1/pip</option>
-          <option value="EUR/GBP">EUR/GBP — ~$12.5/pip</option>
-          <option value="EUR/CHF">EUR/CHF — ~$10.2/pip</option>
-          <option value="GBP/CHF">GBP/CHF — ~$10.2/pip</option>
-          <option value="GBP/AUD">GBP/AUD — ~$6.5/pip</option>
-          <option value="EUR/AUD">EUR/AUD — ~$6.5/pip</option>
-          <option value="EUR/CAD">EUR/CAD — ~$7.6/pip</option>
-          <option value="GBP/CAD">GBP/CAD — ~$7.6/pip</option>
-        </optgroup>
-        <optgroup label="── METALLI ──">
-          <option value="GOLD">GOLD XAU — $1/punto</option>
-          <option value="SILVER">SILVER XAG — $5/punto</option>
-        </optgroup>
-        <optgroup label="── INDICI CFD ──">
-          <option value="NAS100">NASDAQ 100 CFD — $1/punto</option>
-          <option value="US30">DOW JONES CFD — $1/punto</option>
-          <option value="US500">S&P 500 CFD — $1/punto</option>
-          <option value="GER40">DAX 40 CFD — $1/punto</option>
-        </optgroup>
-        <optgroup label="── PROP FUTURES ──">
-          <option value="ES_FUTURE">S&P 500 ES — $50/punto</option>
-          <option value="NQ_FUTURE">NASDAQ NQ — $20/punto</option>
-          <option value="MES_FUTURE">Micro S&P MES — $5/punto</option>
-          <option value="MNQ_FUTURE">Micro NQ MNQ — $2/punto</option>
-          <option value="CL_FUTURE">Crude Oil CL — $10/punto</option>
-        </optgroup>
-      </select>
-      <div class="hint" id="mAssetHint" style="margin-top:5px;font-size:10px;color:var(--teal)">Pip value calcolato automaticamente</div>
-    </div>
+        <div style="display:flex;align-items:center;gap:10px;position:relative">
 
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">Stop Loss (pip)</label>
-        <input id="mSlPips" type="number" value="50" step="1" min="1" oninput="calcPreview()" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">Take Profit (pip)</label>
-        <input id="mTpPips" type="number" value="50" step="1" min="1" oninput="calcPreview()" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">Spread (pip) <span style="color:var(--t3);font-weight:400">opz.</span></label>
-        <input id="mSpread" type="number" value="0" step="0.1" min="0" oninput="calcPreview()" placeholder="0" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
-    </div>
-  </div>
+          <div id="mLogo" style="width:36px;height:36px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--t3);flex-shrink:0;overflow:hidden">?</div>
 
-  <!-- SECONDA PROP -->
-  <div id="prop2Fields" style="display:none;background:rgba(155,93,229,.05);border:1px solid rgba(155,93,229,.2);border-radius:14px;padding:18px;margin-bottom:16px">
-    <div style="font-size:10px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.14em;margin-bottom:14px;font-family:var(--fd)">🎯 Parametri Seconda Prop</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">Dimensione ($)</label>
-        <input id="mSize2" type="number" value="10000" step="1000" oninput="calcPreview()" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">Costo ($)</label>
-        <input id="mCost2" type="number" value="100" step="50" oninput="calcPreview()" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">DD (%)</label>
-        <input id="mDD2" type="number" value="6" step="0.5" oninput="calcPreview()" style="width:100%;padding:11px 13px;font-size:14px;font-family:var(--fd)">
-      </div>
-      <div>
-        <label style="display:block;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:6px">Piattaforma</label>
-        <select id="mPlat2" style="width:100%;padding:11px 13px;font-size:14px">
-          <option value="MT4">MT4</option>
-          <option value="MT5">MT5</option>
-          <option value="cTrader">cTrader</option>
-          <option value="DXTrade">DXTrade</option>
-        </select>
-      </div>
-    </div>
-  </div>
+          <div style="flex:1;position:relative">
 
-  <!-- RISULTATO CALCOLO -->
-  <div id="mPreview"></div>
+            <input id="mName" placeholder="es. FundedElite, FTMO, FTUK..." oninput="onName(this.value)" autocomplete="off">
 
+            <div class="msugg" id="mSugg"></div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <input type="hidden" id="mDomain">
+
+      <div class="sect">Tipo di strategia</div>
+
+      <div class="fr2" style="margin-bottom:14px">
+
+        <div onclick="setMode('personal')" id="modePersonal" style="background:var(--teal-bg);border:2px solid var(--teal);border-radius:10px;padding:12px;cursor:pointer;text-align:center">
+
+          <div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">Prop + Personale</div>
+
+          <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">BUY prop + SELL conto reale</div>
+
+        </div>
+
+        <div onclick="setMode('prop2')" id="modeProp2" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;text-align:center">
+
+          <div style="font-size:14px;font-weight:700;color:var(--violet);margin-bottom:4px">Prop + Prop</div>
+
+          <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">BUY prop + SELL seconda prop</div>
+
+        </div>
+
+      </div>
+
+      <div class="sect">Parametri prop principale</div>
+
+      <div class="fr2">
+
+        <div class="f"><label>Dimensione ($)</label><input id="mSize" type="number" value="100000" step="10000" oninput="calcPreview()"><div class="sub" id="mSizeEur"></div></div>
+
+        <div class="f"><label>Costo challenge ($)</label><input id="mCost" type="number" value="1090" step="50" oninput="calcPreview()"><div class="sub" id="mCostEur"></div></div>
+
+      </div>
+
+      <div class="fr3">
+
+        <div class="f"><label>DD totale (%)</label><input id="mDD" type="number" value="6" step="0.5" oninput="calcPreview()"></div>
+
+        <div class="f"><label>DD giornaliero (%)</label><input id="mDDD" type="number" value="3" step="0.5" oninput="calcPreview()"></div>
+
+        <div class="f"><label>Profit target (%)</label><input id="mTgt" type="number" value="6" step="0.5" oninput="calcPreview()"></div>
+
+      </div>
+
+      <div class="fr2">
+
+        <div class="f"><label>Giorni challenge</label><input id="mDays" type="number" value="14" step="1" min="1" oninput="calcPreview()"></div>
+
+        <div class="f"><label>Payout (%)</label><input id="mPay" type="number" value="80" step="5" oninput="calcPreview()"></div>
+
+      </div>
+      <div class="f">
+  <label>Consistenza Prop (%)</label>
+  <input id="mConsistency" type="number" value="30" step="5" oninput="calcPreview()">
 </div>
+
+      <div id="prop2Fields" style="display:none">
+
+        <div class="sect">Parametri seconda prop (hedge)</div>
+
+        <div class="fr2">
+
+          <div class="f"><label>Dimensione seconda prop ($)</label><input id="mSize2" type="number" value="10000" step="1000" oninput="calcPreview()"></div>
+
+          <div class="f"><label>Costo seconda prop ($)</label><input id="mCost2" type="number" value="100" step="50" oninput="calcPreview()"></div>
+
+        </div>
+
+        <div class="fr2">
+
+          <div class="f"><label>DD seconda prop (%)</label><input id="mDD2" type="number" value="6" step="0.5" oninput="calcPreview()"></div>
+
+          <div class="f"><label>Piattaforma</label><select id="mPlat2"><option value="MT4">MT4</option><option value="MT5">MT5</option><option value="cTrader">cTrader</option><option value="DXTrade">DXTrade</option></select></div>
+
+        </div>
+
+      </div>
+
+      <div class="sect">Asset e pip</div>
+
+      <div class="fr2">
+
+        <div class="f">
+
+          <label>Asset</label>
+
+      <select id="mAsset" onchange="onAssetChange(this.value)">
+    <optgroup label="Forex">
+        <option value="EUR/USD:10">EUR/USD - $10/pip</option>
+        <option value="GBP/USD:10">GBP/USD - $10/pip</option>
+        <option value="USD/JPY:9.1">USD/JPY - $9/pip</option>
+    </optgroup>
+    <optgroup label="Metalli / Indici CFD">
+        <option value="GOLD:1">GOLD (XAU) - $1/pip</option>
+        <option value="NAS100:1">NASDAQ 100 - $1/punto</option>
+        <option value="US30:1">DOW JONES (US30) - $1/punto</option>
+    </optgroup>
+    <optgroup label="Prop Futures">
+        <option value="ES_FUTURE:50">S&P 500 (ES) - $50/punto</option>
+        <option value="NQ_FUTURE:20">NASDAQ (NQ) - $20/punto</option>
+    </optgroup>
+</select>
+
+          <div class="hint" id="mAssetHint">$10 per pip per lotto std</div>
+
+        </div>
+
+
+      <div class="fr2">
+
+        <div class="f"><label>Stop Loss (pip)</label><input id="mSlPips" type="number" value="50" step="1" min="1" oninput="calcPreview()"></div>
+
+        <div class="f"><label>Take Profit (pip)</label><input id="mTpPips" type="number" value="50" step="1" min="1" oninput="calcPreview()"></div>
+
+      </div>
+        <div class="f">
+  <label>Spread (pip) <span style="font-size:8px;color:var(--t3)">opzionale</span></label>
+  <input id="mSpread" type="number" value="0" step="0.1" min="0" oninput="calcPreview()" placeholder="0 = non considerato">
+  <div class="hint">Inserisci lo spread del broker per un calcolo più preciso</div>
+</div>
+
+      <div id="mPreview"></div>
+
+    </div>
+
   </div>
 
 </div>
