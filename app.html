@@ -2338,7 +2338,7 @@ var sA_net = sA_gain - cost - spreadCostHedge;
 
   // ── SCENARIO B — Prop vince (payout incassato, hedge SELL perde) ──
   var payoutGross = propTarget * (pay / 100);
-  var sB_net = payoutGross - hedgeSL_dollar - cost - (spreadCostProp * minTrades);
+  var sB_net = payoutGross - hedgeSL_dollar - cost - (spreadCostProp * minTrades) + cost;
 
   // ── Capitale minimo conto personale ──
   // Deve coprire: margine hedge + eventuale SL hedge + 30% buffer
