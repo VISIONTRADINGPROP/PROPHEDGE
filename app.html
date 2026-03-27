@@ -1920,6 +1920,10 @@ function doRegisterFree(){
 
       </div>
         <div class="f">
+         <div class="fr2" style="margin-bottom:10px">
+  <div class="f"><label>Pip Value Conto Prop ($) <span style="font-size:8px;color:var(--teal)">auto</span></label><input id="mPipVProp" type="number" step="0.01" min="0.01" oninput="calcPreview()" placeholder="es. 10"></div>
+  <div class="f"><label>Pip Value Conto Personale ($) <span style="font-size:8px;color:var(--teal)">auto</span></label><input id="mPipVHedge" type="number" step="0.01" min="0.01" oninput="calcPreview()" placeholder="es. 100"></div>
+</div> 
   <label>Spread (pip) <span style="font-size:8px;color:var(--t3)">opzionale</span></label>
   <input id="mSpread" type="number" value="0" step="0.1" min="0" oninput="calcPreview()" placeholder="0 = non considerato">
   <div class="hint">Inserisci lo spread del broker per un calcolo più preciso</div>
@@ -2283,7 +2287,9 @@ else if(asset==='GCFUTURE'||asset==='GC') pipVal=10;
 else if(asset==='BTCUSD'||asset==='BITCOIN'||asset==='BTC') pipVal=1;
 else if(asset==='ETHUSD'||asset==='ETHEREUM'||asset==='ETH') pipVal=0.1;
   // Se l'utente ha inserito manualmente un pip value, usalo
-  if(p.pipV && parseFloat(p.pipV)>0) pipVal=parseFloat(p.pipV);
+  var pipValProp  = (p.pipVProp  && parseFloat(p.pipVProp)>0)  ? parseFloat(p.pipVProp)  : pipVal;
+var pipValHedge = (p.pipVHedge && parseFloat(p.pipVHedge)>0) ? parseFloat(p.pipVHedge) : pipVal;
+pipVal = pipValProp;
 
   var sl     = Math.max(parseFloat(p.slPips)||1, 0.01);
   var tp     = Math.max(parseFloat(p.tpPips)||1, 0.01);
@@ -2337,8 +2343,8 @@ var hedgeTarget = cost * 1.30;
 var hedgeLots = (hedgeTarget / (tp * pipVal)) / days;
   hedgeLots = Math.ceil(hedgeLots * 100) / 100;
   if(hedgeLots < 0.01) hedgeLots = 0.01;
-  var hedgeTP_dollar = hedgeLots * tp * pipVal; // guadagno hedge se prop fallisce
-  var hedgeSL_dollar = hedgeLots * sl * pipVal; // perdita hedge se prop vince
+  var hedgeTP_dollar = hedgeLots * tp * pipValHedge;
+var hedgeSL_dollar = hedgeLots * sl * pipValHedge;
 
   // ── Costo spread (opzionale) ──
   var spreadCostProp  = propLots  * spread * pipVal; // spread per trade prop
@@ -2448,8 +2454,10 @@ function autoCalcPips(){
   var asset  = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
 
   var p = {size,cost,maxDD,ddd,tgtPct,pay,slPips:sl,tpPips:tp,
-            asset,consistency:cons,spread,days,pipV:0};
-  var c = calcChallenge(p);
+       asset,consistency:cons,spread,days,pipV:0,
+    pipVProp: parseFloat(document.getElementById('mPipVProp')?.value)||0,
+    pipVHedge: parseFloat(document.getElementById('mPipVHedge')?.value)||0};
+var c = calcChallenge(p);
 
   var box = document.getElementById('mPreview');
   if(!box || !size) return;
