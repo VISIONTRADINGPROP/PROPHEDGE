@@ -2347,7 +2347,7 @@ var sA_net = sA_gain - cost - spreadCostHedge;
   // Il personale deve reggere TUTTI i trade del ciclo completo
   // In ogni trade l'hedge può perdere hedgeSL_dollar
   // Quindi serve: hedgeSL * minTrades * 1.3 (buffer sicurezza)
- var hedgeSL_withBuffer = hedgeSL_dollar * 1.3;
+ var hedgeSL_withBuffer = hedgeSL_dollar * 2;
   var minCapPersonale = hedgeSL_withBuffer;
 
   // ── Costo totale ciclo ──
