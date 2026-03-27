@@ -2252,22 +2252,36 @@ function calcChallenge(p) {
   var pipVal = 10; // default EUR/USD
   var asset = (p.asset||'').toUpperCase().replace('/','').replace('_','');
 
-  if(asset==='EURUSD'||asset==='GBPUSD'||asset==='AUDUSD'||asset==='NZDUSD') pipVal=10;
-  else if(asset==='USDJPY'||asset==='EURJPY'||asset==='GBPJPY'||asset==='AUDJPY'||asset==='CADJPY'||asset==='CHFJPY') pipVal=9.1;
-  else if(asset==='USDCHF'||asset==='EURCHF'||asset==='GBPCHF'||asset==='AUDCHF') pipVal=10.2;
-  else if(asset==='USDCAD'||asset==='EURCAD'||asset==='GBPCAD'||asset==='AUDCAD'||asset==='NZDCAD') pipVal=7.6;
-  else if(asset==='EURGBP') pipVal=12.5;
-  else if(asset==='GBPAUD'||asset==='EURAUD'||asset==='AUDNZD'||asset==='EURNZD'||asset==='GBPNZD') pipVal=6.5;
-  else if(asset==='GOLD'||asset==='XAUUSD'||asset==='XAU') pipVal=1;
-  else if(asset==='SILVER'||asset==='XAGUSD') pipVal=5;
-  else if(asset==='NAS100'||asset==='NASDAQ'||asset==='US30'||asset==='DOW'||asset==='US500'||asset==='SP500'||asset==='GER40'||asset==='DAX') pipVal=1;
-  else if(asset==='ESFUTURE'||asset==='ES') pipVal=50;
-  else if(asset==='NQFUTURE'||asset==='NQ') pipVal=20;
-  else if(asset==='MESFUTURE'||asset==='MES') pipVal=5;
-  else if(asset==='MNQFUTURE'||asset==='MNQ') pipVal=2;
-  else if(asset==='CLFUTURE'||asset==='CL') pipVal=10;
-  else if(asset==='GCFUTURE'||asset==='GC') pipVal=10;
-
+ if(asset==='EURUSD'||asset==='GBPUSD'||asset==='AUDUSD'||asset==='NZDUSD') pipVal=10;
+else if(asset==='USDJPY'||asset==='EURJPY'||asset==='GBPJPY'||asset==='AUDJPY'||asset==='CADJPY'||asset==='CHFJPY'||asset==='NZDJPY') pipVal=9.1;
+else if(asset==='USDCHF'||asset==='EURCHF'||asset==='GBPCHF'||asset==='AUDCHF'||asset==='NZDCHF') pipVal=10.2;
+else if(asset==='USDCAD'||asset==='EURCAD'||asset==='GBPCAD'||asset==='AUDCAD'||asset==='NZDCAD'||asset==='CADCHF') pipVal=7.6;
+else if(asset==='EURGBP') pipVal=12.5;
+else if(asset==='GBPAUD'||asset==='EURAUD'||asset==='AUDNZD'||asset==='EURNZD'||asset==='GBPNZD') pipVal=6.5;
+else if(asset==='CADJPY') pipVal=9.1;
+/* METALLI */
+else if(asset==='GOLD'||asset==='XAUUSD'||asset==='XAU') pipVal=10;
+else if(asset==='SILVER'||asset==='XAGUSD'||asset==='XAG') pipVal=50;
+else if(asset==='PLATINUM'||asset==='XPTUSD') pipVal=10;
+else if(asset==='PALLADIUM'||asset==='XPDUSD') pipVal=10;
+/* INDICI CFD */
+else if(asset==='NAS100'||asset==='NASDAQ') pipVal=20;
+else if(asset==='US30'||asset==='DOW'||asset==='DJ30') pipVal=5;
+else if(asset==='US500'||asset==='SP500'||asset==='SPX500') pipVal=50;
+else if(asset==='GER40'||asset==='DAX'||asset==='DE40') pipVal=25;
+else if(asset==='UK100'||asset==='FTSE') pipVal=10;
+else if(asset==='FRA40'||asset==='CAC40') pipVal=10;
+else if(asset==='JPN225'||asset==='NIKKEI') pipVal=0.7;
+else if(asset==='AUS200'||asset==='ASX200') pipVal=7;
+/* FUTURES */
+else if(asset==='ESFUTURE'||asset==='ES') pipVal=50;
+else if(asset==='NQFUTURE'||asset==='NQ') pipVal=20;
+else if(asset==='MESFUTURE'||asset==='MES') pipVal=5;
+else if(asset==='MNQFUTURE'||asset==='MNQ') pipVal=2;
+else if(asset==='CLFUTURE'||asset==='CL'||asset==='WTIUSD'||asset==='USOIL') pipVal=10;
+else if(asset==='GCFUTURE'||asset==='GC') pipVal=10;
+else if(asset==='BTCUSD'||asset==='BITCOIN'||asset==='BTC') pipVal=1;
+else if(asset==='ETHUSD'||asset==='ETHEREUM'||asset==='ETH') pipVal=0.1;
   // Se l'utente ha inserito manualmente un pip value, usalo
   if(p.pipV && parseFloat(p.pipV)>0) pipVal=parseFloat(p.pipV);
 
