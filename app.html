@@ -2319,7 +2319,8 @@ var propLots_byTotalDD = maxDDAmount / (sl * pipVal * minTrades);
   // il conto personale (che ha fatto SELL) guadagna.
   // Quanti lotti mi servono per coprire il costo challenge col TP?
   // hedgeLots = cost / (tp * pipVal)
-  var hedgeLots = cost / (tp * pipVal);
+  var hedgeTarget = cost * 1.30;
+  var hedgeLots = hedgeTarget / (tp * pipVal);
   hedgeLots = Math.ceil(hedgeLots * 100) / 100;
   if(hedgeLots < 0.01) hedgeLots = 0.01;
 
