@@ -2307,7 +2307,7 @@ var propLots_byDailyDD = dailyDD / (sl * pipVal);
 var propLots_byTotalDD = maxDDAmount / (sl * pipVal * minTrades);
 
 // Prendo il MINIMO tra tutti i limiti — il più restrittivo vince
- var propLots = Math.min(propLots_byConsistency, propLots_byDailyDD, propLots_byTotalDD);
+ var propLots = Math.min(propLots_byConsistency, propLots_byDailyDD, propLots_byTotalDD) / days;
   propLots = Math.floor(propLots * 100) / 100;
   if(propLots < 0.01) propLots = 0.01;
 
