@@ -2559,7 +2559,7 @@ var c = calcChallenge(p);
   +'</div>';
 }
 
-function openModal(){ document.getElementById('modalOv').style.display='flex'; calcPreview(); }
+function openModal(){ document.getElementById('modalOv').style.display='flex'; setTimeout(function(){calcPreview();},50); }
 function closeModal(){ document.getElementById('modalOv').style.display='none'; }
 
 function doAdd() {
