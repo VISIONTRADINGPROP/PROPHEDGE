@@ -889,7 +889,84 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 #aiFloatSend{padding:8px 14px;background:linear-gradient(135deg,#00b8a4,#9b5de5);color:#fff;border:none;border-radius:9px;font-weight:700;font-size:12px;cursor:pointer}
 
 #aiFloatSend:disabled{opacity:.5;cursor:not-allowed}
-
+/* ====== FIX FULLSCREEN MODALE (override) ====== */
+.modal{
+  position:fixed !important; inset:0 !important;
+  width:100vw !important; height:100vh !important;
+  max-width:none !important; max-height:none !important;
+  display:flex !important; flex-direction:column !important;
+  background:
+    radial-gradient(1200px 600px at 5% -10%, rgba(0,229,204,.10), transparent 60%),
+    radial-gradient(1000px 600px at 95% -15%, rgba(155,93,229,.10), transparent 60%),
+    var(--bg2) !important;
+  border:0 !important; border-radius:0 !important;
+  box-shadow:none !important; z-index:100000 !important;
+}
+.mb{
+  display:grid !important; grid-template-columns:1.05fr 1fr !important;
+  height:calc(100vh - 60px) !important; min-height:0 !important; overflow:hidden !important;
+}
+.mb-left{
+  overflow:auto !important; padding:20px !important; border-right:1px solid var(--border) !important;
+  background:
+    radial-gradient(800px 300px at -10% -10%, rgba(0,229,204,.08), transparent 60%),
+    radial-gradient(700px 260px at 110% 0%, rgba(155,93,229,.07), transparent 60%) !important;
+}
+.mb-right{
+  overflow:auto !important; padding:20px !important; background:var(--bg3) !important;
+  box-shadow:inset 1px 0 0 rgba(0,229,204,.18) !important;
+}
+.mh{
+  background:
+    radial-gradient(1200px 80px at 10% -20%, rgba(0,229,204,.16), transparent 60%),
+    radial-gradient(900px 80px at 90% -30%, rgba(155,93,229,.16), transparent 60%),
+    linear-gradient(180deg, rgba(0,229,204,.08), rgba(155,93,229,.07)) !important;
+  border-bottom:1px solid rgba(0,229,204,.25) !important;
+}
+.mh h2{
+  background:linear-gradient(90deg,var(--teal),var(--violet));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  letter-spacing:.06em; text-transform:uppercase; font-weight:900;
+}
+.panel{
+  border:1px solid rgba(0,229,204,.22) !important;
+  box-shadow:0 14px 40px rgba(0,0,0,.35), 0 0 0 1px rgba(155,93,229,.10) inset !important;
+  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.02)), var(--bg2) !important;
+}
+.ph h3::before{
+  width:5px; height:16px; border-radius:3px;
+  background:linear-gradient(180deg,var(--teal),var(--violet));
+  box-shadow:0 0 14px rgba(0,229,204,.55);
+}
+.f input,.f select{
+  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.02)), var(--bg3) !important;
+  border:1px solid rgba(0,229,204,.22) !important;
+}
+.f input:focus,.f select:focus{
+  border-color:var(--teal) !important;
+  box-shadow:0 0 0 3px rgba(0,229,204,.20), 0 0 20px rgba(155,93,229,.18) !important;
+}
+.sect{ border-bottom:1px dashed rgba(0,229,204,.30) !important; color:var(--t2) !important; }
+.prev{
+  border:1px solid transparent !important; border-radius:14px !important; padding:14px !important;
+  background:
+    linear-gradient(var(--bg3), var(--bg3)) padding-box,
+    linear-gradient(135deg, rgba(0,229,204,.55), rgba(155,93,229,.55)) border-box !important;
+}
+.ac{
+  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.02)), var(--bg3) !important;
+  border:1px solid rgba(155,93,229,.22) !important;
+  box-shadow:0 12px 32px rgba(0,0,0,.28) !important;
+}
+.ac::before{height:4px; background:linear-gradient(90deg,var(--teal),var(--violet)) !important}
+.roi-a{ border-color:rgba(255,64,96,.45) !important; box-shadow:0 12px 32px rgba(255,64,96,.16) !important }
+.roi-b{ border-color:rgba(0,214,143,.45) !important; box-shadow:0 12px 32px rgba(0,214,143,.16) !important }
+.btn-p{ background:linear-gradient(135deg,var(--teal2),var(--violet2)) !important; box-shadow:0 12px 30px rgba(0,229,204,.28), inset 0 0 16px rgba(155,93,229,.20) !important }
+.btn-p:hover{ transform:translateY(-1px); box-shadow:0 16px 38px rgba(0,229,204,.38), inset 0 0 20px rgba(155,93,229,.28) !important }
+@media (max-width: 1024px){
+  .mb{ grid-template-columns:1fr !important; }
+  .mb-left{ border-right:none !important; border-bottom:1px solid var(--border) !important; }
+}
 </style>
 
 <script>window._sbLoadError=false;</script>
