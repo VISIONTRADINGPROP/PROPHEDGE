@@ -3910,9 +3910,9 @@ function doRegisterFree(){
 
          <div class="fr2" style="margin-bottom:10px">
 
-  <div class="f"><label>Pip Value Conto Prop ($) <span style="font-size:8px;color:var(--teal)">auto</span></label><input id="mPipVProp" type="number" step="0.01" min="0.01" oninput="calcPreview()" placeholder="es. 10"></div>
+  <div class="f"><label>Contratto Prop (lotti/lot) <span style="font-size:8px;color:var(--teal)">opzionale</span></label><input id="mPipVProp" type="number" step="1" min="1" oninput="calcPreview()" placeholder="es. 10 → lotti ÷10"><div class="hint" style="font-size:9px">Se il broker usa 10 lotti come 1 contratto, inserisci 10</div></div>
 
-  <div class="f"><label>Pip Value Conto Personale ($) <span style="font-size:8px;color:var(--teal)">auto</span></label><input id="mPipVHedge" type="number" step="0.01" min="0.01" oninput="calcPreview()" placeholder="es. 100"></div>
+  <div class="f"><label>Contratto Personale (lotti/lot) <span style="font-size:8px;color:var(--teal)">opzionale</span></label><input id="mPipVHedge" type="number" step="1" min="1" oninput="calcPreview()" placeholder="es. 10 → lotti ÷10"><div class="hint" style="font-size:9px">Se il broker personale usa 10 lotti come 1 contratto, inserisci 10</div></div>
 
 </div> 
 
@@ -4632,11 +4632,15 @@ else if(asset==='ETHUSD'||asset==='ETHEREUM'||asset==='ETH') pipVal=0.1;
 
   // Se l'utente ha inserito manualmente un pip value, usalo
 
-  var pipValProp  = (p.pipVProp  && parseFloat(p.pipVProp)>0)  ? parseFloat(p.pipVProp)  : pipVal;
+  // ── Moltiplicatore contratto per broker ──
+  // pipVProp/pipVHedge = dimensione contratto del broker rispetto allo standard
+  // Se il broker usa contratti da 10 lotti: inserisci 10 → i lotti calcolati vengono divisi per 10
+  // Se non inserito (= 0): nessuna divisione, calcolo standard per contratto singolo
 
-var pipValHedge = (p.pipVHedge && parseFloat(p.pipVHedge)>0) ? parseFloat(p.pipVHedge) : pipVal;
+  var contractMultProp  = (p.pipVProp  && parseFloat(p.pipVProp)>0)  ? parseFloat(p.pipVProp)  : 1;
+  var contractMultHedge = (p.pipVHedge && parseFloat(p.pipVHedge)>0) ? parseFloat(p.pipVHedge) : 1;
 
-pipVal = pipValProp;
+  var pipValBase = pipVal;
 
 
 
@@ -4694,19 +4698,19 @@ pipVal = pipValProp;
 
  // Lotti massimi per rispettare la CONSISTENZA (max guadagno per trade)
 
-var propLots_byConsistency = maxPerTrade / (tp * pipVal);
+var propLots_byConsistency = maxPerTrade / (tp * pipValBase);
 
 
 
 // Lotti massimi per rispettare il DD GIORNALIERO (max perdita per trade)
 
-var propLots_byDailyDD = dailyDD / (sl * pipVal);
+var propLots_byDailyDD = dailyDD / (sl * pipValBase);
 
 
 
 // Lotti massimi per rispettare il DD TOTALE distribuito sui trade minimi
 
-var propLots_byTotalDD = maxDDAmount / (sl * pipVal * minTrades);
+var propLots_byTotalDD = maxDDAmount / (sl * pipValBase * minTrades);
 
 
 
@@ -4714,15 +4718,18 @@ var propLots_byTotalDD = maxDDAmount / (sl * pipVal * minTrades);
 
  var propLots = p.lots ? parseFloat(p.lots) : Math.min(propLots_byConsistency, propLots_byDailyDD, propLots_byTotalDD) / days;
 
+  // Applico moltiplicatore contratto Prop
+  propLots = propLots / contractMultProp;
+
   propLots = Math.floor(propLots * 100) / 100;
 
   if(propLots < 0.01) propLots = 0.01;
 
 
 
-  var propTP_dollar = propLots * tp * pipVal; // guadagno se TP colpito
+  var propTP_dollar = propLots * contractMultProp * tp * pipValBase; // guadagno se TP colpito
 
-  var propSL_dollar = propLots * sl * pipVal; // perdita se SL colpito
+  var propSL_dollar = propLots * contractMultProp * sl * pipValBase; // perdita se SL colpito
 
 
 
@@ -4734,45 +4741,51 @@ var propLots_byTotalDD = maxDDAmount / (sl * pipVal * minTrades);
 
   // Quanti lotti mi servono per coprire il costo challenge col TP?
 
-  // hedgeLots = cost / (tp * pipVal)
+  // hedgeLots = cost / (tp * pipValBase), poi diviso per contractMultHedge
 
 var hedgeTarget = cost * 1.30;
 
-var hedgeLots = (hedgeTarget / (sl * pipValHedge)) / days;
+var hedgeLots = (hedgeTarget / (sl * pipValBase)) / days;
+
+  // Applico moltiplicatore contratto Hedge
+  hedgeLots = hedgeLots / contractMultHedge;
 
   hedgeLots = Math.ceil(hedgeLots * 100) / 100;
 
   if(hedgeLots < 0.01) hedgeLots = 0.01;
 
-  var hedgeTP_dollar = hedgeLots * tp * pipValHedge;
+  var hedgeTP_dollar = hedgeLots * contractMultHedge * tp * pipValBase;
 
-var hedgeSL_dollar = hedgeLots * sl * pipValHedge;
+var hedgeSL_dollar = hedgeLots * contractMultHedge * sl * pipValBase;
 
 
 
   // ── Costo spread (opzionale) ──
 
-  var spreadCostProp  = propLots  * spread * pipVal; // spread per trade prop
+  var spreadCostProp  = propLots  * contractMultProp  * spread * pipValBase; // spread per trade prop
 
-  var spreadCostHedge = hedgeLots * spread * pipVal; // spread per trade hedge
+  var spreadCostHedge = hedgeLots * contractMultHedge * spread * pipValBase; // spread per trade hedge
 
   var spreadTotale    = (spreadCostProp * minTrades) + spreadCostHedge;
 
 
 
   // ── SCENARIO A — Prop fallisce (prezzo scende, hedge SELL vince) ──
+  // Quanti trade PERDENTI prima di bruciare il DD totale della prop?
+  var maxLossTrades = propSL_dollar > 0 ? Math.floor(maxDDAmount / propSL_dollar) : days;
+  if(maxLossTrades < 1) maxLossTrades = 1;
+  // L'hedge guadagna su OGNI trade perdente della prop → totale = hedgeTP × maxLossTrades
+var sA_gain = hedgeTP_dollar * maxLossTrades;
+var sA_net  = sA_gain - cost - (spreadCostHedge * maxLossTrades);
 
-  // Guadagno hedge TP - costo challenge - spread hedge
-
-var sA_gain = hedgeTP_dollar;
-
-var sA_net = sA_gain - spreadCostHedge;
-
-  // ── SCENARIO B — Prop vince (payout incassato, hedge SELL perde) ──
-
+  // ── SCENARIO B — Prop vince (payout incassato, hedge SELL perde su ogni trade) ──
+  // Quanti trade VINCENTI servono alla prop per raggiungere il target?
+  var winsNeeded = propTP_dollar > 0 ? Math.ceil(propTarget / propTP_dollar) : minTrades;
+  if(winsNeeded < 1) winsNeeded = 1;
+  // L'hedge perde su OGNI trade vincente della prop → perdita totale = hedgeSL × winsNeeded
+  var totalHedgeSLforB = hedgeSL_dollar * winsNeeded;
   var payoutGross = propTarget * (pay / 100);
-
-  var sB_net = payoutGross - hedgeSL_dollar - cost - (spreadCostProp * minTrades) + cost;
+  var sB_net = payoutGross - totalHedgeSLforB - cost - (spreadCostProp * winsNeeded);
 
 
 
@@ -4788,9 +4801,9 @@ var sA_net = sA_gain - spreadCostHedge;
 
   // Quindi serve: hedgeSL * minTrades * 1.3 (buffer sicurezza)
 
- var hedgeSL_withBuffer = hedgeSL_dollar + cost;
-
-var minCapPersonale = hedgeSL_withBuffer;
+  // Capitale minimo conto personale: deve reggere tutte le perdite hedge del ciclo
+  // (scenario peggiore = prop vince tutti i trade → hedge perde winsNeeded volte)
+  var minCapPersonale = totalHedgeSLforB;
 
  
 
@@ -4810,7 +4823,8 @@ var minCapPersonale = hedgeSL_withBuffer;
 
   // ── Check regole ──
 
-  var consOk   = propTP_dollar <= maxPerTrade * 1.05;
+  var consOk   = propTP_dollar <= maxPerTrade;   // controllo esatto: TP ≤ cons% del target
+  var consWarn = propTP_dollar > maxPerTrade;    // violazione regola consistenza
 
   var trPerDay = Math.ceil(minTrades / days);
 
@@ -4820,7 +4834,8 @@ var minCapPersonale = hedgeSL_withBuffer;
 
   return {
 
-    pipVal, propLots, hedgeLots,
+    pipVal: pipValBase, propLots, hedgeLots,
+    contractMultProp, contractMultHedge,
 
     propTP: propTP_dollar, propSL: propSL_dollar,
 
@@ -4828,9 +4843,9 @@ var minCapPersonale = hedgeSL_withBuffer;
 
     propTarget, maxDDAmount, dailyDD, maxPerTrade, minTrades,
 
-    sA_net, sA_gain,
+    sA_net, sA_gain, maxLossTrades,
 
-    sB_net, sB_pay: payoutGross, sB_los: hedgeSL_dollar,
+    sB_net, sB_pay: payoutGross, sB_los: totalHedgeSLforB, winsNeeded,
 
     recAcc: minCapPersonale,
 
@@ -4838,7 +4853,8 @@ var minCapPersonale = hedgeSL_withBuffer;
 
     spreadCostProp, spreadCostHedge, spreadTotale,
 
-    roiA, roiB, consOk, trPerDay, maxTrDD, days,
+    roiA, roiB, consOk, consWarn, trPerDay, maxTrDD, days,
+    slPips: sl, tpPips: tp,
 
     maxProfit: propTarget,
 
@@ -5058,9 +5074,9 @@ var c = calcChallenge(p);
 
   +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
 
-  +'TP: <span style="color:var(--green)">+$'+c.propTP.toFixed(2)+'</span><br>'
+  +'TP: <span style="color:var(--green)">+$'+c.hedgeTP.toFixed(2)+'</span><br>'
 
-  +'SL: <span style="color:var(--red)">-$'+c.propSL.toFixed(2)+'</span><br>'
+  +'SL: <span style="color:var(--red)">-$'+c.hedgeSL.toFixed(2)+'</span><br>'
 
   +'Max/trade: <span style="color:var(--teal)">$'+c.maxPerTrade.toFixed(2)+'</span>'
 
@@ -5080,9 +5096,9 @@ var c = calcChallenge(p);
 
   +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
 
-  +'TP: <span style="color:var(--green)">+$'+c.hedgeTP.toFixed(2)+'</span><br>'
+  +'TP: <span style="color:var(--green)">+$'+c.propTP.toFixed(2)+'</span><br>'
 
-  +'SL: <span style="color:var(--red)">-$'+c.hedgeSL.toFixed(2)+'</span><br>'
+  +'SL: <span style="color:var(--red)">-$'+c.propSL.toFixed(2)+'</span><br>'
 
   +'Copre costo challenge'
 
@@ -5101,8 +5117,20 @@ var c = calcChallenge(p);
     ?'<div style="background:rgba(155,93,229,.07);border:1px solid rgba(155,93,229,.2);border-radius:6px;padding:7px 10px;font-size:10px;color:rgba(155,93,229,.9);margin-bottom:10px;font-family:var(--fd)">ℹ Lotti diversi — Prop ottimizzato per profitto, Hedge minimo per coprire il costo</div>'
 
     :'')
+  +(c.contractMultProp>1||c.contractMultHedge>1
+    ?'<div style="background:rgba(255,190,11,.07);border:1px solid rgba(255,190,11,.25);border-radius:6px;padding:7px 10px;font-size:10px;color:var(--amber);margin-bottom:10px;font-family:var(--fd)">⚡ Moltiplicatore contratto attivo — Prop ÷'+c.contractMultProp+' · Personale ÷'+c.contractMultHedge+' (lotti già adattati al contratto del broker)</div>'
+    :'')
 
 
+
+  // Avviso consistenza (se TP supera il limite)
+  +(c.consWarn
+    ?'<div style="background:rgba(255,64,96,.08);border:1px solid rgba(255,64,96,.35);border-radius:6px;padding:8px 11px;font-size:10px;color:var(--red);margin-bottom:10px;font-family:var(--fd)">'
+    +'⚠ <strong>VIOLAZIONE CONSISTENZA '+Math.round(p.consistency||30)+'%</strong> — '
+    +'Il tuo TP per trade ($'+c.propTP.toFixed(0)+') supera il limite di $'+c.maxPerTrade.toFixed(0)+'&nbsp;'
+    +'('+Math.round(p.consistency||30)+'% di $'+c.propTarget.toFixed(0)+').'
+    +'<br>Questa regola conta sia il singolo trade che la giornata intera.</div>'
+    :'')
 
   // Regole
 
@@ -5115,6 +5143,10 @@ var c = calcChallenge(p);
   +'<div style="font-size:11px"><span style="color:var(--t3)">Trade/gg: </span><strong style="color:'+(c.trPerDay<=c.maxTrDD?'var(--green)':'var(--amber)')+'">'+c.trPerDay+'</strong></div>'
 
   +'<div style="font-size:11px"><span style="color:var(--t3)">Pip value: </span><strong style="color:var(--teal)">$'+c.pipVal.toFixed(2)+'</strong></div>'
+  +(c.contractMultProp>1||c.contractMultHedge>1
+    ?'<div style="font-size:11px"><span style="color:var(--t3)">Molt. Prop: </span><strong style="color:var(--violet)">×'+c.contractMultProp+'</strong></div>'
+    +'<div style="font-size:11px"><span style="color:var(--t3)">Molt. Personale: </span><strong style="color:var(--violet)">×'+c.contractMultHedge+'</strong></div>'
+    :'')
 
   +'</div>'
 
@@ -5130,7 +5162,7 @@ var c = calcChallenge(p);
 
   +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+(c.sA_net>=0?'var(--green)':'var(--red)')+'">'+( c.sA_net>=0?'+':'')+c.sA_net.toFixed(2)+'$</div>'
 
-  +'<div style="font-size:10px;color:var(--t3);margin-top:4px;line-height:1.6">Hedge TP +$'+c.sA_gain.toFixed(2)+'<br>− Costo $'+cost.toFixed(2)+'<br><span style="color:var(--amber)">ROI '+c.roiA+'%</span></div>'
+  +'<div style="font-size:10px;color:var(--t3);margin-top:4px;line-height:1.6">Hedge tot. +$'+c.sA_gain.toFixed(2)+' ('+c.maxLossTrades+'×$'+c.hedgeTP.toFixed(2)+')<br>− Costo $'+cost.toFixed(2)+'<br><span style="color:var(--amber)">ROI '+c.roiA+'%</span></div>'
 
   +'</div>'
 
@@ -5140,7 +5172,7 @@ var c = calcChallenge(p);
 
   +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+(c.sB_net>=0?'var(--green)':'var(--red)')+'">'+( c.sB_net>=0?'+':'')+c.sB_net.toFixed(2)+'$</div>'
 
-  +'<div style="font-size:10px;color:var(--t3);margin-top:4px;line-height:1.6">Payout +$'+c.sB_pay.toFixed(2)+'<br>− Hedge SL $'+c.sB_los.toFixed(2)+'<br><span style="color:var(--amber)">ROI '+c.roiB+'%</span></div>'
+  +'<div style="font-size:10px;color:var(--t3);margin-top:4px;line-height:1.6">Payout +$'+c.sB_pay.toFixed(2)+'<br>− Hedge SL tot. $'+c.sB_los.toFixed(2)+' ('+c.winsNeeded+'×$'+c.hedgeSL.toFixed(2)+')<br>− Costo $'+cost.toFixed(2)+'<br><span style="color:var(--amber)">ROI '+c.roiB+'%</span></div>'
 
   +'</div>'
 
@@ -5202,6 +5234,9 @@ function doAdd() {
 
   const assetVal = document.getElementById('mAsset').value;
 
+  var rawPipVProp  = parseFloat(document.getElementById('mPipVProp')?.value)  || 0;
+  var rawPipVHedge = parseFloat(document.getElementById('mPipVHedge')?.value) || 0;
+
   const p = {
 
     id: Date.now(), name: document.getElementById('mName').value.trim() || 'Sfida',
@@ -5209,6 +5244,8 @@ function doAdd() {
     size: parseFloat(document.getElementById('mSize').value) || 0,
 
     cost: parseFloat(document.getElementById('mCost').value) || 0,
+
+    maxDD: parseFloat(document.getElementById('mDD').value) || 6,
 
     ddd: parseFloat(document.getElementById('mDDD').value) || 3,
 
@@ -5220,7 +5257,16 @@ function doAdd() {
 
     tpPips: parseFloat(document.getElementById('mTpPips').value) || 50,
 
-    asset: assetVal.split(':')[0], consistency: parseFloat(document.getElementById('mConsistency')?.value) || 30
+    days: parseFloat(document.getElementById('mDays')?.value) || 14,
+
+    spread: parseFloat(document.getElementById('mSpread')?.value) || 0,
+
+    lots: parseFloat(document.getElementById('mLots')?.value) || 0,
+
+    asset: assetVal.split(':')[0], consistency: parseFloat(document.getElementById('mConsistency')?.value) || 30,
+
+    pipVProp:  rawPipVProp,
+    pipVHedge: rawPipVHedge
 
   };
 
@@ -7072,7 +7118,10 @@ function renderCalc(){
 
 
 
-  var rules=[{ok:p.days>=3,t:'Giorni minimi >= 3',d:p.days+' giorni'},{ok:c.consOk,t:'Consistenza 30%',d:c.consOk?'Ok':'Target supera il 30%'},{ok:c.trPerDay<=c.maxTrDD,t:'Trade/giorno ok',d:'Necessari '+c.trPerDay+', consentiti '+c.maxTrDD},{ok:c.sA_net>=0,t:'Hedge copre il costo',d:c.sA_net>=0?'Hedge +'+uF(c.sA_gain):'Aumentare i giorni'},{ok:c.sB_net>=0,t:'Scenario B profittevole',d:c.sB_net>=0?'Netto +'+uF(c.sB_net):'Rivedere i parametri'}];
+  var _cons=Math.round(parseFloat(p.consistency)||30);
+  var _consLabel='Consistenza '+_cons+'% — max per trade/giornata';
+  var _consDetail=c.consOk?'TP $'+c.propTP.toFixed(0)+' ≤ limite $'+c.maxPerTrade.toFixed(0):'⚠ TP $'+c.propTP.toFixed(0)+' > limite $'+c.maxPerTrade.toFixed(0)+'!';
+  var rules=[{ok:p.days>=3,t:'Giorni minimi >= 3',d:p.days+' giorni'},{ok:c.consOk,t:_consLabel,d:_consDetail},{ok:c.trPerDay<=c.maxTrDD,t:'Trade/giorno ok',d:'Necessari '+c.trPerDay+', consentiti '+c.maxTrDD},{ok:c.sA_net>=0,t:'Hedge copre il costo (Scen.A)',d:c.sA_net>=0?'Hedge tot. +'+uF(c.sA_gain)+' ('+c.maxLossTrades+' trade)':'Aumentare i giorni'},{ok:c.sB_net>=0,t:'Scenario B profittevole',d:c.sB_net>=0?'Netto +'+uF(c.sB_net):'Rivedere i parametri'}];
 
 
 
@@ -7188,11 +7237,11 @@ function renderCalc(){
 
 
 
-    +'<div class="roi-card roi-a"><div class="roi-lbl">Scenario A — prop chiusa</div><div class="roi-val '+col(c.sA_net)+'">'+sgn(c.sA_net)+uF(c.sA_net)+'</div><div class="roi-sub">Hedge +'+uF(c.sA_gain)+'\nChallenge -'+uF(p.cost)+'\nROI '+c.roiA+'%</div></div>'
+    +'<div class="roi-card roi-a"><div class="roi-lbl">Scenario A — prop chiusa</div><div class="roi-val '+col(c.sA_net)+'">'+sgn(c.sA_net)+uF(c.sA_net)+'</div><div class="roi-sub">Hedge tot. +'+uF(c.sA_gain)+' ('+c.maxLossTrades+' trade)\nChallenge -'+uF(p.cost)+'\nROI '+c.roiA+'%</div></div>'
 
 
 
-    +'<div class="roi-card roi-b"><div class="roi-lbl">Scenario B — payout incassato</div><div class="roi-val '+col(c.sB_net)+'">'+sgn(c.sB_net)+uF(c.sB_net)+'</div><div class="roi-sub">Payout +'+uF(c.sB_pay)+'\nHedge -'+uF(c.sB_los)+'\nROI '+c.roiB+'%</div></div>'
+    +'<div class="roi-card roi-b"><div class="roi-lbl">Scenario B — payout incassato</div><div class="roi-val '+col(c.sB_net)+'">'+sgn(c.sB_net)+uF(c.sB_net)+'</div><div class="roi-sub">Payout +'+uF(c.sB_pay)+'\nHedge SL tot. -'+uF(c.sB_los)+' ('+c.winsNeeded+' trade)\nChallenge -'+uF(p.cost)+'\nROI '+c.roiB+'%</div></div>'
 
 
 
