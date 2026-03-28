@@ -1643,7 +1643,21 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 #aiFloatSend:disabled{opacity:.5;cursor:not-allowed}
 
 
-
+/* ===== FIX MODALE FULLSCREEN (override forte) ===== */
+.modal{
+  position:fixed !important; inset:0 !important;
+  width:100vw !important; height:100vh !important;
+  max-width:none !important; max-height:none !important;
+  display:flex !important; flex-direction:column !important;
+  background:var(--bg2) !important; border:0 !important; border-radius:0 !important;
+  box-shadow:none !important; z-index:100000 !important;
+}
+.mb{
+  display:grid !important; grid-template-columns:1.05fr 1fr !important;
+  height:calc(100vh - 60px) !important; min-height:0 !important; overflow:hidden !important;
+}
+.mb-left, .mb-right{ overflow:auto !important; min-height:0 !important; }
+body.modal-open{ overflow:hidden !important; }
 </style>
 
 
@@ -5093,24 +5107,20 @@ var c = calcChallenge(p);
 
 
 function openModal(){ 
-
   var m=document.getElementById('modalOv'); 
-
   m.style.display='flex'; 
-
+  document.body.classList.add('modal-open');
   setTimeout(function(){
-
     var s=document.getElementById('mSize');
-
     if(s&&!s.value)s.value='100000';
-
     calcPreview();
-
   },100); 
-
 }
-
-function closeModal(){ document.getElementById('modalOv').style.display='none'; }
+  
+function closeModal(){ 
+  document.getElementById('modalOv').style.display='none'; 
+  document.body.classList.remove('modal-open');
+}
 
 
 
