@@ -199,13 +199,16 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .btn-g:hover{border-color:var(--teal);color:var(--teal)}
 
 /* MODAL */
-.mov{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(8px)}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:100%;max-width:480px;max-height:88vh;max-height:88dvh;overflow-y:auto;display:flex;flex-direction:column}
-.mh{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;flex-shrink:0;position:sticky;top:0;background:var(--bg2);z-index:2}
+.mov{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:5000;backdrop-filter:blur(6px)}
+.modal{position:fixed;inset:0;z-index:5001;background:var(--bg2);display:flex;flex-direction:column;overflow:hidden;border-radius:0;border:none;max-width:none;max-height:none;width:100%;height:100%}
+.mh{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;flex-shrink:0;position:sticky;top:0;background:var(--bg2);z-index:2;height:58px}
 .mh h2{font-size:15px;font-weight:600}
 .mclose{background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer;line-height:1}
 .mclose:hover{color:var(--red)}
-.mb{padding:20px;overflow-y:auto}
+.mb{display:grid;grid-template-columns:460px 1fr;height:calc(100vh - 58px);overflow:hidden;padding:0}
+.mb-left{overflow-y:auto;padding:20px;border-right:1px solid var(--border)}
+.mb-right{overflow-y:auto;padding:22px;background:var(--bg3)}
+@media(max-width:860px){.mb{grid-template-columns:1fr}.mb-right{display:none}}
 .msugg{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;z-index:300;box-shadow:0 8px 28px rgba(0,0,0,.6);max-height:220px;overflow-y:auto}
 .si{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s}
 .si:hover{background:rgba(0,229,204,.05)}
@@ -383,11 +386,11 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 @media(max-width:800px){.cal-row{grid-template-columns:70px 28px 28px 1fr 90px}.cal-val,.cal-hdr-col:nth-child(n+6){display:none}}
 
 /* ── FLOATING AI CHAT WIDGET ── */
-#aiFloatBtn{position:fixed;bottom:24px;right:24px;z-index:9000;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#00b8a4,#9b5de5);border:none;cursor:pointer;font-size:24px;box-shadow:0 4px 20px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s}
+#aiFloatBtn{position:fixed;bottom:100px;right:24px;z-index:99999;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#00b8a4,#9b5de5);border:none;cursor:pointer;padding:0;box-shadow:0 4px 20px rgba(0,0,0,.5),0 0 0 2px rgba(0,229,204,.25);display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s}
 #aiFloatBtn:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(0,229,204,.4)}
 #aiFloatBtn .ai-notif{position:absolute;top:-3px;right:-3px;width:14px;height:14px;background:#ff4060;border-radius:50%;border:2px solid #060810;animation:pulse2 2s infinite}
 @keyframes pulse2{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
-#aiFloatPanel{position:fixed;bottom:90px;right:24px;z-index:9001;width:360px;max-width:calc(100vw - 32px);background:#0a0c18;border:1px solid rgba(0,229,204,.3);border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,.6);display:none;flex-direction:column;overflow:hidden;animation:aiSlideIn .25s ease}
+#aiFloatPanel{position:fixed;bottom:168px;right:24px;z-index:99998;width:360px;max-width:calc(100vw - 32px);background:#0a0c18;border:1px solid rgba(0,229,204,.3);border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,.6);display:none;flex-direction:column;overflow:hidden;animation:aiSlideIn .25s ease}
 @keyframes aiSlideIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 #aiFloatPanel.open{display:flex}
 .ai-panel-hdr{background:linear-gradient(135deg,rgba(0,229,204,.15),rgba(155,93,229,.1));padding:12px 16px;border-bottom:1px solid rgba(128,128,128,.1);display:flex;align-items:center;gap:10px;flex-shrink:0}
@@ -873,9 +876,9 @@ function doForgotSubmit(){
         <button class="btn-g" onclick="closeModal()">Annulla</button>
         <button class="btn-p" onclick="doAdd()">+ Aggiungi sfida</button>
       </div>
-      <button class="mclose" onclick="closeModal()">✕</button>
+      <button class="mclose" onclick="closeModal()">&#x2715;</button>
     </div>
-    <div class="mb">
+   <div class="mb"><div class="mb-left">
       <div class="f" style="margin-bottom:14px">
         <label>Nome prop firm</label>
         <div style="display:flex;align-items:center;gap:10px;position:relative">
@@ -912,6 +915,10 @@ function doForgotSubmit(){
         <div class="f"><label>Giorni challenge</label><input id="mDays" type="number" value="14" step="1" min="1" oninput="calcPreview()"></div>
         <div class="f"><label>Payout (%)</label><input id="mPay" type="number" value="80" step="5" oninput="calcPreview()"></div>
       </div>
+      <div class="f">
+        <label>Consistenza Prop (%)</label>
+        <input id="mConsistency" type="number" value="30" step="5" oninput="calcPreview()">
+      </div>
       <div id="prop2Fields" style="display:none">
         <div class="sect">Parametri seconda prop (hedge)</div>
         <div class="fr2">
@@ -932,30 +939,35 @@ function doForgotSubmit(){
               <option value="EUR/USD:10">EUR/USD - $10/pip</option>
               <option value="GBP/USD:10">GBP/USD - $10/pip</option>
               <option value="USD/JPY:9.1">USD/JPY - $9/pip</option>
-              <option value="EUR/JPY:9.1">EUR/JPY - $9/pip</option>
-              <option value="AUD/USD:10">AUD/USD - $10/pip</option>
             </optgroup>
-            <optgroup label="Materie Prime">
-              <option value="GOLD:1">GOLD XAU/USD - $1/pip</option>
-              <option value="SILVER:5">SILVER - $5/pip</option>
-              <option value="WTI:10">WTI Oil - $10/pip</option>
+            <optgroup label="Metalli / Indici CFD">
+              <option value="GOLD:1">GOLD (XAU) - $1/pip</option>
+              <option value="NAS100:1">NASDAQ 100 - $1/punto</option>
+              <option value="US30:1">DOW JONES (US30) - $1/punto</option>
             </optgroup>
-            <optgroup label="Indici">
-              <option value="US30:5">US30 Dow Jones - $5/pip</option>
-              <option value="SP500:5">SP500 - $5/pip</option>
-              <option value="NAS100:2">NAS100 - $2/pip</option>
-              <option value="DAX:2">DAX GER40 - $2/pip</option>
+            <optgroup label="Prop Futures">
+              <option value="ES_FUTURE:50">S&amp;P 500 (ES) - $50/punto</option>
+              <option value="NQ_FUTURE:20">NASDAQ (NQ) - $20/punto</option>
             </optgroup>
           </select>
           <div class="hint" id="mAssetHint">$10 per pip per lotto std</div>
         </div>
-        <div class="f"><label>Pip Value ($)</label><input id="mPipV" type="number" value="10" step="0.1" min="0.1" oninput="calcPreview()"></div>
       </div>
       <div class="fr2">
-        <div class="f"><label>Stop Loss (pip)</label><input id="mSlPips" type="number" value="50" step="1" min="1" oninput="calcPreview()"></div>
+        <div class="f"><label>Lotti Conto Prop</label><input id="mLots" type="number" value="0.20" step="0.01" min="0.01" oninput="calcPreview()"></div>
+        <div class="f"><label>Stop Loss (pip) <button type="button" onclick="autoCalcPips()" style="background:rgba(0,229,204,.15);border:1px solid var(--teal);color:var(--teal);border-radius:5px;padding:2px 8px;font-size:9px;cursor:pointer;font-family:var(--fd);margin-left:6px">&#x26A1; Auto</button></label><input id="mSlPips" type="number" value="50" step="1" min="1" oninput="calcPreview()"></div>
         <div class="f"><label>Take Profit (pip)</label><input id="mTpPips" type="number" value="50" step="1" min="1" oninput="calcPreview()"></div>
       </div>
-      <div id="mPreview"></div>
+      <div class="f">
+        <div class="fr2" style="margin-bottom:10px">
+          <div class="f"><label>Pip Value Conto Prop ($) <span style="font-size:8px;color:var(--teal)">auto</span></label><input id="mPipVProp" type="number" step="0.01" min="0.01" oninput="calcPreview()" placeholder="es. 10"></div>
+          <div class="f"><label>Pip Value Conto Personale ($) <span style="font-size:8px;color:var(--teal)">auto</span></label><input id="mPipVHedge" type="number" step="0.01" min="0.01" oninput="calcPreview()" placeholder="es. 100"></div>
+        </div>
+        <label>Spread (pip) <span style="font-size:8px;color:var(--t3)">opzionale</span></label>
+        <input id="mSpread" type="number" value="0" step="0.1" min="0" oninput="calcPreview()" placeholder="0 = non considerato">
+        <div class="hint">Inserisci lo spread del broker per un calcolo pi&#xF9; preciso</div>
+      </div>
+   </div><div class="mb-right"><div id="mPreview"></div></div>
     </div>
   </div>
 </div>
@@ -981,13 +993,13 @@ function doForgotSubmit(){
      FLOATING AI CHAT WIDGET
 ══════════════════════════════════════════════════════════ -->
 <button id="aiFloatBtn" onclick="toggleAIChat()" title="Assistente AI PropHedge">
-  🤖
+  <svg width="28" height="28" viewBox="0 0 36 36" fill="none" style="flex-shrink:0;display:block"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#00e5cc" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#00e5cc" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.12"/><circle cx="33" cy="7" r="3.5" fill="#9b5de5"/></svg>
   <span class="ai-notif"></span>
 </button>
 
 <div id="aiFloatPanel">
   <div class="ai-panel-hdr">
-    <div class="ai-avatar">🤖</div>
+    <div class="ai-avatar"><svg width="22" height="22" viewBox="0 0 36 36" fill="none" style="flex-shrink:0"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#00e5cc" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="33" cy="7" r="3.5" fill="#9b5de5"/></svg></div>
     <div>
       <div class="ai-title" id="aiPanelTitle">PropHedge AI</div>
       <div class="ai-status"><span class="ai-dot" id="aiStatusDot"></span><span id="aiStatusText">Online · risponde in secondi</span></div>
@@ -1121,45 +1133,636 @@ function setMode(m){
   calcPreview();
 }
 
-function calcChallenge(p){
-  var slPips=p.slPips||50,tpPips=p.tpPips||slPips,pipV=p.pipV||10;
-  var maxLoss=p.size*p.maxDD/100,maxProfit=p.size*p.tgtPct/100,dayLoss=p.size*p.ddd/100;
-  var riskPerTrade=Math.min(maxLoss/p.days,dayLoss);
-  var slPerLot=slPips*pipV,tpPerLot=tpPips*pipV;
-  var propLots=riskPerTrade/slPerLot;
-  var propSL=propLots*slPerLot,propTP=propLots*tpPerLot;
-  var maxTrDD=Math.floor(dayLoss/propSL),trTarget=Math.ceil(maxProfit/propTP);
-  var daily=Math.min(maxProfit/p.days,maxProfit*0.30);
-  var consOk=(maxProfit/p.days)<=(maxProfit*0.30);
-  var trPerDay=Math.ceil(daily/propTP);
-  var hedgeLots=(p.cost/(slPerLot*p.days))*1.3;
-  if(p.mode==='prop2'&&p.size2>0&&p.dd2>0){var maxLoss2=p.size2*p.dd2/100;hedgeLots=Math.min(hedgeLots,maxLoss2/(slPerLot*p.days));}
-  var hedgeSL=hedgeLots*slPerLot,hedgeTP=hedgeLots*tpPerLot;
-  var maxHedgeLoss=hedgeLots*tpPerLot*trTarget;
-  var margin=hedgeLots*(100000*1.08/100);
-  var minAcc=(margin+maxHedgeLoss)*1.3,recAcc=minAcc*1.5;
-  var sA_gain=hedgeLots*slPerLot*p.days,sA_net=sA_gain-p.cost;
-  var sB_pay=maxProfit*p.pay/100,sB_los=hedgeLots*tpPerLot*trTarget,sB_net=sB_pay-sB_los;
-  var invested=p.cost+recAcc;
-  return{maxLoss:maxLoss,maxProfit:maxProfit,dayLoss:dayLoss,riskPerTrade:+riskPerTrade.toFixed(2),daily:daily,consOk:consOk,trPerDay:trPerDay,
-    propLots:+propLots.toFixed(2),propSL:+propSL.toFixed(2),propTP:+propTP.toFixed(2),slPips:slPips,tpPips:tpPips,maxTrDD:maxTrDD,trTarget:trTarget,
-    hedgeLots:+hedgeLots.toFixed(2),hedgeSL:+hedgeSL.toFixed(2),hedgeTP:+hedgeTP.toFixed(2),margin:+margin.toFixed(2),maxHedgeLoss:+maxHedgeLoss.toFixed(2),
-    minAcc:+minAcc.toFixed(2),recAcc:+recAcc.toFixed(2),sA_gain:+sA_gain.toFixed(2),sA_net:+sA_net.toFixed(2),
-    sB_pay:+sB_pay.toFixed(2),sB_los:+sB_los.toFixed(2),sB_net:+sB_net.toFixed(2),
-    roiA:+((sA_net/invested)*100).toFixed(1),roiB:+((sB_net/invested)*100).toFixed(1)};
+function calcChallenge(p) {
+
+
+
+  // ── PIP VALUE AUTOMATICO per asset ──
+
+  var pipVal = 10; // default EUR/USD
+
+  var asset = (p.asset||'').toUpperCase().replace('/','').replace('_','');
+
+
+
+ if(asset==='EURUSD'||asset==='GBPUSD'||asset==='AUDUSD'||asset==='NZDUSD') pipVal=10;
+
+else if(asset==='USDJPY'||asset==='EURJPY'||asset==='GBPJPY'||asset==='AUDJPY'||asset==='CADJPY'||asset==='CHFJPY'||asset==='NZDJPY') pipVal=9.1;
+
+else if(asset==='USDCHF'||asset==='EURCHF'||asset==='GBPCHF'||asset==='AUDCHF'||asset==='NZDCHF') pipVal=10.2;
+
+else if(asset==='USDCAD'||asset==='EURCAD'||asset==='GBPCAD'||asset==='AUDCAD'||asset==='NZDCAD'||asset==='CADCHF') pipVal=7.6;
+
+else if(asset==='EURGBP') pipVal=12.5;
+
+else if(asset==='GBPAUD'||asset==='EURAUD'||asset==='AUDNZD'||asset==='EURNZD'||asset==='GBPNZD') pipVal=6.5;
+
+else if(asset==='CADJPY') pipVal=9.1;
+
+/* METALLI */
+
+else if(asset==='GOLD'||asset==='XAUUSD'||asset==='XAU') pipVal=10;
+
+else if(asset==='SILVER'||asset==='XAGUSD'||asset==='XAG') pipVal=50;
+
+else if(asset==='PLATINUM'||asset==='XPTUSD') pipVal=10;
+
+else if(asset==='PALLADIUM'||asset==='XPDUSD') pipVal=10;
+
+/* INDICI CFD */
+
+else if(asset==='NAS100'||asset==='NASDAQ') pipVal=20;
+
+else if(asset==='US30'||asset==='DOW'||asset==='DJ30') pipVal=5;
+
+else if(asset==='US500'||asset==='SP500'||asset==='SPX500') pipVal=50;
+
+else if(asset==='GER40'||asset==='DAX'||asset==='DE40') pipVal=25;
+
+else if(asset==='UK100'||asset==='FTSE') pipVal=10;
+
+else if(asset==='FRA40'||asset==='CAC40') pipVal=10;
+
+else if(asset==='JPN225'||asset==='NIKKEI') pipVal=0.7;
+
+else if(asset==='AUS200'||asset==='ASX200') pipVal=7;
+
+/* FUTURES */
+
+else if(asset==='ESFUTURE'||asset==='ES') pipVal=50;
+
+else if(asset==='NQFUTURE'||asset==='NQ') pipVal=20;
+
+else if(asset==='MESFUTURE'||asset==='MES') pipVal=5;
+
+else if(asset==='MNQFUTURE'||asset==='MNQ') pipVal=2;
+
+else if(asset==='CLFUTURE'||asset==='CL'||asset==='WTIUSD'||asset==='USOIL') pipVal=10;
+
+else if(asset==='GCFUTURE'||asset==='GC') pipVal=10;
+
+else if(asset==='BTCUSD'||asset==='BITCOIN'||asset==='BTC') pipVal=1;
+
+else if(asset==='ETHUSD'||asset==='ETHEREUM'||asset==='ETH') pipVal=0.1;
+
+  // Se l'utente ha inserito manualmente un pip value, usalo
+
+  var pipValProp  = (p.pipVProp  && parseFloat(p.pipVProp)>0)  ? parseFloat(p.pipVProp)  : pipVal;
+
+var pipValHedge = (p.pipVHedge && parseFloat(p.pipVHedge)>0) ? parseFloat(p.pipVHedge) : pipVal;
+
+pipVal = pipValProp;
+
+
+
+  var sl     = Math.max(parseFloat(p.slPips)||1, 0.01);
+
+  var tp     = Math.max(parseFloat(p.tpPips)||1, 0.01);
+
+  var size   = parseFloat(p.size)   || 0;
+
+  var cost   = parseFloat(p.cost)   || 0;
+
+  var maxDD  = parseFloat(p.maxDD)  || 6;
+
+  var ddd    = parseFloat(p.ddd)    || 3;
+
+  var tgtPct = parseFloat(p.tgtPct) || maxDD;
+
+  var pay    = parseFloat(p.pay)    || 80;
+
+  var cons   = Math.max(parseFloat(p.consistency)||30, 1);
+
+  var days   = Math.max(parseFloat(p.days)||14, 1);
+
+  var spread = Math.max(parseFloat(p.spread)||0, 0);
+
+
+
+  // ── Valori monetari prop ──
+
+  var propTarget  = size * (tgtPct / 100); // es. $6000
+
+  var maxDDAmount = size * (maxDD   / 100); // es. $6000
+
+  var dailyDD     = size * (ddd     / 100); // es. $3000
+
+
+
+  // ── Regola consistenza ──
+
+  // Max guadagno per singolo trade = cons% del target
+
+  var maxPerTrade = propTarget * (cons / 100); // es. 30% di $6000 = $1800
+
+  var minTrades   = Math.ceil(100 / cons);     // es. ceil(100/30) = 4 trade minimi
+
+
+
+  // ── LOTTI PROP (BUY) ──
+
+  // Quanti lotti posso aprire per guadagnare maxPerTrade con TP pip?
+
+  // propLots = maxPerTrade / (tp * pipVal)
+
+  // Limite: lo SL non deve superare il DD giornaliero
+
+ // Lotti massimi per rispettare la CONSISTENZA (max guadagno per trade)
+
+var propLots_byConsistency = maxPerTrade / (tp * pipVal);
+
+
+
+// Lotti massimi per rispettare il DD GIORNALIERO (max perdita per trade)
+
+var propLots_byDailyDD = dailyDD / (sl * pipVal);
+
+
+
+// Lotti massimi per rispettare il DD TOTALE distribuito sui trade minimi
+
+var propLots_byTotalDD = maxDDAmount / (sl * pipVal * minTrades);
+
+
+
+// Prendo il MINIMO tra tutti i limiti — il più restrittivo vince
+
+ var propLots = p.lots ? parseFloat(p.lots) : Math.min(propLots_byConsistency, propLots_byDailyDD, propLots_byTotalDD) / days;
+
+  propLots = Math.floor(propLots * 100) / 100;
+
+  if(propLots < 0.01) propLots = 0.01;
+
+
+
+  var propTP_dollar = propLots * tp * pipVal; // guadagno se TP colpito
+
+  var propSL_dollar = propLots * sl * pipVal; // perdita se SL colpito
+
+
+
+  // ── LOTTI HEDGE (SELL sul personale) ──
+
+  // Obiettivo: se la prop FALLISCE e il prezzo va contro di lei,
+
+  // il conto personale (che ha fatto SELL) guadagna.
+
+  // Quanti lotti mi servono per coprire il costo challenge col TP?
+
+  // hedgeLots = cost / (tp * pipVal)
+
+var hedgeTarget = cost * 1.30;
+
+var hedgeLots = (hedgeTarget / (sl * pipValHedge)) / days;
+
+  hedgeLots = Math.ceil(hedgeLots * 100) / 100;
+
+  if(hedgeLots < 0.01) hedgeLots = 0.01;
+
+  var hedgeTP_dollar = hedgeLots * tp * pipValHedge;
+
+var hedgeSL_dollar = hedgeLots * sl * pipValHedge;
+
+
+
+  // ── Costo spread (opzionale) ──
+
+  var spreadCostProp  = propLots  * spread * pipVal; // spread per trade prop
+
+  var spreadCostHedge = hedgeLots * spread * pipVal; // spread per trade hedge
+
+  var spreadTotale    = (spreadCostProp * minTrades) + spreadCostHedge;
+
+
+
+  // ── SCENARIO A — Prop fallisce (prezzo scende, hedge SELL vince) ──
+
+  // Guadagno hedge TP - costo challenge - spread hedge
+
+var sA_gain = hedgeTP_dollar;
+
+var sA_net = sA_gain - spreadCostHedge;
+
+  // ── SCENARIO B — Prop vince (payout incassato, hedge SELL perde) ──
+
+  var payoutGross = propTarget * (pay / 100);
+
+  var sB_net = payoutGross - hedgeSL_dollar - cost - (spreadCostProp * minTrades) + cost;
+
+
+
+  // ── Capitale minimo conto personale ──
+
+  // Deve coprire: margine hedge + eventuale SL hedge + 30% buffer
+
+ // Capitale minimo conto personale CORRETTO:
+
+  // Il personale deve reggere TUTTI i trade del ciclo completo
+
+  // In ogni trade l'hedge può perdere hedgeSL_dollar
+
+  // Quindi serve: hedgeSL * minTrades * 1.3 (buffer sicurezza)
+
+ var hedgeSL_withBuffer = hedgeSL_dollar + cost;
+
+var minCapPersonale = hedgeSL_withBuffer;
+
+ 
+
+  // ── Costo totale ciclo ──
+
+  var totalCycleCost = cost + minCapPersonale;
+
+
+
+  // ── ROI ──
+
+  var roiA = totalCycleCost>0 ? ((sA_net/totalCycleCost)*100).toFixed(1) : '0.0';
+
+  var roiB = totalCycleCost>0 ? ((sB_net/totalCycleCost)*100).toFixed(1) : '0.0';
+
+
+
+  // ── Check regole ──
+
+  var consOk   = propTP_dollar <= maxPerTrade * 1.05;
+
+  var trPerDay = Math.ceil(minTrades / days);
+
+  var maxTrDD  = propSL_dollar>0 ? Math.floor(dailyDD/propSL_dollar) : 999;
+
+
+
+  return {
+
+    pipVal, propLots, hedgeLots,
+
+    propTP: propTP_dollar, propSL: propSL_dollar,
+
+    hedgeTP: hedgeTP_dollar, hedgeSL: hedgeSL_dollar,
+
+    propTarget, maxDDAmount, dailyDD, maxPerTrade, minTrades,
+
+    sA_net, sA_gain,
+
+    sB_net, sB_pay: payoutGross, sB_los: hedgeSL_dollar,
+
+    recAcc: minCapPersonale,
+
+    totalCycleCost,
+
+    spreadCostProp, spreadCostHedge, spreadTotale,
+
+    roiA, roiB, consOk, trPerDay, maxTrDD, days,
+
+    maxProfit: propTarget,
+
+    // compatibilità con il resto del codice
+
+    hedgeLots: hedgeLots,
+
+    propLots: propLots,
+
+  };
+
 }
 
-function openModal(){
-  stratMode='personal';setMode('personal');
-  var ov=document.getElementById('modalOv');ov.style.display='flex';
-  var modal=ov.querySelector('.modal');if(modal)modal.scrollTop=0;
+function autoCalcPips(){
+
+  var size  = parseFloat(document.getElementById('mSize')?.value)  || 100000;
+
+  var maxDD = parseFloat(document.getElementById('mDD')?.value)    || 6;
+
+  var days  = parseFloat(document.getElementById('mDays')?.value)  || 14;
+
+  var assetEl = document.getElementById('mAsset');
+
+  var asset = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
+
+
+
+  // Calcola pip value automatico
+
+  var pipVal = 10;
+
+  var a = asset.toUpperCase().replace('/','').replace('_','');
+
+  if(a==='USDJPY'||a==='EURJPY'||a==='GBPJPY'||a==='AUDJPY'||a==='CADJPY'||a==='CHFJPY') pipVal=9.1;
+
+  else if(a==='USDCHF'||a==='EURCHF'||a==='GBPCHF'||a==='AUDCHF') pipVal=10.2;
+
+  else if(a==='USDCAD'||a==='EURCAD'||a==='GBPCAD'||a==='AUDCAD'||a==='NZDCAD') pipVal=7.6;
+
+  else if(a==='EURGBP') pipVal=12.5;
+
+  else if(a==='GOLD'||a==='XAUUSD'||a==='XAU') pipVal=1;
+
+  else if(a==='SILVER'||a==='XAGUSD') pipVal=5;
+
+  else if(a==='NAS100'||a==='US30'||a==='US500'||a==='GER40') pipVal=1;
+
+  else if(a==='ESFUTURE'||a==='ES') pipVal=50;
+
+  else if(a==='NQFUTURE'||a==='NQ') pipVal=20;
+
+  else if(a==='MESFUTURE'||a==='MES') pipVal=5;
+
+  else if(a==='MNQFUTURE'||a==='MNQ') pipVal=2;
+
+
+
+  // DD giornaliero
+
+  var ddGiornaliero = (size * (maxDD / 100)) / days;
+
+
+
+  // Lotti base (1 lotto standard)
+
+  var lots = 1;
+
+
+
+  // Pip ottimali = DD giornaliero / (pip value × lotti)
+
+  var pipsAuto = Math.round(ddGiornaliero / (pipVal * lots));
+
+
+
+  // Imposta SL e TP
+
+  var slEl = document.getElementById('mSlPips');
+
+  var tpEl = document.getElementById('mTpPips');
+
+  if(slEl) slEl.value = pipsAuto;
+
+  if(tpEl) tpEl.value = pipsAuto;
+
+
+
   calcPreview();
-}
-function closeModal(){document.getElementById('modalOv').style.display='none';}
 
-function onAssetChange(val){
-  var parts=val.split(':');document.getElementById('mPipV').value=parseFloat(parts[1])||10;calcPreview();
+
+
+  alert('Pip automatici calcolati: ' + pipsAuto + ' pip\nBasati su DD $' + ddGiornaliero.toFixed(0) + '/giorno con 1 lotto su ' + asset);
+
 }
+
+function calcPreview() {
+
+  var size   = parseFloat(document.getElementById('mSize')?.value)        || 0;
+
+  var cost   = parseFloat(document.getElementById('mCost')?.value)        || 0;
+
+  var maxDD  = parseFloat(document.getElementById('mDD')?.value)          || 6;
+
+  var ddd    = parseFloat(document.getElementById('mDDD')?.value)         || 3;
+
+  var tgtPct = parseFloat(document.getElementById('mTgt')?.value)         || maxDD;
+
+  var pay    = parseFloat(document.getElementById('mPay')?.value)         || 80;
+
+  var sl     = parseFloat(document.getElementById('mSlPips')?.value)      || 50;
+
+  var tp     = parseFloat(document.getElementById('mTpPips')?.value)      || 50;
+
+  var cons   = parseFloat(document.getElementById('mConsistency')?.value) || 30;
+
+  var days   = parseFloat(document.getElementById('mDays')?.value)        || 14;
+
+  var spread = parseFloat(document.getElementById('mSpread')?.value)      || 0;
+
+  var assetEl= document.getElementById('mAsset');
+
+  var asset  = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
+
+
+
+  var lots = parseFloat(document.getElementById('mLots')?.value) || 0.20;
+
+var p = {size,cost,maxDD,ddd,tgtPct,pay,slPips:sl,tpPips:tp,lots:lots,
+
+       asset,consistency:cons,spread,days,pipV:0,
+
+    pipVProp: parseFloat(document.getElementById('mPipVProp')?.value)||0,
+
+    pipVHedge: parseFloat(document.getElementById('mPipVHedge')?.value)||0};
+
+var c = calcChallenge(p);
+
+
+
+  var box = document.getElementById('mPreview');
+
+  if(!box || !size) return;
+
+
+
+  var spreadRiga = spread>0
+
+    ? '<div style="font-size:10px;color:var(--amber);margin-top:6px">Costo spread totale ciclo: <strong>$'+c.spreadTotale.toFixed(2)+'</strong></div>'
+
+    : '<div style="font-size:10px;color:var(--t3);margin-top:6px">Spread non inserito — calcolo senza costo spread</div>';
+
+
+
+  box.innerHTML =
+
+  '<div class="prev">'
+
+
+
+  // Asset e pip value auto
+
+  +'<div style="background:rgba(0,229,204,.05);border:1px solid rgba(0,229,204,.1);border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">'
+
+  +'<span style="font-size:10px;color:var(--t3);font-family:var(--fd)">Asset selezionato</span>'
+
+  +'<span style="font-size:12px;font-weight:700;font-family:var(--fd);color:var(--teal)">'+asset+' — $'+c.pipVal.toFixed(2)+'/pip (automatico)</span>'
+
+  +'</div>'
+
+
+
+  // Valori prop
+
+  +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+
+  +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px;text-align:center">'
+
+  +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:3px">TARGET PROP</div>'
+
+  +'<div style="font-size:16px;font-weight:700;font-family:var(--fd);color:var(--teal)">$'+c.propTarget.toFixed(0)+'</div>'
+
+  +'</div>'
+
+  +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px;text-align:center">'
+
+  +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:3px">MAX DD</div>'
+
+  +'<div style="font-size:16px;font-weight:700;font-family:var(--fd);color:var(--red)">$'+c.maxDDAmount.toFixed(0)+'</div>'
+
+  +'</div>'
+
+  +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px;text-align:center">'
+
+  +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:3px">DD GIORNALIERO</div>'
+
+  +'<div style="font-size:16px;font-weight:700;font-family:var(--fd);color:var(--amber)">$'+c.dailyDD.toFixed(0)+'</div>'
+
+  +'</div>'
+
+  +'</div>'
+
+
+
+  // Lotti — la parte chiave — DIVERSI tra prop e hedge
+
+  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+
+
+
+  // Prop
+
+  +'<div style="background:var(--bg3);border:2px solid rgba(155,93,229,.4);border-radius:10px;padding:12px">'
+
+  +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">CONTO PERSONALE — LOTTI</div>'
+
+ +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+c.hedgeLots+' lot</div>'
+
+  +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+
+  +'TP: <span style="color:var(--green)">+$'+c.propTP.toFixed(2)+'</span><br>'
+
+  +'SL: <span style="color:var(--red)">-$'+c.propSL.toFixed(2)+'</span><br>'
+
+  +'Max/trade: <span style="color:var(--teal)">$'+c.maxPerTrade.toFixed(2)+'</span>'
+
+  +'</div>'
+
+  +'</div>'
+
+
+
+  // Hedge personale
+
+  +'<div style="background:var(--bg3);border:2px solid rgba(0,229,204,.4);border-radius:10px;padding:12px">'
+
+  +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">CONTO PROP</div>'
+
+  +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+c.propLots+' lot</div>'
+
+  +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+
+  +'TP: <span style="color:var(--green)">+$'+c.hedgeTP.toFixed(2)+'</span><br>'
+
+  +'SL: <span style="color:var(--red)">-$'+c.hedgeSL.toFixed(2)+'</span><br>'
+
+  +'Copre costo challenge'
+
+  +'</div>'
+
+  +'</div>'
+
+  +'</div>'
+
+
+
+  // Nota lotti diversi
+
+  +(c.propLots!==c.hedgeLots
+
+    ?'<div style="background:rgba(155,93,229,.07);border:1px solid rgba(155,93,229,.2);border-radius:6px;padding:7px 10px;font-size:10px;color:rgba(155,93,229,.9);margin-bottom:10px;font-family:var(--fd)">ℹ Lotti diversi — Prop ottimizzato per profitto, Hedge minimo per coprire il costo</div>'
+
+    :'')
+
+
+
+  // Regole
+
+  +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;margin-bottom:10px;display:flex;gap:16px;flex-wrap:wrap">'
+
+  +'<div style="font-size:11px"><span style="color:var(--t3)">Trade minimi: </span><strong style="color:var(--violet)">'+c.minTrades+'</strong></div>'
+
+  +'<div style="font-size:11px"><span style="color:var(--t3)">Max/trade: </span><strong style="color:var(--teal)">$'+c.maxPerTrade.toFixed(0)+'</strong></div>'
+
+  +'<div style="font-size:11px"><span style="color:var(--t3)">Trade/gg: </span><strong style="color:'+(c.trPerDay<=c.maxTrDD?'var(--green)':'var(--amber)')+'">'+c.trPerDay+'</strong></div>'
+
+  +'<div style="font-size:11px"><span style="color:var(--t3)">Pip value: </span><strong style="color:var(--teal)">$'+c.pipVal.toFixed(2)+'</strong></div>'
+
+  +'</div>'
+
+
+
+  // Scenari
+
+  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+
+  +'<div style="background:rgba(255,64,96,.05);border:1px solid rgba(255,64,96,.2);border-radius:9px;padding:11px">'
+
+  +'<div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">SCENARIO A — Prop fallisce</div>'
+
+  +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+(c.sA_net>=0?'var(--green)':'var(--red)')+'">'+( c.sA_net>=0?'+':'')+c.sA_net.toFixed(2)+'$</div>'
+
+  +'<div style="font-size:10px;color:var(--t3);margin-top:4px;line-height:1.6">Hedge TP +$'+c.sA_gain.toFixed(2)+'<br>− Costo $'+cost.toFixed(2)+'<br><span style="color:var(--amber)">ROI '+c.roiA+'%</span></div>'
+
+  +'</div>'
+
+  +'<div style="background:rgba(0,214,143,.05);border:1px solid rgba(0,214,143,.2);border-radius:9px;padding:11px">'
+
+  +'<div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">SCENARIO B — Payout incassato</div>'
+
+  +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+(c.sB_net>=0?'var(--green)':'var(--red)')+'">'+( c.sB_net>=0?'+':'')+c.sB_net.toFixed(2)+'$</div>'
+
+  +'<div style="font-size:10px;color:var(--t3);margin-top:4px;line-height:1.6">Payout +$'+c.sB_pay.toFixed(2)+'<br>− Hedge SL $'+c.sB_los.toFixed(2)+'<br><span style="color:var(--amber)">ROI '+c.roiB+'%</span></div>'
+
+  +'</div>'
+
+  +'</div>'
+
+
+
+  // Costo totale ciclo
+
+  +'<div style="background:rgba(255,190,11,.06);border:1px solid rgba(255,190,11,.2);border-radius:9px;padding:12px">'
+
+  +'<div style="font-size:9px;color:var(--amber);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:8px">💰 Spesa totale 1 ciclo completo</div>'
+
+  +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+
+  +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd)">Costo challenge</div><div style="font-size:15px;font-weight:700;font-family:var(--fd);color:var(--amber)">$'+cost.toFixed(0)+'</div></div>'
+
+  +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd)">Capitale hedge min</div><div style="font-size:15px;font-weight:700;font-family:var(--fd)">$'+c.recAcc.toFixed(0)+'</div></div>'
+
+  +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);font-weight:800">TOTALE</div><div style="font-size:22px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+c.totalCycleCost.toFixed(0)+'</div></div>'
+
+  +'</div>'
+
+  +spreadRiga
+
+  +'</div>'
+
+
+
+  +'</div>';
+
+}
+
+
+function openModal(){ 
+  var m=document.getElementById('modalOv'); 
+  m.style.display='flex'; 
+  setTimeout(function(){
+    var s=document.getElementById('mSize');
+    if(s&&!s.value)s.value='100000';
+    calcPreview();
+  },100); 
+}
+function closeModal(){ document.getElementById('modalOv').style.display='none'; }
+
+
+function onAssetChange(val){ calcPreview(); }
 function findBrand(v){var q=v.toLowerCase().trim();if(!q)return null;return BRANDS.find(function(b){return b.name.toLowerCase().indexOf(q)!==-1;})||null;}
 function searchBrands(q){if(!q||q.length<2)return[];var ql=q.toLowerCase();return BRANDS.filter(function(b){return b.name.toLowerCase().indexOf(ql)!==-1;}).slice(0,6);}
 function setLogoPreview(b){var el=document.getElementById('mLogo');if(!el)return;if(b){el.innerHTML='<img src="'+logoUrl(b.domain)+'" style="width:100%;height:100%;object-fit:cover;border-radius:7px" data-try="1" onerror="logoErr(this,\''+b.domain+'\',\''+b.name+'\')" alt="">';el.style.border='1px solid '+b.color+'40';}else{el.innerHTML='?';el.style.border='1px solid var(--border)';}}
@@ -1179,33 +1782,7 @@ function pickBrand(name){
 }
 document.addEventListener('click',function(e){var s=document.getElementById('mSugg');if(s&&!e.target.closest('#mSugg')&&!e.target.closest('#mName'))s.style.display='none';});
 
-function calcPreview(){
-  var size=parseFloat(document.getElementById('mSize').value)||0;
-  var cost=parseFloat(document.getElementById('mCost').value)||0;
-  var maxDD=parseFloat(document.getElementById('mDD').value)||0;
-  var ddd=parseFloat(document.getElementById('mDDD').value)||0;
-  var tgtPct=parseFloat(document.getElementById('mTgt').value)||0;
-  var days=parseFloat(document.getElementById('mDays').value)||1;
-  var pay=parseFloat(document.getElementById('mPay').value)||80;
-  var pipV=parseFloat(document.getElementById('mPipV').value)||10;
-  var slPips=parseFloat(document.getElementById('mSlPips').value)||50;
-  var tpPips=parseFloat(document.getElementById('mTpPips').value)||slPips;
-  var se=document.getElementById('mSizeEur');if(se)se.textContent=size?('~ '+eF(size)):'';
-  var ce=document.getElementById('mCostEur');if(ce)ce.textContent=cost?('~ '+eF(cost)):'';
-  var box=document.getElementById('mPreview');if(!box||!size||!maxDD||!cost)return;
-  var size2=stratMode==='prop2'?(parseFloat((document.getElementById('mSize2')||{value:''}).value)||10000):0;
-  var cost2=stratMode==='prop2'?(parseFloat((document.getElementById('mCost2')||{value:''}).value)||100):0;
-  var dd2=stratMode==='prop2'?(parseFloat((document.getElementById('mDD2')||{value:''}).value)||6):0;
-  var p={size:size,cost:cost,maxDD:maxDD,ddd:ddd||3,tgtPct:tgtPct||maxDD,days:days,pay:pay,pipV:pipV,slPips:slPips,tpPips:tpPips,mode:stratMode,size2:size2,cost2:cost2,dd2:dd2};
-  var c=calcChallenge(p);
-  box.innerHTML='<div class="prev"><div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Anteprima automatica</div>'
-    +'<div class="prev-g">'
-    +'<div class="pv" style="border-color:rgba(0,229,204,.2)"><div class="pv-lb">Lotti PROP</div><div class="pv-v v-teal">'+c.propLots+' lot</div><div class="pv-s">SL '+uF(c.propSL)+' TP '+uF(c.propTP)+'</div></div>'
-    +'<div class="pv" style="border-color:rgba(155,93,229,.2)"><div class="pv-lb">Lotti PERSONALE</div><div class="pv-v v-violet">'+c.hedgeLots+' lot</div><div class="pv-s">SL '+uF(c.hedgeSL)+' TP '+uF(c.hedgeTP)+'</div></div>'
-    +'<div class="pv"><div class="pv-lb">Conto personale</div><div class="pv-v v-amber">'+uF(c.recAcc)+'</div><div class="pv-s">min: '+uF(c.minAcc)+'</div></div>'
-    +'<div class="pv"><div class="pv-lb">Netto scenario B</div><div class="pv-v '+col(c.sB_net)+'">'+sgn(c.sB_net)+uF(c.sB_net)+'</div><div class="pv-s">ROI '+c.roiB+'%</div></div>'
-    +'</div></div>';
-}
+
 
 function doAdd(){
   var name=document.getElementById('mName').value.trim()||('Sfida '+(props.length+1));
@@ -2080,27 +2657,1092 @@ function closeAccDrop(){
   if(panel)panel.style.display='none';if(overlay)overlay.style.display='none';
   var tab=document.getElementById('tabAccount');if(tab)tab.classList.remove('active');
 }
-function renderAccountDrop(){
-  var displayName=((accountData.firstName||'')+(accountData.lastName?' '+accountData.lastName:'')).trim()||accountData.email||'Account';
-  return'<div style="padding:20px"><div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><div style="width:48px;height:48px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:18px">👤</div><div><div style="font-size:15px;font-weight:700">'+displayName+'</div><div style="font-size:12px;color:var(--t3);font-family:var(--fd)">'+accountData.email+'</div></div></div><div style="display:grid;gap:8px"><button onclick="toggleTheme()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--t);cursor:pointer;font-size:13px"><span>🎨</span><span>Tema: '+(accountData.theme==='light'?'Chiaro':'Scuro')+'</span></button><button onclick="doLogout()" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(255,64,96,.2);border-radius:10px;color:var(--red);cursor:pointer;font-size:13px"><span>🔓</span><span>Esci</span></button></div></div>';
+
+function saveProfileData() {
+
+  var firstName = (document.getElementById('accFirstName')||{value:''}).value.trim();
+
+  var lastName  = (document.getElementById('accLastName')||{value:''}).value.trim();
+
+  accountData.firstName = firstName;
+
+  accountData.lastName  = lastName;
+
+  try{ localStorage.setItem('ph_account', JSON.stringify(accountData)); }catch(e){}
+
+  if(window._sb) _sb.auth.updateUser({ data: { first_name: firstName, last_name: lastName } });
+
+  var tn = document.getElementById('tabAccountName');
+
+  if(tn) tn.textContent = ((firstName+' '+lastName).trim() || accountData.email.split('@')[0] || 'Account');
+
+  // Messaggio inline nel pannello
+
+  var msg = document.getElementById('accSaveMsg');
+
+  if(msg){ msg.style.display='block'; msg.style.background='var(--green-bg)'; msg.style.color='var(--green)'; msg.textContent=t('acc_saved'); setTimeout(function(){if(msg)msg.style.display='none';},2500); }
+
 }
-function toggleTheme(){
-  accountData.theme=accountData.theme==='light'?'dark':'light';
-  if(accountData.theme==='light')document.body.classList.add('light-theme');else document.body.classList.remove('light-theme');
+
+function setTheme(themeMode) {
+
+  accountData.theme = themeMode;
+
+  if(themeMode === 'light') document.body.classList.add('light-theme');
+
+  else document.body.classList.remove('light-theme');
+
   try{localStorage.setItem('ph_account',JSON.stringify(accountData));}catch(e){}
-  var panel=document.getElementById('accDropPanel');if(panel&&panel.style.display!=='none')panel.innerHTML=renderAccountDrop();
+
+  var panel=document.getElementById('accDropPanel');
+
+  if(panel&&panel.style.display!=='none') panel.innerHTML=renderAccountDrop();
+
 }
-function loadAccountData(){
-  try{var d=localStorage.getItem('ph_account');if(d)accountData=Object.assign(accountData,JSON.parse(d));}catch(e){}
-  if(accountData.theme==='light')document.body.classList.add('light-theme');
-  _sb.auth.getSession().then(function(res){
-    if(res.data&&res.data.session&&res.data.session.user){
-      var user=res.data.session.user;accountData.email=user.email||'';
-      var meta=user.user_metadata||{};accountData.firstName=meta.first_name||meta.firstName||'';accountData.lastName=meta.last_name||meta.lastName||'';
-      var tn=document.getElementById('tabAccountName');if(tn)tn.textContent=((accountData.firstName+' '+accountData.lastName).trim()||accountData.email.split('@')[0]||'Account');
-    }
+
+function renderAccountDrop() {
+
+  var displayName = ((accountData.firstName || '') + ' ' + (accountData.lastName || '')).trim() || accountData.email || 'Account';
+
+  var photoImg = accountData.photo ? '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">' : '👤';
+
+  var scadenza = accountData.expiry || t('acc_noplan');
+
+  var flagMap = {it:'🇮🇹',en:'🇬🇧',de:'🇩🇪',fr:'🇫🇷',es:'🇪🇸'};
+
+  var langNames = {it:'Italiano',en:'English',de:'Deutsch',fr:'Français',es:'Español'};
+
+  var flagDomains = {it:'it',en:'gb',de:'de',fr:'fr',es:'es'};
+
+
+
+  var html = '<div style="padding:20px;width:340px;max-height:85vh;overflow-y:auto">';
+
+
+
+  /* ── HEADER ── */
+
+  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">'
+
+    + '<div id="accDropAvatarBtn" onclick="document.getElementById(\'accPhotoInput\').click()" style="width:54px;height:54px;border-radius:50%;background:var(--bg3);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;cursor:pointer;flex-shrink:0;position:relative" title="Cambia foto">' + photoImg
+
+    + '<div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0"><span style="font-size:16px">📷</span></div></div>'
+
+    + '<input type="file" id="accPhotoInput" style="display:none" accept="image/*" onchange="updateProfilePhoto(this)">'
+
+    + '<div><div style="font-size:15px;font-weight:700;color:var(--t)">' + displayName + '</div>'
+
+    + '<div style="font-size:12px;color:var(--t3);font-family:var(--fd)">' + accountData.email + '</div></div>'
+
+    + '</div>';
+
+
+
+  /* ── TEMA + LINGUA affiancati ── */
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)">';
+
+
+
+  /* -- TEMA -- */
+
+  html += '<div>'
+
+    + '<button onclick="var d=document.getElementById(\'accThemeDrop\'),l=document.getElementById(\'accLangDrop\');d.style.display=d.style.display===\'none\'?\'flex\':\'none\';l.style.display=\'none\';" '
+
+    + 'class="btn-g" style="width:100%;padding:8px;font-size:11px;justify-content:center;font-weight:700">' + t('acc_theme') + '</button>'
+
+    + '<div id="accThemeDrop" style="display:none;flex-direction:column;gap:5px;margin-top:6px">'
+
+    + '<button onclick="setTheme(\'light\')" class="btn-g" style="padding:6px;font-size:11px;width:100%;justify-content:center'+(accountData.theme==='light'?';border-color:var(--teal);color:var(--teal)':'')+'">' + t('acc_light') + '</button>'
+
+    + '<button onclick="setTheme(\'dark\')" class="btn-g" style="padding:6px;font-size:11px;width:100%;justify-content:center'+(accountData.theme!=='light'?';border-color:var(--teal);color:var(--teal)':'')+'">' + t('acc_dark') + '</button>'
+
+    + '</div>'
+
+    + '</div>';
+
+
+
+  /* -- LINGUA -- */
+
+  html += '<div>'
+
+    + '<button onclick="var l=document.getElementById(\'accLangDrop\'),d=document.getElementById(\'accThemeDrop\');l.style.display=l.style.display===\'none\'?\'flex\':\'none\';d.style.display=\'none\';" '
+
+    + 'class="btn-g" style="width:100%;padding:8px;font-size:11px;justify-content:center;font-weight:700">'
+
+    + (flagMap[_currentLang]||'🌐') + ' ' + t('acc_lang').replace('🌐 ','') + '</button>'
+
+    + '<div id="accLangDrop" style="display:none;flex-direction:column;gap:5px;margin-top:6px">';
+
+  ['it','en','de','fr','es'].forEach(function(code){
+
+    var active = code === _currentLang;
+
+    html += '<button onclick="changeAppLang(\''+code+'\')" class="btn-g" style="padding:6px;font-size:11px;width:100%;display:flex;align-items:center;gap:6px'+(active?';border-color:var(--teal);color:var(--teal)':'')+'">'
+
+      + '<img src="https://flagcdn.com/w20/'+flagDomains[code]+'.png" width="14" style="border-radius:2px;flex-shrink:0">'
+
+      + '<span>'+langNames[code]+'</span>'
+
+      + (active ? '<span style="margin-left:auto;font-size:9px;font-family:var(--fd);color:var(--teal)">✓</span>' : '')
+
+      + '</button>';
+
   });
+
+  html += '</div></div>';
+
+
+
+  html += '</div>'; /* fine grid tema+lingua */
+
+
+
+  /* ── DATI PERSONALI ── */
+
+  html += '<div style="margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:16px">'
+
+    + '<div style="font-size:9px;color:var(--t3);font-family:var(--fh);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:8px">' + t('acc_personal') + '</div>'
+
+    + '<input type="text" id="accFirstName" placeholder="'+t('acc_firstname')+'" value="' + (accountData.firstName||'') + '" style="width:100%;margin-bottom:8px;background:var(--bg3);border:1px solid var(--border);color:var(--t);padding:9px 12px;border-radius:8px;font-size:12px;font-family:var(--fd);outline:none" onfocus="this.style.borderColor=\'var(--teal)\'" onblur="this.style.borderColor=\'var(--border)\'">'
+
+    + '<input type="text" id="accLastName" placeholder="'+t('acc_lastname')+'" value="' + (accountData.lastName||'') + '" style="width:100%;margin-bottom:10px;background:var(--bg3);border:1px solid var(--border);color:var(--t);padding:9px 12px;border-radius:8px;font-size:12px;font-family:var(--fd);outline:none" onfocus="this.style.borderColor=\'var(--teal)\'" onblur="this.style.borderColor=\'var(--border)\'">'
+
+    + '<button onclick="saveProfileData()" class="btn-p" style="width:100%;padding:9px;font-size:11px;justify-content:center;margin-bottom:10px">' + t('acc_save') + '</button>'
+
+    + '<div id="accSaveMsg" style="display:none;font-size:11px;font-family:var(--fd);padding:5px 8px;border-radius:6px;margin-bottom:8px"></div>'
+
+    /* Email inline */
+
+    + '<button onclick="accToggleInline(\'accEmailSection\')" style="background:none;border:none;color:var(--teal);cursor:pointer;font-size:11px;font-family:var(--fd);font-weight:700;padding:0;text-decoration:underline">' + t('acc_changeemail') + '</button>'
+
+    + '<div id="accEmailSection" style="display:none;margin-top:8px">'
+
+    + '<input type="email" id="accNewEmail" placeholder="'+t('acc_emailnew')+'" style="width:100%;margin-bottom:6px;background:var(--bg3);border:1px solid var(--border);color:var(--t);padding:8px 12px;border-radius:8px;font-size:12px;font-family:var(--fd);outline:none" onfocus="this.style.borderColor=\'var(--teal)\'" onblur="this.style.borderColor=\'var(--border)\'">'
+
+    + '<button onclick="doChangeEmail()" class="btn-p" style="width:100%;padding:8px;font-size:11px;justify-content:center">' + t('acc_changeemail') + '</button>'
+
+    + '<div id="accEmailMsg" style="display:none;margin-top:6px;font-size:11px;font-family:var(--fd);padding:5px 8px;border-radius:6px"></div>'
+
+    + '</div>'
+
+    /* Password inline */
+
+    + '<button onclick="accToggleInline(\'accPassSection\')" style="background:none;border:none;color:var(--teal);cursor:pointer;font-size:11px;font-family:var(--fd);font-weight:700;padding:0;text-decoration:underline;margin-left:auto;float:right">' + t('acc_resetpass') + '</button>'
+
+    + '<div style="clear:both"></div>'
+
+    + '<div id="accPassSection" style="display:none;margin-top:8px">'
+
+    + '<input type="password" id="accNewPass" placeholder="'+t('acc_passnew')+'" style="width:100%;margin-bottom:6px;background:var(--bg3);border:1px solid var(--border);color:var(--t);padding:8px 12px;border-radius:8px;font-size:12px;font-family:var(--fd);outline:none" onfocus="this.style.borderColor=\'var(--teal)\'" onblur="this.style.borderColor=\'var(--border)\'">'
+
+    + '<button onclick="doChangePassword()" class="btn-p" style="width:100%;padding:8px;font-size:11px;justify-content:center">' + t('acc_resetpass') + '</button>'
+
+    + '<div id="accPassMsg" style="display:none;margin-top:6px;font-size:11px;font-family:var(--fd);padding:5px 8px;border-radius:6px"></div>'
+
+    + '</div>'
+
+    + '</div>';
+
+
+
+  /* ── ABBONAMENTO ── */
+
+  var btnMBaseStyle = 'width:100%;padding:10px 14px;font-size:12px;justify-content:space-between;display:flex;align-items:center;transition:all .2s';
+
+  html += '<div style="margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:16px">'
+
+    + '<div style="font-size:9px;color:var(--t3);font-family:var(--fh);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:6px">' + t('acc_subscription') + '</div>'
+
+    + '<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:12px">' + t('acc_expiry') + ': <strong style="color:var(--teal)">' + scadenza + '</strong></div>'
+
+    + '<div style="display:grid;gap:10px">'
+
+
+
+    /* Mensile — diventa come annuale al hover */
+
+    + '<button id="accBtnMonthly" onclick="buyPlan(\'Mensile\')" class="btn-g" style="'+btnMBaseStyle+'" '
+
+    + 'onmouseover="this.className=\'btn-p\';this.style.justifyContent=\'space-between\';this.style.display=\'flex\';this.style.alignItems=\'center\';this.style.width=\'100%\';this.style.padding=\'10px 14px\';this.style.fontSize=\'12px\'" '
+
+    + 'onmouseout="this.className=\'btn-g\';this.style.background=\'\';this.style.color=\'\';">'
+
+    + '<span>' + t('acc_monthly') + '</span><span style="font-family:var(--fd);font-weight:700">€ 19.99</span>'
+
+    + '</button>'
+
+
+
+    /* Annuale con badge */
+
+    + '<div style="position:relative">'
+
+    + '<div style="position:absolute;top:-9px;right:8px;background:linear-gradient(135deg,var(--teal2),var(--violet2));color:#fff;font-size:8px;font-weight:700;font-family:var(--fh);padding:2px 8px;border-radius:10px;letter-spacing:.08em;z-index:1">' + t('acc_save40') + '</div>'
+
+    + '<button onclick="buyPlan(\'Annuale\')" class="btn-p" style="'+btnMBaseStyle+'">'
+
+    + '<span>' + t('acc_yearly') + '</span><span style="font-family:var(--fd);font-weight:700">€ 199</span>'
+
+    + '</button>'
+
+    + '</div>'
+
+
+
+    + '</div>'
+
+    + '</div>';
+
+
+
+  /* ── LOGOUT ── */
+
+  html += '<button onclick="doLogout()" style="width:100%;padding:10px 14px;background:var(--red-bg);border:1px solid rgba(255,64,96,.3);border-radius:9px;color:var(--red);cursor:pointer;font-size:12px;font-weight:700;font-family:var(--fm);letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s" onmouseover="this.style.background=\'rgba(255,64,96,.15)\'" onmouseout="this.style.background=\'var(--red-bg)\'">'
+
+    + t('acc_signout') + '</button>';
+
+
+
+  html += '</div>';
+
+  return html;
+
 }
+
+
+
+/* helper per toggle sezioni inline */
+
+function accToggleInline(id){
+
+  var el=document.getElementById(id);if(!el)return;
+
+  el.style.display=el.style.display==='none'?'block':'none';
+
+}
+
+
+
+/* Cambio email inline → Supabase */
+
+function doChangeEmail(){
+
+  var input=document.getElementById('accNewEmail');
+
+  var msg=document.getElementById('accEmailMsg');
+
+  if(!input||!msg)return;
+
+  var email=input.value.trim();
+
+  if(!email){msg.style.display='block';msg.style.background='var(--red-bg)';msg.style.color='var(--red)';msg.textContent='Email non valida.';return;}
+
+  msg.style.display='block';msg.style.background='var(--amber-bg)';msg.style.color='var(--amber)';msg.textContent=t('acc_saving');
+
+  _sb.auth.updateUser({email:email}).then(function(res){
+
+    if(res.error){msg.style.background='var(--red-bg)';msg.style.color='var(--red)';msg.textContent=t('acc_errsb')+res.error.message;}
+
+    else{accountData.email=email;try{localStorage.setItem('ph_account',JSON.stringify(accountData));}catch(e){}
+
+      msg.style.background='var(--green-bg)';msg.style.color='var(--green)';msg.textContent=t('acc_emailok');input.value='';}
+
+  });
+
+}
+
+
+
+/* Cambio password inline → Supabase */
+
+function doChangePassword(){
+
+  var input=document.getElementById('accNewPass');
+
+  var msg=document.getElementById('accPassMsg');
+
+  if(!input||!msg)return;
+
+  var pass=input.value;
+
+  if(!pass||pass.length<6){msg.style.display='block';msg.style.background='var(--red-bg)';msg.style.color='var(--red)';msg.textContent=t('acc_passmin');return;}
+
+  msg.style.display='block';msg.style.background='var(--amber-bg)';msg.style.color='var(--amber)';msg.textContent=t('acc_saving');
+
+  _sb.auth.updateUser({password:pass}).then(function(res){
+
+    if(res.error){msg.style.background='var(--red-bg)';msg.style.color='var(--red)';msg.textContent=t('acc_errsb')+res.error.message;}
+
+    else{msg.style.background='var(--green-bg)';msg.style.color='var(--green)';msg.textContent=t('acc_passok');input.value='';}
+
+  });
+
+}
+
+
+
+/* Acquisto piano → Stripe checkout */
+
+async function buyPlan(tipo) {
+
+  var plan = (tipo === 'Mensile') ? 'monthly' : 'yearly';
+
+  try {
+
+    var res = await fetch('/api/create-checkout-session', {
+
+      method: 'POST',
+
+      headers: {'Content-Type': 'application/json'},
+
+      body: JSON.stringify({ plan: plan, email: accountData.email || '' })
+
+    });
+
+    var data = await res.json();
+
+    if (data.url) window.location.href = data.url;
+
+    else alert('Errore: ' + (data.error || 'Riprova'));
+
+  } catch(e) {
+
+    alert('Errore di connessione. Riprova.');
+
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+function updateProfilePhoto(input) {
+
+
+
+  if (input.files && input.files[0]) {
+
+
+
+    var reader = new FileReader();
+
+
+
+    reader.onload = function(e) {
+
+
+
+      accountData.photo = e.target.result;
+
+
+
+      localStorage.setItem('ph_account', JSON.stringify(accountData));
+
+
+
+      var topPhoto = document.getElementById('tabAccountPhoto');
+
+
+
+      if(topPhoto) topPhoto.innerHTML = '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">';
+
+
+
+      var dropPhotoBtn = document.getElementById('accDropAvatarBtn');
+
+
+
+      if(dropPhotoBtn) dropPhotoBtn.innerHTML = '<img src="'+accountData.photo+'" style="width:100%;height:100%;object-fit:cover">';
+
+
+
+    };
+
+
+
+    reader.readAsDataURL(input.files[0]);
+
+
+
+  }
+
+
+
+}
+
+
+
+function updateSecurity() {
+
+
+
+  var newPass = document.getElementById('accNewPass').value;
+
+
+
+  var msg = document.getElementById('accSecMsg');
+
+
+
+  if(!newPass) { msg.style.display = 'block'; msg.style.color = 'var(--amber)'; msg.textContent = 'Inserisci password.'; return; }
+
+
+
+  msg.style.display = 'block'; msg.style.color = 'var(--t3)'; msg.textContent = 'Aggiornamento...';
+
+
+
+  _sb.auth.updateUser({password: newPass}).then(function(res){
+
+
+
+    if(res.error) { msg.style.color = 'var(--red)'; msg.textContent = 'Errore: ' + res.error.message; } 
+
+
+
+    else { msg.style.color = 'var(--green)'; msg.textContent = 'Password aggiornata con successo!'; document.getElementById('accNewPass').value = ''; }
+
+
+
+  });
+
+
+
+}
+
+
+
+function toggleTheme(){
+
+
+
+  accountData.theme=accountData.theme==='light'?'dark':'light';
+
+
+
+  if(accountData.theme==='light')document.body.classList.add('light-theme');else document.body.classList.remove('light-theme');
+
+
+
+  try{localStorage.setItem('ph_account',JSON.stringify(accountData));}catch(e){}
+
+
+
+  var panel=document.getElementById('accDropPanel');if(panel&&panel.style.display!=='none')panel.innerHTML=renderAccountDrop();
+
+
+
+}
+
+
+
+function loadAccountData(){
+
+  try{var d=localStorage.getItem('ph_account');if(d)accountData=Object.assign(accountData,JSON.parse(d));}catch(e){}
+
+  if(accountData.theme==='light')document.body.classList.add('light-theme');
+
+  // Ripristina lingua salvata e applica subito le label delle tab
+
+  if(accountData.lang && LANGS[accountData.lang]) _currentLang = accountData.lang;
+
+  applyTabLang();
+
+  _sb.auth.getSession().then(function(res){
+
+    if(res.data&&res.data.session&&res.data.session.user){
+
+      var user=res.data.session.user;
+
+      accountData.email=user.email||'';
+
+      var meta=user.user_metadata||{};
+
+      accountData.firstName=meta.first_name||meta.firstName||'';
+
+      accountData.lastName=meta.last_name||meta.lastName||'';
+
+      var tn=document.getElementById('tabAccountName');
+
+      if(tn)tn.textContent=((accountData.firstName+' '+accountData.lastName).trim()||accountData.email.split('@')[0]||'Account');
+
+      // Aggiorna anche il pannello se è aperto
+
+      var panel=document.getElementById('accDropPanel');
+
+      if(panel&&panel.style.display!=='none')panel.innerHTML=renderAccountDrop();
+
+    }
+
+  });
+
+}
+
+
+
+function showPolicy(){document.getElementById('policyModal').style.display='block';}
+
+
+
+function resetConsent(){try{localStorage.removeItem('ph_consent');}catch(e){}location.reload();}
+
+
+
+
+
+
+
+// ── Calendario economico (versione compatta) ─────────────────────
+
+
+
+var _calData=[],_calFilter='high',_calLoaded=false,_calTimer=null,_calDemoMode=false;
+
+
+
+var CAL_FLAGS={'USD':'us','EUR':'eu','GBP':'gb','JPY':'jp','AUD':'au','CAD':'ca','CHF':'ch','NZD':'nz','CNY':'cn','ALL':'un'};
+
+
+
+var CAL_IMP_LABEL={'High':'red','Medium':'orange','Low':'yellow','Holiday':'gray','high':'red','medium':'orange','low':'yellow'};
+
+
+
+function calFlag(currency){var code=CAL_FLAGS[currency];if(!code)return'<span style="font-size:13px;opacity:.4">🌐</span>';return'<img src="https://flagcdn.com/24x18/'+code+'.png" width="24" height="18" style="border-radius:2px;vertical-align:middle;object-fit:cover" alt="'+currency+'">';}
+
+
+
+function calSetFilter(f){_calFilter=f;calRender();}
+
+
+
+function calNow(){return new Date();}
+
+
+
+function calParseDate(dateStr,timeStr){if(!dateStr)return null;var parts=dateStr.split('-');if(parts.length!==3)return null;var base=new Date(parseInt(parts[2]),parseInt(parts[0])-1,parseInt(parts[1]),0,0,0);if(timeStr&&timeStr!=='All Day'&&timeStr!=='Tentative'){var m=timeStr.match(/(\d+):(\d+)(am|pm)/i);if(m){var h=parseInt(m[1]),min=parseInt(m[2]),ampm=m[3].toLowerCase();if(ampm==='pm'&&h!==12)h+=12;if(ampm==='am'&&h===12)h=0;base.setHours(h,min,0,0);}}return base;}
+
+
+
+function calCountdown(eventDate){if(!eventDate)return{txt:'—',cls:'past'};var now=calNow();var diff=eventDate-now;if(diff<0)return{txt:'Passato',cls:'past'};var h=Math.floor(diff/3600000);var m=Math.floor((diff%3600000)/60000);if(h>0)return{txt:h+'h '+m+'m',cls:h<3?'orange':''};return{txt:m+'m',cls:m<15?'red':'orange'};}
+
+
+
+
+
+
+
+async function calLoad(){
+
+
+
+  var FF_URL='https://nfs.faireconomy.media/ff_calendar_thisweek.json';var NOW=Date.now();
+
+
+
+  var attempts=[fetch(FF_URL+'?version='+NOW,{cache:'no-store',mode:'cors'}),fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(FF_URL+'?version='+NOW),{cache:'no-store'}),fetch('https://corsproxy.io/?'+encodeURIComponent(FF_URL),{cache:'no-store'})];
+
+
+
+  var winner=null;
+
+
+
+  try{var responses=await Promise.any(attempts.map(function(p){return p.then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r;});}));winner=responses;}catch(e){winner=null;}
+
+
+
+  if(winner){try{var data=await winner.json();if(Array.isArray(data)&&data.length>0){_calData=data;_calLoaded=true;calRender();return;}}catch(e){}}
+
+
+
+  _calData=calGenerateDemo();_calLoaded=true;_calDemoMode=true;calRender();
+
+
+
+}
+
+
+
+
+
+
+
+function calGenerateDemo(){
+
+
+
+  var now=new Date();var mon=new Date(now);mon.setDate(now.getDate()-now.getDay()+1);mon.setHours(0,0,0,0);
+
+
+
+  function dayEvs(d,evs){var dd=new Date(mon);dd.setDate(mon.getDate()+d);var dateStr=(dd.getMonth()+1).toString().padStart(2,'0')+'-'+dd.getDate().toString().padStart(2,'0')+'-'+dd.getFullYear();return evs.map(function(e){return Object.assign({date:dateStr},e);});}
+
+
+
+  return[].concat(
+
+
+
+    dayEvs(0,[{time:'8:30am',currency:'USD',impact:'High',title:'S&P Global Manufacturing PMI'},{time:'3:00pm',currency:'EUR',impact:'High',title:'ECB President Lagarde Speaks'}]),
+
+
+
+    dayEvs(1,[{time:'8:30am',currency:'USD',impact:'High',title:'JOLTS Job Openings'},{time:'10:00am',currency:'USD',impact:'Medium',title:'Factory Orders m/m'}]),
+
+
+
+    dayEvs(2,[{time:'8:15am',currency:'USD',impact:'High',title:'ADP Non-Farm Employment'},{time:'2:00pm',currency:'USD',impact:'High',title:'FOMC Meeting Minutes'}]),
+
+
+
+    dayEvs(3,[{time:'8:30am',currency:'USD',impact:'High',title:'Unemployment Claims'},{time:'8:30am',currency:'USD',impact:'High',title:'Trade Balance'}]),
+
+
+
+    dayEvs(4,[{time:'8:30am',currency:'USD',impact:'High',title:'Non-Farm Payrolls',forecast:'180K',previous:'151K'},{time:'8:30am',currency:'USD',impact:'High',title:'Unemployment Rate',forecast:'4.1%',previous:'4.1%'}])
+
+
+
+  );
+
+
+
+}
+
+
+
+
+
+
+
+function calRender(){
+
+
+
+  var ct=document.getElementById('main');if(!ct)return;
+
+
+
+  ct.style.padding='24px';ct.style.maxWidth='1400px';
+
+
+
+  var now=calNow();
+
+
+
+  var filtered=_calData.filter(function(ev){var imp=ev.impact||ev.importance||'';if(_calFilter==='high')return imp==='High'||imp==='high';if(_calFilter==='medium')return imp==='High'||imp==='high'||imp==='Medium'||imp==='medium';return true;});
+
+
+
+  var byDay={},dayOrder=[];
+
+
+
+  filtered.forEach(function(ev){var dateKey=ev.date||'';if(!byDay[dateKey]){byDay[dateKey]=[];dayOrder.push(dateKey);}byDay[dateKey].push(ev);});
+
+
+
+  var redSoon=0;_calData.forEach(function(ev){var imp=ev.impact||ev.importance||'';if(imp!=='High'&&imp!=='high')return;var eDate=calParseDate(ev.date,ev.time);if(!eDate)return;var diff=eDate-now;if(diff>0&&diff<2*3600000)redSoon++;});
+
+
+
+  var html='<div class="cal-wrap"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-size:17px;font-weight:800;font-family:var(--fh)">📅 Calendario Economico</div><div style="display:flex;gap:8px;align-items:center">'+(_calDemoMode?'<span style="font-size:10px;font-family:var(--fd);background:rgba(255,190,11,.15);color:#ffbe0b;padding:3px 10px;border-radius:5px">⚠ Dati demo</span>':'')+'<button class="btn-g" style="padding:4px 12px;font-size:10px" onclick="_calLoaded=false;_calDemoMode=false;_calData=[];renderCalendar()">🔄 Aggiorna</button></div></div>';
+
+
+
+  if(redSoon>0)html+='<div class="cal-alert-box show"><span style="font-size:20px">⚠️</span><span><strong>Attenzione:</strong> '+redSoon+' notizia ad ALTO IMPATTO nelle prossime 2 ore.</span></div>';
+
+
+
+  html+='<div class="cal-filter-bar"><span style="font-size:10px;font-family:var(--fh);color:var(--t3);letter-spacing:.1em">FILTRO:</span><button class="cal-filter-btn red-f'+(_calFilter==='high'?' active':'')+'" onclick="calSetFilter(\'high\')">🔴 Alto Impatto</button><button class="cal-filter-btn orange-f'+(_calFilter==='medium'?' active':'')+'" onclick="calSetFilter(\'medium\')">🟡 Alto + Medio</button><button class="cal-filter-btn all-f'+(_calFilter==='all'?' active':'')+'" onclick="calSetFilter(\'all\')">Tutti</button></div>';
+
+
+
+  if(!filtered.length){html+='<div style="text-align:center;padding:40px;color:var(--t3)">Nessuna notizia con questo filtro.</div>';}
+
+
+
+  else{
+
+
+
+    dayOrder.forEach(function(dateKey){
+
+
+
+      var evs=byDay[dateKey];if(!evs||!evs.length)return;
+
+
+
+      var d=calParseDate(dateKey,'');var dayLabel=d?d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'}):dateKey;
+
+
+
+      html+='<div class="cal-day-hdr">'+dayLabel.toUpperCase()+'</div>';
+
+
+
+      evs.forEach(function(ev){
+
+
+
+        var imp=ev.impact||ev.importance||'';var impCls=CAL_IMP_LABEL[imp]||'gray';
+
+
+
+        var currency=ev.currency||'—';var eDate=calParseDate(ev.date,ev.time);
+
+
+
+        var countdown=calCountdown(eDate);var isPast=eDate&&eDate<now;
+
+
+
+        var rowBg=impCls==='red'&&!isPast?'border-left:3px solid rgba(255,64,96,.3);':'border-left:3px solid transparent;';
+
+
+
+        html+='<div class="cal-row" style="'+rowBg+'cursor:pointer" onclick="window.open(\'https://www.forexfactory.com/calendar\',\'_blank\')">'
+
+
+
+          +'<div class="cal-time'+(isPast?' past':'')+'">'+(ev.time||'—')+'</div>'
+
+
+
+          +'<div class="cal-flag">'+calFlag(currency)+'</div>'
+
+
+
+          +'<div><div class="cal-imp '+impCls+'"></div></div>'
+
+
+
+          +'<div class="cal-event"><span style="color:var(--t)">'+(ev.title||ev.event||'—')+'</span><span class="cal-cur">'+currency+'</span></div>'
+
+
+
+          +(ev.forecast?'<div class="cal-val">'+ev.forecast+'</div>':'<div class="cal-val na">—</div>')
+
+
+
+          +(ev.previous?'<div class="cal-val">'+ev.previous+'</div>':'<div class="cal-val na">—</div>')
+
+
+
+          +(ev.actual?'<div class="cal-val actual">'+ev.actual+'</div>':'<div class="cal-val na">—</div>')
+
+
+
+          +'<div class="cal-countdown '+countdown.cls+'">'+countdown.txt+'</div>'
+
+
+
+          +'</div>';
+
+
+
+      });
+
+
+
+    });
+
+
+
+  }
+
+
+
+  html+='</div>';ct.innerHTML=html;
+
+
+
+  if(_calTimer)clearInterval(_calTimer);
+
+
+
+  _calTimer=setInterval(function(){if(currentTab==='calendar')calRender();},60000);
+
+
+
+}
+
+
+
+
+
+
+
+function renderCalendar(){
+
+
+
+  var ct=document.getElementById('main');if(!ct)return;
+
+
+
+  ct.style.padding='24px';ct.style.maxWidth='1400px';
+
+
+
+  if(!_calLoaded){ct.innerHTML='<div class="cal-wrap"><div style="text-align:center;padding:60px;font-size:13px;color:var(--t3)"><div style="font-size:40px;margin-bottom:16px">📅</div><div style="font-size:16px;font-weight:700;color:var(--t);margin-bottom:8px">Calendario Economico</div>Caricamento da ForexFactory...</div></div>';calLoad();}
+
+
+
+  else{calRender();}
+
+
+
+}
+
+
+
+
+
+
+
+// ══ MAIN RENDER ══════════════════════════════════════════════════
+
+
+
+function render(){
+
+
+
+  var ct=document.getElementById('main');if(!ct)return;
+
+
+
+  ct.style.padding='24px';ct.style.maxWidth='1400px';
+
+
+
+  if(currentTab==='dash')ct.innerHTML=renderDash();
+
+
+
+  else if(currentTab==='dashdetail'){renderDashDetailPage();return;}
+
+
+
+  else if(currentTab==='calc')ct.innerHTML=renderCalc();
+
+
+
+  else if(currentTab==='proplist')ct.innerHTML=renderPropList();
+
+
+
+  else if(currentTab==='brokerlist')ct.innerHTML=renderBrokerList();
+
+
+
+  else if(currentTab==='guide')ct.innerHTML=renderGuide();
+
+
+
+  else if(currentTab==='support')ct.innerHTML=renderSupport();
+
+
+
+  else if(currentTab==='eadownload')ct.innerHTML=renderEADownload();
+
+
+
+  else if(currentTab==='calendar'){renderCalendar();return;}
+
+
+
+  else if(currentTab==='stats')ct.innerHTML=renderStats();
+
+
+
+  else if(currentTab==='broker')ct.innerHTML=renderBrokerList();
+
+
+
+  else if(currentTab==='platform'){renderPlatform();return;}
+
+
+
+  else if(currentTab==='journal'){renderJournal();return;}
+
+
+
+  else ct.innerHTML=renderGuide();
+
+
+
+}
+
+
+
+
+
+
+
+// ══ FLOATING AI CHAT — con supporto umano Telegram nascosto ══════
+
+
+
+var _aiOpen=false,_aiHist=[],_aiGreeted=false;
+
+
+
+var _humanMode=false,_ticketId=null,_pollTimer=null,_lastMsgAt=null;
+
+
+
+
+
+
+
+function genTicketId(){return'ticket_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
+
+
+
+
+
+
+
+function toggleAIChat(){
+
+
+
+  _aiOpen=!_aiOpen;
+
+
+
+  var panel=document.getElementById('aiFloatPanel');if(panel)panel.classList.toggle('open',_aiOpen);
+
+
+
+  var notif=document.querySelector('#aiFloatBtn .ai-notif');if(notif)notif.style.display='none';
+
+
+
+  if(_aiOpen&&!_aiGreeted){_aiGreeted=true;aiFloatAddMsg('bot','Ciao! 👋 Sono l\'assistente AI di PropHedge.\n\nPosso aiutarti su qualsiasi funzione del software: calcolo lotti, connessione broker, journal, calendario economico e altro.\n\nCome posso aiutarti?');}
+
+
+
+  if(_aiOpen&&_humanMode&&!_pollTimer)startSupportPolling();
+
+
+
+}
+
+
+
+
+
+
+
+function aiFloatAddMsg(role, text) {
+
+  var msgs = document.getElementById('aiFloatMsgs'); if (!msgs) return null;
+
+  var isBot = (role === 'bot' || role === 'support');
+
+  var row = document.createElement('div'); row.className = 'ai-msg-row' + (isBot ? '' : ' user');
+
+  
+
+  // LOGO PROP HEDGE AL POSTO DELLA FACCINA
+
+  var botLogo = '<svg width="18" height="18" viewBox="0 0 36 36" fill="none"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#00e5cc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="33" cy="7" r="3.2" fill="#9b5de5"/></svg>';
+
+  
+
+  var ava = '<div class="ai-msg-ava ' + (isBot?'bot':'usr') + '">' + (isBot? botLogo : '👤') + '</div>';
+
+  row.innerHTML = ava + '<div class="ai-bubble ' + (isBot?'bot':'usr') + '">' + text.replace(/\n/g, '<br>') + '</div>';
+
+  msgs.appendChild(row); msgs.scrollTop = msgs.scrollHeight;
+
+}
+
+
+
+
+
+function aiFloatAddTyping(){
+
+
+
+  var msgs=document.getElementById('aiFloatMsgs');if(!msgs)return null;
+
+
+
+  var row=document.createElement('div');row.className='ai-msg-row';row.id='aiTypingRow';
+
+
+
+  row.innerHTML='<div class="ai-msg-ava bot">🤖</div>';
+
+
+
+  var bubble=document.createElement('div');bubble.className='ai-bubble bot';bubble.id='aiTypingBubble';
+
+
+
+  bubble.innerHTML='<span id="aiTypingDots">●</span>';
+
+
+
+  var t=0;bubble._timer=setInterval(function(){t=(t+1)%3;var el=document.getElementById('aiTypingDots');if(el)el.textContent='●'.repeat(t+1);},400);
+
+
+
+  row.appendChild(bubble);msgs.appendChild(row);msgs.scrollTop=msgs.scrollHeight;return bubble;
+
+
+
+}
+
+
+
+
+
+
+
+function aiFloatRemoveTyping(){
+
+
+
+  var row=document.getElementById('aiTypingRow');var bub=document.getElementById('aiTypingBubble');
+
+
+
+  if(bub&&bub._timer)clearInterval(bub._timer);if(row)row.remove();
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
 function showPolicy(){document.getElementById('policyModal').style.display='block';}
 function resetConsent(){try{localStorage.removeItem('ph_consent');}catch(e){}location.reload();}
 
@@ -2220,7 +3862,7 @@ function aiFloatAddMsg(role,text){
   var msgs=document.getElementById('aiFloatMsgs');if(!msgs)return null;
   var isBot=(role==='bot'||role==='support');
   var row=document.createElement('div');row.className='ai-msg-row'+(isBot?'':' user');
-  var ava='<div class="ai-msg-ava '+(isBot?'bot':'usr')+'">'+(isBot?'🤖':'👤')+'</div>';
+  var ava='<div class="ai-msg-ava '+(isBot?'bot':'usr')+'">'+(isBot?'<svg width="16" height="16" viewBox="0 0 36 36" fill="none" style="flex-shrink:0"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#00e5cc" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="33" cy="7" r="3.5" fill="#9b5de5"/></svg>':'👤')+'</div>';
   var bubble=document.createElement('div');bubble.className='ai-bubble '+(isBot?'bot':'usr');
   bubble.innerHTML=text.replace(/\n/g,'<br>');
   row.innerHTML=ava;row.appendChild(bubble);msgs.appendChild(row);msgs.scrollTop=msgs.scrollHeight;return bubble;
@@ -2229,7 +3871,7 @@ function aiFloatAddMsg(role,text){
 function aiFloatAddTyping(){
   var msgs=document.getElementById('aiFloatMsgs');if(!msgs)return null;
   var row=document.createElement('div');row.className='ai-msg-row';row.id='aiTypingRow';
-  row.innerHTML='<div class="ai-msg-ava bot">🤖</div>';
+  row.innerHTML='<div class="ai-msg-ava bot"><svg width="16" height="16" viewBox="0 0 36 36" fill="none" style="flex-shrink:0"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#00e5cc" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="33" cy="7" r="3.5" fill="#9b5de5"/></svg></div>';
   var bubble=document.createElement('div');bubble.className='ai-bubble bot';bubble.id='aiTypingBubble';
   bubble.innerHTML='<span id="aiTypingDots">●</span>';
   var t=0;bubble._timer=setInterval(function(){t=(t+1)%3;var el=document.getElementById('aiTypingDots');if(el)el.textContent='●'.repeat(t+1);},400);
