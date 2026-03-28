@@ -1661,12 +1661,18 @@ body.modal-open{ overflow:hidden !important; }
   /* assicura le due colonne dentro la modale */
 .mb{ display:grid !important; grid-template-columns:1.05fr 1fr !important; }
 .mb-right{ background:var(--bg3) !important; }
-/* riporta la chat sopra la modale */
-#aiFloatBtn{ z-index:100001 !important; display:flex !important; }
+
+/* Chat button sempre visibile */
+#aiFloatBtn{
+  position:fixed !important; right:24px !important; bottom:130px !important;
+  width:56px !important; height:56px !important; border-radius:50% !important;
+  display:flex !important; align-items:center !important; justify-content:center !important;
+  background:#7c4dff !important; color:#fff !important; font-size:22px !important;
+  box-shadow:0 10px 30px rgba(0,0,0,.35) !important; border:1px solid rgba(255,255,255,.2) !important;
+  z-index:100001 !important; cursor:pointer !important;
+}
 #aiFloatPanel{ z-index:100000 !important; }
-
 </style>
-
 
 
 <script>window._sbLoadError=false;</script>
