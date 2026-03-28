@@ -3910,9 +3910,9 @@ function doRegisterFree(){
 
          <div class="fr2" style="margin-bottom:10px">
 
-  <div class="f"><label>Pip Value Conto Prop ($) <span style="font-size:8px;color:var(--teal)">auto</span></label><input id="mPipVProp" type="number" step="0.01" min="0.01" oninput="calcPreview()" placeholder="es. 10"></div>
+  <div class="f"><label>Contratto Prop (lotti/lot) <span style="font-size:8px;color:var(--teal)">opzionale</span></label><input id="mPipVProp" type="number" step="1" min="1" oninput="calcPreview()" placeholder="es. 10 → lotti ÷10"><div class="hint" style="font-size:9px">Se il broker usa 10 lotti come 1 contratto, inserisci 10</div></div>
 
-  <div class="f"><label>Pip Value Conto Personale ($) <span style="font-size:8px;color:var(--teal)">auto</span></label><input id="mPipVHedge" type="number" step="0.01" min="0.01" oninput="calcPreview()" placeholder="es. 100"></div>
+  <div class="f"><label>Contratto Personale (lotti/lot) <span style="font-size:8px;color:var(--teal)">opzionale</span></label><input id="mPipVHedge" type="number" step="1" min="1" oninput="calcPreview()" placeholder="es. 10 → lotti ÷10"><div class="hint" style="font-size:9px">Se il broker personale usa 10 lotti come 1 contratto, inserisci 10</div></div>
 
 </div> 
 
@@ -4630,13 +4630,17 @@ else if(asset==='BTCUSD'||asset==='BITCOIN'||asset==='BTC') pipVal=1;
 
 else if(asset==='ETHUSD'||asset==='ETHEREUM'||asset==='ETH') pipVal=0.1;
 
-  // Se l'utente ha inserito manualmente un pip value, usalo
+  // ── Moltiplicatore contratto per broker ──
+  // pipVProp/pipVHedge = dimensione contratto del broker rispetto allo standard
+  // Se il broker usa contratti da 10 lotti: inserisci 10 → i lotti calcolati vengono divisi per 10
+  // Se non inserito (= 0): nessuna divisione, calcolo standard per contratto singolo
 
-  var pipValProp  = (p.pipVProp  && parseFloat(p.pipVProp)>0)  ? parseFloat(p.pipVProp)  : pipVal;
+  var contractMultProp  = (p.pipVProp  && parseFloat(p.pipVProp)>0)  ? parseFloat(p.pipVProp)  : 1;
+  var contractMultHedge = (p.pipVHedge && parseFloat(p.pipVHedge)>0) ? parseFloat(p.pipVHedge) : 1;
 
-var pipValHedge = (p.pipVHedge && parseFloat(p.pipVHedge)>0) ? parseFloat(p.pipVHedge) : pipVal;
-
-pipVal = pipValProp;
+  // Il pipVal usato nel calcolo dollari rimane quello BASE (auto-rilevato dall'asset)
+  // Il moltiplicatore viene applicato SOLO ai lotti finali (divisione)
+  var pipValBase = pipVal; // salva il pip value base prima di sovrascrivere
 
 
 
@@ -4694,19 +4698,19 @@ pipVal = pipValProp;
 
  // Lotti massimi per rispettare la CONSISTENZA (max guadagno per trade)
 
-var propLots_byConsistency = maxPerTrade / (tp * pipVal);
+var propLots_byConsistency = maxPerTrade / (tp * pipValBase);
 
 
 
 // Lotti massimi per rispettare il DD GIORNALIERO (max perdita per trade)
 
-var propLots_byDailyDD = dailyDD / (sl * pipVal);
+var propLots_byDailyDD = dailyDD / (sl * pipValBase);
 
 
 
 // Lotti massimi per rispettare il DD TOTALE distribuito sui trade minimi
 
-var propLots_byTotalDD = maxDDAmount / (sl * pipVal * minTrades);
+var propLots_byTotalDD = maxDDAmount / (sl * pipValBase * minTrades);
 
 
 
@@ -4714,15 +4718,19 @@ var propLots_byTotalDD = maxDDAmount / (sl * pipVal * minTrades);
 
  var propLots = p.lots ? parseFloat(p.lots) : Math.min(propLots_byConsistency, propLots_byDailyDD, propLots_byTotalDD) / days;
 
+  // ── Applico moltiplicatore contratto Prop ──
+  // Se il broker usa contratti da 10 lotti, divido i lotti calcolati per 10
+  propLots = propLots / contractMultProp;
+
   propLots = Math.floor(propLots * 100) / 100;
 
   if(propLots < 0.01) propLots = 0.01;
 
 
 
-  var propTP_dollar = propLots * tp * pipVal; // guadagno se TP colpito
+  var propTP_dollar = propLots * contractMultProp * tp * pipValBase; // guadagno se TP colpito
 
-  var propSL_dollar = propLots * sl * pipVal; // perdita se SL colpito
+  var propSL_dollar = propLots * contractMultProp * sl * pipValBase; // perdita se SL colpito
 
 
 
@@ -4734,27 +4742,31 @@ var propLots_byTotalDD = maxDDAmount / (sl * pipVal * minTrades);
 
   // Quanti lotti mi servono per coprire il costo challenge col TP?
 
-  // hedgeLots = cost / (tp * pipVal)
+  // hedgeLots = cost / (tp * pipValBase), poi diviso per contractMultHedge
 
 var hedgeTarget = cost * 1.30;
 
-var hedgeLots = (hedgeTarget / (tp * pipValHedge)) / days;
+var hedgeLots = (hedgeTarget / (tp * pipValBase)) / days;
+
+  // ── Applico moltiplicatore contratto Hedge ──
+  // Se il broker personale usa contratti da 10 lotti, divido per 10
+  hedgeLots = hedgeLots / contractMultHedge;
 
   hedgeLots = Math.ceil(hedgeLots * 100) / 100;
 
   if(hedgeLots < 0.01) hedgeLots = 0.01;
 
-  var hedgeTP_dollar = hedgeLots * tp * pipValHedge;
+  var hedgeTP_dollar = hedgeLots * contractMultHedge * tp * pipValBase;
 
-var hedgeSL_dollar = hedgeLots * sl * pipValHedge;
+var hedgeSL_dollar = hedgeLots * contractMultHedge * sl * pipValBase;
 
 
 
   // ── Costo spread (opzionale) ──
 
-  var spreadCostProp  = propLots  * spread * pipVal; // spread per trade prop
+  var spreadCostProp  = propLots  * contractMultProp  * spread * pipValBase; // spread per trade prop
 
-  var spreadCostHedge = hedgeLots * spread * pipVal; // spread per trade hedge
+  var spreadCostHedge = hedgeLots * contractMultHedge * spread * pipValBase; // spread per trade hedge
 
   var spreadTotale    = (spreadCostProp * minTrades) + spreadCostHedge;
 
@@ -4820,7 +4832,8 @@ var minCapPersonale = hedgeSL_withBuffer;
 
   return {
 
-    pipVal, propLots, hedgeLots,
+    pipVal: pipValBase, propLots, hedgeLots,
+    contractMultProp, contractMultHedge,
 
     propTP: propTP_dollar, propSL: propSL_dollar,
 
@@ -5096,9 +5109,10 @@ var c = calcChallenge(p);
   // Nota lotti diversi
 
   +(c.propLots!==c.hedgeLots
-
     ?'<div style="background:rgba(155,93,229,.07);border:1px solid rgba(155,93,229,.2);border-radius:6px;padding:7px 10px;font-size:10px;color:rgba(155,93,229,.9);margin-bottom:10px;font-family:var(--fd)">ℹ Lotti diversi — Prop ottimizzato per profitto, Hedge minimo per coprire il costo</div>'
-
+    :'')
+  +(c.contractMultProp>1||c.contractMultHedge>1
+    ?'<div style="background:rgba(255,190,11,.07);border:1px solid rgba(255,190,11,.25);border-radius:6px;padding:7px 10px;font-size:10px;color:var(--amber);margin-bottom:10px;font-family:var(--fd)">⚡ Moltiplicatore contratto attivo — Prop ÷'+c.contractMultProp+' · Personale ÷'+c.contractMultHedge+' (lotti già adattati al contratto del broker)</div>'
     :'')
 
 
@@ -5114,6 +5128,10 @@ var c = calcChallenge(p);
   +'<div style="font-size:11px"><span style="color:var(--t3)">Trade/gg: </span><strong style="color:'+(c.trPerDay<=c.maxTrDD?'var(--green)':'var(--amber)')+'">'+c.trPerDay+'</strong></div>'
 
   +'<div style="font-size:11px"><span style="color:var(--t3)">Pip value: </span><strong style="color:var(--teal)">$'+c.pipVal.toFixed(2)+'</strong></div>'
+  +(c.contractMultProp>1||c.contractMultHedge>1
+    ?'<div style="font-size:11px"><span style="color:var(--t3)">Molt. Prop: </span><strong style="color:var(--violet)">×'+c.contractMultProp+'</strong></div>'
+    +'<div style="font-size:11px"><span style="color:var(--t3)">Molt. Personale: </span><strong style="color:var(--violet)">×'+c.contractMultHedge+'</strong></div>'
+    :'')
 
   +'</div>'
 
@@ -5201,6 +5219,10 @@ function doAdd() {
 
   const assetVal = document.getElementById('mAsset').value;
 
+  // Leggi pip value Prop — se > 0 usato come moltiplicatore contratto
+  var rawPipVProp  = parseFloat(document.getElementById('mPipVProp')?.value)  || 0;
+  var rawPipVHedge = parseFloat(document.getElementById('mPipVHedge')?.value) || 0;
+
   const p = {
 
     id: Date.now(), name: document.getElementById('mName').value.trim() || 'Sfida',
@@ -5208,6 +5230,8 @@ function doAdd() {
     size: parseFloat(document.getElementById('mSize').value) || 0,
 
     cost: parseFloat(document.getElementById('mCost').value) || 0,
+
+    maxDD: parseFloat(document.getElementById('mDD').value) || 6,
 
     ddd: parseFloat(document.getElementById('mDDD').value) || 3,
 
@@ -5219,7 +5243,19 @@ function doAdd() {
 
     tpPips: parseFloat(document.getElementById('mTpPips').value) || 50,
 
-    asset: assetVal.split(':')[0], consistency: parseFloat(document.getElementById('mConsistency')?.value) || 30
+    days: parseFloat(document.getElementById('mDays')?.value) || 14,
+
+    spread: parseFloat(document.getElementById('mSpread')?.value) || 0,
+
+    lots: parseFloat(document.getElementById('mLots')?.value) || 0,
+
+    asset: assetVal.split(':')[0], consistency: parseFloat(document.getElementById('mConsistency')?.value) || 30,
+
+    // ── Pip Value / Moltiplicatore contratto per broker ──
+    // Se inserito: i lotti calcolati vengono divisi per questo valore
+    // (es. contratto da 10 lotti → lotti calcolati / 10)
+    pipVProp:  rawPipVProp,
+    pipVHedge: rawPipVHedge
 
   };
 
