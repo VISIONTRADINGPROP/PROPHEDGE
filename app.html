@@ -360,12 +360,12 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 
 .tab.active{color:var(--teal);background:linear-gradient(135deg,rgba(56,189,248,.11),rgba(167,139,250,.11));border-bottom-color:var(--teal);box-shadow:0 0 0 1px rgba(56,189,248,.25)}
 
-/* ── SCONTI TAB GLOW ── */
-.tab-disc{position:relative;overflow:hidden;background:linear-gradient(135deg,rgba(56,189,248,.18),rgba(56,189,248,.06))!important;border:2px solid rgba(56,189,248,.55)!important;border-radius:10px!important;padding:0 4px!important}
-.tab-disc::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.13) 50%,transparent 60%);animation:discshine 2.8s ease-in-out infinite}
-@keyframes discshine{0%,100%{transform:translateX(-120%)}50%{transform:translateX(120%)}}
-.tab-disc-lbl{position:relative;z-index:1;font-weight:900!important;letter-spacing:.16em!important;font-size:11.5px!important;color:#38BDF8!important;text-shadow:0 0 14px rgba(56,189,248,.7),0 0 28px rgba(56,189,248,.3)}
-.tab-disc.active{box-shadow:0 0 28px rgba(56,189,248,.45),0 0 0 1.5px rgba(56,189,248,.6)!important}
+/* ── SCONTI NEON ── */
+#tabSconti{color:var(--amber);text-shadow:0 0 8px rgba(251,191,36,.6),0 0 18px rgba(251,191,36,.3)}
+#tabSconti:hover{color:var(--amber)!important;background:linear-gradient(135deg,rgba(251,191,36,.14),rgba(251,191,36,.05))!important;box-shadow:0 0 0 1px rgba(251,191,36,.3),0 0 18px rgba(251,191,36,.15)!important;text-shadow:0 0 10px rgba(251,191,36,.9),0 0 24px rgba(251,191,36,.5)}
+#tabSconti.active{color:var(--amber)!important;background:linear-gradient(135deg,rgba(251,191,36,.14),rgba(251,191,36,.05))!important;border-bottom-color:var(--amber)!important;box-shadow:0 0 0 1px rgba(251,191,36,.35),0 0 22px rgba(251,191,36,.2)!important;text-shadow:0 0 12px rgba(251,191,36,1),0 0 28px rgba(251,191,36,.6)}
+
+
 
 /* ── SCONTI PAGE ── */
 .sc-wrap{font-family:'Inter',system-ui,sans-serif;max-width:1180px;padding-bottom:60px;width:100%;box-sizing:border-box}
@@ -508,7 +508,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 
 
 
-.f label{display:block;font-size:9.5px;color:var(--t3);margin-bottom:5px;font-family:var(--fh);text-transform:uppercase;letter-spacing:.12em;font-weight:600}
+.f label{display:block;font-size:9.5px;color:#ffffff;margin-bottom:5px;font-family:var(--fh);text-transform:uppercase;letter-spacing:.12em;font-weight:600}
 
 
 
@@ -540,7 +540,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 
 
 
-.sect{font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:var(--t3);font-family:var(--fh);font-weight:700;margin:14px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.sect{font-size:9px;text-transform:uppercase;letter-spacing:.16em;color:#ffffff;font-family:var(--fh);font-weight:700;margin:14px 0 10px;padding-bottom:5px;border-bottom:1px solid var(--border)}
 
 
 
@@ -3470,7 +3470,7 @@ function doRegisterFree(){
 
   <div class="tab" onclick="openNewSfidaTab(this)" id="tabCalc">Nuova sfida</div>
 
-  <div class="tab tab-disc" onclick="goTab('sconti',this)" id="tabSconti" style=""><span class="tab-disc-lbl" style="font-size:12px!important;letter-spacing:.18em!important">🏷️ SCONTI</span></div>
+  <div class="tab" onclick="goTab('sconti',this)" id="tabSconti">🏷️ Sconti</div>
 
 
 
@@ -3736,42 +3736,23 @@ function doRegisterFree(){
 
 
 
-      <div class="fr2" style="margin-bottom:14px">
-
-
-
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
         <div onclick="setMode('personal')" id="modePersonal" style="background:var(--teal-bg);border:2px solid var(--teal);border-radius:10px;padding:12px;cursor:pointer;text-align:center">
-
-
-
           <div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">Prop + Personale</div>
-
-
-
           <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">BUY prop + SELL conto reale</div>
-
-
-
         </div>
-
-
-
         <div onclick="setMode('prop2')" id="modeProp2" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;text-align:center">
-
-
-
           <div style="font-size:14px;font-weight:700;color:var(--violet);margin-bottom:4px">Prop + Prop</div>
-
-
-
           <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">BUY prop + SELL seconda prop</div>
-
-
-
         </div>
-
-
-
+        <div onclick="setMode('futures_personal')" id="modeFuturesPersonal" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;text-align:center">
+          <div style="font-size:14px;font-weight:700;color:var(--amber);margin-bottom:4px">Futures + Personale</div>
+          <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">BUY futures micro + SELL conto reale</div>
+        </div>
+        <div onclick="setMode('futures_prop')" id="modeFuturesProp" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;text-align:center">
+          <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:4px">Futures + Prop</div>
+          <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">BUY futures micro + SELL seconda prop</div>
+        </div>
       </div>
 
 
@@ -3874,40 +3855,37 @@ function doRegisterFree(){
 
 
       <select id="mAsset" onchange="onAssetChange(this.value)">
-
     <optgroup label="Forex">
-
         <option value="EUR/USD:10">EUR/USD - $10/pip</option>
-
         <option value="GBP/USD:10">GBP/USD - $10/pip</option>
-
         <option value="USD/JPY:9.1">USD/JPY - $9/pip</option>
-
     </optgroup>
-
     <optgroup label="Metalli / Indici CFD">
-
         <option value="GOLD:1">GOLD (XAU) - $1/pip</option>
-
         <option value="NAS100:1">NASDAQ 100 - $1/punto</option>
-
         <option value="US30:1">DOW JONES (US30) - $1/punto</option>
-
     </optgroup>
-
     <optgroup label="Prop Futures">
-
-        <option value="ES_FUTURE:50">S&P 500 (ES) - $50/punto</option>
-
+        <option value="ES_FUTURE:50">S&amp;P 500 (ES) - $50/punto</option>
         <option value="NQ_FUTURE:20">NASDAQ (NQ) - $20/punto</option>
-
     </optgroup>
-
+    <optgroup id="microFuturesGroup" label="Micro Futures (per Futures+Personale/Prop)" style="display:none">
+        <option value="EURUSD_MICRO:1">EUR/USD Micro (M6E) - $1/pip</option>
+        <option value="XAUUSD_MICRO:1">Oro/USD Micro (MGC) - $1/pip</option>
+        <option value="MNQ:2">NASDAQ Micro (MNQ) - $2/punto</option>
+        <option value="MES:5">S&amp;P 500 Micro (MES) - $5/punto</option>
+        <option value="MYM:0.5">Dow Jones Micro (MYM) - $0.50/punto</option>
+    </optgroup>
 </select>
 
 
 
           <div class="hint" id="mAssetHint">$10 per pip per lotto std</div>
+          <div id="futuresMicroNote" style="display:none;background:rgba(251,191,36,0.09);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-top:6px;font-size:10px;color:var(--amber);font-family:var(--fd);line-height:1.6">
+            ⚡ <strong>Modalità Futures Micro</strong> — I valori pip mostrati si riferiscono al <em>micro-contratto</em> (1 micro-lotto).<br>
+            M6E (EUR/USD): $1/pip · MGC (Oro): $1/pip · MES (S&amp;P500): $5/punto · MNQ (Nasdaq): $2/punto · MYM (Dow): $0.50/punto.<br>
+            <span style="color:var(--t2)">Il calcolo lotti è già calibrato per i micro-contratti — non serve dividere manualmente.</span>
+          </div>
 
 
 
@@ -4564,35 +4542,66 @@ function buildBot(items){
 var stratMode = 'personal';
 
 function setMode(m) {
-
   stratMode = m;
-
-  var p1 = document.getElementById('modePersonal'), p2 = document.getElementById('modeProp2');
-
+  // Reset all 4 buttons
+  var p1 = document.getElementById('modePersonal');
+  var p2 = document.getElementById('modeProp2');
+  var pFP = document.getElementById('modeFuturesPersonal');
+  var pFP2 = document.getElementById('modeFuturesProp');
   var p2f = document.getElementById('prop2Fields');
-
+  var microGrp = document.getElementById('microFuturesGroup');
+  var futuresNote = document.getElementById('futuresMicroNote');
   if (!p1 || !p2) return;
+
+  // Reset all to inactive
+  [p1, p2, pFP, pFP2].forEach(function(el) {
+    if (el) { el.style.background = 'var(--bg3)'; el.style.borderColor = 'var(--border)'; }
+  });
+
+  var ptf = document.getElementById('propTargetField');
+  var ggf = document.getElementById('ggChallengeField');
 
   if (m === 'personal') {
     p1.style.background = 'var(--teal-bg)'; p1.style.borderColor = 'var(--teal)';
-    p2.style.background = 'var(--bg3)'; p2.style.borderColor = 'var(--border)';
     if (p2f) p2f.style.display = 'none';
-    var ptf = document.getElementById('propTargetField');
-    var ggf = document.getElementById('ggChallengeField');
     if (ptf) ptf.style.display = '';
     if (ggf) ggf.style.display = '';
-  } else {
+    if (microGrp) microGrp.style.display = 'none';
+    if (futuresNote) futuresNote.style.display = 'none';
+  } else if (m === 'prop2') {
     p2.style.background = 'var(--violet-bg)'; p2.style.borderColor = 'var(--violet)';
-    p1.style.background = 'var(--bg3)'; p1.style.borderColor = 'var(--border)';
     if (p2f) p2f.style.display = 'block';
-    var ptf = document.getElementById('propTargetField');
-    var ggf = document.getElementById('ggChallengeField');
     if (ptf) ptf.style.display = 'none';
     if (ggf) ggf.style.display = 'none';
+    if (microGrp) microGrp.style.display = 'none';
+    if (futuresNote) futuresNote.style.display = 'none';
+  } else if (m === 'futures_personal') {
+    if (pFP) { pFP.style.background = 'rgba(251,191,36,0.12)'; pFP.style.borderColor = 'var(--amber)'; }
+    if (p2f) p2f.style.display = 'none';
+    if (ptf) ptf.style.display = '';
+    if (ggf) ggf.style.display = '';
+    if (microGrp) microGrp.style.display = '';
+    if (futuresNote) futuresNote.style.display = '';
+    // Auto-select first micro futures
+    var mAsset = document.getElementById('mAsset');
+    if (mAsset && mAsset.value && !mAsset.value.includes('MICRO') && !mAsset.value.includes('MNQ') && !mAsset.value.includes('MES') && !mAsset.value.includes('MYM')) {
+      mAsset.value = 'EURUSD_MICRO:1';
+      onAssetChange('EURUSD_MICRO:1');
+    }
+  } else if (m === 'futures_prop') {
+    if (pFP2) { pFP2.style.background = 'rgba(52,211,153,0.12)'; pFP2.style.borderColor = 'var(--green)'; }
+    if (p2f) p2f.style.display = 'block';
+    if (ptf) ptf.style.display = 'none';
+    if (ggf) ggf.style.display = 'none';
+    if (microGrp) microGrp.style.display = '';
+    if (futuresNote) futuresNote.style.display = '';
+    var mAsset = document.getElementById('mAsset');
+    if (mAsset && mAsset.value && !mAsset.value.includes('MICRO') && !mAsset.value.includes('MNQ') && !mAsset.value.includes('MES') && !mAsset.value.includes('MYM')) {
+      mAsset.value = 'EURUSD_MICRO:1';
+      onAssetChange('EURUSD_MICRO:1');
+    }
   }
-
   calcPreview();
-
 }
 
 
@@ -4665,8 +4674,11 @@ else if(asset==='CLFUTURE'||asset==='CL'||asset==='WTIUSD'||asset==='USOIL') pip
 
 else if(asset==='GCFUTURE'||asset==='GC') pipVal=10;
 
+/* MICRO FUTURES - pip value per micro-lotto */
+else if(asset==='EURUSD_MICRO'||asset==='M6E') pipVal=1;
+else if(asset==='XAUUSD_MICRO'||asset==='MGC') pipVal=1;
+else if(asset==='MYM') pipVal=0.5;
 else if(asset==='BTCUSD'||asset==='BITCOIN'||asset==='BTC') pipVal=1;
-
 else if(asset==='ETHUSD'||asset==='ETHEREUM'||asset==='ETH') pipVal=0.1;
 
   // Se l'utente ha inserito manualmente un pip value, usalo
@@ -4923,19 +4935,39 @@ function autoCalcPips(){
     'SILVER','XAGUSD','XAG',
     'NAS100','NASDAQ','US30','DOW','DJ30',
     'US500','SP500','SPX500',
-    'UK100','FTSE'
+    'UK100','FTSE',
+    'EURUSD_MICRO','M6E','XAUUSD_MICRO','MGC',
+    'MES','MNQ','MYM'
   ];
 
   var isSupported = supported.indexOf(a) !== -1;
   if(!isSupported){
-    alert('Asset non supportato dal Calcolo Automatico.\n\nSono supportati solo asset in USD:\nForex: EURUSD, GBPUSD, AUDUSD, NZDUSD, USDCHF, USDJPY, USDCAD\nMetalli: GOLD/XAUUSD, SILVER/XAGUSD\nIndici: NAS100, US30, US500, UK100\n\nPer altri asset inserisci i lotti manualmente.');
+    alert('Asset non supportato dal Calcolo Automatico.\n\nSono supportati solo asset in USD:\nForex: EURUSD, GBPUSD, AUDUSD, NZDUSD, USDCHF, USDJPY, USDCAD\nMetalli: GOLD/XAUUSD, SILVER/XAGUSD\nIndici: NAS100, US30, US500, UK100\nMicro Futures: EURUSD_MICRO, XAUUSD_MICRO, MES, MNQ, MYM\n\nPer altri asset inserisci i lotti manualmente.');
     return;
   }
 
   var pip100 = 100;
 
+  // ── Pip value per asset ──
+  if(a==='EURUSD'||a==='GBPUSD'||a==='AUDUSD'||a==='NZDUSD') pipVal=10;
+  else if(a==='USDJPY'||a==='EURJPY'||a==='GBPJPY') pipVal=9.1;
+  else if(a==='USDCHF'||a==='EURCHF') pipVal=10.2;
+  else if(a==='USDCAD'||a==='EURCAD'||a==='GBPCAD') pipVal=7.6;
+  else if(a==='GOLD'||a==='XAUUSD'||a==='XAU') pipVal=10;
+  else if(a==='SILVER'||a==='XAGUSD'||a==='XAG') pipVal=50;
+  else if(a==='NAS100'||a==='NASDAQ') pipVal=20;
+  else if(a==='US30'||a==='DOW'||a==='DJ30') pipVal=5;
+  else if(a==='US500'||a==='SP500'||a==='SPX500') pipVal=50;
+  else if(a==='UK100'||a==='FTSE') pipVal=10;
+  // Micro Futures
+  else if(a==='EURUSDMICRO'||a==='EURUSD_MICRO'||a==='M6E') pipVal=1;
+  else if(a==='XAUUSDMICRO'||a==='XAUUSD_MICRO'||a==='MGC') pipVal=1;
+  else if(a==='MES') pipVal=5;
+  else if(a==='MNQ') pipVal=2;
+  else if(a==='MYM') pipVal=0.5;
+
   // ── PROP+PROP ──
-  if(stratMode === 'prop2') {
+  if(stratMode === 'prop2' || stratMode === 'futures_prop') {
     var size2  = parseFloat(document.getElementById('mSize2')?.value)  || 0;
     var dd2    = parseFloat(document.getElementById('mDD2')?.value)    || 6;
     var days2  = parseFloat(document.getElementById('mDays2')?.value)  || 10;
@@ -5059,7 +5091,7 @@ var c = calcChallenge(p);
 
 
   // ── PROP+PROP: calcolo separato ──
-  if(stratMode === 'prop2' && size > 0 && size2 > 0) {
+  if((stratMode === 'prop2' || stratMode === 'futures_prop') && size > 0 && size2 > 0) {
     var pipVal_pp = c.pipVal;                       // pip value asset selezionato
     var ddTot1    = size  * (maxDD / 100);           // DD totale prop1 $
     var ddTot2    = size2 * (dd2  / 100);            // DD totale prop2 $
@@ -5421,7 +5453,13 @@ function doAdd() {
     asset: assetVal.split(':')[0], consistency: parseFloat(document.getElementById('mConsistency')?.value) || 30,
 
     pipVProp:  rawPipVProp,
-    pipVHedge: rawPipVHedge
+    pipVHedge: rawPipVHedge,
+    stratMode: stratMode,
+    size2: parseFloat(document.getElementById('mSize2')?.value) || 0,
+    cost2: parseFloat(document.getElementById('mCost2')?.value) || 0,
+    dd2:   parseFloat(document.getElementById('mDD2')?.value)   || 6,
+    days2: parseFloat(document.getElementById('mDays2')?.value) || 10,
+    pay2:  parseFloat(document.getElementById('mPay2')?.value)  || 80
 
   };
 
@@ -7292,7 +7330,7 @@ function renderCalc(){
 
 
 
-    +'<div class="panel"><div class="ph"><h3>'+lh+p.name+'</h3><span class="badge b-teal">Prop+Personale</span></div><div class="pb">'+sel
+    +'<div class="panel"><div class="ph"><h3>'+lh+p.name+'</h3>'+(p.stratMode==='futures_personal'?'<span class="badge" style="background:rgba(251,191,36,0.15);color:var(--amber);border:1px solid rgba(251,191,36,0.3)">Futures+Personale</span>':p.stratMode==='futures_prop'?'<span class="badge" style="background:rgba(52,211,153,0.15);color:var(--green);border:1px solid rgba(52,211,153,0.3)">Futures+Prop</span>':p.stratMode==='prop2'?'<span class="badge b-violet">Prop+Prop</span>':'<span class="badge b-teal">Prop+Personale</span>')+'</div><div class="pb">'+sel
 
 
 
