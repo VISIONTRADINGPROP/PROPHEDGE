@@ -1658,6 +1658,13 @@ body.light-theme .mk-row>*:not(:first-child),body.light-theme .mk-col-hdr>*:not(
 }
 .mb-left, .mb-right{ overflow:auto !important; min-height:0 !important; }
 body.modal-open{ overflow:hidden !important; }
+  /* assicura le due colonne dentro la modale */
+.mb{ display:grid !important; grid-template-columns:1.05fr 1fr !important; }
+.mb-right{ background:var(--bg3) !important; }
+/* riporta la chat sopra la modale */
+#aiFloatBtn{ z-index:100001 !important; display:flex !important; }
+#aiFloatPanel{ z-index:100000 !important; }
+
 </style>
 
 
