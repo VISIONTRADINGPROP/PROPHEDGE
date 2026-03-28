@@ -3754,7 +3754,7 @@ function doRegisterFree(){
 
 
 
-        <div class="f"><label>Profit target (%)</label><input id="mTgt" type="number" value="6" step="0.5" oninput="calcPreview()"></div>
+        <div id="propTargetField" class="f"><label>Profit target (%)</label><input id="mTgt" type="number" value="6" step="0.5" oninput="calcPreview()"></div>
 
 
 
@@ -3766,7 +3766,7 @@ function doRegisterFree(){
 
 
 
-        <div class="f"><label>Giorni challenge</label><input id="mDays" type="number" value="14" step="1" min="1" oninput="calcPreview()"></div>
+        <div id="ggChallengeField" class="f"><label>Giorni challenge</label><input id="mDays" type="number" value="14" step="1" min="1" oninput="calcPreview()"></div>
 
 
 
@@ -3797,8 +3797,7 @@ function doRegisterFree(){
           <div class="f"><label>Giorni minimi trading <span style="font-size:8px;color:var(--teal)">usa il MAX tra le due prop</span></label><input id="mDays2" type="number" value="10" step="1" min="1" oninput="calcPreview()"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">Es: Prop1=4gg, Prop2=10gg → inserisci 10</div></div>
         </div>
         <div class="fr2">
-          <div class="f"><label>Spread Prop 1 (pip)</label><input id="mSpreadP1" type="number" value="0" step="0.1" min="0" oninput="calcPreview()" placeholder="0 = non considerato"></div>
-          <div class="f"><label>Spread Prop 2 (pip)</label><input id="mSpreadP2" type="number" value="0" step="0.1" min="0" oninput="calcPreview()" placeholder="0 = non considerato"></div>
+          <div class="f"><label>Payout Prop 2 (%)</label><input id="mPay2" type="number" value="80" step="5" min="1" max="100" oninput="calcPreview()"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">Payout della Prop 2 — es. 80% → incassi l'80% del profitto</div></div>
         </div>
       </div>
 
@@ -3870,19 +3869,12 @@ function doRegisterFree(){
         <div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-align:center;margin-top:5px;letter-spacing:.04em">Calcola lottaggio ottimale su DD totale ÷ giorni minimi × 100 pip</div>
       </div>
 
-      <div class="fr2">
-
-        
+      <div class="f">
 <div class="f"><label>Lotti Conto Prop</label><input id="mLots" type="number" value="0.20" step="0.01" min="0.01" oninput="calcPreview()"></div>
-
+      </div>
+      <div class="fr2">
        <div class="f"><label>Stop Loss (pip)</label><input id="mSlPips" type="number" value="100" step="1" min="1" oninput="calcPreview()"></div>
-
-
-
         <div class="f"><label>Take Profit (pip)</label><input id="mTpPips" type="number" value="100" step="1" min="1" oninput="calcPreview()"></div>
-
-
-
       </div>
 
         <div class="f">
@@ -4527,9 +4519,23 @@ function setMode(m) {
 
   if (!p1 || !p2) return;
 
-  if (m === 'personal') { p1.style.background = 'var(--teal-bg)'; p1.style.borderColor = 'var(--teal)'; p2.style.background = 'var(--bg3)'; p2.style.borderColor = 'var(--border)'; if (p2f) p2f.style.display = 'none'; }
-
-  else { p2.style.background = 'var(--violet-bg)'; p2.style.borderColor = 'var(--violet)'; p1.style.background = 'var(--bg3)'; p1.style.borderColor = 'var(--border)'; if (p2f) p2f.style.display = 'block'; }
+  if (m === 'personal') {
+    p1.style.background = 'var(--teal-bg)'; p1.style.borderColor = 'var(--teal)';
+    p2.style.background = 'var(--bg3)'; p2.style.borderColor = 'var(--border)';
+    if (p2f) p2f.style.display = 'none';
+    var ptf = document.getElementById('propTargetField');
+    var ggf = document.getElementById('ggChallengeField');
+    if (ptf) ptf.style.display = '';
+    if (ggf) ggf.style.display = '';
+  } else {
+    p2.style.background = 'var(--violet-bg)'; p2.style.borderColor = 'var(--violet)';
+    p1.style.background = 'var(--bg3)'; p1.style.borderColor = 'var(--border)';
+    if (p2f) p2f.style.display = 'block';
+    var ptf = document.getElementById('propTargetField');
+    var ggf = document.getElementById('ggChallengeField');
+    if (ptf) ptf.style.display = 'none';
+    if (ggf) ggf.style.display = 'none';
+  }
 
   calcPreview();
 
@@ -4968,8 +4974,7 @@ var size2   = parseFloat(document.getElementById('mSize2')?.value)    || 0;
   var cost2   = parseFloat(document.getElementById('mCost2')?.value)    || 0;
   var dd2     = parseFloat(document.getElementById('mDD2')?.value)      || 6;
   var days2   = parseFloat(document.getElementById('mDays2')?.value)    || 10;
-  var spreadP1 = parseFloat(document.getElementById('mSpreadP1')?.value) || 0;
-  var spreadP2 = parseFloat(document.getElementById('mSpreadP2')?.value) || 0;
+  var pay2    = parseFloat(document.getElementById('mPay2')?.value)     || 80;
 
 var p = {size,cost,maxDD,ddd,tgtPct,pay,slPips:sl,tpPips:tp,lots:lots,
 
@@ -4979,7 +4984,7 @@ var p = {size,cost,maxDD,ddd,tgtPct,pay,slPips:sl,tpPips:tp,lots:lots,
 
     pipVHedge: parseFloat(document.getElementById('mPipVHedge')?.value)||0,
 
-    size2, cost2, dd2, days2, spreadP1, spreadP2};
+    size2, cost2, dd2, days2, pay2};
 
 var c = calcChallenge(p);
 
@@ -5004,24 +5009,29 @@ var c = calcChallenge(p);
     var pipVal_pp = c.pipVal;                       // pip value asset selezionato
     var ddTot1    = size  * (maxDD / 100);           // DD totale prop1 $
     var ddTot2    = size2 * (dd2  / 100);            // DD totale prop2 $
-    var ggMax     = Math.max(days, days2);           // giorni: prendo il massimo
+    var ggMax     = Math.max(days2, 1);             // giorni: usa giorni minimi prop2 (max tra le due)
     var ddGiorno  = (ddTot1 + ddTot2) / ggMax;      // DD giornaliero combinato
     var pip100    = 100;                             // pip consigliati fissi
+    var pay1      = parseFloat(document.getElementById('mPay')?.value) || 80;
+    var pay2      = parseFloat(document.getElementById('mPay2')?.value) || 80;
     // lotti: ogni prop copre la propria quota di DD giornaliero
     var lot1 = Math.floor((ddTot1 / ggMax / (pipVal_pp * pip100)) * 100) / 100;
     var lot2 = Math.floor((ddTot2 / ggMax / (pipVal_pp * pip100)) * 100) / 100;
     if(lot1 < 0.01) lot1 = 0.01;
     if(lot2 < 0.01) lot2 = 0.01;
-    // profitti per TP (10 trade = ggMax trade)
-    var profit1 = lot1 * pipVal_pp * pip100 * ggMax;   // prop1 vince tutti i trade
-    var profit2 = lot2 * pipVal_pp * pip100 * ggMax;   // prop2 vince tutti i trade
-    // spread costo
-    var spCost1 = lot1 * pipVal_pp * spreadP1 * ggMax;
-    var spCost2 = lot2 * pipVal_pp * spreadP2 * ggMax;
-    // Scenario A: Prop1 profitto, Prop2 si azzera → netto = profit1 - cost2 - spCost1 - spCost2
-    var scenA = profit1 - cost2 - spCost1 - spCost2;
-    // Scenario B: Prop2 profitto, Prop1 si azzera → netto = profit2 - cost1 - spCost1 - spCost2
-    var scenB = profit2 - cost - spCost1 - spCost2;
+    // profitti lordi per ggMax trade TP
+    var profitLordo1 = lot1 * pipVal_pp * pip100 * ggMax;
+    var profitLordo2 = lot2 * pipVal_pp * pip100 * ggMax;
+    // profitti netti con payout
+    var profit1 = profitLordo1 * (pay1 / 100);
+    var profit2 = profitLordo2 * (pay2 / 100);
+    // spread costo totale (spread unico applicato a entrambi i lotti)
+    var spreadTotPip = parseFloat(document.getElementById('mSpread')?.value) || 0;
+    var spCostTot = (lot1 + lot2) * pipVal_pp * spreadTotPip * ggMax;
+    // Scenario A: Prop1 profitto (con payout), Prop2 si azzera → netto = profit1_net - cost2 - spread
+    var scenA = profit1 - cost2 - spCostTot;
+    // Scenario B: Prop2 profitto (con payout), Prop1 si azzera → netto = profit2_net - cost1 - spread
+    var scenB = profit2 - cost - spCostTot;
     // costo ciclo totale
     var costoCiclo = cost + cost2;
 
@@ -5058,18 +5068,18 @@ var c = calcChallenge(p);
     +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">PROP 1 — LOTTI</div>'
     +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+lot1+' lot</div>'
     +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
-    +'TP: <span style="color:var(--green)">+$'+(lot1*pipVal_pp*pip100).toFixed(2)+'</span><br>'
-    +'SL: <span style="color:var(--red)">-$'+(lot1*pipVal_pp*pip100).toFixed(2)+'</span><br>'
-    +'DD/trade: <span style="color:var(--teal)">$'+(ddTot1/ggMax).toFixed(0)+'</span>'
+    +'TP lordo: <span style="color:var(--green)">+$'+profitLordo1.toFixed(2)+'</span><br>'
+    +'Payout '+pay1+'%: <span style="color:var(--teal)">+$'+profit1.toFixed(2)+'</span><br>'
+    +'DD/trade: <span style="color:var(--red)">$'+(ddTot1/ggMax).toFixed(0)+'</span>'
     +'</div></div>'
     // Prop 2
     +'<div style="background:var(--bg3);border:2px solid rgba(0,229,204,.4);border-radius:10px;padding:12px">'
     +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">PROP 2 — LOTTI</div>'
     +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+lot2+' lot</div>'
     +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
-    +'TP: <span style="color:var(--green)">+$'+(lot2*pipVal_pp*pip100).toFixed(2)+'</span><br>'
-    +'SL: <span style="color:var(--red)">-$'+(lot2*pipVal_pp*pip100).toFixed(2)+'</span><br>'
-    +'DD/trade: <span style="color:var(--teal)">$'+(ddTot2/ggMax).toFixed(0)+'</span>'
+    +'TP lordo: <span style="color:var(--green)">+$'+profitLordo2.toFixed(2)+'</span><br>'
+    +'Payout '+pay2+'%: <span style="color:var(--teal)">+$'+profit2.toFixed(2)+'</span><br>'
+    +'DD/trade: <span style="color:var(--red)">$'+(ddTot2/ggMax).toFixed(0)+'</span>'
     +'</div></div>'
     +'</div>'
 
@@ -5081,19 +5091,19 @@ var c = calcChallenge(p);
     +'<div style="background:var(--bg3);border:1px solid '+(scenA>=0?'rgba(0,214,143,.3)':'rgba(255,64,96,.3)')+';border-radius:8px;padding:10px">'
     +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:4px">Scen. A — Prop 1 vince</div>'
     +'<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:'+clr(scenA)+'">'+sgn2(scenA)+uF2(scenA)+'</div>'
-    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">Profitto P1 $'+profit1.toFixed(0)+' - costo P2 $'+cost2.toFixed(0)+(spCost1+spCost2>0?' - spread $'+(spCost1+spCost2).toFixed(0):'')+'</div>'
+    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">Netto payout P1 $'+profit1.toFixed(0)+' - costo P2 $'+cost2.toFixed(0)+(spCostTot>0?' - spread $'+spCostTot.toFixed(0):'')+'</div>'
     +'</div>'
     // Scenario B
     +'<div style="background:var(--bg3);border:1px solid '+(scenB>=0?'rgba(0,214,143,.3)':'rgba(255,64,96,.3)')+';border-radius:8px;padding:10px">'
     +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:4px">Scen. B — Prop 2 vince</div>'
     +'<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:'+clr(scenB)+'">'+sgn2(scenB)+uF2(scenB)+'</div>'
-    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">Profitto P2 $'+profit2.toFixed(0)+' - costo P1 $'+cost.toFixed(0)+(spCost1+spCost2>0?' - spread $'+(spCost1+spCost2).toFixed(0):'')+'</div>'
+    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">Netto payout P2 $'+profit2.toFixed(0)+' - costo P1 $'+cost.toFixed(0)+(spCostTot>0?' - spread $'+spCostTot.toFixed(0):'')+'</div>'
     +'</div>'
     +'</div></div>'
 
     // Info formula
     +'<div style="background:rgba(155,93,229,.07);border:1px solid rgba(155,93,229,.2);border-radius:6px;padding:7px 10px;font-size:10px;color:rgba(155,93,229,.9);font-family:var(--fd)">'
-    +'DD/giorno combinato: $'+ddGiorno.toFixed(0)+' | 1 trade/giorno per '+ggMax+' giorni | 100 pip SL=TP'
+    +'DD/giorno combinato: $'+ddGiorno.toFixed(0)+' | 1 trade/giorno per '+ggMax+' giorni | 100 pip SL=TP | Payout P1: '+pay1+'% · P2: '+pay2+'%'
     +'</div>'
     +'</div>';
     return;
