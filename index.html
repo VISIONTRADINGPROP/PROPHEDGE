@@ -11041,34 +11041,40 @@ function _activateHumanSupport(){
 }
 
 // ── Submit form dati ──
+// ── Submit form: invia ticket e apre la chat ──
 function _submitContact(){
   var nEl = document.getElementById('_hcfName');
   var eEl = document.getElementById('_hcfEmail');
   var name  = nEl ? nEl.value.trim() : '';
   var email = eEl ? eEl.value.trim() : '';
-  if(!name){ if(nEl){nEl.style.borderColor='#F87171';nEl.focus();} return; }
-  if(!email||!email.includes('@')){ if(eEl){eEl.style.borderColor='#F87171';eEl.focus();} return; }
+  if(!name){  if(nEl){nEl.style.borderColor='#F87171'; nEl.focus();} return; }
+  if(!email || !email.includes('@')){ if(eEl){eEl.style.borderColor='#F87171'; eEl.focus();} return; }
 
   _humanFormSent = true;
-  _ticketData = {name:name, email:email};
+  _ticketData = {name: name, email: email};
 
-  // Rimuovi form
-  var fr = document.getElementById('_humanForm'); if(fr) fr.remove();
+  // 1. Rimuovi il form dalla chat
+  var fr = document.getElementById('_humanForm');
+  if(fr) fr.remove();
 
-  // Ripristina input bar
-  var ir = document.querySelector('#aiFloatPanel .ai-input-row'); if(ir) ir.style.display='';
-  var inp = document.getElementById('aiFloatInput'); if(inp) inp.placeholder='Scrivi il tuo messaggio...';
+  // 2. Mostra input bar (forza display:flex)
+  var ir = document.querySelector('#aiFloatPanel .ai-input-row');
+  if(ir) ir.style.display = 'flex';
+  var inp = document.getElementById('aiFloatInput');
+  if(inp){ inp.placeholder = 'Scrivi il tuo messaggio...'; inp.focus(); }
 
-  // Messaggio attesa
+  // 3. Messaggio "in attesa"
   _chatMsg('bot',
-    '\u23F3 <b>In attesa che si liberi un operatore...</b>\n'+
-    'Ti risponderemo il prima possibile.\n'+
-    'Puoi già scrivere il tuo messaggio qui sotto.'
+    '\u23F3 <b>In attesa di un operatore...</b>\n' +
+    'Riceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.'
   );
 
-  // Invia ticket a Telegram (apre la chat con il tuo bot)
-  fetch('/api/support-contact',{
-    method:'POST', headers:{'Content-Type':'application/json'},
+  // 4. Invia ticket a Telegram via API server
+  // Il server riceve nome+email+ticket_id e manda un messaggio al tuo bot Telegram
+  // Tu apri Telegram e rispondi — la risposta torner\u00e0 qui via polling Supabase
+  fetch('/api/support-contact', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
       ticket_id: _ticketId,
       name: name,
@@ -11077,76 +11083,93 @@ function _submitContact(){
     })
   }).catch(function(){});
 
-  // Avvia polling risposte
+  // 5. Avvia polling risposte
   _startPoll();
 }
 
-
-
-// ── Telegram credentials (lato client per polling diretto) ──
-// Il bot token va inserito nelle variabili d'ambiente del server
-// Per il fallback client-side usiamo la stessa variabile
-var _TG_BOT = '';   // inserisci il bot token se vuoi polling diretto
-var _TG_CHAT = '';  // inserisci il tuo chat_id
-
-// ── Polling: prima prova server /api/support-poll, poi Telegram diretto ──
+// ── Polling: cerca risposte dell'operatore ogni 3 secondi ──
+// Strategia a cascata:
+//   1. Supabase diretto (tabella support_messages) — pi\u00f9 affidabile
+//   2. API server /api/support-poll — fallback
 var _tgOffset = 0;
 
 function _startPoll(){
   if(_pollTimer) return;
   _pollTimer = setInterval(async function(){
     if(!_humanMode || !_ticketId) return;
-    // Tentativo 1: API server
-    try{
-      var r = await fetch('/api/support-poll?ticket_id='+encodeURIComponent(_ticketId)+'&since='+encodeURIComponent(_lastMsgAt||''));
+
+    var found = false;
+
+    // Metodo 1: Supabase diretto
+    // Il server (webhook Telegram) inserisce i messaggi dell'operatore in questa tabella
+    try {
+      var since = _lastMsgAt || new Date(Date.now() - 86400000).toISOString();
+      var res = await _sb
+        .from('support_messages')
+        .select('id, text, created_at')
+        .eq('ticket_id', _ticketId)
+        .eq('direction', 'inbound')
+        .gt('created_at', since)
+        .order('created_at', {ascending: true});
+
+      if(res && res.data && res.data.length > 0){
+        res.data.forEach(function(m){
+          if(m && m.text) _showOpMsg(m.text);
+        });
+        _lastMsgAt = res.data[res.data.length - 1].created_at;
+        found = true;
+      }
+    } catch(e1){}
+
+    if(found) return;
+
+    // Metodo 2: API server /api/support-poll
+    try {
+      var r = await fetch(
+        '/api/support-poll?ticket_id=' + encodeURIComponent(_ticketId) +
+        '&since=' + encodeURIComponent(_lastMsgAt || '')
+      );
       if(r.ok){
         var d = await r.json();
         if(d && Array.isArray(d.messages) && d.messages.length){
-          d.messages.forEach(function(m){ if(m && m.text) _showOpMsg(m.text); });
+          d.messages.forEach(function(m){
+            if(m && m.text) _showOpMsg(m.text);
+          });
           _lastMsgAt = new Date().toISOString();
-          return;
         }
       }
-    }catch(e){}
-    // Tentativo 2: Telegram getUpdates diretto
-    if(!_TG_BOT) return;
-    try{
-      var tgR = await fetch('https://api.telegram.org/bot'+_TG_BOT+'/getUpdates?offset='+_tgOffset+'&timeout=1&allowed_updates=%5B%22message%22%5D');
-      var tgD = await tgR.json();
-      if(tgD && tgD.ok && tgD.result && tgD.result.length){
-        tgD.result.forEach(function(upd){
-          _tgOffset = upd.update_id + 1;
-          var msg = upd.message;
-          if(!msg || !msg.text) return;
-          if(msg.from && msg.from.is_bot) return;
-          if(msg.text.charAt(0) === '/') return;
-          _showOpMsg(msg.text);
-        });
-      }
-    }catch(e2){}
+    } catch(e2){}
+
   }, 3000);
 }
 
+// ── Mostra risposta operatore — prima volta annuncia "sei in linea" ──
 function _showOpMsg(text){
+  if(!text || !text.trim()) return;
   if(!_operatorOnline){
     _operatorOnline = true;
     var op = _assignedOp || {n:'un operatore', img:''};
+    // Aggiorna header
     var statusEl = document.querySelector('#aiFloatPanel .ai-status');
     if(statusEl){
       statusEl.innerHTML =
-        '<span class="ai-dot" style="background:#34D399;box-shadow:0 0 6px #34D399;animation:pu 1s infinite"></span>'+
-        (op.img ? '<img src="'+op.img+'" style="width:20px;height:20px;border-radius:50%;margin:0 5px 0 4px;vertical-align:middle;object-fit:cover">' : ' ')+
-        '<span>Sei in linea con <b>'+op.n+'</b></span>';
+        '<span class="ai-dot" style="background:#34D399;box-shadow:0 0 6px #34D399;animation:pu 1s infinite"></span>' +
+        (op.img
+          ? '<img src="' + op.img + '" style="width:20px;height:20px;border-radius:50%;margin:0 5px 0 4px;vertical-align:middle;object-fit:cover">'
+          : ' ') +
+        '<span>Sei in linea con <b>' + op.n + '</b></span>';
     }
-    _chatMsg('support', '\uD83D\uDFE2 <b>Sei in linea con '+op.n+'!</b>');
+    // Messaggio "sei in linea"
+    _chatMsg('support', '\uD83D\uDFE2 <b>Sei in linea con ' + op.n + '!</b>');
   }
-  _chatMsg('support', text);
+  _chatMsg('support', text.trim());
   _lastMsgAt = new Date().toISOString();
 }
 
 function _stopPoll(){
-  if(_pollTimer){ clearInterval(_pollTimer); _pollTimer=null; }
+  if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
 }
+
 
 // ══ INIT ════════════════════════════════════════════════════════════
 
