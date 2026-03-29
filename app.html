@@ -2816,18 +2816,18 @@ function doForgotSubmit(){
 
       <button id="btnAcquistaLicenza" onclick="toggleBuyDrop()" style="width:100%;background:linear-gradient(135deg,#1a7a45,#27a85f);border:none;color:#fff;border-radius:12px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--fm);letter-spacing:.08em;text-transform:uppercase;transition:all .2s;box-shadow:0 4px 16px rgba(39,168,95,.25)" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 20px rgba(39,168,95,.4)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 4px 16px rgba(39,168,95,.25)'">ACQUISTA LICENZA</button>
       <div id="buyDrop" style="display:none;flex-direction:column;gap:10px;margin-top:10px">
-        <button onclick="buyPlan('Mensile')"
-          style="width:100%;background:transparent;border:1px solid var(--border2);color:var(--t2);border-radius:9px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fm);text-transform:uppercase;letter-spacing:.06em;justify-content:space-between;display:flex;align-items:center;gap:7px;transition:all .2s"
-          onmouseover="this.style.background='linear-gradient(135deg,#0EA5E9,#A78BFA)';this.style.color='#fff';this.style.borderColor='transparent';this.style.boxShadow='0 4px 18px rgba(56,189,248,.35)'"
-          onmouseout="this.style.background='transparent';this.style.color='var(--t2)';this.style.borderColor='var(--border2)';this.style.boxShadow='none'">
+        <button id="bdMensile" onclick="buyPlan('Mensile')"
+          style="width:100%;background:transparent;border:1px solid var(--border2);color:var(--t2);border-radius:9px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fm);text-transform:uppercase;letter-spacing:.06em;justify-content:space-between;display:flex;align-items:center;gap:7px;transition:all .25s"
+          onmouseover="_bdHover('mensile')"
+          onmouseout="_bdReset()">
           <span>🔄 ACQUISTA MENSILE</span><span style="font-family:var(--fd);font-weight:700">&euro; 19.99</span>
         </button>
         <div style="position:relative;margin-top:4px">
           <div style="position:absolute;top:-9px;right:8px;background:linear-gradient(135deg,var(--teal2),var(--violet2));color:#fff;font-size:8px;font-weight:700;font-family:var(--fh);padding:2px 8px;border-radius:10px;letter-spacing:.08em;z-index:1">RISPARMIA &euro;40</div>
-          <button onclick="buyPlan('Annuale')"
-            style="width:100%;background:linear-gradient(135deg,#7C3AED,#38BDF8);border:none;color:#fff;border-radius:9px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fm);text-transform:uppercase;letter-spacing:.06em;justify-content:space-between;display:flex;align-items:center;gap:7px;transition:all .2s;box-shadow:0 0 20px rgba(124,58,237,.3)"
-            onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 24px rgba(56,189,248,.45)'"
-            onmouseout="this.style.transform='none';this.style.boxShadow='0 0 20px rgba(124,58,237,.3)'">
+          <button id="bdAnnuale" onclick="buyPlan('Annuale')"
+            style="width:100%;background:linear-gradient(135deg,#7C3AED,#38BDF8);border:none;color:#fff;border-radius:9px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fm);text-transform:uppercase;letter-spacing:.06em;justify-content:space-between;display:flex;align-items:center;gap:7px;transition:all .25s;box-shadow:0 0 20px rgba(124,58,237,.3)"
+            onmouseover="_bdHover('annuale')"
+            onmouseout="_bdReset()">
             <span>📅 ACQUISTA ANNUALE</span><span style="font-family:var(--fd);font-weight:700">&euro; 199</span>
           </button>
         </div>
@@ -10105,15 +10105,17 @@ function renderAccountDrop() {
 
     /* Mensile — btn-g: bordo, sfondo trasparente, esattamente come screenshot */
     + '<button id="accBtnMonthly" onclick="buyPlan(\'Mensile\')" class="btn-g" style="'+bMS+'" '
-    + 'onmouseover="this.style.borderColor=\'var(--teal)\';this.style.color=\'var(--teal)\'" '
-    + 'onmouseout="this.style.borderColor=\'\';this.style.color=\'\'">'
+    + 'onmouseover="_accHover(\'m\')" '
+    + 'onmouseout="_accReset()">'
     + '<span>' + t('acc_monthly') + '</span><span style="font-family:var(--fd);font-weight:700">€ 19.99</span>'
     + '</button>'
 
     /* Annuale — btn-p: gradiente viola→teal, con badge teal→viola */
     + '<div style="position:relative">'
     + '<div style="position:absolute;top:-9px;right:8px;background:linear-gradient(135deg,var(--teal2),var(--violet2));color:#fff;font-size:8px;font-weight:700;font-family:var(--fh);padding:2px 8px;border-radius:10px;letter-spacing:.08em;z-index:1">' + t('acc_save40') + '</div>'
-    + '<button onclick="buyPlan(\'Annuale\')" class="btn-p" style="'+bMS+'">'
+    + '<button id="accBtnYearly" onclick="buyPlan(\'Annuale\')" class="btn-p" style="'+bMS+'" '
+    + 'onmouseover="_accHover(\'y\')" '
+    + 'onmouseout="_accReset()">'
     + '<span>' + t('acc_yearly') + '</span><span style="font-family:var(--fd);font-weight:700">€ 199</span>'
     + '</button>'
     + '</div>'
@@ -10845,6 +10847,44 @@ var _staff = [
 
 function _genTicket(){ return 'T'+Date.now()+'_'+Math.random().toString(36).slice(2,6).toUpperCase(); }
 
+// ── Hover mutuo esclusivo bottoni acquisto ──
+function _bdHover(which){
+  var m = document.getElementById('bdMensile');
+  var a = document.getElementById('bdAnnuale');
+  if(which === 'mensile'){
+    if(m){ m.style.background='linear-gradient(135deg,#0EA5E9,#A78BFA)'; m.style.color='#fff'; m.style.borderColor='transparent'; m.style.boxShadow='0 4px 18px rgba(56,189,248,.4)'; m.style.opacity='1'; }
+    if(a){ a.style.opacity='0.4'; a.style.boxShadow='none'; }
+  } else {
+    if(a){ a.style.transform='translateY(-1px)'; a.style.boxShadow='0 6px 24px rgba(56,189,248,.5)'; a.style.opacity='1'; }
+    if(m){ m.style.opacity='0.4'; }
+  }
+}
+function _bdReset(){
+  var m = document.getElementById('bdMensile');
+  var a = document.getElementById('bdAnnuale');
+  if(m){ m.style.background='transparent'; m.style.color='var(--t2)'; m.style.borderColor='var(--border2)'; m.style.boxShadow='none'; m.style.opacity='1'; }
+  if(a){ a.style.transform='none'; a.style.boxShadow='0 0 20px rgba(124,58,237,.3)'; a.style.opacity='1'; }
+}
+
+// ── Hover mutuo esclusivo bottoni account ──
+function _accHover(which){
+  var m = document.getElementById('accBtnMonthly');
+  var a = document.getElementById('accBtnYearly');
+  if(which === 'm'){
+    if(m){ m.style.background='none'; m.style.borderColor='var(--teal)'; m.style.color='var(--teal)'; m.style.opacity='1'; }
+    if(a){ a.style.opacity='0.38'; }
+  } else {
+    if(a){ a.style.transform='translateY(-1px)'; a.style.boxShadow='0 6px 20px rgba(124,58,237,.45)'; a.style.opacity='1'; }
+    if(m){ m.style.opacity='0.38'; }
+  }
+}
+function _accReset(){
+  var m = document.getElementById('accBtnMonthly');
+  var a = document.getElementById('accBtnYearly');
+  if(m){ m.style.background=''; m.style.borderColor=''; m.style.color=''; m.style.opacity='1'; }
+  if(a){ a.style.transform=''; a.style.boxShadow=''; a.style.opacity='1'; }
+}
+
 // ── Apri/chiudi pannello ──
 function toggleAIChat(){
   _aiOpen = !_aiOpen;
@@ -11041,141 +11081,123 @@ function _submitContact(){
   _startPoll();
 }
 
-// ── Polling: controlla ogni 3s se l'operatore ha risposto ──
+
+
+// ── Telegram credentials (lato client per polling diretto) ──
+// Il bot token va inserito nelle variabili d'ambiente del server
+// Per il fallback client-side usiamo la stessa variabile
+var _TG_BOT = '';   // inserisci il bot token se vuoi polling diretto
+var _TG_CHAT = '';  // inserisci il tuo chat_id
+
+// ── Polling: prima prova server /api/support-poll, poi Telegram diretto ──
+var _tgOffset = 0;
+
 function _startPoll(){
   if(_pollTimer) return;
   _pollTimer = setInterval(async function(){
     if(!_humanMode || !_ticketId) return;
+    // Tentativo 1: API server
     try{
       var r = await fetch('/api/support-poll?ticket_id='+encodeURIComponent(_ticketId)+'&since='+encodeURIComponent(_lastMsgAt||''));
-      var d = await r.json();
-      if(d && Array.isArray(d.messages) && d.messages.length){
-        d.messages.forEach(function(m){
-          if(!m || !m.text) return;
-          // Prima risposta: mostra "sei in linea"
-          if(!_operatorOnline){
-            _operatorOnline = true;
-            var op = _assignedOp || {n:'un operatore', img:''};
-            var statusEl = document.querySelector('#aiFloatPanel .ai-status');
-            if(statusEl){
-              statusEl.innerHTML =
-                '<span class="ai-dot" style="background:#34D399;box-shadow:0 0 6px #34D399;animation:pu 1s infinite"></span>'+
-                (op.img ? '<img src="'+op.img+'" style="width:20px;height:20px;border-radius:50%;margin:0 5px 0 4px;vertical-align:middle;object-fit:cover">' : ' ')+
-                '<span>Sei in linea con <b>'+op.n+'</b></span>';
-            }
-            _chatMsg('support', '\uD83D\uDFE2 <b>Sei in linea con '+op.n+'!</b>\nScrivi pure il tuo messaggio.');
-          }
-          _chatMsg('support', m.text);
-        });
-        _lastMsgAt = new Date().toISOString();
+      if(r.ok){
+        var d = await r.json();
+        if(d && Array.isArray(d.messages) && d.messages.length){
+          d.messages.forEach(function(m){ if(m && m.text) _showOpMsg(m.text); });
+          _lastMsgAt = new Date().toISOString();
+          return;
+        }
       }
     }catch(e){}
+    // Tentativo 2: Telegram getUpdates diretto
+    if(!_TG_BOT) return;
+    try{
+      var tgR = await fetch('https://api.telegram.org/bot'+_TG_BOT+'/getUpdates?offset='+_tgOffset+'&timeout=1&allowed_updates=%5B%22message%22%5D');
+      var tgD = await tgR.json();
+      if(tgD && tgD.ok && tgD.result && tgD.result.length){
+        tgD.result.forEach(function(upd){
+          _tgOffset = upd.update_id + 1;
+          var msg = upd.message;
+          if(!msg || !msg.text) return;
+          if(msg.from && msg.from.is_bot) return;
+          if(msg.text.charAt(0) === '/') return;
+          _showOpMsg(msg.text);
+        });
+      }
+    }catch(e2){}
   }, 3000);
+}
+
+function _showOpMsg(text){
+  if(!_operatorOnline){
+    _operatorOnline = true;
+    var op = _assignedOp || {n:'un operatore', img:''};
+    var statusEl = document.querySelector('#aiFloatPanel .ai-status');
+    if(statusEl){
+      statusEl.innerHTML =
+        '<span class="ai-dot" style="background:#34D399;box-shadow:0 0 6px #34D399;animation:pu 1s infinite"></span>'+
+        (op.img ? '<img src="'+op.img+'" style="width:20px;height:20px;border-radius:50%;margin:0 5px 0 4px;vertical-align:middle;object-fit:cover">' : ' ')+
+        '<span>Sei in linea con <b>'+op.n+'</b></span>';
+    }
+    _chatMsg('support', '\uD83D\uDFE2 <b>Sei in linea con '+op.n+'!</b>');
+  }
+  _chatMsg('support', text);
+  _lastMsgAt = new Date().toISOString();
 }
 
 function _stopPoll(){
   if(_pollTimer){ clearInterval(_pollTimer); _pollTimer=null; }
 }
 
-
-// ══ INIT ══════════════════════════════════════════════════════════
-
-
+// ══ INIT ════════════════════════════════════════════════════════════
 
 window.addEventListener('DOMContentLoaded',function(){
 
   loadAccountData();jrnlLoad();buildBot(BOT_ALL);loadFX();
 
-
-
-  // ── AUTO-START: prezzi live al caricamento, senza attendere click ──
-
   _mkLiveStarted=true;
-
   mkStartLive();
-
-  // Storico forex: carica subito (settimanale/mensile)
-
   mkLoadFxHistory();
 
-  // Prima build del ticker appena arrivano i dati (max 2.5s)
-
   setTimeout(function(){
-
     if(Object.keys(_mkData).length>0) mkBuildTicker();
-
   },2500);
 
-  // Seconda chance a 5s nel caso la rete sia più lenta
-
   setTimeout(function(){
-
     if(!_tkBuilt && Object.keys(_mkData).length>0) mkBuildTicker();
-
     else if(_tkBuilt) mkUpdateMainTicker();
-
   },5000);
 
-
-
   window.addEventListener('message',function(event){
-
     if(event.origin!==window.location.origin)return;
-
     if(!event.data||event.data.type!=='ctrader_callback')return;
-
   });
 
-
-
   var urlParams=new URLSearchParams(window.location.search);
-
   var authCode=urlParams.get('code');
-
   if(authCode){var jPending=null;try{jPending=JSON.parse(localStorage.getItem('ph_jconn_pending')||'null');}catch(e){}
-
     if(jPending){goTab('journal',document.getElementById('tabJournal'));}
-
   }
-
-
 
   render();
 
-
-
   function checkNet(){var w=document.getElementById('netWarn');if(w){if(!navigator.onLine||window._sbLoadError)w.style.display='block';else w.style.display='none';}}
-
   checkNet();window.addEventListener('online',checkNet);window.addEventListener('offline',checkNet);
 
 });
 
 </script>
 
-
-
 <script type="text/javascript">
-
 function googleTranslateElementInit() {
-
   new google.translate.TranslateElement({
-
-    pageLanguage: 'it', 
-
-    includedLanguages: 'it,en,es,fr,de', 
-
+    pageLanguage: 'it',
+    includedLanguages: 'it,en,es,fr,de',
     autoDisplay: false
-
   }, 'google_translate_element');
-
 }
-
 </script>
 
 <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
-
-
 </body>
-
 </html>
