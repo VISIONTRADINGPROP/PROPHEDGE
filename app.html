@@ -350,7 +350,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 
 
 
-.tab{padding:8px 15px;font-size:10.5px;font-weight:600;font-family:var(--fh);color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;white-space:nowrap;letter-spacing:.1em;text-transform:uppercase;border-radius:8px;margin:5px 2px}
+.tab{padding:8px 15px;font-size:10.5px;font-weight:600;font-family:var(--fh);color:#ffffff;cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;white-space:nowrap;letter-spacing:.1em;text-transform:uppercase;border-radius:8px;margin:5px 2px}
 
 
 
@@ -361,9 +361,9 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .tab.active{color:var(--teal);background:linear-gradient(135deg,rgba(56,189,248,.11),rgba(167,139,250,.11));border-bottom-color:var(--teal);box-shadow:0 0 0 1px rgba(56,189,248,.25)}
 
 /* ── SCONTI NEON ── */
-#tabSconti{color:var(--amber);text-shadow:0 0 8px rgba(251,191,36,.6),0 0 18px rgba(251,191,36,.3)}
-#tabSconti:hover{color:var(--amber)!important;background:linear-gradient(135deg,rgba(251,191,36,.14),rgba(251,191,36,.05))!important;box-shadow:0 0 0 1px rgba(251,191,36,.3),0 0 18px rgba(251,191,36,.15)!important;text-shadow:0 0 10px rgba(251,191,36,.9),0 0 24px rgba(251,191,36,.5)}
-#tabSconti.active{color:var(--amber)!important;background:linear-gradient(135deg,rgba(251,191,36,.14),rgba(251,191,36,.05))!important;border-bottom-color:var(--amber)!important;box-shadow:0 0 0 1px rgba(251,191,36,.35),0 0 22px rgba(251,191,36,.2)!important;text-shadow:0 0 12px rgba(251,191,36,1),0 0 28px rgba(251,191,36,.6)}
+#tabSconti{color:#00e676;text-shadow:0 0 8px rgba(0,230,118,.6),0 0 18px rgba(0,230,118,.3)}
+#tabSconti:hover{color:#00e676!important;background:linear-gradient(135deg,rgba(0,230,118,.14),rgba(0,230,118,.05))!important;box-shadow:0 0 0 1px rgba(0,230,118,.3),0 0 18px rgba(0,230,118,.15)!important;text-shadow:0 0 10px rgba(0,230,118,.9),0 0 24px rgba(0,230,118,.5)}
+#tabSconti.active{color:#00e676!important;background:linear-gradient(135deg,rgba(0,230,118,.14),rgba(0,230,118,.05))!important;border-bottom-color:#00e676!important;box-shadow:0 0 0 1px rgba(0,230,118,.35),0 0 22px rgba(0,230,118,.2)!important;text-shadow:0 0 12px rgba(0,230,118,1),0 0 28px rgba(0,230,118,.6)}
 
 
 
@@ -1952,15 +1952,15 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
 
 
 
-      <h1 style="font-family:"Playfair Display",'Georgia',serif;font-size:clamp(26px,3.8vw,50px);font-weight:800;color:#e8eaf6;line-height:1.15;margin-bottom:16px;letter-spacing:-.02em">Domina le <span style="color:#38BDF8">Prop Firm</span><br>con il software <span style="color:#A78BFA">PropHedge</span></h1>
+      <h1 style="font-family:"Playfair Display",'Georgia',serif;font-size:clamp(32px,4.5vw,60px);font-weight:800;color:#e8eaf6;line-height:1.15;margin-bottom:18px;letter-spacing:-.02em">Domina le <span style="color:#38BDF8">Prop Firm</span><br>con il software <span style="color:#A78BFA">PropHedge</span></h1>
 
 
 
-      <p style="font-family:"DM Sans",sans-serif;font-size:15px;color:#7880a8;line-height:1.8;margin-bottom:28px;max-width:540px">Calcola i lotti, gestisci il drawdown e proteggi il tuo capitale su ogni challenge. Dashboard multi prop firm, hedge automatico e prezzi live su tutti gli asset.</p>
+      <p style="font-family:"DM Sans",sans-serif;font-size:18px;color:#7880a8;line-height:1.8;margin-bottom:32px;max-width:540px">Calcola i lotti, gestisci il drawdown e proteggi il tuo capitale su ogni challenge. Dashboard multi prop firm, hedge automatico e prezzi live su tutti gli asset.</p>
 
 
 
-      <button onclick="openConsent()" style="background:linear-gradient(135deg,#7C3AED,#38BDF8);border:none;color:#fff;border-radius:14px;padding:16px 52px;font-size:15px;font-weight:700;cursor:pointer;font-family:"Syne",sans-serif;letter-spacing:.1em;text-transform:uppercase;display:inline-flex;align-items:center;gap:10px;transition:all .25s;box-shadow:0 0 40px rgba(124,58,237,.5),0 8px 28px rgba(56,189,248,.25),inset 0 1px 0 rgba(255,255,255,.15)" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">&#9658;&nbsp; Entra nel software</button>
+      <button onclick="openConsent()" style="background:linear-gradient(135deg,#7C3AED,#38BDF8);border:none;color:#fff;border-radius:14px;padding:22px 72px;font-size:19px;font-weight:700;cursor:pointer;font-family:"Syne",sans-serif;letter-spacing:.1em;text-transform:uppercase;display:inline-flex;align-items:center;gap:12px;transition:all .25s;box-shadow:0 0 40px rgba(124,58,237,.5),0 8px 28px rgba(56,189,248,.25),inset 0 1px 0 rgba(255,255,255,.15)" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">&#9658;&nbsp; Entra nel software</button>
 
 
 
@@ -2617,6 +2617,16 @@ function doLogout(){_sb.auth.signOut().then(function(){location.reload();});}
 
 
 function doRegister(){window.open('https://visiontrading.it','_blank');}
+function openBuyModal(){var m=document.getElementById('buyModal');if(m){m.style.display='flex';}}
+function closeBuyModal(){var m=document.getElementById('buyModal');if(m){m.style.display='none';}}
+function toggleBuyDrop(){
+  var d=document.getElementById('buyDrop');
+  var btn=document.getElementById('btnAcquistaLicenza');
+  if(!d)return;
+  var isOpen = d.style.display==='grid';
+  d.style.display = isOpen ? 'none' : 'flex';
+  if(btn) btn.textContent = isOpen ? 'ACQUISTA LICENZA' : 'ACQUISTA LICENZA ▲';
+}
 
 
 
@@ -2804,7 +2814,18 @@ function doForgotSubmit(){
 
 
 
-     <button onclick="goToPurchase()" style="width:100%;background:#00c97a;border:none;border-radius:999px;padding:15px 0;color:#fff;font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px" onmouseover="this.style.background='#00e085'" onmouseout="this.style.background='#00c97a'">📝 REGISTRATI GRATIS</button>
+      <button id="btnAcquistaLicenza" onclick="toggleBuyDrop()" style="width:100%;background:#16803d;border:none;color:#fff;border-radius:12px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans','Inter',sans-serif;letter-spacing:.08em;text-transform:uppercase;margin-bottom:0;transition:all .2s" onmouseover="this.style.background='#1a9649'" onmouseout="this.style.background='#16803d'">ACQUISTA LICENZA</button>
+      <div id="buyDrop" style="display:none;flex-direction:column;gap:10px;margin-top:10px">
+        <button onclick="buyPlan('Mensile')" style="width:100%;background:#16803d;border:none;color:#fff;border-radius:12px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans','Inter',sans-serif;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;transition:all .2s" onmouseover="this.style.background='#1a9649'" onmouseout="this.style.background='#16803d'">
+          <span>ACQUISTA MENSILE</span><span style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:13px">&euro;&nbsp;19.99</span>
+        </button>
+        <div style="position:relative">
+          <div style="position:absolute;top:-10px;right:10px;background:#fff;color:#16803d;font-size:8px;font-weight:900;font-family:'Plus Jakarta Sans','Inter',sans-serif;padding:2px 9px;border-radius:10px;letter-spacing:.08em;z-index:1">RISPARMIA &euro;40</div>
+          <button onclick="buyPlan('Annuale')" style="width:100%;background:#16803d;border:2px solid rgba(255,255,255,.35);color:#fff;border-radius:12px;padding:14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans','Inter',sans-serif;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;transition:all .2s" onmouseover="this.style.background='#1a9649'" onmouseout="this.style.background='#16803d'">
+            <span>ACQUISTA ANNUALE</span><span style="font-family:'JetBrains Mono',monospace;font-weight:800;font-size:13px">&euro;&nbsp;199</span>
+          </button>
+        </div>
+      </div>
 
 
 
@@ -2939,6 +2960,55 @@ function doForgotSubmit(){
 
 
 
+
+<!-- ===== BUY MODAL ===== -->
+<div id="buyModal" style="display:none;position:fixed;inset:0;z-index:999995;background:rgba(0,0,0,.88);backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:24px;flex-direction:column">
+  <div style="background:#0d0f22;border:1px solid #1a3a20;border-radius:22px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.8),0 0 60px rgba(0,200,83,.12);animation:spUp .4s ease forwards;position:relative;z-index:1">
+    <div style="background:linear-gradient(135deg,rgba(0,200,83,.12),rgba(0,230,118,.06));border-bottom:1px solid rgba(0,200,83,.2);padding:28px 28px 22px;text-align:center">
+      <div style="font-size:38px;margin-bottom:10px">&#128273;</div>
+      <div style="font-size:22px;font-weight:800;color:#e8eaf6;margin-bottom:6px;font-family:'Syne',sans-serif;letter-spacing:-.01em">Acquista Licenza PropHedge</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#7880a8">Scegli il piano &middot; Accesso immediato dopo il pagamento</div>
+    </div>
+    <div style="padding:28px;display:grid;gap:16px">
+
+      <!-- ACQUISTA MENSILE -->
+      <button onclick="buyPlan('Mensile')" style="width:100%;background:linear-gradient(135deg,#00c853,#00e676);border:none;border-radius:16px;padding:22px 24px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all .25s;font-family:'DM Sans',sans-serif;box-shadow:0 0 28px rgba(0,230,118,.35),0 6px 18px rgba(0,200,83,.25)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 0 40px rgba(0,230,118,.55),0 10px 28px rgba(0,200,83,.35)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 0 28px rgba(0,230,118,.35),0 6px 18px rgba(0,200,83,.25)'">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:24px">&#128260;</div>
+          <div style="text-align:left">
+            <div style="font-size:17px;font-weight:800;letter-spacing:-.01em">Acquista Mensile</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:3px">Rinnovo automatico ogni mese</div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:26px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1">&euro; 19.99</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.7)">/mese</div>
+        </div>
+      </button>
+
+      <!-- ACQUISTA ANNUALE con badge -->
+      <div style="position:relative;margin-top:6px">
+        <div style="position:absolute;top:-12px;right:14px;background:#fff;color:#00a040;font-size:10px;font-weight:900;font-family:'Syne',sans-serif;padding:3px 12px;border-radius:20px;letter-spacing:.08em;z-index:2;box-shadow:0 2px 8px rgba(0,0,0,.3)">RISPARMIA &euro;40</div>
+        <button onclick="buyPlan('Annuale')" style="width:100%;background:linear-gradient(135deg,#00b848,#00d96e);border:none;border-radius:16px;padding:22px 24px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all .25s;font-family:'DM Sans',sans-serif;box-shadow:0 0 32px rgba(0,230,118,.4),0 8px 22px rgba(0,185,72,.3)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 0 48px rgba(0,230,118,.6),0 12px 32px rgba(0,185,72,.45)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 0 32px rgba(0,230,118,.4),0 8px 22px rgba(0,185,72,.3)'">
+          <div style="display:flex;align-items:center;gap:16px">
+            <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:24px">&#128197;</div>
+            <div style="text-align:left">
+              <div style="font-size:17px;font-weight:800;letter-spacing:-.01em">Acquista Annuale</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:3px">Accesso completo per 12 mesi</div>
+            </div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:26px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1">&euro; 199</div>
+            <div style="font-size:11px;color:rgba(255,255,255,.7)">/anno</div>
+          </div>
+        </button>
+      </div>
+
+      <div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:#363b60;margin-top:2px">&#128274; Pagamento sicuro &middot; Cancellazione in qualsiasi momento</div>
+      <button onclick="closeBuyModal()" style="width:100%;background:none;border:1px solid #1c1f3a;color:#363b60;border-radius:10px;padding:11px;font-size:11px;cursor:pointer;font-family:var(--fd)" onmouseover="this.style.borderColor='#2a2f55';this.style.color='#7880a8'" onmouseout="this.style.borderColor='#1c1f3a';this.style.color='#363b60'">&#8592; Torna al login</button>
+    </div>
+  </div>
+</div>
 
 <!-- ===== PURCHASE PAGE ===== -->
 
@@ -10017,27 +10087,27 @@ function renderAccountDrop() {
 
   /* ── ABBONAMENTO ── */
 
-  var btnMBaseStyle = 'width:100%;padding:10px 14px;font-size:12px;justify-content:space-between;display:flex;align-items:center;transition:all .2s';
+  var btnMBaseStyle = 'width:100%;padding:14px 16px;font-size:13px;justify-content:space-between;display:flex;align-items:center;transition:all .2s';
 
   html += '<div style="margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:16px">'
 
     + '<div style="font-size:9px;color:var(--t3);font-family:var(--fh);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:6px">' + t('acc_subscription') + '</div>'
 
-    + '<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:12px">' + t('acc_expiry') + ': <strong style="color:var(--teal)">' + scadenza + '</strong></div>'
+    + '<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:14px">' + t('acc_expiry') + ': <strong style="color:var(--teal)">' + scadenza + '</strong></div>'
 
-    + '<div style="display:grid;gap:10px">'
+    + '<div style="display:grid;gap:12px">'
 
 
 
-    /* Mensile — diventa come annuale al hover */
+    /* Mensile */
 
-    + '<button id="accBtnMonthly" onclick="buyPlan(\'Mensile\')" class="btn-g" style="'+btnMBaseStyle+'" '
+    + '<button id="accBtnMonthly" onclick="buyPlan(\'Mensile\')" style="'+btnMBaseStyle+';background:var(--bg3);border:1.5px solid var(--border2);border-radius:12px;color:#e8eaf6;cursor:pointer;font-family:var(--fm);font-weight:700" '
 
-    + 'onmouseover="this.className=\'btn-p\';this.style.justifyContent=\'space-between\';this.style.display=\'flex\';this.style.alignItems=\'center\';this.style.width=\'100%\';this.style.padding=\'10px 14px\';this.style.fontSize=\'12px\'" '
+    + 'onmouseover="this.style.background=\'rgba(56,189,248,.1)\';this.style.borderColor=\'#38BDF8\'" '
 
-    + 'onmouseout="this.className=\'btn-g\';this.style.background=\'\';this.style.color=\'\';">'
+    + 'onmouseout="this.style.background=\'var(--bg3)\';this.style.borderColor=\'var(--border2)\';">'
 
-    + '<span>' + t('acc_monthly') + '</span><span style="font-family:var(--fd);font-weight:700">€ 19.99</span>'
+    + '<span style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">🔄</span>' + t('acc_monthly') + '</span><span style="font-family:var(--fd);font-weight:800;font-size:15px;color:#38BDF8">€ 19.99</span>'
 
     + '</button>'
 
@@ -10047,11 +10117,15 @@ function renderAccountDrop() {
 
     + '<div style="position:relative">'
 
-    + '<div style="position:absolute;top:-9px;right:8px;background:linear-gradient(135deg,var(--teal2),var(--violet2));color:#fff;font-size:8px;font-weight:700;font-family:var(--fh);padding:2px 8px;border-radius:10px;letter-spacing:.08em;z-index:1">' + t('acc_save40') + '</div>'
+    + '<div style="position:absolute;top:-9px;right:8px;background:linear-gradient(135deg,#00c853,#00e676);color:#fff;font-size:8px;font-weight:800;font-family:var(--fh);padding:2px 10px;border-radius:10px;letter-spacing:.08em;z-index:1">' + t('acc_save40') + '</div>'
 
-    + '<button onclick="buyPlan(\'Annuale\')" class="btn-p" style="'+btnMBaseStyle+'">'
+    + '<button onclick="buyPlan(\'Annuale\')" style="'+btnMBaseStyle+';background:linear-gradient(135deg,rgba(0,200,83,.12),rgba(56,189,248,.08));border:2px solid #00c853;border-radius:12px;color:#e8eaf6;cursor:pointer;font-family:var(--fm);font-weight:700" '
 
-    + '<span>' + t('acc_yearly') + '</span><span style="font-family:var(--fd);font-weight:700">€ 199</span>'
+    + 'onmouseover="this.style.background=\'linear-gradient(135deg,rgba(0,230,118,.18),rgba(56,189,248,.12))\'" '
+
+    + 'onmouseout="this.style.background=\'linear-gradient(135deg,rgba(0,200,83,.12),rgba(56,189,248,.08))\'">'
+
+    + '<span style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">📅</span>' + t('acc_yearly') + '</span><span style="font-family:var(--fd);font-weight:800;font-size:15px;color:#00e676">€ 199</span>'
 
     + '</button>'
 
@@ -10770,7 +10844,7 @@ var _aiOpen=false,_aiHist=[],_aiGreeted=false;
 
 
 
-var _humanMode=false,_ticketId=null,_pollTimer=null,_lastMsgAt=null;
+var _humanMode=false,_ticketId=null,_pollTimer=null,_lastMsgAt=null,_humanFormSent=false;
 
 
 
@@ -10918,135 +10992,37 @@ function aiFloatRemoveTyping(){
 
 async function aiFloatSend(){
 
-
-
   var input = document.getElementById('aiFloatInput');
-
-
-
   var text = input.value.trim();
-
-
-
   if(!text) return;
 
-
-
-  
-
-
-
-  // Aggiunge messaggio utente a schermo
-
-
-
   aiFloatAddMsg('usr', text);
-
-
-
   input.value = '';
 
-
-
-  
-
-
-
-  if(text.toLowerCase().includes('supporto umano') || _humanMode){
-
-
-
-    if(!_humanMode){
-
-
-
-      switchToHumanSupport();
-
-
-
-    } else {
-
-
-
-      // Invia il messaggio al tuo database/telegram
-
-
-
-      try {
-
-
-
-        await fetch('/api/support-send', {
-
-
-
-          method: 'POST',
-
-
-
-          headers: {'Content-Type': 'application/json'},
-
-
-
-          body: JSON.stringify({ ticket_id: _ticketId, message: text, user: accountData.email })
-
-
-
-        });
-
-
-
-        aiFloatAddMsg('support', 'Messaggio ricevuto! Un operatore ti risponderà a breve.');
-
-
-
-      } catch(e) {
-
-
-
-        aiFloatAddMsg('support', 'Consegnato. In attesa di risposta...');
-
-
-
-      }
-
-
-
-    }
-
-
-
-  } else {
-
-
-
-    // Risposta automatica AI simulata (da collegare a tua API se ce l'hai)
-
-
-
-    aiFloatAddTyping();
-
-
-
-    setTimeout(() => {
-
-
-
-      aiFloatRemoveTyping();
-
-
-
-      aiFloatAddMsg('bot', 'Ho ricevuto la tua richiesta. Se vuoi parlare con un operatore scrivi "supporto umano".');
-
-
-
-    }, 1500);
-
-
-
+  // — MODALITA' SUPPORTO UMANO (form gia' inviato) —
+  if(_humanMode && _humanFormSent){
+    try {
+      await fetch('/api/support-send', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ ticket_id: _ticketId, message: text, user: (_ticketData && _ticketData.email) || accountData.email, name: (_ticketData && _ticketData.name) || '' })
+      });
+    } catch(e) { /* invio silenzioso - risposta arriva via polling */ }
+    return;
   }
 
+  // — ATTIVAZIONE SUPPORTO UMANO —
+  if(text.toLowerCase().includes('supporto umano')){
+    switchToHumanSupport();
+    return;
+  }
 
+  // — BOT AI NORMALE —
+  aiFloatAddTyping();
+  setTimeout(() => {
+    aiFloatRemoveTyping();
+    aiFloatAddMsg('bot', 'Ho ricevuto la tua richiesta. Se vuoi parlare con un operatore scrivi "supporto umano".');
+  }, 1500);
 
 }
 
@@ -11077,69 +11053,99 @@ function aiFloatAsk(text){
 
 
 function switchToHumanSupport() {
-
-
-
   _humanMode = true; _ticketId = genTicketId(); _lastMsgAt = new Date().toISOString();
-
-
+  _operatorOnline = false;
+  _humanFormSent = false;
 
   var hdrTitle = document.querySelector('#aiFloatPanel .ai-title');
-
-
-
   var hdrStatus = document.querySelector('#aiFloatPanel .ai-status');
-
-
-
-  
-
-
-
-  // Rotazione casuale di 3 operatori dai 9 disponibili
-
-
-
   var online = supportStaff.sort(() => 0.5 - Math.random()).slice(0, 3).map(s => s.n).join(', ');
 
-
-
-  
-
-
-
   if (hdrTitle) hdrTitle.textContent = 'Supporto Live';
-
-
-
   if (hdrStatus) hdrStatus.innerHTML = '<span class="ai-dot" style="background:#34D399;animation:pu 1s infinite"></span> Online: ' + online;
-
-
-
-  
-
-
 
   var qb = document.getElementById('aiQuickBtns'); if (qb) qb.style.display = 'none';
 
+  // Input bar resta SEMPRE visibile
+  var input = document.getElementById('aiFloatInput');
+  if (input) input.placeholder = 'Scrivi il tuo messaggio...';
 
+  // Messaggio bot + form dati cliente come bubble in chat
+  var msgs = document.getElementById('aiFloatMsgs');
+  if (msgs) {
+    var botLogo = '<svg width="18" height="18" viewBox="0 0 36 36" fill="none"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="33" cy="7" r="3.2" fill="#A78BFA"/></svg>';
+    var formRow = document.createElement('div');
+    formRow.className = 'ai-msg-row';
+    formRow.id = 'humanContactForm';
+    formRow.innerHTML = '<div class="ai-msg-ava bot">' + botLogo + '</div>'
+      + '<div class="ai-bubble bot" style="width:100%;padding:14px 16px">'
+      + '<div style="font-size:13px;font-weight:700;margin-bottom:8px">&#127897; Supporto Umano</div>'
+      + '<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:12px;line-height:1.6">'
+      + 'Ti metto subito in contatto con un operatore.'
+      + '<br>Inserisci i tuoi dati per continuare:</div>'
+      + '<input id="hcfName" type="text" placeholder="Nome e Cognome" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:10px 12px;color:#e8eaf6;font-size:12px;font-family:var(--fd);outline:none;margin-bottom:8px;box-sizing:border-box" onfocus="this.style.borderColor=\'#38BDF8\'" onblur="this.style.borderColor=\'rgba(255,255,255,.18)\'">' 
+      + '<input id="hcfEmail" type="email" placeholder="Email" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:10px 12px;color:#e8eaf6;font-size:12px;font-family:var(--fd);outline:none;margin-bottom:12px;box-sizing:border-box" onfocus="this.style.borderColor=\'#38BDF8\'" onblur="this.style.borderColor=\'rgba(255,255,255,.18)\'" onkeydown="if(event.key===\'Enter\')submitHumanContact()">'
+      + '<button onclick="submitHumanContact()" style="width:100%;background:linear-gradient(135deg,#7C3AED,#38BDF8);border:none;border-radius:8px;padding:11px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fm);letter-spacing:.04em">Invia e parla con un operatore</button>'
+      + '</div>';
+    msgs.appendChild(formRow);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+}
 
+var _operatorOnline = false;
+var _ticketData = null;
 
+function submitHumanContact() {
+  var nameEl = document.getElementById('hcfName');
+  var emailEl = document.getElementById('hcfEmail');
+  var name = nameEl ? nameEl.value.trim() : '';
+  var email = emailEl ? emailEl.value.trim() : '';
+  if (!name) { if(nameEl){nameEl.style.borderColor='#F87171';nameEl.focus();} return; }
+  if (!email || !email.includes('@')) { if(emailEl){emailEl.style.borderColor='#F87171';emailEl.focus();} return; }
 
+  _humanFormSent = true;
+  _ticketData = { name: name, email: email };
 
+  var formRow = document.getElementById('humanContactForm');
+  if (formRow) formRow.remove();
 
-  aiFloatAddMsg('bot', 'Ti sto mettendo in contatto con un operatore. 🎧\n\nPer favore, scrivi qui sotto la tua **EMAIL, NOME e COGNOME**. Ti risponderemo subito!');
+  // Input bar gia' visibile — nessun ripristino necessario
 
+  fetch('/api/support-contact', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ ticket_id: _ticketId, name: name, email: email })
+  }).catch(function(){});
 
+  aiFloatAddMsg('bot', '\u2705 Dati ricevuti! Un operatore risponder\u00e0 a breve.\nScrivi qui il tuo messaggio.');
 
-  
+  startSupportPolling();
+}
 
+function startSupportPolling() {
+  if (_pollTimer) return;
+  _pollTimer = setInterval(async function() {
+    if (!_humanMode || !_ticketId) return;
+    try {
+      var res = await fetch('/api/support-poll?ticket_id=' + encodeURIComponent(_ticketId) + '&since=' + encodeURIComponent(_lastMsgAt || ''));
+      var data = await res.json();
+      if (data && data.messages && data.messages.length > 0) {
+        data.messages.forEach(function(msg) {
+          if (!msg || !msg.text) return;
+          if (!_operatorOnline) {
+            _operatorOnline = true;
+            aiFloatAddMsg('bot', '\uD83D\uDFE2 Sei in linea con un operatore...');
+          }
+          aiFloatAddMsg('support', msg.text);
+        });
+        _lastMsgAt = new Date().toISOString();
+      }
+    } catch(e) {}
+  }, 3000);
+}
 
-
-  var input = document.getElementById('aiFloatInput'); if (input) input.placeholder = 'Scrivi i tuoi dati...';
-
-
-
+function stopSupportPolling() {
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
 }
 
 
