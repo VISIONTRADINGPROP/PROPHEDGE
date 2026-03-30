@@ -15,23 +15,29 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // I tuoi Token originali
   const TELEGRAM_BOT_TOKEN = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA';
   const TELEGRAM_CHAT_ID   = '998979042';
 
   try {
-    const { ticket_id, message, user_email, user_name } = req.body;
+    // FIX 1: Accetta tutti i formati (sia vecchi che nuovi) per non perdere i dati
+    const ticket_id  = req.body.ticket_id || 'N/D';
+    const message    = req.body.message || '';
+    const user_email = req.body.user_email || req.body.user || req.body.email || 'N/D';
+    const user_name  = req.body.user_name || req.body.name || 'Sconosciuto';
 
     if (!message) {
       return res.status(400).json({ error: 'Messaggio mancante' });
     }
 
-    // Costruisce il messaggio Telegram
-    const telegramText =
-      `🆕 *NUOVO MESSAGGIO SUPPORTO*\n\n` +
-      `👤 *Utente:* ${user_name || 'Sconosciuto'}\n` +
-      `📧 *Email:* ${user_email || 'N/D'}\n` +
-      `🎫 *Ticket:* \`${ticket_id || 'N/D'}\`\n\n` +
-      `💬 *Messaggio:*\n${message}`;
+    // FIX 2: NIENTE Markdown. Testo pulito per evitare crash su caratteri speciali (_ o *)
+    // Questa struttura è perfetta per far funzionare il tuo webhook!
+    const telegramText = 
+      `🔴 RICHIESTA SUPPORTO LIVE\n\n` +
+      `👤 Utente: ${user_name}\n` +
+      `📧 Email: ${user_email}\n` +
+      `🎫 TICKET: ${ticket_id}\n\n` +
+      `💬 Messaggio:\n${message}`;
 
     // Invia a Telegram
     const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -40,8 +46,7 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: TELEGRAM_CHAT_ID,
-        text: telegramText,
-        parse_mode: 'Markdown'
+        text: telegramText
       })
     });
 
