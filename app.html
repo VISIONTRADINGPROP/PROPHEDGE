@@ -11852,7 +11852,7 @@ function _processOpMsg(text){
   _chatMsg('support', text.trim());
 }
 
-var _seenTexts = []; // FIX 2: Usiamo un array di testi per non perdere MAI una risposta
+var _seenTexts = []; 
 var _tgOffset = 0;
 
 function _startPoll(){
@@ -11860,7 +11860,9 @@ function _startPoll(){
   _pollTimer = setInterval(async function(){
     if(!_humanMode || !_ticketId) return;
 
-    // Metodo 1: Supabase Diretto (senza limiti di orario che bloccavano i messaggi)
+    var found = false;
+
+    // Metodo 1: Supabase Diretto
     try {
       var res = await _sb.from('support_messages')
                          .select('*')
@@ -11874,34 +11876,30 @@ function _startPoll(){
              _processOpMsg(m.text);
            }
         });
-        return; // Se Supabase funziona, interrompe qui per questo giro
+        found = true;
       }
     }catch(e){}
 
-    // Metodo 2: API Fallback
-    try {
-      var r = await fetch('/api/support-poll?ticket_id=' + _ticketId);
-      if(r.ok){
-        var d = await r.json();
-        if(d.messages && d.messages.length > 0){
-          d.messages.forEach(function(msg){
-            var txt = msg.text || msg; // Estrae il testo in modo sicuro
-            if(!_seenTexts.includes(txt)){
-              _seenTexts.push(txt);
-              _processOpMsg(txt);
-            }
-          });
+    // Metodo 2: API Fallback ESATTA (con offset ripristinato)
+    if(!found){
+      try {
+        var r = await fetch('/api/support-poll?ticket_id=' + _ticketId + '&offset=' + _tgOffset);
+        if(r.ok){
+          var d = await r.json();
+          if(d.messages && d.messages.length > 0){
+            d.messages.forEach(function(msg){
+              var txt = msg.text || msg;
+              if(!_seenTexts.includes(txt)){
+                _seenTexts.push(txt);
+                _processOpMsg(txt);
+              }
+            });
+            _tgOffset = d.next_offset || _tgOffset;
+          }
         }
-      }
-    }catch(ex){}
+      }catch(ex){}
+    }
   }, 3000);
-}
-
-function _stopPoll(){
-  if(_pollTimer){
-    clearInterval(_pollTimer);
-    _pollTimer = null;
-  }
 }
 
 
