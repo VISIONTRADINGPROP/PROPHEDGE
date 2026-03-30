@@ -39,11 +39,13 @@ module.exports = async function handler(req, res) {
       process.env.SUPABASE_SERVICE_KEY
     );
 
+    // FIX DEFINITIVO: Allineato alle colonne corrette del tuo database Supabase!
     await sb.from('support_messages').insert({
-      ticket_id:  ticketId,
-      role:       'support',
-      content:    text,
-      created_at: new Date().toISOString()
+      ticket_id:    ticketId,
+      sender:       'support',    // Modificato da 'role' a 'sender'
+      text:         text,         // Modificato da 'content' a 'text'
+      operator_msg: true,         // 🔥 IL FIX PIÙ IMPORTANTE: permette alla chat di vederlo!
+      created_at:   new Date().toISOString()
     });
   } catch(e) {
     console.error('telegram-webhook supabase error:', e.message);
