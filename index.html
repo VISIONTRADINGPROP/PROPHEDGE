@@ -11807,47 +11807,38 @@ function _activateHumanSupport(){
 function _submitContact(){
   var nEl = document.getElementById('_hcfName');
   var eEl = document.getElementById('_hcfEmail');
-  var name = nEl ? nEl.value.trim() : '';
+  var name  = nEl ? nEl.value.trim() : '';
   var email = eEl ? eEl.value.trim() : '';
-
-  if(!name){ if(nEl){nEl.style.borderColor='#F87171'; nEl.focus();} return; }
+  if(!name){  if(nEl){nEl.style.borderColor='#F87171'; nEl.focus();} return; }
   if(!email || !email.includes('@')){ if(eEl){eEl.style.borderColor='#F87171'; eEl.focus();} return; }
 
   _humanFormSent = true;
   _ticketData = {name: name, email: email};
 
+  // Rimuovi form e mostra input
   var fr = document.getElementById('_humanForm');
   if(fr) fr.remove();
-
   var ir = document.querySelector('#aiFloatPanel .ai-input-row');
   if(ir) ir.style.display = 'flex';
   var inp = document.getElementById('aiFloatInput');
-  if(inp){ inp.placeholder = 'Scrivi un messaggio al team...'; inp.focus(); }
+  if(inp){ inp.placeholder = 'Scrivi il tuo messaggio...'; inp.focus(); }
 
-  _chatMsg('bot', '⏳ <b>In attesa del supporto...</b>\nRiceverai risposta a breve, puoi già scrivere qui sotto il tuo problema.');
+  _chatMsg('bot', '\u23F3 <b>In attesa di un operatore...</b>\nRiceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.');
 
-  // FORZA INSERIMENTO IN SUPABASE
-  try {
-    _sb.from('support_messages').insert({
-      ticket_id: _ticketId,
-      sender: 'user',
-      text: "🔴 NUOVO TICKET APERTO\nNome: " + name + "\nEmail: " + email,
-      operator_msg: false
-    }).then(function(){});
-  } catch(e) {}
-
-  // 🔥 RIPRISTINATA: API Server Originale per innescare Telegram
-  fetch('/api/support-contact', {
+  // FIX 1 ASSOLUTO: Invia la richiesta ESATTAMENTE come se l'utente avesse scritto un messaggio!
+  // Questo costringe il tuo server a far squillare il bot Telegram immediatamente.
+  fetch('/api/support-send', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ 
-      ticket_id: _ticketId, 
-      name: name, 
-      email: email,
-      operator: _assignedOp ? _assignedOp.n : ''
+    body: JSON.stringify({
+      ticket_id: _ticketId,
+      message: "🔴 RICHIESTA SUPPORTO LIVE\nNome: " + name + "\nEmail: " + email,
+      user: email,
+      name: name
     })
   }).catch(function(){});
 
+  // Avvia il controllo risposte
   _startPoll();
 }
 
@@ -11861,55 +11852,49 @@ function _processOpMsg(text){
   _chatMsg('support', text.trim());
 }
 
+var _seenTexts = []; // FIX 2: Usiamo un array di testi per non perdere MAI una risposta
 var _tgOffset = 0;
+
 function _startPoll(){
   if(_pollTimer) return;
   _pollTimer = setInterval(async function(){
     if(!_humanMode || !_ticketId) return;
 
-    var found = false;
-    
-    // 1. Supabase Diretto
+    // Metodo 1: Supabase Diretto (senza limiti di orario che bloccavano i messaggi)
     try {
       var res = await _sb.from('support_messages')
-                         .select('id, text, created_at')
+                         .select('*')
                          .eq('ticket_id', _ticketId)
                          .eq('operator_msg', true)
-                         .order('created_at', { ascending: true });
-
+                         .order('created_at', {ascending: true});
       if(res.data && res.data.length > 0){
         res.data.forEach(function(m){
-          var msgId = m.id || m.created_at || m.text;
-          if(!_seenMsgs.has(msgId)){
-            _seenMsgs.add(msgId);
-            _processOpMsg(m.text);
-          }
+           if(!_seenTexts.includes(m.text)){
+             _seenTexts.push(m.text);
+             _processOpMsg(m.text);
+           }
         });
-        found = true;
+        return; // Se Supabase funziona, interrompe qui per questo giro
       }
-    } catch(e) {}
+    }catch(e){}
 
-    // 2. 🔥 RIPRISTINATA: API Server Originale di fallback per leggere i messaggi
-    if(!found){
-      try {
-        var r = await fetch('/api/support-poll?ticket_id=' + _ticketId + '&offset=' + _tgOffset);
-        if(r.ok){
-          var d = await r.json();
-          if(d.messages && d.messages.length>0){
-            d.messages.forEach(function(msg){
-              var mId = msg.id || msg.message_id || msg.text;
-              if(!_seenMsgs.has(mId)){
-                _seenMsgs.add(mId);
-                _processOpMsg(msg.text);
-              }
-            });
-            _tgOffset = d.next_offset || _tgOffset;
-          }
+    // Metodo 2: API Fallback
+    try {
+      var r = await fetch('/api/support-poll?ticket_id=' + _ticketId);
+      if(r.ok){
+        var d = await r.json();
+        if(d.messages && d.messages.length > 0){
+          d.messages.forEach(function(msg){
+            var txt = msg.text || msg; // Estrae il testo in modo sicuro
+            if(!_seenTexts.includes(txt)){
+              _seenTexts.push(txt);
+              _processOpMsg(txt);
+            }
+          });
         }
-      }catch(ex){}
-    }
-
-  }, 2500); 
+      }
+    }catch(ex){}
+  }, 3000);
 }
 
 function _stopPoll(){
@@ -11918,6 +11903,7 @@ function _stopPoll(){
     _pollTimer = null;
   }
 }
+  
 // ══ INIT ════════════════════════════════════════════════════════════
 
 window.addEventListener('DOMContentLoaded',function(){
