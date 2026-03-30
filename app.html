@@ -11813,9 +11813,20 @@ function _submitContact(){
     'Riceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.'
   );
 
-  // 4. Invia ticket a Telegram via API server
+// 4. Invia ticket a Telegram via API server
   // Il server riceve nome+email+ticket_id e manda un messaggio al tuo bot Telegram
-  // Tu apri Telegram e rispondi — la risposta torner\u00e0 qui via polling Supabase
+  // Tu apri Telegram e rispondi — la risposta tornerà qui via polling Supabase
+
+  // FIX BUG 1: Forza subito la creazione del ticket su Telegram inserendo il contatto in Supabase
+  try {
+    _sb.from('support_messages').insert({
+      ticket_id: _ticketId,
+      sender: 'user',
+      text: "🔴 NUOVO TICKET APERTO\nNome: " + name + "\nEmail: " + email,
+      operator_msg: false
+    }).then(function(){});
+  } catch(e) {}
+
   fetch('/api/support-contact', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
@@ -11833,57 +11844,56 @@ function _submitContact(){
 
 // ── Polling: cerca risposte dell'operatore ogni 3 secondi ──
 // Strategia a cascata:
-//   1. Supabase diretto (tabella support_messages) — pi\u00f9 affidabile
-//   2. API server /api/support-poll — fallback
+// 1. Supabase diretto (tabella support_messages) — più affidabile
+// 2. API server /api/support-poll — fallback
 var _tgOffset = 0;
+var _seenMsgs = new Set(); // FIX BUG 2: Evita asincronie d'orario memorizzando i messaggi processati
 
 function _startPoll(){
   if(_pollTimer) return;
   _pollTimer = setInterval(async function(){
     if(!_humanMode || !_ticketId) return;
-
     var found = false;
 
     // Metodo 1: Supabase diretto
     // Il server (webhook Telegram) inserisce i messaggi dell'operatore in questa tabella
     try {
-      var since = _lastMsgAt || new Date(Date.now() - 86400000).toISOString();
-      var res = await _sb
-        .from('support_messages')
-        .select('id, text, created_at')
-        .eq('ticket_id', _ticketId)
-        .eq('direction', 'inbound')
-        .gt('created_at', since)
-        .order('created_at', {ascending: true});
-
-      if(res && res.data && res.data.length > 0){
+      var res = await _sb.from('support_messages')
+                         .select('*')
+                         .eq('ticket_id', _ticketId)
+                         .eq('operator_msg', true)
+                         .order('created_at', {ascending: true});
+      if(res.data && res.data.length > 0){
         res.data.forEach(function(m){
-          if(m && m.text) _showOpMsg(m.text);
+           var msgId = m.id || m.created_at;
+           if(!_seenMsgs.has(msgId)){
+             _seenMsgs.add(msgId);
+             _processOpMsg(m.text);
+           }
         });
-        _lastMsgAt = res.data[res.data.length - 1].created_at;
         found = true;
       }
-    } catch(e1){}
+    }catch(e){}
 
-    if(found) return;
-
-    // Metodo 2: API server /api/support-poll
-    try {
-      var r = await fetch(
-        '/api/support-poll?ticket_id=' + encodeURIComponent(_ticketId) +
-        '&since=' + encodeURIComponent(_lastMsgAt || '')
-      );
-      if(r.ok){
-        var d = await r.json();
-        if(d && Array.isArray(d.messages) && d.messages.length){
-          d.messages.forEach(function(m){
-            if(m && m.text) _showOpMsg(m.text);
-          });
-          _lastMsgAt = new Date().toISOString();
+    // Metodo 2: API di fallback
+    if(!found){
+      try {
+        var r = await fetch('/api/support-poll?ticket_id=' + _ticketId + '&offset=' + _tgOffset);
+        if(r.ok){
+          var d = await r.json();
+          if(d.messages && d.messages.length>0){
+            d.messages.forEach(function(msg){
+              var mId = msg.id || msg.message_id || msg.text;
+              if(!_seenMsgs.has(mId)){
+                _seenMsgs.add(mId);
+                _processOpMsg(msg.text);
+              }
+            });
+            _tgOffset = d.next_offset || _tgOffset;
+          }
         }
-      }
-    } catch(e2){}
-
+      }catch(ex){}
+    }
   }, 3000);
 }
 
