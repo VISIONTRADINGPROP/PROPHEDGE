@@ -11813,11 +11813,7 @@ function _submitContact(){
     'Riceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.'
   );
 
-// 4. Invia ticket a Telegram via API server
-  // Il server riceve nome+email+ticket_id e manda un messaggio al tuo bot Telegram
-  // Tu apri Telegram e rispondi — la risposta tornerà qui via polling Supabase
-
-  // FIX BUG 1: Forza subito la creazione del ticket su Telegram inserendo il contatto in Supabase
+  // 4. FORZA L'APERTURA IMMEDIATA DEL TICKET SU SUPABASE (risolve il problema di Telegram)
   try {
     _sb.from('support_messages').insert({
       ticket_id: _ticketId,
@@ -11838,16 +11834,12 @@ function _submitContact(){
     })
   }).catch(function(){});
 
-  // 5. Avvia polling risposte
+  // 5. Avvia controllo continuo delle risposte
   _startPoll();
 }
 
-// ── Polling: cerca risposte dell'operatore ogni 3 secondi ──
-// Strategia a cascata:
-// 1. Supabase diretto (tabella support_messages) — più affidabile
-// 2. API server /api/support-poll — fallback
 var _tgOffset = 0;
-var _seenMsgs = new Set(); // FIX BUG 2: Evita asincronie d'orario memorizzando i messaggi processati
+var _seenMsgs = new Set(); // Risolve il problema delle risposte non lette
 
 function _startPoll(){
   if(_pollTimer) return;
@@ -11855,8 +11847,7 @@ function _startPoll(){
     if(!_humanMode || !_ticketId) return;
     var found = false;
 
-    // Metodo 1: Supabase diretto
-    // Il server (webhook Telegram) inserisce i messaggi dell'operatore in questa tabella
+    // Controllo Supabase
     try {
       var res = await _sb.from('support_messages')
                          .select('*')
@@ -11875,7 +11866,7 @@ function _startPoll(){
       }
     }catch(e){}
 
-    // Metodo 2: API di fallback
+    // Controllo Fallback API
     if(!found){
       try {
         var r = await fetch('/api/support-poll?ticket_id=' + _ticketId + '&offset=' + _tgOffset);
@@ -11896,7 +11887,6 @@ function _startPoll(){
     }
   }, 3000);
 }
-
 // ── Mostra risposta operatore — prima volta annuncia "sei in linea" ──
 function _showOpMsg(text){
   if(!text || !text.trim()) return;
