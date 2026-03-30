@@ -1053,7 +1053,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 
 
 
-.bot-wrap{position:fixed!important;bottom:36px!important;left:0!important;right:0!important;z-index:9999!important;background:var(--bg2);border-top:1px solid var(--border2);height:54px;display:flex!important;align-items:center;overflow:hidden}
+.bot-wrap{position:fixed!important;bottom:36px!important;left:0!important;right:0!important;z-index:9999!important;background:var(--bg2);border-top:1px solid var(--border2);height:54px;display:flex!important;align-items:center;overflow:hidden}.bot-wrap-hidden{display:none!important}
 
 
 
@@ -9514,210 +9514,14 @@ function _phSVG(id,sz){
 
 /* ══ MAIN RENDER ═════════════════════════════════════════════ */
 function renderPlatform(){
-  var ct=document.getElementById('main'); if(!ct) return;
-  ct.innerHTML=''; ct.style.padding='0'; ct.style.maxWidth='100%';
-  _ph.isDark=!document.body.classList.contains('light-theme');
-  var D=_ph.isDark;
-
-  /* Load saved */
-  _ph.favs     = _phGet(_PH.FAVS_KEY,[]);
-  _ph.drawings = _phGet(_PH.DRAWINGS_KEY,[]);
-  _ph.params   = _phGet(_PH.PARAMS_KEY,{});
-  _ph.tpls     = _phGet(_PH.TPLS_KEY,[]);
-  _ph.assets   = _phGet(_PH.ASSETS_KEY,[
-    {sym:'BTCUSDT',label:'Bitcoin', tag:'BTC/USDT',col:'#F7931A',type:'crypto'},
-    {sym:'ETHUSDT',label:'Ethereum',tag:'ETH/USDT',col:'#627EEA',type:'crypto'},
-    {sym:'SOLUSDT',label:'Solana',  tag:'SOL/USDT',col:'#9945FF',type:'crypto'},
-    {sym:'BNBUSDT',label:'BNB',     tag:'BNB/USDT',col:'#F0B90B',type:'crypto'},
-    {sym:'XRPUSDT',label:'XRP',     tag:'XRP/USDT',col:'#346AA9',type:'crypto'},
-    {sym:'EURUSD', label:'Euro',    tag:'EUR/USD', col:'#2962FF',type:'forex'},
-    {sym:'XAUUSD', label:'Gold',    tag:'XAU/USD', col:'#FFD700',type:'forex'},
-    {sym:'GBPUSD', label:'GBP',     tag:'GBP/USD', col:'#012169',type:'forex'},
-  ]);
-
-  var c={
-    bg   : D?'#131722':'#ffffff',
-    bgP  : D?'#1e222d':'#f0f3fa',
-    bgH  : D?'#2a2e39':'#e8ecf5',
-    bdr  : D?'rgba(255,255,255,.07)':'rgba(0,0,0,.09)',
-    txt  : D?'#d1d4dc':'#131722',
-    txt2 : D?'#787b86':'#5d606b',
-    blue : '#2962FF',
-    green: '#089981',
-    red  : '#F23645',
-  };
-
-  var state=_phGet(_PH.TV_KEY,{});
-
-  /* Root */
-  var root=document.createElement('div');
-  root.id='ph_root';
-  root.style.cssText='position:relative;display:flex;flex-direction:column;width:100%;height:calc(100vh - 92px);min-height:540px;overflow:hidden;background:'+c.bg+';font-family:-apple-system,BlinkMacSystemFont,Trebuchet MS,Roboto,sans-serif';
-
-  /* ─── TOP BAR ── */
-  var top=document.createElement('div');
-  top.style.cssText='display:flex;align-items:center;height:38px;background:'+c.bg+';border-bottom:1px solid '+c.bdr+';flex-shrink:0;padding:0 4px;overflow:hidden;z-index:20;position:relative';
-
-  /* Timeframes */
-  [{l:'1m',v:'1'},{l:'3m',v:'3'},{l:'5m',v:'5'},{l:'15m',v:'15'},{l:'30m',v:'30'},{l:'1h',v:'60'},{l:'4h',v:'240'},{l:'D',v:'D'},{l:'W',v:'W'},{l:'M',v:'M'}].forEach(function(tf){
-    var act=tf.v===(state.interval||'D')||tf.l===(state.interval||'D');
-    var b=document.createElement('button');
-    b.textContent=tf.l; b.dataset.phtf=tf.v;
-    b.style.cssText='background:'+(act?'rgba(41,98,255,.12)':'transparent')+';border:none;color:'+(act?c.blue:c.txt2)+';padding:3px 6px;font-size:11.5px;font-weight:'+(act?700:400)+';cursor:pointer;border-radius:4px;transition:all .12s;font-family:inherit;flex-shrink:0';
-    b.onmouseover=function(){if(!act)this.style.background=c.bgH;};
-    b.onmouseout=function(){if(!act)this.style.background='transparent';};
-    top.appendChild(b);
-  });
-
-  _phSep(top,c);
-
-  /* Indicatori */
-  _phBtn(top,'Indicatori',c,'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="1,9 3.5,5 6,7.5 9,2 11,4.5" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>');
-
-  /* Spacer → TradingView button CENTRO */
-  var sp1=document.createElement('div'); sp1.style.cssText='flex:1'; top.appendChild(sp1);
-
-  var tvA=document.createElement('a');
-  tvA.href='https://www.tradingview.com'; tvA.target='_blank';
-  tvA.innerHTML='<svg width="14" height="14" viewBox="0 0 32 32" fill="none" style="margin-right:5px"><rect x="0" y="0" width="13" height="13" fill="white" rx="2"/><rect x="0" y="19" width="13" height="13" fill="white" rx="2"/><rect x="19" y="0" width="13" height="13" fill="white" rx="2"/><rect x="19" y="19" width="13" height="6" fill="white" rx="2"/><rect x="26" y="25" width="6" height="7" fill="white" rx="2"/></svg>TradingView';
-  tvA.style.cssText='display:inline-flex;align-items:center;padding:5px 13px;background:linear-gradient(135deg,#2962FF,#1E53D9);border-radius:6px;color:#fff;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.03em;animation:phglow 2.8s ease-in-out infinite;flex-shrink:0;transition:transform .18s';
-  tvA.onmouseover=function(){this.style.transform='translateY(-1px)';};
-  tvA.onmouseout=function(){this.style.transform='none';};
-  top.appendChild(tvA);
-
-  var sp2=document.createElement('div'); sp2.style.cssText='flex:1'; top.appendChild(sp2);
-
-  _phSep(top,c);
-
-  /* Replay */
-  var repB=document.createElement('button');
-  repB.id='ph_rep';
-  repB.innerHTML='<svg width="10" height="10" viewBox="0 0 10 10" fill="none" style="margin-right:3px"><polygon points="1.5,1 8.5,5 1.5,9" fill="currentColor"/></svg>Replay';
-  repB.style.cssText='display:inline-flex;align-items:center;background:transparent;border:1px solid transparent;color:'+c.txt2+';padding:3px 9px;font-size:11px;cursor:pointer;border-radius:5px;font-family:inherit;flex-shrink:0;transition:all .15s';
-  repB.onmouseover=function(){if(!this.dataset.on)this.style.background=c.bgH;};
-  repB.onmouseout=function(){if(!this.dataset.on)this.style.background='transparent';};
-  repB.onclick=function(){
-    var on=this.dataset.on==='1'; this.dataset.on=on?'':'1';
-    this.style.background=on?'transparent':'rgba(41,98,255,.1)';
-    this.style.color=on?c.txt2:c.blue;
-    this.style.borderColor=on?'transparent':'rgba(41,98,255,.3)';
-  };
-  top.appendChild(repB);
-
-  root.appendChild(top);
-
-  /* ─── MIDDLE ── */
-  var mid=document.createElement('div');
-  mid.style.cssText='display:flex;flex:1;overflow:hidden;min-height:0';
-
-  /* ─── CHART AREA (full width, no custom sidebar) ── */
-  var ca=document.createElement('div');
-  ca.id='ph_ca';
-  ca.style.cssText='flex:1;position:relative;overflow:hidden;min-width:0;background:'+c.bg;
-
-  /* TradingView container */
-  var tvD=document.createElement('div');
-  tvD.id='tv_chart_container';
-  tvD.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:1';
-  var ldg=document.createElement('div');
-  ldg.id='tvLoading';
-  ldg.style.cssText='position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:3;background:'+c.bg+';gap:12px';
-  ldg.innerHTML='<svg width="36" height="36" viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="15" stroke="'+(D?'#2a2e39':'#e8ecf5')+'" stroke-width="2.5"/><path d="M18 3 a15 15 0 0 1 15 15" stroke="#2962FF" stroke-width="3" stroke-linecap="round"><animateTransform attributeName="transform" type="rotate" from="0 18 18" to="360 18 18" dur=".8s" repeatCount="indefinite"/></path></svg><span style="font-size:11px;color:'+c.txt2+'">Caricamento grafico...</span>';
-  tvD.appendChild(ldg);
-  ca.appendChild(tvD);
-
-  /* Canvas overlay per disegni */
-  var cvs=document.createElement('canvas');
-  cvs.id='ph_canvas';
-  cvs.style.cssText='position:absolute;inset:0;width:100%;height:100%;z-index:8;pointer-events:none';
-  ca.appendChild(cvs);
-
-  /* Pannello parametri */
-  var prm=document.createElement('div');
-  prm.id='ph_prm';
-  prm.style.cssText='display:none;position:absolute;top:8px;right:8px;z-index:55;background:'+(D?'#1e222d':'#fff')+';border:1px solid '+(D?'rgba(255,255,255,.1)':'rgba(0,0,0,.12)')+';border-radius:8px;width:240px;max-height:72vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.5);scrollbar-width:thin;scrollbar-color:rgba(128,128,128,.2) transparent';
-  ca.appendChild(prm);
-
-  /* Tool picker (stelline) */
-  var tpick=document.createElement('div');
-  tpick.id='ph_tpick';
-  tpick.style.cssText='display:none;position:absolute;top:50px;left:4px;z-index:55;background:'+(D?'#1e222d':'#fff')+';border:1px solid '+(D?'rgba(255,255,255,.1)':'rgba(0,0,0,.1)')+';border-radius:8px;width:300px;max-height:75vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.5);scrollbar-width:thin;scrollbar-color:rgba(128,128,128,.2) transparent';
-  ca.appendChild(tpick);
-
-  mid.appendChild(ca);
-
-  /* ─── ASSET PANEL ── */
-  var ap=document.createElement('div');
-  ap.id='ph_ap';
-  ap.style.cssText='width:178px;flex-shrink:0;background:'+c.bg+';border-left:1px solid '+c.bdr+';display:flex;flex-direction:column;overflow:hidden';
-
-  var apH=document.createElement('div');
-  apH.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-bottom:1px solid '+c.bdr+';flex-shrink:0;height:35px;box-sizing:border-box';
-  apH.innerHTML='<span style="font-size:11px;font-weight:600;color:'+c.txt+'">Asset</span>';
-  var addB=document.createElement('button');
-  addB.innerHTML='+'; addB.title='Aggiungi asset';
-  addB.style.cssText='background:transparent;border:none;color:'+c.txt2+';cursor:pointer;font-size:18px;font-weight:300;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px;line-height:1;padding:0;transition:all .12s';
-  addB.onmouseover=function(){this.style.background=c.bgH;this.style.color=c.txt;};
-  addB.onmouseout=function(){this.style.background='transparent';this.style.color=c.txt2;};
-  addB.onclick=function(){_phAddAsset(c);};
-  apH.appendChild(addB);
-  ap.appendChild(apH);
-
-  /* Column headers */
-  var apCh=document.createElement('div');
-  apCh.style.cssText='display:flex;padding:3px 7px;border-bottom:1px solid '+c.bdr+';flex-shrink:0';
-  apCh.innerHTML='<span style="font-size:9px;color:'+c.txt2+';font-weight:500;flex:1">Simbolo</span><span style="font-size:9px;color:'+c.txt2+';font-weight:500;width:55px;text-align:right">Ultimi</span><span style="font-size:9px;color:'+c.txt2+';font-weight:500;width:38px;text-align:right">Var%</span>';
-  ap.appendChild(apCh);
-
-  var apList=document.createElement('div');
-  apList.id='ph_ap_list';
-  apList.style.cssText='flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(128,128,128,.15) transparent';
-  ap.appendChild(apList);
-  mid.appendChild(ap);
-
-  root.appendChild(mid);
-
-  /* Close button — bottom right (above asset panel) */
-  var xb=document.createElement('button');
-  xb.title='Chiudi piattaforma';
-  xb.innerHTML='<svg width="10" height="10" viewBox="0 0 10 10"><line x1="1" y1="1" x2="9" y2="9" stroke="#F23645" stroke-width="2" stroke-linecap="round"/><line x1="9" y1="1" x2="1" y2="9" stroke="#F23645" stroke-width="2" stroke-linecap="round"/></svg>';
-  xb.style.cssText='position:absolute;bottom:12px;right:190px;z-index:22;width:28px;height:28px;background:rgba(242,54,69,.1);border:1px solid rgba(242,54,69,.22);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s';
-  xb.onmouseover=function(){this.style.background='rgba(242,54,69,.2)';this.style.boxShadow='0 0 10px rgba(242,54,69,.3)';};
-  xb.onmouseout=function(){this.style.background='rgba(242,54,69,.1)';this.style.boxShadow='none';};
-  xb.onclick=function(){goTab('dash',document.getElementById('tabDash'));};
-  root.appendChild(xb);
-
-  ct.appendChild(root);
-  _phCSS();
-
-  setTimeout(function(){
-    _phRenderFavbar(c);
-    _phInitCanvas(c);
-    _phRenderAssets(c);
-    _phStartPrices(c);
-  },90);
-
-  /* Load TV */
-  if(window.TradingView){_initTV(_ph.isDark,state);}
-  else{
-    var sc=document.createElement('script'); sc.src='https://s3.tradingview.com/tv.js';
-    sc.onload=function(){_initTV(_ph.isDark,state);};
-    sc.onerror=function(){_tvFallback(_ph.isDark,state);};
-    document.head.appendChild(sc);
-  }
-
-  /* Close tool picker on outside click */
-  setTimeout(function(){
-    document.addEventListener('click',function _phOC(e){
-      var tp=document.getElementById('ph_tpick');
-      var fb=document.getElementById('ph_favbar');
-      if(tp&&fb&&!tp.contains(e.target)&&!fb.contains(e.target)){
-        tp.style.display='none';
-        document.removeEventListener('click',_phOC);
-      }
-    });
-  },150);
+  /* Apri TradingView in nuova scheda e resta sulla dashboard */
+  window.open('https://www.tradingview.com/chart/', '_blank');
+  goTab('dash', document.getElementById('tabDash'));
 }
+
+
+
+
 
 function _phSep(el,c){
   var s=document.createElement('div');
@@ -11597,7 +11401,7 @@ function render(){
 
 
 
-  else if(currentTab==='platform'){renderPlatform();return;}
+  else if(currentTab==='platform'){ renderPlatform(); return; }
 
 
 
