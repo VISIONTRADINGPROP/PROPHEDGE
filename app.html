@@ -11629,9 +11629,11 @@ function _accReset(){
   if(a){ a.style.transform=''; a.style.boxShadow=''; a.style.opacity='1'; }
 }
 
-// ── GESTIONE CHAT LIVE & SUPPORTO UMANO (Riscritto + API Telegram Ripristinate) ──
-var _seenMsgs = new Set(); 
-var _ticketData = null; // Aggiunto per evitare errori sull'invio API
+// ── GESTIONE CHAT LIVE & SUPPORTO UMANO (Grafica Originale + FIX TICKET ID) ──
+var _seenMsgs = new Set();
+var _ticketData = null;
+var _seenTexts = [];
+var _tgOffset = 0;
 
 function toggleAIChat(){
   _aiOpen = !_aiOpen;
@@ -11644,7 +11646,7 @@ function toggleAIChat(){
     _aiGreeted = true;
     _chatMsg('bot', 'Ciao! 👋 Sono l’assistente AI di PropHedge.\n\nPosso aiutarti con: calcolo lotti, drawdown, journal, connessione piattaforme e altro.\n\nScrivi <b>supporto umano</b> per parlare con un operatore.');
   }
-  
+
   if(_aiOpen && _humanMode && _humanFormSent && !_pollTimer){
     _startPoll();
   } else if(!_aiOpen && _pollTimer) {
@@ -11658,16 +11660,16 @@ function _chatMsg(role, html){
   var isBot = (role === 'bot' || role === 'support');
   var row = document.createElement('div');
   row.className = 'ai-msg-row' + (isBot ? '' : ' user');
-  
+
   var avaHtml;
   if(role === 'support' && _assignedOp){
-    avaHtml = '<img src="'+_assignedOp.img+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0">';
+    avaHtml = '<img src="'+(_assignedOp.img || 'https://randomuser.me/api/portraits/men/32.jpg')+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0">';
   } else if(isBot){
-    avaHtml = '<div class="ai-msg-ava bot" style="background:linear-gradient(135deg,#0EA5E9,#A78BFA);color:#fff;font-weight:bold;font-size:9px">AI</div>';
+    avaHtml = '<div class="ai-msg-ava bot"><svg width="18" height="18" viewBox="0 0 36 36" fill="none"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#38BDF8" stroke-width="2.5" fill="none"/><circle cx="33" cy="7" r="3.2" fill="#A78BFA"/></svg></div>';
   } else {
-    avaHtml = '<div class="ai-msg-ava usr" style="background:rgba(255,255,255,0.1);color:#fff">👤</div>';
+    avaHtml = '<div class="ai-msg-ava usr">👤</div>';
   }
-  
+
   row.innerHTML = avaHtml + '<div class="ai-bubble '+(isBot?'bot':'usr')+'">'+html.replace(/\n/g,'<br>')+'</div>';
   msgs.appendChild(row);
   msgs.scrollTop = msgs.scrollHeight;
@@ -11679,7 +11681,7 @@ function _chatTyping(){
   var row = document.createElement('div');
   row.className = 'ai-msg-row';
   row.id = '_typingRow';
-  row.innerHTML = '<div class="ai-msg-ava bot" style="background:linear-gradient(135deg,#0EA5E9,#A78BFA);color:#fff;font-weight:bold;font-size:9px">AI</div><div class="ai-bubble bot">Sto scrivendo...</div>';
+  row.innerHTML = '<div class="ai-msg-ava bot"><svg width="18" height="18" viewBox="0 0 36 36" fill="none"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#38BDF8" stroke-width="2.5" fill="none"/><circle cx="33" cy="7" r="3.2" fill="#A78BFA"/></svg></div><div class="ai-bubble bot">Sto scrivendo...</div>';
   msgs.appendChild(row);
   msgs.scrollTop = msgs.scrollHeight;
 }
@@ -11698,14 +11700,12 @@ async function aiFloatSend(){
 
   _chatMsg('user', text);
 
-  // Se l'utente è già in modalità Supporto Umano
   if(_humanMode){
     if(!_humanFormSent){
       _chatMsg('bot', '⚠️ Per favore, inserisci nome ed email nel modulo per poter chattare con l\'operatore.');
       return;
     }
-    
-    // Tenta Supabase Diretto
+
     try {
       _sb.from('support_messages').insert({
         ticket_id: _ticketId,
@@ -11714,31 +11714,28 @@ async function aiFloatSend(){
         operator_msg: false
       }).then(function(){});
     } catch(e) {}
-    
-    // 🔥 RIPRISTINATA: API Server Originale per inviare il messaggio a Telegram
+
     try {
       await fetch('/api/support-send', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
           ticket_id: _ticketId,
-          message: text,
+          message: "🎫 TICKET: " + _ticketId + "\n\n" + text, 
           user: (_ticketData && _ticketData.email) || '',
           name: (_ticketData && _ticketData.name) || ''
         })
       });
     } catch(e) {}
-    
+
     return;
   }
 
-  // Verifica se chiede il supporto umano
   if(text.toLowerCase().includes('supporto') || text.toLowerCase().includes('operatore') || text.toLowerCase().includes('umano')){
     _activateHumanSupport();
     return;
   }
 
-  // Invio normale all'intelligenza artificiale
   _chatTyping();
   try {
     var res = await fetch('https://api.anthropic.com/v1/messages',{
@@ -11747,7 +11744,7 @@ async function aiFloatSend(){
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 400,
-        system: 'Sei l\'assistente AI di PropHedge di VISIONTRADING. Rispondi in italiano, max 3 frasi. Aiuta con: calcolo lotti, drawdown, journal trading, connessione prop firm. Se chiedono aiuto tecnico specifico o operatore, consiglia di scrivere "supporto umano".',
+        system: 'Sei l\'assistente AI di PropHedge di VISIONTRADING. Rispondi in italiano, max 3 frasi. Aiuta con: calcolo lotti, drawdown, journal. Se chiedono aiuto tecnico o operatore, consiglia di scrivere "supporto umano".',
         messages: [{role: 'user', content: text}]
       })
     });
@@ -11757,7 +11754,7 @@ async function aiFloatSend(){
     _chatMsg('bot', reply);
   } catch(e) {
     _clearTyping();
-    _chatMsg('bot','⚠️ Risposta AI non disponibile al momento. Scrivi <b>supporto umano</b> per parlare direttamente con il team.');
+    _chatMsg('bot','⚠️ Risposta AI non disponibile al momento. Scrivi <b>supporto umano</b> per parlare con il team.');
   }
 }
 
@@ -11771,34 +11768,47 @@ function _activateHumanSupport(){
   _humanMode = true;
   _humanFormSent = false;
   _operatorOnline = false;
-  _ticketId = 'TKT-' + Math.floor(Math.random() * 1000000);
-  _assignedOp = {n: 'Il Supporto', img: 'https://randomuser.me/api/portraits/men/32.jpg'};
-  _seenMsgs = new Set();
-  _ticketData = null;
+  
+  // Ripristinate le tue variabili originali per l'assegnazione
+  _ticketId = (typeof _genTicket === 'function') ? _genTicket() : 'TKT-' + Math.floor(Math.random() * 1000000);
+  _assignedOp = (typeof _staff !== 'undefined' && _staff.length) ? _staff[Math.floor(Math.random()*_staff.length)] : {n: 'Il Supporto', img: 'https://randomuser.me/api/portraits/men/32.jpg'};
+  _seenTexts = [];
 
   var qb = document.getElementById('aiQuickBtns');
   if(qb) qb.style.display = 'none';
-  
+
   var ir = document.querySelector('#aiFloatPanel .ai-input-row');
   if(ir) ir.style.display = 'none';
 
   var title = document.querySelector('#aiFloatPanel .ai-title');
   var statusEl = document.querySelector('#aiFloatPanel .ai-status');
   if(title) title.textContent = 'Supporto Live';
-  if(statusEl) statusEl.innerHTML = '<span class="ai-dot" style="background:#FBBF24;box-shadow:0 0 6px #FBBF24;animation:pu 1s infinite"></span><span> Operatore in arrivo...</span>';
+  if(statusEl) statusEl.innerHTML = '<span class="ai-dot" style="background:#FBBF24;box-shadow:0 0 6px #FBBF24;animation:pu 1s infinite"></span><span> In attesa di un operatore...</span>';
 
   var msgs = document.getElementById('aiFloatMsgs');
   if(!msgs) return;
   var fr = document.createElement('div');
   fr.className = 'ai-msg-row';
   fr.id = '_humanForm';
-  fr.innerHTML = '<div class="ai-msg-ava bot" style="background:linear-gradient(135deg,#0EA5E9,#A78BFA);color:#fff;font-weight:bold;font-size:9px">AI</div>' +
-    '<div class="ai-bubble bot" style="width:100%;padding:14px">' +
-    '<div style="font-size:13px;font-weight:700;margin-bottom:8px">Passaggio al team di supporto</div>' +
-    '<div style="font-size:11px;color:var(--t2);margin-bottom:12px;line-height:1.5">Per ricevere assistenza, inserisci i tuoi dati:</div>' +
-    '<input type="text" id="_hcfName" placeholder="Il tuo Nome" style="width:100%;background:rgba(0,0,0,0.2);border:1px solid var(--border);color:#fff;border-radius:6px;padding:9px;font-size:12px;margin-bottom:8px;outline:none">' +
-    '<input type="email" id="_hcfEmail" placeholder="La tua Email" style="width:100%;background:rgba(0,0,0,0.2);border:1px solid var(--border);color:#fff;border-radius:6px;padding:9px;font-size:12px;margin-bottom:12px;outline:none">' +
-    '<button onclick="_submitContact()" style="width:100%;background:linear-gradient(135deg,#7C3AED,#38BDF8);border:none;color:#fff;border-radius:6px;padding:10px;font-weight:700;cursor:pointer">Avvia Chat Live</button>' +
+  
+  // 🔥 RIPRISTINATA LA TUA GRAFICA ORIGINALE PER GLI INPUT NOME E EMAIL
+  fr.innerHTML =
+    '<div class="ai-msg-ava bot"><svg width="18" height="18" viewBox="0 0 36 36" fill="none"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#38BDF8" stroke-width="2.5" fill="none"/><circle cx="33" cy="7" r="3.2" fill="#A78BFA"/></svg></div>'+
+    '<div class="ai-bubble bot" style="width:100%;padding:14px">'+
+      '<div style="font-size:13px;font-weight:700;margin-bottom:6px">\uD83C\uDFA7 Supporto Umano</div>'+
+      '<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:12px;line-height:1.5">Inserisci i tuoi dati per essere messo in contatto con un operatore:</div>'+
+      '<input id="_hcfName" type="text" placeholder="Nome e Cognome" '+
+        'style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.2);border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;font-family:var(--fm);outline:none;margin-bottom:8px;transition:border-color .15s" '+
+        'onfocus="this.style.borderColor=\'#38BDF8\'" onblur="this.style.borderColor=\'rgba(255,255,255,.2)\'">' +
+      '<input id="_hcfEmail" type="email" placeholder="Email" '+
+        'style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.2);border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;font-family:var(--fm);outline:none;margin-bottom:12px;transition:border-color .15s" '+
+        'onfocus="this.style.borderColor=\'#38BDF8\'" onblur="this.style.borderColor=\'rgba(255,255,255,.2)\'" '+
+        'onkeydown="if(event.key===\'Enter\')_submitContact()">'+
+      '<button onclick="_submitContact()" '+
+        'style="width:100%;background:linear-gradient(135deg,#7C3AED,#38BDF8);border:none;border-radius:8px;padding:11px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--fm);letter-spacing:.04em" '+
+        'onmouseover="this.style.opacity=\'.85\'" onmouseout="this.style.opacity=\'1\'">'+
+        'Mettimi in contatto'+
+      '</button>'+
     '</div>';
   msgs.appendChild(fr);
   msgs.scrollTop = msgs.scrollHeight;
@@ -11815,30 +11825,38 @@ function _submitContact(){
   _humanFormSent = true;
   _ticketData = {name: name, email: email};
 
-  // Rimuovi form e mostra input
   var fr = document.getElementById('_humanForm');
   if(fr) fr.remove();
+  
   var ir = document.querySelector('#aiFloatPanel .ai-input-row');
   if(ir) ir.style.display = 'flex';
+  
   var inp = document.getElementById('aiFloatInput');
   if(inp){ inp.placeholder = 'Scrivi il tuo messaggio...'; inp.focus(); }
 
   _chatMsg('bot', '\u23F3 <b>In attesa di un operatore...</b>\nRiceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.');
 
-  // FIX 1 ASSOLUTO: Invia la richiesta ESATTAMENTE come se l'utente avesse scritto un messaggio!
-  // Questo costringe il tuo server a far squillare il bot Telegram immediatamente.
+  try {
+    _sb.from('support_messages').insert({
+      ticket_id: _ticketId,
+      sender: 'user',
+      text: "🔴 NUOVO TICKET APERTO\nNome: " + name + "\nEmail: " + email,
+      operator_msg: false
+    }).then(function(){});
+  } catch(e) {}
+
+  // 🔥 IL FIX DECISIVO: Manda a Telegram INCLUDENDO LA PAROLA CHIAVE "🎫 TICKET:"
   fetch('/api/support-send', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
       ticket_id: _ticketId,
-      message: "🔴 RICHIESTA SUPPORTO LIVE\nNome: " + name + "\nEmail: " + email,
+      message: "🎫 TICKET: " + _ticketId + "\n🔴 RICHIESTA SUPPORTO LIVE\nNome: " + name + "\nEmail: " + email, 
       user: email,
       name: name
     })
   }).catch(function(){});
 
-  // Avvia il controllo risposte
   _startPoll();
 }
 
@@ -11852,9 +11870,6 @@ function _processOpMsg(text){
   _chatMsg('support', text.trim());
 }
 
-var _seenTexts = []; 
-var _tgOffset = 0;
-
 function _startPoll(){
   if(_pollTimer) return;
   _pollTimer = setInterval(async function(){
@@ -11862,7 +11877,6 @@ function _startPoll(){
 
     var found = false;
 
-    // Metodo 1: Supabase Diretto
     try {
       var res = await _sb.from('support_messages')
                          .select('*')
@@ -11880,7 +11894,6 @@ function _startPoll(){
       }
     }catch(e){}
 
-    // Metodo 2: API Fallback ESATTA (con offset ripristinato)
     if(!found){
       try {
         var r = await fetch('/api/support-poll?ticket_id=' + _ticketId + '&offset=' + _tgOffset);
@@ -11900,6 +11913,13 @@ function _startPoll(){
       }catch(ex){}
     }
   }, 3000);
+}
+
+function _stopPoll(){
+  if(_pollTimer){
+    clearInterval(_pollTimer);
+    _pollTimer = null;
+  }
 }
 
 
