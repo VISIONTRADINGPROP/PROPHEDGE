@@ -3812,7 +3812,7 @@ function doRegisterFree(){
 
 
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
         <div onclick="setMode('personal')" id="modePersonal" style="background:var(--teal-bg);border:2px solid var(--teal);border-radius:10px;padding:12px;cursor:pointer;text-align:center">
           <div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:4px">Prop + Personale</div>
           <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">BUY prop + SELL conto reale</div>
@@ -3821,13 +3821,19 @@ function doRegisterFree(){
           <div style="font-size:14px;font-weight:700;color:var(--violet);margin-bottom:4px">Prop + Prop</div>
           <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">BUY prop + SELL seconda prop</div>
         </div>
-        <div onclick="setMode('futures_personal')" id="modeFuturesPersonal" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;text-align:center">
-          <div style="font-size:14px;font-weight:700;color:var(--amber);margin-bottom:4px">Futures + Personale</div>
-          <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">BUY futures micro + SELL conto reale</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+        <div onclick="setMode('futures_personal')" id="modeFuturesPersonal" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;text-align:center">
+          <div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:3px">Futures + Personale</div>
+          <div style="font-size:10px;color:var(--t3);font-family:var(--fd)">Micro futures + conto reale</div>
         </div>
-        <div onclick="setMode('futures_prop')" id="modeFuturesProp" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;text-align:center">
-          <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:4px">Futures + Prop</div>
-          <div style="font-size:11px;color:var(--t3);font-family:var(--fd)">BUY futures micro + SELL seconda prop</div>
+        <div onclick="setMode('futures_prop')" id="modeFuturesProp" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;text-align:center">
+          <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:3px">Futures + Prop</div>
+          <div style="font-size:10px;color:var(--t3);font-family:var(--fd)">Micro futures + prop</div>
+        </div>
+        <div onclick="setMode('futures_futures')" id="modeFuturesFutures" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;text-align:center">
+          <div style="font-size:12px;font-weight:700;color:#c084fc;margin-bottom:3px">Futures + Futures</div>
+          <div style="font-size:10px;color:var(--t3);font-family:var(--fd)">Micro BUY + Micro SELL</div>
         </div>
       </div>
 
@@ -3977,7 +3983,7 @@ function doRegisterFree(){
         <div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-align:center;margin-top:5px;letter-spacing:.04em">Calcola lottaggio ottimale su DD totale ÷ giorni minimi × 100 pip</div>
       </div>
 
-      <div class="f">
+      <div class="f" id="lotsRow">
 <div class="f"><label>Lotti Conto Prop</label><input id="mLots" type="number" value="0.20" step="0.01" min="0.01" oninput="calcPreview()"></div>
       </div>
       <div class="fr2">
@@ -4617,6 +4623,29 @@ function buildBot(items){
 
 var stratMode = 'personal';
 
+/* ── Futures: converte micro-contratti in display leggibile ── */
+function _ftxDisplay(microContratti, asset) {
+  var a = (asset||'').toUpperCase();
+  // I contratti micro NON si frazionano → sempre interi (arrotonda per eccesso)
+  var n = Math.max(1, Math.ceil(microContratti));
+  // Quanti micro = 1 mini e quanti micro = 1 pieno (dipende dall'asset)
+  var miniMult = 10, fullMult = 10; // default: MES/MNQ/MYM: 10 micro = 1 mini E, 10 mini = 1 pieno
+  // Per semplicità operativa: mostriamo solo micro contratti interi
+  // Il trader poi decide se usare mini o pieno
+  var full = Math.floor(n / fullMult);
+  var rem1 = n - full * fullMult;
+  var mini = Math.floor(rem1 / (miniMult/10));  // approssimazione
+  var micro = n; // il numero intero da aprire è sempre micro
+
+  var parts = [];
+  if(full > 0) parts.push(full + (full > 1 ? ' contratti pieni' : ' contratto pieno'));
+  var residuoMicro = n - full * fullMult;
+  if(full > 0 && residuoMicro > 0) parts.push(residuoMicro + ' micro');
+  if(full === 0) parts.push(n + (n > 1 ? ' micro contratti' : ' micro contratto'));
+  return { total: n, str: parts.join(' + '), micro: n, full: full, residuo: residuoMicro };
+}
+
+
 function setMode(m) {
   stratMode = m;
   // Reset all 4 buttons
@@ -4644,6 +4673,7 @@ function setMode(m) {
     if (ggf) ggf.style.display = '';
     if (microGrp) microGrp.style.display = 'none';
     if (futuresNote) futuresNote.style.display = 'none';
+    var lotsRow = document.getElementById('lotsRow'); if(lotsRow) lotsRow.style.display='';
   } else if (m === 'prop2') {
     p2.style.background = 'var(--violet-bg)'; p2.style.borderColor = 'var(--violet)';
     if (p2f) p2f.style.display = 'block';
@@ -4651,6 +4681,7 @@ function setMode(m) {
     if (ggf) ggf.style.display = 'none';
     if (microGrp) microGrp.style.display = 'none';
     if (futuresNote) futuresNote.style.display = 'none';
+    var lotsRow = document.getElementById('lotsRow'); if(lotsRow) lotsRow.style.display='';
   } else if (m === 'futures_personal') {
     if (pFP) { pFP.style.background = 'rgba(251,191,36,0.12)'; pFP.style.borderColor = 'var(--amber)'; }
     if (p2f) p2f.style.display = 'none';
@@ -4658,12 +4689,12 @@ function setMode(m) {
     if (ggf) ggf.style.display = '';
     if (microGrp) microGrp.style.display = '';
     if (futuresNote) futuresNote.style.display = '';
-    // Auto-select first micro futures
     var mAsset = document.getElementById('mAsset');
     if (mAsset && mAsset.value && !mAsset.value.includes('MICRO') && !mAsset.value.includes('MNQ') && !mAsset.value.includes('MES') && !mAsset.value.includes('MYM')) {
-      mAsset.value = 'EURUSD_MICRO:1';
-      onAssetChange('EURUSD_MICRO:1');
+      mAsset.value = 'MES:5'; onAssetChange('MES:5');
     }
+    // Nascondi campo lotti (futures usa contratti)
+    var lotsRow = document.getElementById('lotsRow'); if(lotsRow) lotsRow.style.display='none';
   } else if (m === 'futures_prop') {
     if (pFP2) { pFP2.style.background = 'rgba(52,211,153,0.12)'; pFP2.style.borderColor = 'var(--green)'; }
     if (p2f) p2f.style.display = 'block';
@@ -4673,9 +4704,22 @@ function setMode(m) {
     if (futuresNote) futuresNote.style.display = '';
     var mAsset = document.getElementById('mAsset');
     if (mAsset && mAsset.value && !mAsset.value.includes('MICRO') && !mAsset.value.includes('MNQ') && !mAsset.value.includes('MES') && !mAsset.value.includes('MYM')) {
-      mAsset.value = 'EURUSD_MICRO:1';
-      onAssetChange('EURUSD_MICRO:1');
+      mAsset.value = 'MES:5'; onAssetChange('MES:5');
     }
+    var lotsRow = document.getElementById('lotsRow'); if(lotsRow) lotsRow.style.display='none';
+  } else if (m === 'futures_futures') {
+    var pFF = document.getElementById('modeFuturesFutures');
+    if (pFF) { pFF.style.background = 'rgba(192,132,252,0.12)'; pFF.style.borderColor = '#c084fc'; }
+    if (p2f) p2f.style.display = 'block';
+    if (ptf) ptf.style.display = 'none';
+    if (ggf) ggf.style.display = 'none';
+    if (microGrp) microGrp.style.display = '';
+    if (futuresNote) futuresNote.style.display = '';
+    var mAsset = document.getElementById('mAsset');
+    if (mAsset && mAsset.value && !mAsset.value.includes('MICRO') && !mAsset.value.includes('MNQ') && !mAsset.value.includes('MES') && !mAsset.value.includes('MYM')) {
+      mAsset.value = 'MES:5'; onAssetChange('MES:5');
+    }
+    var lotsRow = document.getElementById('lotsRow'); if(lotsRow) lotsRow.style.display='none';
   }
   calcPreview();
 }
@@ -5043,7 +5087,7 @@ function autoCalcPips(){
   else if(a==='MYM') pipVal=0.5;
 
   // ── PROP+PROP ──
-  if(stratMode === 'prop2' || stratMode === 'futures_prop') {
+  if(stratMode === 'prop2' || stratMode === 'futures_prop' || stratMode === 'futures_futures') {
     var size2  = parseFloat(document.getElementById('mSize2')?.value)  || 0;
     var dd2    = parseFloat(document.getElementById('mDD2')?.value)    || 6;
     var days2  = parseFloat(document.getElementById('mDays2')?.value)  || 10;
@@ -5167,7 +5211,7 @@ var c = calcChallenge(p);
 
 
   // ── PROP+PROP: calcolo separato ──
-  if((stratMode === 'prop2' || stratMode === 'futures_prop') && size > 0 && size2 > 0) {
+  if((stratMode === 'prop2' || stratMode === 'futures_prop' || stratMode === 'futures_futures') && size > 0 && size2 > 0) {
     var pipVal_pp = c.pipVal;                       // pip value asset selezionato
     var ddTot1    = size  * (maxDD / 100);           // DD totale prop1 $
     var ddTot2    = size2 * (dd2  / 100);            // DD totale prop2 $
@@ -5223,27 +5267,82 @@ var c = calcChallenge(p);
     +'<div style="font-size:14px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+costoCiclo.toFixed(0)+'</div></div>'
     +'</div>'
 
-    // Lotti
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
-    // Prop 1
-    +'<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
-    +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">PROP 1 — LOTTI</div>'
-    +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+lot1+' lot</div>'
-    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
-    +'TP lordo: <span style="color:var(--green)">+$'+profitLordo1.toFixed(2)+'</span><br>'
-    +'Payout '+pay1+'%: <span style="color:var(--teal)">+$'+profit1.toFixed(2)+'</span><br>'
-    +'DD/trade: <span style="color:var(--red)">$'+(ddTot1/ggMax).toFixed(0)+'</span>'
-    +'</div></div>'
-    // Prop 2
-    +'<div style="background:var(--bg3);border:2px solid rgba(56,189,248,.4);border-radius:10px;padding:12px">'
-    +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">PROP 2 — LOTTI</div>'
-    +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+lot2+' lot</div>'
-    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
-    +'TP lordo: <span style="color:var(--green)">+$'+profitLordo2.toFixed(2)+'</span><br>'
-    +'Payout '+pay2+'%: <span style="color:var(--teal)">+$'+profit2.toFixed(2)+'</span><br>'
-    +'DD/trade: <span style="color:var(--red)">$'+(ddTot2/ggMax).toFixed(0)+'</span>'
-    +'</div></div>'
-    +'</div>'
+    // Lotti — per futures_prop mostra contratti, per prop2 rimane lotti
+    +(function(){
+      if(stratMode==='futures_prop'||stratMode==='futures_futures'){
+        // BUY = futures micro interi
+        var d1=_ftxDisplay(lot1, asset);
+        var pip100 = parseFloat(document.getElementById('mTpPips')?.value||100);
+        var pipV   = pipVal_pp;
+        var tp1real = (d1.micro * pipV * pip100).toFixed(2);
+        var sl1real = (d1.micro * pipV * pip100).toFixed(2);
+        var pr1real = (d1.micro * pipV * pip100 * ggMax * (pay1/100)).toFixed(2);
+
+        var buyBlock = '<div style="background:var(--bg3);border:2px solid rgba(56,189,248,.4);border-radius:10px;padding:12px">'
+          +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">FUTURES BUY — MICRO</div>'
+          +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:2px">'+d1.str+'</div>'
+          +(d1.full>0?'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:4px">oppure '+d1.full+' pieno + '+d1.residuo+' micro</div>':'')
+          +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+          +'TP/trade: <span style="color:var(--green)">+$'+tp1real+'</span><br>'
+          +'SL/trade: <span style="color:var(--red)">-$'+sl1real+'</span><br>'
+          +'Payout '+pay1+'%: <span style="color:var(--teal)">+$'+pr1real+'</span>'
+          +'</div></div>';
+
+        // SELL: futures_futures → micro interi; futures_prop → lotti standard
+        var sellBlock = '';
+        if(stratMode==='futures_futures'){
+          var d2=_ftxDisplay(lot2,asset);
+          var tp2real=(d2.micro*pipV*pip100).toFixed(2);
+          var sl2real=(d2.micro*pipV*pip100).toFixed(2);
+          var pr2real=(d2.micro*pipV*pip100*ggMax*(pay2/100)).toFixed(2);
+          sellBlock = '<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
+            +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">FUTURES SELL — MICRO</div>'
+            +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:2px">'+d2.str+'</div>'
+            +(d2.full>0?'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:4px">oppure '+d2.full+' pieno + '+d2.residuo+' micro</div>':'')
+            +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+            +'TP/trade: <span style="color:var(--green)">+$'+tp2real+'</span><br>'
+            +'SL/trade: <span style="color:var(--red)">-$'+sl2real+'</span><br>'
+            +'Payout '+pay2+'%: <span style="color:var(--teal)">+$'+pr2real+'</span>'
+            +'</div></div>';
+        } else {
+          // futures_prop → SELL = lotti standard prop
+          var lot2r = Math.ceil(lot2*100)/100;
+          var lot2tp = profitLordo2.toFixed(2);
+          var lot2net = profit2.toFixed(2);
+          sellBlock = '<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
+            +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">PROP SELL — LOTTI</div>'
+            +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:2px">'+lot2r+' lot</div>'
+            +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+            +'TP lordo: <span style="color:var(--green)">+$'+lot2tp+'</span><br>'
+            +'Payout '+pay2+'%: <span style="color:var(--teal)">+$'+lot2net+'</span><br>'
+            +'DD/trade: <span style="color:var(--red)">$'+(ddTot2/ggMax).toFixed(0)+'</span>'
+            +'</div></div>';
+        }
+
+        return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+          +buyBlock+sellBlock+'</div>';
+      } else {
+        // PROP+PROP: rimane invariato con lotti — NON TOCCARE
+        return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+          +'<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
+          +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">PROP 1 — LOTTI</div>'
+          +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+lot1+' lot</div>'
+          +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+          +'TP lordo: <span style="color:var(--green)">+$'+profitLordo1.toFixed(2)+'</span><br>'
+          +'Payout '+pay1+'%: <span style="color:var(--teal)">+$'+profit1.toFixed(2)+'</span><br>'
+          +'DD/trade: <span style="color:var(--red)">$'+(ddTot1/ggMax).toFixed(0)+'</span>'
+          +'</div></div>'
+          +'<div style="background:var(--bg3);border:2px solid rgba(56,189,248,.4);border-radius:10px;padding:12px">'
+          +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">PROP 2 — LOTTI</div>'
+          +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+lot2+' lot</div>'
+          +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+          +'TP lordo: <span style="color:var(--green)">+$'+profitLordo2.toFixed(2)+'</span><br>'
+          +'Payout '+pay2+'%: <span style="color:var(--teal)">+$'+profit2.toFixed(2)+'</span><br>'
+          +'DD/trade: <span style="color:var(--red)">$'+(ddTot2/ggMax).toFixed(0)+'</span>'
+          +'</div></div>'
+          +'</div>';
+      }
+    })()
 
     // Scenari
     +'<div style="margin-bottom:10px">'
@@ -5321,55 +5420,83 @@ box.innerHTML =
 
 
 
-  // Lotti — la parte chiave — DIVERSI tra prop e hedge
+  // Contratti/Lotti — adattivo per futures vs prop
+  +(function(){
+    var isFut = (stratMode==='futures_personal'||stratMode==='futures_prop'||stratMode==='futures_futures');
+    if(isFut){
+      // BUY lato = SEMPRE futures micro contratti (interi)
+      var pd = _ftxDisplay(c.propLots, asset);
+      // Ricalcola TP/SL con contratti interi effettivi
+      var pdTP = (pd.micro * c.pipVal * parseFloat(document.getElementById('mTpPips')?.value||100)).toFixed(2);
+      var pdSL = (pd.micro * c.pipVal * parseFloat(document.getElementById('mSlPips')?.value||100)).toFixed(2);
 
-  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+      // SELL lato:
+      // futures_futures → micro contratti interi
+      // futures_personal / futures_prop → LOTTI standard (non micro)
+      var sellIsFutures = (stratMode==='futures_futures');
+      var hedgeLabel = stratMode==='futures_personal' ? 'CONTO PERSONALE — LOTTI' : (stratMode==='futures_futures' ? 'FUTURES SELL (micro)' : 'PROP SELL — LOTTI');
 
+      var sellBlock = '';
+      if(sellIsFutures){
+        var hd = _ftxDisplay(c.hedgeLots, asset);
+        var hdTP = (hd.micro * c.pipVal * parseFloat(document.getElementById('mTpPips')?.value||100)).toFixed(2);
+        var hdSL = (hd.micro * c.pipVal * parseFloat(document.getElementById('mSlPips')?.value||100)).toFixed(2);
+        sellBlock = '<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
+          +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">'+hedgeLabel+'</div>'
+          +'<div style="font-size:22px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:2px">'+hd.str+'</div>'
+          +(hd.full>0?'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:5px">oppure '+hd.full+' contratto pieno + '+hd.residuo+' micro</div>':'')
+          +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+          +'TP: <span style="color:var(--green)">+$'+hdTP+'</span><br>'
+          +'SL: <span style="color:var(--red)">-$'+hdSL+'</span><br>'
+          +'Max/trade: <span style="color:var(--teal)">$'+c.maxPerTrade.toFixed(2)+'</span>'
+          +'</div></div>';
+      } else {
+        // Loti standard (conto personale o prop)
+        var hLots = Math.ceil(c.hedgeLots * 100) / 100;
+        sellBlock = '<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
+          +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">'+hedgeLabel+'</div>'
+          +'<div style="font-size:22px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:2px">'+hLots+' lot</div>'
+          +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+          +'TP: <span style="color:var(--green)">+$'+c.hedgeTP.toFixed(2)+'</span><br>'
+          +'SL: <span style="color:var(--red)">-$'+c.hedgeSL.toFixed(2)+'</span><br>'
+          +'Max/trade: <span style="color:var(--teal)">$'+c.maxPerTrade.toFixed(2)+'</span>'
+          +'</div></div>';
+      }
 
-
-  // Conto Personale (hedge) — SINISTRA
-
-  +'<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
-
-  +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">CONTO PERSONALE — LOTTI</div>'
-
-  +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+c.hedgeLots+' lot</div>'
-
-  +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
-
-  +'TP: <span style="color:var(--green)">+$'+c.hedgeTP.toFixed(2)+'</span><br>'
-
-  +'SL: <span style="color:var(--red)">-$'+c.hedgeSL.toFixed(2)+'</span><br>'
-
-  +'Max/trade: <span style="color:var(--teal)">$'+c.maxPerTrade.toFixed(2)+'</span>'
-
-  +'</div>'
-
-  +'</div>'
-
-
-
-  // Conto Prop — DESTRA
-
-  +'<div style="background:var(--bg3);border:2px solid rgba(56,189,248,.4);border-radius:10px;padding:12px">'
-
-  +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">CONTO PROP</div>'
-
-  +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+c.propLots+' lot</div>'
-
-  +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
-
-  +'TP: <span style="color:var(--green)">+$'+c.propTP.toFixed(2)+'</span><br>'
-
-  +'SL: <span style="color:var(--red)">-$'+c.propSL.toFixed(2)+'</span><br>'
-
-  +'Copre costo challenge'
-
-  +'</div>'
-
-  +'</div>'
-
-  +'</div>'
+      return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+        // BUY Futures micro (intero)
+        +'<div style="background:var(--bg3);border:2px solid rgba(56,189,248,.4);border-radius:10px;padding:12px">'
+        +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">FUTURES BUY — MICRO</div>'
+        +'<div style="font-size:22px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:2px">'+pd.str+'</div>'
+        +(pd.full>0?'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:5px">oppure '+pd.full+' contratto pieno + '+pd.residuo+' micro</div>':'')
+        +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+        +'TP: <span style="color:var(--green)">+$'+pdTP+'</span><br>'
+        +'SL: <span style="color:var(--red)">-$'+pdSL+'</span>'
+        +'</div></div>'
+        +sellBlock
+        +'</div>';
+    } else {
+      // PROP/PERSONALE: rimane lotti come prima — NON TOCCARE
+      return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+        +'<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
+        +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">CONTO PERSONALE — LOTTI</div>'
+        +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+c.hedgeLots+' lot</div>'
+        +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+        +'TP: <span style="color:var(--green)">+$'+c.hedgeTP.toFixed(2)+'</span><br>'
+        +'SL: <span style="color:var(--red)">-$'+c.hedgeSL.toFixed(2)+'</span><br>'
+        +'Max/trade: <span style="color:var(--teal)">$'+c.maxPerTrade.toFixed(2)+'</span>'
+        +'</div></div>'
+        +'<div style="background:var(--bg3);border:2px solid rgba(56,189,248,.4);border-radius:10px;padding:12px">'
+        +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">CONTO PROP</div>'
+        +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+c.propLots+' lot</div>'
+        +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+        +'TP: <span style="color:var(--green)">+$'+c.propTP.toFixed(2)+'</span><br>'
+        +'SL: <span style="color:var(--red)">-$'+c.propSL.toFixed(2)+'</span><br>'
+        +'Copre costo challenge'
+        +'</div></div>'
+        +'</div>';
+    }
+  })()
 
 
 
