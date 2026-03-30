@@ -11279,6 +11279,24 @@ function calGenerateDemo(){
 
 
 
+function _calFFUrl(ev){
+  // Costruisce URL ForexFactory per il giorno specifico dell'evento
+  // Formato FF: forexfactory.com/calendar?day=mar30.2026
+  var months=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  try{
+    var d=calParseDate(ev.date, ev.time);
+    if(d){
+      var mon=months[d.getMonth()];
+      var day=d.getDate();
+      var yr=d.getFullYear();
+      // Se esiste url diretto nell'evento (alcuni JSON FF lo includono), usalo
+      if(ev.url && ev.url.length>10) return ev.url;
+      return 'https://www.forexfactory.com/calendar?day='+mon+day+'.'+yr;
+    }
+  }catch(e){}
+  return 'https://www.forexfactory.com/calendar';
+}
+
 function calRender(){
 
 
@@ -11367,7 +11385,8 @@ function calRender(){
 
 
 
-        html+='<div class="cal-row" style="'+rowBg+'cursor:pointer" onclick="window.open(\'https://www.forexfactory.com/calendar\',\'_blank\')">'
+        var _ffU=_calFFUrl(ev);
+        html+='<div class="cal-row" style="'+rowBg+'cursor:pointer" title="Apri su ForexFactory" onclick="window.open(\''+_ffU+'\',\'_blank\')">'
 
 
 
