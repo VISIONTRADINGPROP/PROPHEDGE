@@ -11629,8 +11629,9 @@ function _accReset(){
   if(a){ a.style.transform=''; a.style.boxShadow=''; a.style.opacity='1'; }
 }
 
-// ── GESTIONE CHAT LIVE & SUPPORTO UMANO (Riscritto) ──
+// ── GESTIONE CHAT LIVE & SUPPORTO UMANO (Riscritto + API Telegram Ripristinate) ──
 var _seenMsgs = new Set(); 
+var _ticketData = null; // Aggiunto per evitare errori sull'invio API
 
 function toggleAIChat(){
   _aiOpen = !_aiOpen;
@@ -11641,7 +11642,7 @@ function toggleAIChat(){
 
   if(_aiOpen && !_aiGreeted){
     _aiGreeted = true;
-    _chatMsg('bot', 'Ciao! 👋 Sono l’assistente AI di PropHedge.\n\nPosso aiutarti con il calcolo lotti, drawdown, journal, connessione piattaforme e altro.\n\nScrivi <b>supporto umano</b> per parlare con un operatore reale.');
+    _chatMsg('bot', 'Ciao! 👋 Sono l’assistente AI di PropHedge.\n\nPosso aiutarti con: calcolo lotti, drawdown, journal, connessione piattaforme e altro.\n\nScrivi <b>supporto umano</b> per parlare con un operatore.');
   }
   
   if(_aiOpen && _humanMode && _humanFormSent && !_pollTimer){
@@ -11660,7 +11661,7 @@ function _chatMsg(role, html){
   
   var avaHtml;
   if(role === 'support' && _assignedOp){
-    avaHtml = '<img src="'+_assignedOp.img+'" style="width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0">';
+    avaHtml = '<img src="'+_assignedOp.img+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0">';
   } else if(isBot){
     avaHtml = '<div class="ai-msg-ava bot" style="background:linear-gradient(135deg,#0EA5E9,#A78BFA);color:#fff;font-weight:bold;font-size:9px">AI</div>';
   } else {
@@ -11700,11 +11701,11 @@ async function aiFloatSend(){
   // Se l'utente è già in modalità Supporto Umano
   if(_humanMode){
     if(!_humanFormSent){
-      _chatMsg('bot', '⚠️ Per favore, inserisci nome ed email nel modulo qui sopra per poter chattare con l\'operatore.');
+      _chatMsg('bot', '⚠️ Per favore, inserisci nome ed email nel modulo per poter chattare con l\'operatore.');
       return;
     }
     
-    // Invia il messaggio al database Supabase (Telegram)
+    // Tenta Supabase Diretto
     try {
       _sb.from('support_messages').insert({
         ticket_id: _ticketId,
@@ -11714,12 +11715,19 @@ async function aiFloatSend(){
       }).then(function(){});
     } catch(e) {}
     
-    // API di Fallback
-    fetch('/api/support-contact', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ ticket_id: _ticketId, text: text, operator: _assignedOp ? _assignedOp.n : '' })
-    }).catch(function(){});
+    // 🔥 RIPRISTINATA: API Server Originale per inviare il messaggio a Telegram
+    try {
+      await fetch('/api/support-send', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          ticket_id: _ticketId,
+          message: text,
+          user: (_ticketData && _ticketData.email) || '',
+          name: (_ticketData && _ticketData.name) || ''
+        })
+      });
+    } catch(e) {}
     
     return;
   }
@@ -11765,7 +11773,8 @@ function _activateHumanSupport(){
   _operatorOnline = false;
   _ticketId = 'TKT-' + Math.floor(Math.random() * 1000000);
   _assignedOp = {n: 'Il Supporto', img: 'https://randomuser.me/api/portraits/men/32.jpg'};
-  _seenMsgs = new Set(); // Reset totale della memoria dei messaggi letti
+  _seenMsgs = new Set();
+  _ticketData = null;
 
   var qb = document.getElementById('aiQuickBtns');
   if(qb) qb.style.display = 'none';
@@ -11805,6 +11814,7 @@ function _submitContact(){
   if(!email || !email.includes('@')){ if(eEl){eEl.style.borderColor='#F87171'; eEl.focus();} return; }
 
   _humanFormSent = true;
+  _ticketData = {name: name, email: email};
 
   var fr = document.getElementById('_humanForm');
   if(fr) fr.remove();
@@ -11816,7 +11826,7 @@ function _submitContact(){
 
   _chatMsg('bot', '⏳ <b>In attesa del supporto...</b>\nRiceverai risposta a breve, puoi già scrivere qui sotto il tuo problema.');
 
-  // FORZA INSERIMENTO IN SUPABASE (Apre immediatamente il ticket Telegram)
+  // FORZA INSERIMENTO IN SUPABASE
   try {
     _sb.from('support_messages').insert({
       ticket_id: _ticketId,
@@ -11826,10 +11836,16 @@ function _submitContact(){
     }).then(function(){});
   } catch(e) {}
 
+  // 🔥 RIPRISTINATA: API Server Originale per innescare Telegram
   fetch('/api/support-contact', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ ticket_id: _ticketId, name: name, email: email })
+    body: JSON.stringify({ 
+      ticket_id: _ticketId, 
+      name: name, 
+      email: email,
+      operator: _assignedOp ? _assignedOp.n : ''
+    })
   }).catch(function(){});
 
   _startPoll();
@@ -11845,11 +11861,15 @@ function _processOpMsg(text){
   _chatMsg('support', text.trim());
 }
 
+var _tgOffset = 0;
 function _startPoll(){
   if(_pollTimer) return;
   _pollTimer = setInterval(async function(){
     if(!_humanMode || !_ticketId) return;
 
+    var found = false;
+    
+    // 1. Supabase Diretto
     try {
       var res = await _sb.from('support_messages')
                          .select('id, text, created_at')
@@ -11859,17 +11879,37 @@ function _startPoll(){
 
       if(res.data && res.data.length > 0){
         res.data.forEach(function(m){
-          // Usa ID reale per non perdere mai i messaggi
           var msgId = m.id || m.created_at || m.text;
           if(!_seenMsgs.has(msgId)){
             _seenMsgs.add(msgId);
             _processOpMsg(m.text);
           }
         });
+        found = true;
       }
     } catch(e) {}
 
-  }, 2500); // Polling accelerato a 2.5 secondi
+    // 2. 🔥 RIPRISTINATA: API Server Originale di fallback per leggere i messaggi
+    if(!found){
+      try {
+        var r = await fetch('/api/support-poll?ticket_id=' + _ticketId + '&offset=' + _tgOffset);
+        if(r.ok){
+          var d = await r.json();
+          if(d.messages && d.messages.length>0){
+            d.messages.forEach(function(msg){
+              var mId = msg.id || msg.message_id || msg.text;
+              if(!_seenMsgs.has(mId)){
+                _seenMsgs.add(mId);
+                _processOpMsg(msg.text);
+              }
+            });
+            _tgOffset = d.next_offset || _tgOffset;
+          }
+        }
+      }catch(ex){}
+    }
+
+  }, 2500); 
 }
 
 function _stopPoll(){
