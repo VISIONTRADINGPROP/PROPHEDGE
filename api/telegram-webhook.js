@@ -3,26 +3,27 @@
 const { createClient } = require('@supabase/supabase-js');
 
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') { res.status(200).end(); return; }
+  if (req.method !== 'POST') { return res.status(200).end(); }
 
   const body = req.body;
-  if (!body || !body.message) { res.status(200).end(); return; }
+  if (!body || !body.message) { return res.status(200).end(); }
 
   const msg     = body.message;
   const text    = msg.text || '';
   const replyTo = msg.reply_to_message;
 
   // Ignora i comandi come /start
-  if (text.startsWith('/')) { res.status(200).end(); return; }
+  if (text.startsWith('/')) { return res.status(200).end(); }
 
   // Se non stai usando la funzione "Rispondi" di Telegram, blocca tutto
-  if (!replyTo) { res.status(200).end(); return; }
+  if (!replyTo) { return res.status(200).end(); }
 
   const originalText = replyTo.text || '';
   
-  // 🔥 FIX DEFINITIVO: Cerca SOLO "TKT-" seguito da numeri. Ignora emoji, spazi e formattazioni!
-  const ticketMatch  = originalText.match(/(TKT-\d+)/);
-  if (!ticketMatch) { res.status(200).end(); return; }
+  // 🔥 FIX DEFINITIVO: Cerca la parola "TICKET:" e cattura QUALSIASI codice ci sia dopo, 
+  // che sia TKT-123 o T1711800_A1B2
+  const ticketMatch  = originalText.match(/TICKET:\s*([A-Za-z0-9_-]+)/);
+  if (!ticketMatch) { return res.status(200).end(); }
 
   const ticketId = ticketMatch[1];
 
