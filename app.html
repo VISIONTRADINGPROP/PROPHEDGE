@@ -5307,196 +5307,169 @@ var sA_net  = sA_gain - cost - (spreadCostHedge * maxLossTrades);
 
 }
 
-// ==========================================
-// 1. NUOVO CERVELLO AUTO-CALCOLO (PULITO)
-// ==========================================
 function autoCalcPips(){
-  var size = parseFloat(document.getElementById('mSize')?.value) || 100000;
-  var tgtPct = parseFloat(document.getElementById('mTgt')?.value) || 8;
-  var ddd = parseFloat(document.getElementById('mDDD')?.value) || 3;
-  var cons = parseFloat(document.getElementById('mConsistency')?.value) || 0;
+  /* ═══ CALCOLO AUTOMATICO INTELLIGENTE ═══
+     Testa RR 1:1 / 1:2 / 1:3 con SL variabili
+     Trova la combinazione che MASSIMIZZA il netto realistico
+     mantenendo copertura costo ≥ 50% nel caso peggiore
+     Funziona per TUTTE le modalità
+  ═══════════════════════════════════════════ */
+  var size   = parseFloat(document.getElementById('mSize')?.value)        || 100000;
+  var cost   = parseFloat(document.getElementById('mCost')?.value)        || 1500;
+  var maxDD  = parseFloat(document.getElementById('mDD')?.value)          || 6;
+  var ddd    = parseFloat(document.getElementById('mDDD')?.value)         || 3;
+  var days   = parseFloat(document.getElementById('mDays')?.value)        || 10;
+  var pay    = parseFloat(document.getElementById('mPay')?.value)         || 80;
+  var cons   = parseFloat(document.getElementById('mConsistency')?.value) || 30;
   var assetEl = document.getElementById('mAsset');
-  var asset = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
-  var isTrailing = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
-  var pipVal = (typeof _chPipVal === 'function') ? _chPipVal(asset) : 10;
-  var dailyDDusd = size * (ddd / 100);
-  var stratMode = typeof _stratMode !== 'undefined' ? _stratMode : 'personal';
+  var asset  = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
+  var a = asset.toUpperCase().replace(/[^A-Z0-9]/g,'');
 
-  // Se siamo in Prop vs Prop (Logica Invariata)
+  var pipVal = _chPipVal(asset);
+
+  var maxDDusd   = size * (maxDD / 100);
+  var dailyDDusd = size * (ddd  / 100);
+  var isTrailing = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
+
+  // ── PROP+PROP: logica invariata (RR 1:1 fisso) ──
   if(stratMode==='prop2'||stratMode==='futures_prop'||stratMode==='futures_futures'){
-    var size2 = parseFloat(document.getElementById('mSize2')?.value) || 0;
-    var maxDD = parseFloat(document.getElementById('mDD')?.value) || 6;
-    var dd2 = parseFloat(document.getElementById('mDD2')?.value) || 6;
-    var ggM = Math.max(parseFloat(document.getElementById('mDays')?.value)||10, 10);
-    var ddT1 = size*(maxDD/100), ddT2 = size2*(dd2/100);
-    var l1 = Math.floor((ddT1/ggM/(pipVal*100))*100)/100;
-    if(l1<0.01) l1=0.01;
-    document.getElementById('mSlPips').value = 100;
-    document.getElementById('mTpPips').value = 100;
-    document.getElementById('mLots').value = l1;
+    var size2  = parseFloat(document.getElementById('mSize2')?.value) || 0;
+    var dd2    = parseFloat(document.getElementById('mDD2')?.value)   || 6;
+    var days2  = parseFloat(document.getElementById('mDays2')?.value) || 10;
+    if(size2<=0){alert('Inserisci la dimensione della Prop 2.');return;}
+    var ddT1=size*(maxDD/100), ddT2=size2*(dd2/100);
+    var ggM=Math.max(days,days2);
+    var l1=Math.floor((ddT1/ggM/(pipVal*100))*100)/100;
+    var l2=Math.floor((ddT2/ggM/(pipVal*100))*100)/100;
+    if(l1<0.01)l1=0.01; if(l2<0.01)l2=0.01;
+    var sE=document.getElementById('mSlPips'), tE=document.getElementById('mTpPips'), lE=document.getElementById('mLots');
+    if(sE)sE.value=100; if(tE)tE.value=100; if(lE)lE.value=l1;
     calcPreview();
+    alert('CALCOLO AUTOMATICO PROP+PROP\n\nAsset: '+asset+' | $'+pipVal+'/pip\nGiorni max: '+ggM+'\n\nProp 1 \u2192 '+l1+' lot (DD $'+ddT1.toFixed(0)+')\nProp 2 \u2192 '+l2+' lot (DD $'+ddT2.toFixed(0)+')\nSL=TP=100 pip');
     return;
   }
 
-  // Se siamo in Prop vs Personale (Niente Payout su Personale)
-  var rrMult = (cons > 0) ? 2 : 3;
-  var pipsSL = 100;
-  var pipsTP = pipsSL * rrMult;
+  /* ═══ RICERCA MIGLIOR RR ═══
+     Testa tutte le combinazioni:
+     SL candidati:  30, 50, 80, 100, 150 pip
+     RR candidati:  1:1, 1:2, 1:3
+     Criterio di scelta:
+       1. Copertura costo nel peggiore ≥ 50%
+       2. Massimizza netto scenario realistico (60% win)
+       3. In parità, preferisce RR più alto
+  ═══════════════════════════════════════════ */
+  var slOptions = [30, 50, 80, 100, 150];
+  var rrOptions = [{rr:'1:1',m:1},{rr:'1:2',m:2},{rr:'1:3',m:3}];
+  var best = null, bestScore = -Infinity;
 
-  var targetProp = size * (tgtPct / 100);
-  var tp_dollar_ideale = (cons > 0) ? (targetProp * (cons / 100) * 0.95) : (targetProp * 0.20);
-  var rischioMax = isTrailing ? (dailyDDusd * 0.25) : (dailyDDusd * 0.40);
-  var sl_dollar_ideale = tp_dollar_ideale / rrMult;
+  slOptions.forEach(function(slPip){
+    rrOptions.forEach(function(rr){
+      var tpPip = slPip * rr.m;
 
-  if (sl_dollar_ideale > rischioMax) {
-      sl_dollar_ideale = rischioMax;
-      tp_dollar_ideale = sl_dollar_ideale * rrMult;
-  }
+      // Lotto prop: rispetta daily DD e consistenza
+      var lotByDaily = (dailyDDusd * 0.90) / (slPip * pipVal);
+      // Con trailing: riduco lotto se il primo TP consuma troppo buffer
+      if(isTrailing){
+        var bufAfterTP = maxDDusd - (lotByDaily * tpPip * pipVal);
+        if(bufAfterTP < maxDDusd * 0.3){
+          lotByDaily = (maxDDusd * 0.35) / (tpPip * pipVal);
+        }
+      }
+      // Consistenza: nessun giorno > cons% del profitto totale
+      // Stima profitto totale = target prop (usiamo maxDD come proxy)
+      var lotByCons = (maxDDusd * (cons/100)) / (tpPip * pipVal);
+      var lot = Math.min(lotByDaily, lotByCons);
+      lot = Math.floor(lot * 100) / 100;
+      if(lot < 0.01) lot = 0.01;
 
-  var lottiIdeali = tp_dollar_ideale / (pipsTP * pipVal);
-  lottiIdeali = Math.floor(lottiIdeali * 100) / 100;
-  if (lottiIdeali < 0.01) lottiIdeali = 0.01;
+      var winAmt  = lot * tpPip * pipVal;
+      var lossAmt = lot * slPip * pipVal;
 
-  document.getElementById('mSlPips').value = pipsSL;
-  document.getElementById('mTpPips').value = pipsTP;
-  document.getElementById('mLots').value = lottiIdeali;
+      // N° max loss prima del game over
+      var bufForLoss = isTrailing ? Math.max(0, maxDDusd - winAmt) : maxDDusd;
+      var nLossMax = lossAmt > 0 ? Math.floor(bufForLoss / lossAmt) : days;
+      if(nLossMax < 1) nLossMax = 1;
 
-  calcPreview(); // Forza l'aggiornamento visivo immediato
+      // Lotto personale (50% copertura default nel calcolo automatico)
+      var covTarget = cost * 0.5;
+      var lotPers = covTarget / (nLossMax * slPip * pipVal);
+      lotPers = Math.ceil(lotPers * 1000) / 1000;
+      if(lotPers < 0.001) lotPers = 0.001;
+      var persWin  = lotPers * tpPip * pipVal;
+      var persLoss = lotPers * slPip * pipVal;
+
+      // Spread
+      var spPip  = parseFloat(document.getElementById('mSpread')?.value)||0;
+      var spProp = parseFloat(document.getElementById('ifSpreadProp')?.value)||spPip;
+      var spPers = parseFloat(document.getElementById('ifSpreadPers')?.value)||spPip;
+      var spTrade= lot * spProp * pipVal + lotPers * spPers * pipVal;
+      var spTot  = spTrade * days;
+
+      // Scenario PEGGIORE (tutti loss)
+      var sW_pers  = persWin * nLossMax;
+      var sW_netto = -(0) + sW_pers - cost - spTot;
+      var copertura = cost > 0 ? Math.min(100, Math.round(sW_pers/cost*100)) : 0;
+
+      // Scenario REALISTICO (60% win)
+      var rW = Math.round(days*0.6), rL = days - rW;
+      var sR_prop  = rW*winAmt - rL*lossAmt;
+      var sR_pers  = rL*persWin - rW*persLoss;
+      var sR_pay   = sR_prop > 0 ? sR_prop*(pay/100) : 0;
+      var sR_netto = sR_pay + sR_pers - cost - spTot;
+
+      // Scenario MIGLIORE (tutti win)
+      var sB_prop  = winAmt * days;
+      var sB_pers  = -(persLoss * days);
+      var sB_pay   = sB_prop * (pay/100);
+      var sB_netto = sB_pay + sB_pers - cost - spTot;
+
+      // SCORE: priorità a copertura ≥ 50%, poi massimizza realistico
+      var score = sR_netto;
+      if(copertura >= 80) score += 1000;
+      else if(copertura >= 50) score += 400;
+      else score -= 500;
+      // Bonus RR alto a parità
+      score += rr.m * 10;
+
+      if(score > bestScore){
+        bestScore = score;
+        best = {slPip, tpPip, rr:rr.rr, lot, lotPers,
+          winAmt, lossAmt, nLossMax, copertura,
+          sW_netto, sR_netto, sB_netto, sR_pay, sB_pay};
+      }
+    });
+  });
+
+  if(!best){ alert('Impossibile calcolare. Controlla i parametri.'); return; }
+
+  // Applica il miglior risultato ai campi
+  var slEl  = document.getElementById('mSlPips');
+  var tpEl  = document.getElementById('mTpPips');
+  var lotEl = document.getElementById('mLots');
+  if(slEl)  slEl.value  = best.slPip;
+  if(tpEl)  tpEl.value  = best.tpPip;
+  if(lotEl) lotEl.value = best.lot;
+
+  calcPreview();
+
+  // Popup con il riepilogo
+  alert(
+    'MIGLIOR COMBINAZIONE TROVATA\n' +
+    '============================\n' +
+    'Asset: ' + asset + ' | $' + pipVal + '/pip\n' +
+    'RR ottimale: ' + best.rr + '\n' +
+    'SL: ' + best.slPip + ' pip  TP: ' + best.tpPip + ' pip\n' +
+    'Lotto prop: ' + best.lot + ' lot\n' +
+    '----------------------------\n' +
+    'PEGGIORE:    $' + best.sW_netto.toFixed(0) + ' (copertura ' + best.copertura + '%)\n' +
+    'REALISTICO:  $' + best.sR_netto.toFixed(0) + '\n' +
+    'MIGLIORE:    $' + best.sB_netto.toFixed(0) + '\n' +
+    '----------------------------\n' +
+    'Max stop tollerati: ' + best.nLossMax + '\n' +
+    'Vedi il risultato aggiornato nel pannello'
+  );
 }
 
-// ==========================================
-// 2. NUOVO RENDER A SCHERMO (ZERO IMMONDIZIA)
-// ==========================================
-function calcPreview() {
-  var size = parseFloat(document.getElementById('mSize')?.value) || 0;
-  if(!size) return;
-
-  var cost = parseFloat(document.getElementById('mCost')?.value) || 0;
-  var maxDD = parseFloat(document.getElementById('mDD')?.value) || 6;
-  var ddd = parseFloat(document.getElementById('mDDD')?.value) || 3;
-  var tgtPct = parseFloat(document.getElementById('mTgt')?.value) || maxDD;
-  var pay = parseFloat(document.getElementById('mPay')?.value) || 80;
-  var sl = parseFloat(document.getElementById('mSlPips')?.value) || 50;
-  var tp = parseFloat(document.getElementById('mTpPips')?.value) || 50;
-  var cons = parseFloat(document.getElementById('mConsistency')?.value) || 0;
-  var days = parseFloat(document.getElementById('mDays')?.value) || 14;
-  var spread = parseFloat(document.getElementById('mSpread')?.value) || 0;
-  var assetEl = document.getElementById('mAsset');
-  var asset = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
-  var lots = parseFloat(document.getElementById('mLots')?.value) || 0.01;
-
-  var p = {
-    size, cost, maxDD, ddd, tgtPct, pay, slPips:sl, tpPips:tp, lots:lots,
-    asset, consistency:cons, spread, days, pipV:0,
-    pipVProp: parseFloat(document.getElementById('mPipVProp')?.value)||0,
-    pipVHedge: parseFloat(document.getElementById('mPipVHedge')?.value)||0,
-    size2: parseFloat(document.getElementById('mSize2')?.value)||0, 
-    cost2: parseFloat(document.getElementById('mCost2')?.value)||0, 
-    dd2: parseFloat(document.getElementById('mDD2')?.value)||6, 
-    days2: parseFloat(document.getElementById('mDays2')?.value)||10, 
-    pay2: parseFloat(document.getElementById('mPay2')?.value)||80,
-    trailingDD: typeof _ddTrailing !== 'undefined' ? _ddTrailing : false,
-    trailLock: parseFloat(document.getElementById('mTrailLock')?.value)||0
-  };
-
-  var c = calcChallenge(p);
-  var box = document.getElementById('mPreview');
-  if(!box) return;
-
-  // Pialla via tutto il contenuto vecchio per non accavallare i box
-  box.innerHTML = ''; 
-  var stratMode = typeof _stratMode !== 'undefined' ? _stratMode : 'personal';
-
-  // ── A. MODALITA' PROP VS PERSONALE (Challenge Singola) ──
-  if(stratMode === 'challenge_1step' || stratMode === 'personal'){
-      
-      // Box Valori Esatti Lotti/Pips (Legge in tempo reale)
-      var tradeHtml = `
-      <div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
-          <div style="flex:1; min-width:240px; background:rgba(56,189,248,0.08); padding:15px; border-radius:10px; border:1px solid var(--teal);">
-              <h4 style="color:var(--teal); margin:0 0 10px 0; font-family:var(--fd); font-size:12px; letter-spacing:1px;">🎯 CONTO PROP (VIRTUALI)</h4>
-              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.propTP.toFixed(2)}</b></p>
-              <p style="font-size:14px; color:#fff;">🔻 SL (${p.slPips} pip): <b style="color:#F87171;">- $${c.propSL.toFixed(2)}</b></p>
-              <hr style="border-color:rgba(255,255,255,0.1); margin:10px 0">
-              <p style="font-size:11px; color:var(--t3);">Lotti base: ${p.lots} | Pip Val: $${c.pipVal}</p>
-          </div>
-          <div style="flex:1; min-width:240px; background:rgba(167,139,250,0.08); padding:15px; border-radius:10px; border:1px solid var(--violet);">
-              <h4 style="color:var(--violet); margin:0 0 10px 0; font-family:var(--fd); font-size:12px; letter-spacing:1px;">🛡️ CONTO PERSONALE (REALI)</h4>
-              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.hedgeTP.toFixed(2)}</b></p>
-              <p style="font-size:14px; color:#fff;">🔻 SL (${p.slPips} pip): <b style="color:#F87171;">- $${c.hedgeSL.toFixed(2)}</b></p>
-              <hr style="border-color:rgba(255,255,255,0.1); margin:10px 0">
-              <p style="font-size:11px; color:var(--t3);">Lotti di copertura: ${c.hedgeLots}</p>
-          </div>
-      </div>
-      `;
-
-      // Calcoli Puri Fine Ciclo
-      var spreadHedgeSingolo = (spread || 0) * c.pipVal * c.contractMultHedge * c.hedgeLots;
-      var nettoRealeFallimento = c.sA_gain - cost - (spreadHedgeSingolo * c.maxLossTrades);
-      var costoRealePassaggio = c.sB_los + cost + (spreadHedgeSingolo * c.winsNeeded);
-
-      var cicloHtml = `
-      <div style="background:var(--bg2); padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
-          <h3 style="color:#fff; margin:0 0 15px 0; font-family:var(--fd); text-align:center; font-size:14px;">⚖️ BILANCIO REALE FINE CICLO</h3>
-          <div style="display:flex; gap:15px; flex-wrap:wrap;">
-              <div style="flex:1; min-width:240px; background:rgba(248,113,113,0.05); border:1px solid rgba(248,113,113,0.4); padding:15px; border-radius:8px;">
-                  <h4 style="color:#F87171; margin-top:0;">❌ PROP FALLITA (Stop sulla Prop)</h4>
-                  <ul style="font-size:12px; color:#fff; padding-left:15px; margin-bottom:10px;">
-                      <li>Costo Challenge Persa: <span style="color:#F87171">-$${cost.toFixed(2)}</span></li>
-                      <li>TP incassati sul Personale: <span style="color:var(--green)">+$${c.sA_gain.toFixed(2)}</span></li>
-                  </ul>
-                  <div style="border-top:1px dashed rgba(255,255,255,0.1); padding-top:10px; font-weight:bold;">
-                      Soldi Veri in Tasca: <span style="color:${nettoRealeFallimento >= 0 ? 'var(--green)' : '#F87171'}">${nettoRealeFallimento >= 0 ? '+' : ''}$${nettoRealeFallimento.toFixed(2)}</span>
-                  </div>
-              </div>
-              <div style="flex:1; min-width:240px; background:rgba(52,211,153,0.05); border:1px solid rgba(52,211,153,0.4); padding:15px; border-radius:8px;">
-                  <h4 style="color:var(--green); margin-top:0;">✅ PROP PASSATA (TP sulla Prop)</h4>
-                  <ul style="font-size:12px; color:#fff; padding-left:15px; margin-bottom:10px;">
-                      <li>Costo Investimento Challenge: <span style="color:#F87171">-$${cost.toFixed(2)}</span></li>
-                      <li>SL pagati dal Personale: <span style="color:#F87171">-$${c.sB_los.toFixed(2)}</span></li>
-                  </ul>
-                  <div style="border-top:1px dashed rgba(255,255,255,0.1); padding-top:10px; font-weight:bold;">
-                      Costo per Passare lo Step: <span style="color:#F87171">-$${costoRealePassaggio.toFixed(2)}</span>
-                  </div>
-              </div>
-          </div>
-      </div>
-      `;
-      box.innerHTML = tradeHtml + cicloHtml;
-      return;
-  }
-
-  // ── B. MODALITA' PROP VS PROP (Logica Intoccabile Originale) ──
-  if((stratMode === 'prop2' || stratMode === 'futures_prop' || stratMode === 'futures_futures') && p.size > 0 && p.size2 > 0) {
-      // (Qui c'è il codice nativo di PropHedge per due Prop, lo lascio intatto per non rompere il tuo motore)
-      var pipVal_pp = c.pipVal;
-      var ddTot1 = p.size * (p.maxDD / 100);
-      var ddTot2 = p.size2 * (p.dd2 / 100);
-      var ggMax = Math.max(p.days2, 1);
-      var lot1 = Math.floor((ddTot1 / ggMax / (pipVal_pp * 100)) * 100) / 100;
-      var lot2 = Math.floor((ddTot2 / ggMax / (pipVal_pp * 100)) * 100) / 100;
-      if(lot1 < 0.01) lot1 = 0.01; if(lot2 < 0.01) lot2 = 0.01;
-      var profit1 = (lot1 * pipVal_pp * 100 * ggMax) * (p.pay / 100);
-      var profit2 = (lot2 * pipVal_pp * 100 * ggMax) * (p.pay2 / 100);
-      var spCostTot = (lot1 + lot2) * pipVal_pp * p.spread * ggMax;
-      
-      box.innerHTML = `
-      <div style="background:var(--bg2); padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
-          <h3 style="color:#fff; text-align:center; font-size:14px;">PROP 1 vs PROP 2</h3>
-          <p style="color:var(--t3); text-align:center;">Lotti Prop 1: ${lot1} | Lotti Prop 2: ${lot2}</p>
-          <div style="display:flex; gap:15px; margin-top:15px;">
-              <div style="flex:1; background:rgba(255,255,255,0.05); padding:10px; border-radius:5px;">
-                  <h4 style="color:var(--teal);">Scenario A (Vince Prop 1)</h4>
-                  Netto: $${(profit1 - p.cost2 - spCostTot).toFixed(2)}
-              </div>
-              <div style="flex:1; background:rgba(255,255,255,0.05); padding:10px; border-radius:5px;">
-                  <h4 style="color:var(--teal);">Scenario B (Vince Prop 2)</h4>
-                  Netto: $${(profit2 - p.cost - spCostTot).toFixed(2)}
-              </div>
-          </div>
-      </div>`;
-  }
-}
   var _ddTrailing = false;
 
   function _toggleDDType(){
@@ -5520,133 +5493,503 @@ function calcPreview() {
   }
 
   function calcPreview() {
-  var size = parseFloat(document.getElementById('mSize')?.value) || 0;
-  if(!size) return;
 
-  var cost = parseFloat(document.getElementById('mCost')?.value) || 0;
-  var maxDD = parseFloat(document.getElementById('mDD')?.value) || 6;
-  var ddd = parseFloat(document.getElementById('mDDD')?.value) || 3;
-  var tgtPct = parseFloat(document.getElementById('mTgt')?.value) || maxDD;
-  var pay = parseFloat(document.getElementById('mPay')?.value) || 80;
-  var sl = parseFloat(document.getElementById('mSlPips')?.value) || 50;
-  var tp = parseFloat(document.getElementById('mTpPips')?.value) || 50;
-  var cons = parseFloat(document.getElementById('mConsistency')?.value) || 0;
-  var days = parseFloat(document.getElementById('mDays')?.value) || 14;
-  var spread = parseFloat(document.getElementById('mSpread')?.value) || 0;
-  var assetEl = document.getElementById('mAsset');
-  var asset = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
-  var lots = parseFloat(document.getElementById('mLots')?.value) || 0.01;
+  var size   = parseFloat(document.getElementById('mSize')?.value)        || 0;
 
-  var p = {
-    size, cost, maxDD, ddd, tgtPct, pay, slPips:sl, tpPips:tp, lots:lots,
-    asset, consistency:cons, spread, days, pipV:0,
+  var cost   = parseFloat(document.getElementById('mCost')?.value)        || 0;
+
+  var maxDD  = parseFloat(document.getElementById('mDD')?.value)          || 6;
+
+  var ddd    = parseFloat(document.getElementById('mDDD')?.value)         || 3;
+
+  var tgtPct = parseFloat(document.getElementById('mTgt')?.value)         || maxDD;
+
+  var pay    = parseFloat(document.getElementById('mPay')?.value)         || 80;
+
+  var sl     = parseFloat(document.getElementById('mSlPips')?.value)      || 50;
+
+  var tp     = parseFloat(document.getElementById('mTpPips')?.value)      || 50;
+
+  var cons   = parseFloat(document.getElementById('mConsistency')?.value) || 30;
+
+  var days   = parseFloat(document.getElementById('mDays')?.value)        || 14;
+
+  var spread = parseFloat(document.getElementById('mSpread')?.value)      || 0;
+
+  var assetEl= document.getElementById('mAsset');
+
+  var asset  = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
+
+
+
+  var lots = parseFloat(document.getElementById('mLots')?.value) || 0.20;
+
+var size2   = parseFloat(document.getElementById('mSize2')?.value)    || 0;
+  var cost2   = parseFloat(document.getElementById('mCost2')?.value)    || 0;
+  var dd2     = parseFloat(document.getElementById('mDD2')?.value)      || 6;
+  var days2   = parseFloat(document.getElementById('mDays2')?.value)    || 10;
+  var pay2    = parseFloat(document.getElementById('mPay2')?.value)     || 80;
+
+var p = {size,cost,maxDD,ddd,tgtPct,pay,slPips:sl,tpPips:tp,lots:lots,
+
+       asset,consistency:cons,spread,days,pipV:0,
+
     pipVProp: parseFloat(document.getElementById('mPipVProp')?.value)||0,
+
     pipVHedge: parseFloat(document.getElementById('mPipVHedge')?.value)||0,
-    size2: parseFloat(document.getElementById('mSize2')?.value)||0, 
-    cost2: parseFloat(document.getElementById('mCost2')?.value)||0, 
-    dd2: parseFloat(document.getElementById('mDD2')?.value)||6, 
-    days2: parseFloat(document.getElementById('mDays2')?.value)||10, 
-    pay2: parseFloat(document.getElementById('mPay2')?.value)||80,
+
+    size2, cost2, dd2, days2, pay2,
     trailingDD: typeof _ddTrailing !== 'undefined' ? _ddTrailing : false,
     trailLock: parseFloat(document.getElementById('mTrailLock')?.value)||0
   };
 
-  var c = calcChallenge(p);
+var c = calcChallenge(p);
+
+
+
   var box = document.getElementById('mPreview');
-  if(!box) return;
 
-  // Ripulisce il box per non accavallare la grafica vecchia
-  box.innerHTML = ''; 
-  var stratMode = typeof _stratMode !== 'undefined' ? _stratMode : 'personal';
+  if(!box || !size) return;
 
-  // ── A. MODALITA' PROP VS PERSONALE (Soldi Virtuali vs Reali) ──
-  if(stratMode === 'challenge_1step' || stratMode === 'personal'){
-      
-      var tradeHtml = `
-      <div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
-          <div style="flex:1; min-width:240px; background:rgba(56,189,248,0.08); padding:15px; border-radius:10px; border:1px solid var(--teal);">
-              <h4 style="color:var(--teal); margin:0 0 10px 0; font-family:var(--fd); font-size:12px; letter-spacing:1px;">🎯 CONTO PROP (VIRTUALI)</h4>
-              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.propTP.toFixed(2)}</b></p>
-              <p style="font-size:14px; color:#fff;">🔻 SL (${p.slPips} pip): <b style="color:#F87171;">- $${c.propSL.toFixed(2)}</b></p>
-              <hr style="border-color:rgba(255,255,255,0.1); margin:10px 0">
-              <p style="font-size:11px; color:var(--t3);">Lotti base: ${p.lots} | Pip Val: $${c.pipVal.toFixed(2)}</p>
-          </div>
-          <div style="flex:1; min-width:240px; background:rgba(167,139,250,0.08); padding:15px; border-radius:10px; border:1px solid var(--violet);">
-              <h4 style="color:var(--violet); margin:0 0 10px 0; font-family:var(--fd); font-size:12px; letter-spacing:1px;">🛡️ CONTO PERSONALE (REALI)</h4>
-              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.hedgeTP.toFixed(2)}</b></p>
-              <p style="font-size:14px; color:#fff;">🔻 SL (${p.slPips} pip): <b style="color:#F87171;">- $${c.hedgeSL.toFixed(2)}</b></p>
-              <hr style="border-color:rgba(255,255,255,0.1); margin:10px 0">
-              <p style="font-size:11px; color:var(--t3);">Lotti di copertura: ${c.hedgeLots}</p>
-          </div>
-      </div>
-      `;
-
-      // Calcoli Puri Fine Ciclo
-      var spreadHedgeSingolo = (spread || 0) * c.pipVal * c.contractMultHedge * c.hedgeLots;
-      var nettoRealeFallimento = c.sA_gain - cost - (spreadHedgeSingolo * c.maxLossTrades);
-      var costoRealePassaggio = c.sB_los + cost + (spreadHedgeSingolo * c.winsNeeded);
-
-      var cicloHtml = `
-      <div style="background:var(--bg2); padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
-          <h3 style="color:#fff; margin:0 0 15px 0; font-family:var(--fd); text-align:center; font-size:14px;">⚖️ BILANCIO REALE FINE CICLO</h3>
-          <div style="display:flex; gap:15px; flex-wrap:wrap;">
-              <div style="flex:1; min-width:240px; background:rgba(248,113,113,0.05); border:1px solid rgba(248,113,113,0.4); padding:15px; border-radius:8px;">
-                  <h4 style="color:#F87171; margin-top:0;">❌ PROP FALLITA (Stop sulla Prop)</h4>
-                  <ul style="font-size:12px; color:#fff; padding-left:15px; margin-bottom:10px; line-height:1.6;">
-                      <li>Costo Challenge Persa: <span style="color:#F87171">-$${cost.toFixed(2)}</span></li>
-                      <li>TP incassati sul Personale: <span style="color:var(--green)">+$${c.sA_gain.toFixed(2)}</span></li>
-                  </ul>
-                  <div style="border-top:1px dashed rgba(255,255,255,0.1); padding-top:10px; font-weight:bold;">
-                      Soldi Veri in Tasca: <span style="color:${nettoRealeFallimento >= 0 ? 'var(--green)' : '#F87171'}">${nettoRealeFallimento >= 0 ? '+' : ''}$${nettoRealeFallimento.toFixed(2)}</span>
-                  </div>
-              </div>
-              <div style="flex:1; min-width:240px; background:rgba(52,211,153,0.05); border:1px solid rgba(52,211,153,0.4); padding:15px; border-radius:8px;">
-                  <h4 style="color:var(--green); margin-top:0;">✅ PROP PASSATA (TP sulla Prop)</h4>
-                  <ul style="font-size:12px; color:#fff; padding-left:15px; margin-bottom:10px; line-height:1.6;">
-                      <li>Costo Investimento Challenge: <span style="color:#F87171">-$${cost.toFixed(2)}</span></li>
-                      <li>SL pagati dal Personale: <span style="color:#F87171">-$${c.sB_los.toFixed(2)}</span></li>
-                  </ul>
-                  <div style="border-top:1px dashed rgba(255,255,255,0.1); padding-top:10px; font-weight:bold;">
-                      Costo per Passare lo Step: <span style="color:#F87171">-$${costoRealePassaggio.toFixed(2)}</span>
-                  </div>
-              </div>
-          </div>
-      </div>
-      `;
-      box.innerHTML = tradeHtml + cicloHtml;
-      return;
+  // ── INSTANT FUNDED: rendering separato ──
+  if(stratMode === 'instant_funded'){
+    _renderInstantFunded(box, size, cost, maxDD, ddd, days, pay, cons, sl, tp, asset, c);
+    return;
+  }
+  // ── CHALLENGE 1 STEP ──
+  if(stratMode === 'challenge_1step'){
+    _renderChallenge1(box, size, cost, maxDD, ddd, days, pay, cons, sl, tp, asset);
+    return;
+  }
+  // ── CHALLENGE 2 STEP ──
+  if(stratMode === 'challenge_2step'){
+    _renderChallenge2(box, size, cost, maxDD, ddd, days, pay, cons, sl, tp, asset);
+    return;
   }
 
-  // ── B. MODALITA' PROP VS PROP (Logica Intoccabile Originale) ──
-  if((stratMode === 'prop2' || stratMode === 'futures_prop' || stratMode === 'futures_futures') && p.size > 0 && p.size2 > 0) {
-      var pipVal_pp = c.pipVal;
-      var ddTot1 = p.size * (p.maxDD / 100);
-      var ddTot2 = p.size2 * (p.dd2 / 100);
-      var ggMax = Math.max(p.days2, 1);
-      var lot1 = Math.floor((ddTot1 / ggMax / (pipVal_pp * 100)) * 100) / 100;
-      var lot2 = Math.floor((ddTot2 / ggMax / (pipVal_pp * 100)) * 100) / 100;
-      if(lot1 < 0.01) lot1 = 0.01; if(lot2 < 0.01) lot2 = 0.01;
-      var profit1 = (lot1 * pipVal_pp * 100 * ggMax) * (p.pay / 100);
-      var profit2 = (lot2 * pipVal_pp * 100 * ggMax) * (p.pay2 / 100);
-      var spCostTot = (lot1 + lot2) * pipVal_pp * p.spread * ggMax;
-      
-      box.innerHTML = `
-      <div style="background:var(--bg2); padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
-          <h3 style="color:#fff; text-align:center; font-size:14px;">PROP 1 vs PROP 2</h3>
-          <p style="color:var(--t3); text-align:center; margin-bottom:10px;">Lotti Prop 1: ${lot1} | Lotti Prop 2: ${lot2}</p>
-          <div style="display:flex; gap:15px;">
-              <div style="flex:1; background:rgba(255,255,255,0.05); padding:10px; border-radius:5px;">
-                  <h4 style="color:var(--teal); margin:0 0 5px 0;">Scenario A (Vince Prop 1)</h4>
-                  Netto Payout: $${(profit1 - p.cost2 - spCostTot).toFixed(2)}
-              </div>
-              <div style="flex:1; background:rgba(255,255,255,0.05); padding:10px; border-radius:5px;">
-                  <h4 style="color:var(--teal); margin:0 0 5px 0;">Scenario B (Vince Prop 2)</h4>
-                  Netto Payout: $${(profit2 - p.cost - spCostTot).toFixed(2)}
-              </div>
-          </div>
-      </div>`;
+
+
+  var spreadRiga = spread>0
+
+    ? '<div style="font-size:10px;color:var(--amber);margin-top:6px">Costo spread totale ciclo: <strong>$'+c.spreadTotale.toFixed(2)+'</strong></div>'
+
+    : '<div style="font-size:10px;color:var(--t3);margin-top:6px">Spread non inserito — calcolo senza costo spread</div>';
+
+
+
+  // ── PROP+PROP: calcolo separato ──
+  if((stratMode === 'prop2' || stratMode === 'futures_prop' || stratMode === 'futures_futures') && size > 0 && size2 > 0) {
+    var pipVal_pp = c.pipVal;                       // pip value asset selezionato
+    var ddTot1    = size  * (maxDD / 100);           // DD totale prop1 $
+    var ddTot2    = size2 * (dd2  / 100);            // DD totale prop2 $
+    var ggMax     = Math.max(days2, 1);             // giorni: usa giorni minimi prop2 (max tra le due)
+    var ddGiorno  = (ddTot1 + ddTot2) / ggMax;      // DD giornaliero combinato
+    var pip100    = 100;                             // pip consigliati fissi
+    var pay1      = parseFloat(document.getElementById('mPay')?.value) || 80;
+    var pay2      = parseFloat(document.getElementById('mPay2')?.value) || 80;
+    // lotti: ogni prop copre la propria quota di DD giornaliero
+    var lot1 = Math.floor((ddTot1 / ggMax / (pipVal_pp * pip100)) * 100) / 100;
+    var lot2 = Math.floor((ddTot2 / ggMax / (pipVal_pp * pip100)) * 100) / 100;
+    if(lot1 < 0.01) lot1 = 0.01;
+    if(lot2 < 0.01) lot2 = 0.01;
+    // profitti lordi per ggMax trade TP
+    var profitLordo1 = lot1 * pipVal_pp * pip100 * ggMax;
+    var profitLordo2 = lot2 * pipVal_pp * pip100 * ggMax;
+    // profitti netti con payout
+    var profit1 = profitLordo1 * (pay1 / 100);
+    var profit2 = profitLordo2 * (pay2 / 100);
+    // spread costo totale (spread unico applicato a entrambi i lotti)
+    var spreadTotPip = parseFloat(document.getElementById('mSpread')?.value) || 0;
+    var spCostTot = (lot1 + lot2) * pipVal_pp * spreadTotPip * ggMax;
+    // Scenario A: Prop1 profitto (con payout), Prop2 si azzera → netto = profit1_net - cost2 - spread
+    var scenA = profit1 - cost2 - spCostTot;
+    // Scenario B: Prop2 profitto (con payout), Prop1 si azzera → netto = profit2_net - cost1 - spread
+    var scenB = profit2 - cost - spCostTot;
+    // costo ciclo totale
+    var costoCiclo = cost + cost2;
+
+    function clr(v){ return v>=0?'var(--green)':'var(--red)'; }
+    function sgn2(v){ return v>=0?'+':''; }
+    function uF2(v){ return '$'+Math.abs(v).toFixed(0); }
+
+    box.innerHTML = '<div class="prev">'
+    +'<div style="background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.1);border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">'
+    +'<span style="font-size:10px;color:var(--t3);font-family:var(--fd)">Asset selezionato</span>'
+    +'<span style="font-size:12px;font-weight:700;font-family:var(--fd);color:var(--teal)">'+asset+' — $'+pipVal_pp.toFixed(2)+'/pip (automatico)</span>'
+    +'</div>'
+
+    // KPI top: DD prop1, DD prop2, giorni, costo ciclo
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">'
+    +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px;text-align:center">'
+    +'<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">DD Prop 1</div>'
+    +'<div style="font-size:14px;font-weight:800;font-family:var(--fd);color:var(--red)">$'+ddTot1.toFixed(0)+'</div></div>'
+    +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px;text-align:center">'
+    +'<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">DD Prop 2</div>'
+    +'<div style="font-size:14px;font-weight:800;font-family:var(--fd);color:var(--red)">$'+ddTot2.toFixed(0)+'</div></div>'
+    +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px;text-align:center">'
+    +'<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">Giorni max</div>'
+    +'<div style="font-size:14px;font-weight:800;font-family:var(--fd);color:var(--amber)">'+ggMax+'</div></div>'
+    +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px;text-align:center">'
+    +'<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">Costo ciclo</div>'
+    +'<div style="font-size:14px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+costoCiclo.toFixed(0)+'</div></div>'
+    +'</div>'
+
+    // Lotti — per futures_prop mostra contratti, per prop2 rimane lotti
+    +(function(){
+      if(stratMode==='futures_prop'||stratMode==='futures_futures'){
+        // BUY = futures micro interi
+        var d1=_ftxDisplay(lot1, asset);
+        var pip100 = parseFloat(document.getElementById('mTpPips')?.value||100);
+        var pipV   = pipVal_pp;
+        var tp1real = (d1.micro * pipV * pip100).toFixed(2);
+        var sl1real = (d1.micro * pipV * pip100).toFixed(2);
+        var pr1real = (d1.micro * pipV * pip100 * ggMax * (pay1/100)).toFixed(2);
+
+        var buyBlock = '<div style="background:var(--bg3);border:2px solid rgba(56,189,248,.4);border-radius:10px;padding:12px">'
+          +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">FUTURES BUY — MICRO</div>'
+          +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:2px">'+d1.str+'</div>'
+          +(d1.full>0?'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:4px">oppure '+d1.full+' pieno + '+d1.residuo+' micro</div>':'')
+          +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+          +'TP/trade: <span style="color:var(--green)">+$'+tp1real+'</span><br>'
+          +'SL/trade: <span style="color:var(--red)">-$'+sl1real+'</span><br>'
+          +'Payout '+pay1+'%: <span style="color:var(--teal)">+$'+pr1real+'</span>'
+          +'</div></div>';
+
+        // SELL: futures_futures → micro interi; futures_prop → lotti standard
+        var sellBlock = '';
+        if(stratMode==='futures_futures'){
+          var d2=_ftxDisplay(lot2,asset);
+          var tp2real=(d2.micro*pipV*pip100).toFixed(2);
+          var sl2real=(d2.micro*pipV*pip100).toFixed(2);
+          var pr2real=(d2.micro*pipV*pip100*ggMax*(pay2/100)).toFixed(2);
+          sellBlock = '<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
+            +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">FUTURES SELL — MICRO</div>'
+            +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:2px">'+d2.str+'</div>'
+            +(d2.full>0?'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:4px">oppure '+d2.full+' pieno + '+d2.residuo+' micro</div>':'')
+            +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+            +'TP/trade: <span style="color:var(--green)">+$'+tp2real+'</span><br>'
+            +'SL/trade: <span style="color:var(--red)">-$'+sl2real+'</span><br>'
+            +'Payout '+pay2+'%: <span style="color:var(--teal)">+$'+pr2real+'</span>'
+            +'</div></div>';
+        } else {
+          // futures_prop → SELL = lotti standard prop
+          var lot2r = Math.ceil(lot2*100)/100;
+          var lot2tp = profitLordo2.toFixed(2);
+          var lot2net = profit2.toFixed(2);
+          sellBlock = '<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
+            +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">PROP SELL — LOTTI</div>'
+            +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:2px">'+lot2r+' lot</div>'
+            +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+            +'TP lordo: <span style="color:var(--green)">+$'+lot2tp+'</span><br>'
+            +'Payout '+pay2+'%: <span style="color:var(--teal)">+$'+lot2net+'</span><br>'
+            +'DD/trade: <span style="color:var(--red)">$'+(ddTot2/ggMax).toFixed(0)+'</span>'
+            +'</div></div>';
+        }
+
+        return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+          +buyBlock+sellBlock+'</div>';
+      } else {
+        // PROP+PROP: rimane invariato con lotti — NON TOCCARE
+        return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+          +'<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
+          +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">PROP 1 — LOTTI</div>'
+          +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+lot1+' lot</div>'
+          +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+          +'TP lordo: <span style="color:var(--green)">+$'+profitLordo1.toFixed(2)+'</span><br>'
+          +'Payout '+pay1+'%: <span style="color:var(--teal)">+$'+profit1.toFixed(2)+'</span><br>'
+          +'DD/trade: <span style="color:var(--red)">$'+(ddTot1/ggMax).toFixed(0)+'</span>'
+          +'</div></div>'
+          +'<div style="background:var(--bg3);border:2px solid rgba(56,189,248,.4);border-radius:10px;padding:12px">'
+          +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">PROP 2 — LOTTI</div>'
+          +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+lot2+' lot</div>'
+          +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+          +'TP lordo: <span style="color:var(--green)">+$'+profitLordo2.toFixed(2)+'</span><br>'
+          +'Payout '+pay2+'%: <span style="color:var(--teal)">+$'+profit2.toFixed(2)+'</span><br>'
+          +'DD/trade: <span style="color:var(--red)">$'+(ddTot2/ggMax).toFixed(0)+'</span>'
+          +'</div></div>'
+          +'</div>';
+      }
+    })()
+
+    // Scenari
+    +'<div style="margin-bottom:10px">'
+    +'<div style="font-size:9px;font-weight:700;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">SCENARI (una prop si salva sempre)</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    // Scenario A
+    +'<div style="background:var(--bg3);border:1px solid '+(scenA>=0?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)')+';border-radius:8px;padding:10px">'
+    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:4px">Scen. A — Prop 1 vince</div>'
+    +'<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:'+clr(scenA)+'">'+sgn2(scenA)+uF2(scenA)+'</div>'
+    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">Netto payout P1 $'+profit1.toFixed(0)+' - costo P2 $'+cost2.toFixed(0)+(spCostTot>0?' - spread $'+spCostTot.toFixed(0):'')+'</div>'
+    +'</div>'
+    // Scenario B
+    +'<div style="background:var(--bg3);border:1px solid '+(scenB>=0?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)')+';border-radius:8px;padding:10px">'
+    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:4px">Scen. B — Prop 2 vince</div>'
+    +'<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:'+clr(scenB)+'">'+sgn2(scenB)+uF2(scenB)+'</div>'
+    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">Netto payout P2 $'+profit2.toFixed(0)+' - costo P1 $'+cost.toFixed(0)+(spCostTot>0?' - spread $'+spCostTot.toFixed(0):'')+'</div>'
+    +'</div>'
+    +'</div></div>'
+
+    // Info formula
+    +'<div style="background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.2);border-radius:6px;padding:7px 10px;font-size:10px;color:rgba(167,139,250,.9);font-family:var(--fd)">'
+    +'DD/giorno combinato: $'+ddGiorno.toFixed(0)+' | 1 trade/giorno per '+ggMax+' giorni | 100 pip SL=TP | Payout P1: '+pay1+'% · P2: '+pay2+'%'
+    +'</div>'
+    +'</div>';
+    return;
   }
+
+box.innerHTML =
+
+  '<div class="prev">'
+
+
+
+  // Asset e pip value auto
+
+  +'<div style="background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.1);border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">'
+
+  +'<span style="font-size:10px;color:var(--t3);font-family:var(--fd)">Asset selezionato</span>'
+
+  +'<span style="font-size:12px;font-weight:700;font-family:var(--fd);color:var(--teal)">'+asset+' — $'+c.pipVal.toFixed(2)+'/pip (automatico)</span>'
+
+  +'</div>'
+
+
+
+  // Valori prop
+
+  +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+
+  +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px;text-align:center">'
+
+  +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:3px">TARGET PROP</div>'
+
+  +'<div style="font-size:16px;font-weight:700;font-family:var(--fd);color:var(--teal)">$'+c.propTarget.toFixed(0)+'</div>'
+
+  +'</div>'
+
+  +(function(){
+    if(c.trailingDD){
+      var safeDD = Math.max(0, c.ddEffective);
+      var pctLost = c.maxDDAmount > 0 ? ((c.maxDDAmount - safeDD) / c.maxDDAmount * 100).toFixed(0) : 0;
+      return '<div style="background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:9px;text-align:center">'
+        +'<div style="font-size:9px;color:var(--amber);font-family:var(--fd);margin-bottom:3px">MAX DD (TRAILING)</div>'
+        +'<div style="font-size:16px;font-weight:700;font-family:var(--fd);color:var(--red)">$'+c.maxDDAmount.toFixed(0)+'</div>'
+        +'<div style="font-size:9px;color:var(--amber);font-family:var(--fd);margin-top:2px">Spazio reale: <strong>$'+safeDD.toFixed(0)+'</strong></div>'
+        +'</div>';
+    } else {
+      return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px;text-align:center">'
+        +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:3px">MAX DD</div>'
+        +'<div style="font-size:16px;font-weight:700;font-family:var(--fd);color:var(--red)">$'+c.maxDDAmount.toFixed(0)+'</div>'
+        +'</div>';
+    }
+  })()
+
+  +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px;text-align:center">'
+
+  +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:3px">DD GIORNALIERO</div>'
+
+  +'<div style="font-size:16px;font-weight:700;font-family:var(--fd);color:var(--amber)">$'+c.dailyDD.toFixed(0)+'</div>'
+
+  +'</div>'
+
+  +'</div>'
+
+
+
+  // Contratti/Lotti — adattivo per futures vs prop
+  +(function(){
+    var isFut = (stratMode==='futures_personal'||stratMode==='futures_prop'||stratMode==='futures_futures');
+    if(isFut){
+      // BUY lato = SEMPRE futures micro contratti (interi)
+      var pd = _ftxDisplay(c.propLots, asset);
+      // Ricalcola TP/SL con contratti interi effettivi
+      var pdTP = (pd.micro * c.pipVal * parseFloat(document.getElementById('mTpPips')?.value||100)).toFixed(2);
+      var pdSL = (pd.micro * c.pipVal * parseFloat(document.getElementById('mSlPips')?.value||100)).toFixed(2);
+
+      // SELL lato:
+      // futures_futures → micro contratti interi
+      // futures_personal / futures_prop → LOTTI standard (non micro)
+      var sellIsFutures = (stratMode==='futures_futures');
+      var hedgeLabel = stratMode==='futures_personal' ? 'CONTO PERSONALE — LOTTI' : (stratMode==='futures_futures' ? 'FUTURES SELL (micro)' : 'PROP SELL — LOTTI');
+
+      var sellBlock = '';
+      if(sellIsFutures){
+        var hd = _ftxDisplay(c.hedgeLots, asset);
+        var hdTP = (hd.micro * c.pipVal * parseFloat(document.getElementById('mTpPips')?.value||100)).toFixed(2);
+        var hdSL = (hd.micro * c.pipVal * parseFloat(document.getElementById('mSlPips')?.value||100)).toFixed(2);
+        sellBlock = '<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
+          +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">'+hedgeLabel+'</div>'
+          +'<div style="font-size:22px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:2px">'+hd.str+'</div>'
+          +(hd.full>0?'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:5px">oppure '+hd.full+' contratto pieno + '+hd.residuo+' micro</div>':'')
+          +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+          +'TP: <span style="color:var(--green)">+$'+hdTP+'</span><br>'
+          +'SL: <span style="color:var(--red)">-$'+hdSL+'</span><br>'
+          +'Max/trade: <span style="color:var(--teal)">$'+c.maxPerTrade.toFixed(2)+'</span>'
+          +'</div></div>';
+      } else {
+        // Loti standard (conto personale o prop)
+        var hLots = Math.ceil(c.hedgeLots * 100) / 100;
+        sellBlock = '<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
+          +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">'+hedgeLabel+'</div>'
+          +'<div style="font-size:22px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:2px">'+hLots+' lot</div>'
+          +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+          +'TP: <span style="color:var(--green)">+$'+c.hedgeTP.toFixed(2)+'</span><br>'
+          +'SL: <span style="color:var(--red)">-$'+c.hedgeSL.toFixed(2)+'</span><br>'
+          +'Max/trade: <span style="color:var(--teal)">$'+c.maxPerTrade.toFixed(2)+'</span>'
+          +'</div></div>';
+      }
+
+      return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+        // BUY Futures micro (intero)
+        +'<div style="background:var(--bg3);border:2px solid rgba(56,189,248,.4);border-radius:10px;padding:12px">'
+        +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">FUTURES BUY — MICRO</div>'
+        +'<div style="font-size:22px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:2px">'+pd.str+'</div>'
+        +(pd.full>0?'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:5px">oppure '+pd.full+' contratto pieno + '+pd.residuo+' micro</div>':'')
+        +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+        +'TP: <span style="color:var(--green)">+$'+pdTP+'</span><br>'
+        +'SL: <span style="color:var(--red)">-$'+pdSL+'</span>'
+        +'</div></div>'
+        +sellBlock
+        +'</div>';
+    } else {
+      // PROP/PERSONALE: rimane lotti come prima — NON TOCCARE
+      return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+        +'<div style="background:var(--bg3);border:2px solid rgba(167,139,250,.4);border-radius:10px;padding:12px">'
+        +'<div style="font-size:9px;font-weight:700;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">CONTO PERSONALE — LOTTI</div>'
+        +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+c.hedgeLots+' lot</div>'
+        +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+        +'TP: <span style="color:var(--green)">+$'+c.hedgeTP.toFixed(2)+'</span><br>'
+        +'SL: <span style="color:var(--red)">-$'+c.hedgeSL.toFixed(2)+'</span><br>'
+        +'Max/trade: <span style="color:var(--teal)">$'+c.maxPerTrade.toFixed(2)+'</span>'
+        +'</div></div>'
+        +'<div style="background:var(--bg3);border:2px solid rgba(56,189,248,.4);border-radius:10px;padding:12px">'
+        +'<div style="font-size:9px;font-weight:700;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">CONTO PROP</div>'
+        +'<div style="font-size:24px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+c.propLots+' lot</div>'
+        +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.8">'
+        +'TP: <span style="color:var(--green)">+$'+c.propTP.toFixed(2)+'</span><br>'
+        +'SL: <span style="color:var(--red)">-$'+c.propSL.toFixed(2)+'</span><br>'
+        +'Copre costo challenge'
+        +'</div></div>'
+        +'</div>';
+    }
+  })()
+
+
+
+  // ── Avviso Trailing DD ──
+  +(c.trailingDD ? (function(){
+    var safeDD = Math.max(0, c.ddEffective);
+    var safeLoss = c.propSL > 0 ? Math.floor(safeDD / c.propSL) : 0;
+    var staticLoss = c.propSL > 0 ? Math.floor(c.maxDDAmount / c.propSL) : 0;
+    var diffLoss = staticLoss - safeLoss;
+    return '<div style="background:rgba(251,191,36,.09);border:1px solid rgba(251,191,36,.35);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-family:var(--fd)">'
+      +'<div style="font-size:10px;font-weight:700;color:var(--amber);margin-bottom:5px">⚠ MODALITÀ TRAILING DD ATTIVA</div>'
+      +'<div style="font-size:10px;color:var(--t2);line-height:1.8">'
+      +'DD nominale: <strong style="color:var(--red)">$'+c.maxDDAmount.toFixed(0)+'</strong> &nbsp;|&nbsp; '
+      +'Spazio REALE dopo 1° TP: <strong style="color:var(--amber)">$'+safeDD.toFixed(0)+'</strong><br>'
+      +'Stop loss tollerabili (nominale): <strong>'+staticLoss+'</strong> &nbsp;→&nbsp; '
+      +'Stop loss reali (trailing): <strong style="color:'+(safeLoss<=1?'var(--red)':'var(--amber)')+'">'+safeLoss+'</strong>'
+      +(diffLoss>0?' &nbsp;<span style="color:var(--red)">(-'+diffLoss+' dopo il 1° TP)</span>':'')+'<br>'
+      +'<span style="font-size:9px;color:var(--t3)">Ogni profitto guadagnato riduce il buffer disponibile per le perdite successive.</span>'
+      +'</div></div>';
+  })() : '')
+
+  // Nota lotti diversi
+
+  +(c.propLots!==c.hedgeLots
+
+    ?'<div style="background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.2);border-radius:6px;padding:7px 10px;font-size:10px;color:rgba(167,139,250,.9);margin-bottom:10px;font-family:var(--fd)">ℹ Lotti diversi — Prop ottimizzato per profitto, Hedge minimo per coprire il costo</div>'
+
+    :'')
+  +(c.contractMultProp>1||c.contractMultHedge>1
+    ?'<div style="background:rgba(255,190,11,.07);border:1px solid rgba(255,190,11,.25);border-radius:6px;padding:7px 10px;font-size:10px;color:var(--amber);margin-bottom:10px;font-family:var(--fd)">⚡ Moltiplicatore contratto attivo — Prop ÷'+c.contractMultProp+' · Personale ÷'+c.contractMultHedge+' (lotti già adattati al contratto del broker)</div>'
+    :'')
+
+
+
+  // Avviso consistenza (se TP supera il limite)
+  +(c.consWarn
+    ?'<div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.35);border-radius:6px;padding:8px 11px;font-size:10px;color:var(--red);margin-bottom:10px;font-family:var(--fd)">'
+    +'⚠ <strong>VIOLAZIONE CONSISTENZA '+Math.round(p.consistency||30)+'%</strong> — '
+    +'Il tuo TP per trade ($'+c.propTP.toFixed(0)+') supera il limite di $'+c.maxPerTrade.toFixed(0)+'&nbsp;'
+    +'('+Math.round(p.consistency||30)+'% di $'+c.propTarget.toFixed(0)+').'
+    +'<br>Questa regola conta sia il singolo trade che la giornata intera.</div>'
+    :'')
+
+  // Regole
+
+  +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px;margin-bottom:10px;display:flex;gap:16px;flex-wrap:wrap">'
+
+  +'<div style="font-size:11px"><span style="color:var(--t3)">Trade minimi: </span><strong style="color:var(--violet)">'+c.minTrades+'</strong></div>'
+
+  +'<div style="font-size:11px"><span style="color:var(--t3)">Max/trade: </span><strong style="color:var(--teal)">$'+c.maxPerTrade.toFixed(0)+'</strong></div>'
+
+  +'<div style="font-size:11px"><span style="color:var(--t3)">Trade/gg: </span><strong style="color:'+(c.trPerDay<=c.maxTrDD?'var(--green)':'var(--amber)')+'">'+c.trPerDay+'</strong></div>'
+
+  +'<div style="font-size:11px"><span style="color:var(--t3)">Pip value: </span><strong style="color:var(--teal)">$'+c.pipVal.toFixed(2)+'</strong></div>'
+  +(c.contractMultProp>1||c.contractMultHedge>1
+    ?'<div style="font-size:11px"><span style="color:var(--t3)">Molt. Prop: </span><strong style="color:var(--violet)">×'+c.contractMultProp+'</strong></div>'
+    +'<div style="font-size:11px"><span style="color:var(--t3)">Molt. Personale: </span><strong style="color:var(--violet)">×'+c.contractMultHedge+'</strong></div>'
+    :'')
+
+  +'</div>'
+
+
+
+  // Scenari
+
+  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+
+  +'<div style="background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.2);border-radius:9px;padding:11px">'
+
+  +'<div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">SCENARIO A — Prop fallisce</div>'
+
+  +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+(c.sA_net>=0?'var(--green)':'var(--red)')+'">'+( c.sA_net>=0?'+':'')+c.sA_net.toFixed(2)+'$</div>'
+
+  +'<div style="font-size:10px;color:var(--t3);margin-top:4px;line-height:1.6">Hedge tot. +$'+c.sA_gain.toFixed(2)+' ('+c.maxLossTrades+'×$'+c.hedgeTP.toFixed(2)+')<br>− Costo $'+cost.toFixed(2)+'<br><span style="color:var(--amber)">ROI '+c.roiA+'%</span></div>'
+
+  +'</div>'
+
+  +'<div style="background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.2);border-radius:9px;padding:11px">'
+
+  +'<div style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">SCENARIO B — Payout incassato</div>'
+
+  +'<div style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+(c.sB_net>=0?'var(--green)':'var(--red)')+'">'+( c.sB_net>=0?'+':'')+c.sB_net.toFixed(2)+'$</div>'
+
+  +'<div style="font-size:10px;color:var(--t3);margin-top:4px;line-height:1.6">Payout +$'+c.sB_pay.toFixed(2)+'<br>− Hedge SL tot. $'+c.sB_los.toFixed(2)+' ('+c.winsNeeded+'×$'+c.hedgeSL.toFixed(2)+')<br>− Costo $'+cost.toFixed(2)+'<br><span style="color:var(--amber)">ROI '+c.roiB+'%</span></div>'
+
+  +'</div>'
+
+  +'</div>'
+
+
+
+  // Costo totale ciclo
+
+  +'<div style="background:rgba(255,190,11,.06);border:1px solid rgba(255,190,11,.2);border-radius:9px;padding:12px">'
+
+  +'<div style="font-size:9px;color:var(--amber);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:8px">💰 Spesa totale 1 ciclo completo</div>'
+
+  +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'
+
+  +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd)">Costo challenge</div><div style="font-size:15px;font-weight:700;font-family:var(--fd);color:var(--amber)">$'+cost.toFixed(0)+'</div></div>'
+
+  +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd)">Capitale hedge min</div><div style="font-size:15px;font-weight:700;font-family:var(--fd)">$'+c.recAcc.toFixed(0)+'</div></div>'
+
+  +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);font-weight:800">TOTALE</div><div style="font-size:22px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+c.totalCycleCost.toFixed(0)+'</div></div>'
+
+  +'</div>'
+
+  +spreadRiga
+
+  +'</div>'
+
+
+
+  +'</div>';
+
 }
+
 
 
 function openModal(){ 
@@ -11183,11 +11526,9 @@ function setTheme(themeMode) {
 
   try{localStorage.setItem('ph_account',JSON.stringify(accountData));}catch(e){}
 
- var panel=document.getElementById('accDropPanel');
+  var panel=document.getElementById('accDropPanel');
 
   if(panel&&panel.style.display!=='none') panel.innerHTML=renderAccountDrop();
-
-  if(typeof calcPreview==='function') calcPreview();
 
 }
 
@@ -11970,8 +12311,7 @@ function toggleTheme(){
 
 
 
-var panel=document.getElementById('accDropPanel');if(panel&&panel.style.display!=='none')panel.innerHTML=renderAccountDrop();
-  if(typeof calcPreview==='function') calcPreview(); 
+  var panel=document.getElementById('accDropPanel');if(panel&&panel.style.display!=='none')panel.innerHTML=renderAccountDrop();
 
 
 
