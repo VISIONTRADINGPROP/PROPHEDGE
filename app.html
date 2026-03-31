@@ -5547,9 +5547,34 @@ var c = calcChallenge(p);
 
 
 
-  var box = document.getElementById('mPreview');
+ var box = document.getElementById('mPreview');
 
   if(!box || !size) return;
+
+  // --- INIZIO NUOVO BOX TRADE SINGOLO ---
+  var tradeInfo = document.getElementById('tradeInfoSingolo');
+  if(!tradeInfo) {
+      tradeInfo = document.createElement('div');
+      tradeInfo.id = 'tradeInfoSingolo';
+      box.parentNode.insertBefore(tradeInfo, box);
+  }
+  
+  tradeInfo.innerHTML = `
+      <div style="background:rgba(56,189,248,0.1); padding:15px; border-radius:10px; border:1px solid var(--teal); margin-bottom:15px; box-shadow:0 0 15px rgba(56,189,248,.1)">
+          <h4 style="color:var(--teal); margin:0 0 10px 0; font-family:var(--fd); text-transform:uppercase; font-size:12px; letter-spacing:1px;">📊 Valore Reale del Trade (Conto Prop)</h4>
+          <p style="margin-bottom:8px; font-size:14px; color:#fff">💰 Profitto stimato (TP): 
+              <b style="color:var(--green); font-size:18px">+ ${c.propTP.toFixed(2)} $</b> 
+          </p>
+          <p style="font-size:14px; color:#fff">🔻 Perdita stimata (SL): 
+              <b style="color:#F87171; font-size:18px">- ${c.propSL.toFixed(2)} $</b>
+          </p>
+          <hr style="border-color:rgba(255,255,255,0.1); margin:12px 0">
+          <p style="font-size:11px; color:var(--t3); font-family:var(--fm);">
+              Lotti: ${p.lots} | TP: ${p.tpPips} pip | SL: ${p.slPips} pip | Valore 1 Pip: $${c.pipVal}
+          </p>
+      </div>
+  `;
+  // --- FINE NUOVO BOX ---
 
   // ── INSTANT FUNDED: rendering separato ──
   if(stratMode === 'instant_funded'){
