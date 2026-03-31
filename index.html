@@ -3837,18 +3837,10 @@ function doRegisterFree(){
         </div>
       </div>
 
-      <div style="margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-        <div onclick="setMode('instant_funded')" id="modeInstantFunded" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;text-align:center">
-          <div style="font-size:12px;font-weight:700;color:#f59e0b;margin-bottom:3px">⚡ Instant Funded</div>
-          <div style="font-size:9px;color:var(--t3);font-family:var(--fd)">Già live • DD trailing • 3 scenari</div>
-        </div>
+     <div style="margin-bottom:14px;display:grid;grid-template-columns:1fr;gap:8px">
         <div onclick="setMode('challenge_1step')" id="modeChallenge1" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;text-align:center">
           <div style="font-size:12px;font-weight:700;color:#60a5fa;margin-bottom:3px">🎯 Challenge 1 Step</div>
           <div style="font-size:9px;color:var(--t3);font-family:var(--fd)">1 fase • poi live • costo totale</div>
-        </div>
-        <div onclick="setMode('challenge_2step')" id="modeChallenge2" style="background:var(--bg3);border:2px solid var(--border);border-radius:10px;padding:10px;cursor:pointer;text-align:center">
-          <div style="font-size:12px;font-weight:700;color:#a78bfa;margin-bottom:3px">🎯🎯 Challenge 2 Step</div>
-          <div style="font-size:9px;color:var(--t3);font-family:var(--fd)">Step 1 + Step 2 • costo totale</div>
         </div>
       </div>
 
@@ -5461,22 +5453,76 @@ var c = calcChallenge(p);
 
   if(!box || !size) return;
 
-  // ── INSTANT FUNDED: rendering separato ──
-  if(stratMode === 'instant_funded'){
-    _renderInstantFunded(box, size, cost, maxDD, ddd, days, pay, cons, sl, tp, asset, c);
-    return;
-  }
-  // ── CHALLENGE 1 STEP ──
-  if(stratMode === 'challenge_1step'){
-    _renderChallenge1(box, size, cost, maxDD, ddd, days, pay, cons, sl, tp, asset);
-    return;
-  }
-  // ── CHALLENGE 2 STEP ──
-  if(stratMode === 'challenge_2step'){
-    _renderChallenge2(box, size, cost, maxDD, ddd, days, pay, cons, sl, tp, asset);
-    return;
-  }
+  // ── RIMOSSE INSTANT FUNDED E 2 STEP COME RICHIESTO ──
 
+  if(stratMode === 'challenge_1step' || stratMode === 'personal'){
+      // 1. Box Valore Singolo Trade
+      var tradeHtml = `
+      <div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:240px; background:rgba(56,189,248,0.08); padding:15px; border-radius:10px; border:1px solid var(--teal);">
+              <h4 style="color:var(--teal); margin:0 0 10px 0; font-family:var(--fd); font-size:12px; letter-spacing:1px;">🎯 CONTO PROP (SOLDI VIRTUALI)</h4>
+              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP Prop (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.propTP.toFixed(2)}</b></p>
+              <p style="font-size:14px; color:#fff;">🔻 SL Prop (${p.slPips} pip): <b style="color:#F87171;">- $${c.propSL.toFixed(2)}</b></p>
+              <hr style="border-color:rgba(255,255,255,0.1); margin:10px 0">
+              <p style="font-size:11px; color:var(--t3);">Lotti: ${p.lots} | Pip Val: $${c.pipVal.toFixed(2)}</p>
+          </div>
+          <div style="flex:1; min-width:240px; background:rgba(167,139,250,0.08); padding:15px; border-radius:10px; border:1px solid var(--violet);">
+              <h4 style="color:var(--violet); margin:0 0 10px 0; font-family:var(--fd); font-size:12px; letter-spacing:1px;">🛡️ CONTO PERSONALE (SOLDI REALI)</h4>
+              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP Reale (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.hedgeTP.toFixed(2)}</b></p>
+              <p style="font-size:14px; color:#fff;">🔻 SL Reale (${p.slPips} pip): <b style="color:#F87171;">- $${c.hedgeSL.toFixed(2)}</b></p>
+              <hr style="border-color:rgba(255,255,255,0.1); margin:10px 0">
+              <p style="font-size:11px; color:var(--t3);">Lotti coperti: ${c.hedgeLots}</p>
+          </div>
+      </div>
+      `;
+
+      // 2. Calcoli Bilancio Reale Fine Ciclo
+      var spreadHedgeSingolo = (spread || 0) * c.pipVal * c.contractMultHedge * c.hedgeLots;
+      var spreadTotaleA = spreadHedgeSingolo * c.maxLossTrades;
+      var spreadTotaleB = spreadHedgeSingolo * c.winsNeeded;
+
+      // Scenario A: Prop Fallita (La Prop brucia, il Personale prende i TP veri)
+      var nettoRealeFallimento = c.sA_gain - cost - spreadTotaleA;
+
+      // Scenario B: Prop Passata (Passi lo step della Prop, il Personale paga gli SL veri)
+      // NESSUN PAYOUT SOMMATO. Solo costi reali.
+      var costoRealePassaggio = c.sB_los + cost + spreadTotaleB;
+
+      var cicloHtml = `
+      <div style="background:var(--bg2); padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); margin-top:15px;">
+          <h3 style="color:#fff; margin:0 0 15px 0; font-family:var(--fd); text-align:center; font-size:14px; text-transform:uppercase; letter-spacing:1px;">⚖️ BILANCIO A FINE CICLO (SOLO SOLDI REALI)</h3>
+          <div style="display:flex; gap:15px; flex-wrap:wrap;">
+              
+              <div style="flex:1; min-width:240px; background:rgba(248,113,113,0.05); border:1px solid rgba(248,113,113,0.4); padding:15px; border-radius:8px;">
+                  <h4 style="color:#F87171; margin-top:0; font-family:var(--fd);">❌ SCENARIO A: PROP FALLITA</h4>
+                  <p style="font-size:11px; color:var(--t3); margin-bottom:10px;">La Prop prende <b>${c.maxLossTrades} Stop Loss</b> e salta. Il tuo conto Personale incassa i Take Profit veri.</p>
+                  <ul style="font-size:12px; color:#fff; padding-left:15px; margin-bottom:10px; line-height:1.6;">
+                      <li>Costo Challenge Persa: <span style="color:#F87171">-$${cost.toFixed(2)}</span></li>
+                      <li>TP incassati sul Personale: <span style="color:var(--green)">+$${c.sA_gain.toFixed(2)}</span></li>
+                  </ul>
+                  <div style="border-top:1px dashed rgba(255,255,255,0.1); padding-top:10px; font-weight:bold; font-size:14px;">
+                      Netto Reale in tasca: <span style="color:${nettoRealeFallimento >= 0 ? 'var(--green)' : '#F87171'}">${nettoRealeFallimento >= 0 ? '+' : ''}$${nettoRealeFallimento.toFixed(2)}</span>
+                  </div>
+              </div>
+
+              <div style="flex:1; min-width:240px; background:rgba(52,211,153,0.05); border:1px solid rgba(52,211,153,0.4); padding:15px; border-radius:8px;">
+                  <h4 style="color:var(--green); margin-top:0; font-family:var(--fd);">✅ SCENARIO B: PROP PASSATA</h4>
+                  <p style="font-size:11px; color:var(--t3); margin-bottom:10px;">La Prop prende <b>${c.winsNeeded} Take Profit</b>. Passi lo step, ma il tuo conto Personale ha pagato gli Stop Loss veri.</p>
+                  <ul style="font-size:12px; color:#fff; padding-left:15px; margin-bottom:10px; line-height:1.6;">
+                      <li>Costo Challenge Iniziale: <span style="color:#F87171">-$${cost.toFixed(2)}</span></li>
+                      <li>SL pagati sul Personale: <span style="color:#F87171">-$${c.sB_los.toFixed(2)}</span></li>
+                  </ul>
+                  <div style="border-top:1px dashed rgba(255,255,255,0.1); padding-top:10px; font-weight:bold; font-size:14px;">
+                      Costo reale per passare: <span style="color:#F87171">-$${costoRealePassaggio.toFixed(2)}</span>
+                  </div>
+              </div>
+
+          </div>
+      </div>
+      `;
+      box.innerHTML = tradeHtml + cicloHtml;
+      return; 
+  }
 
 
   var spreadRiga = spread>0
