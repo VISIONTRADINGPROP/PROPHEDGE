@@ -5308,100 +5308,74 @@ var sA_net  = sA_gain - cost - (spreadCostHedge * maxLossTrades);
 }
 
 function autoCalcPips(){
-  /* ═══ CALCOLO AUTOMATICO INTELLIGENTE (ANTI-PROP) ═══
-     Testa RR ottimale (1:2)
-     Sopravvive al Trailing DD e aggira la Coerenza
-     Mantiene intatta la logica per la modalità PROP+PROP
-  ═════════════════════════════════════════════════════ */
   var size   = parseFloat(document.getElementById('mSize')?.value)        || 100000;
   var cost   = parseFloat(document.getElementById('mCost')?.value)        || 1500;
   var maxDD  = parseFloat(document.getElementById('mDD')?.value)          || 6;
   var ddd    = parseFloat(document.getElementById('mDDD')?.value)         || 3;
-  var tgtPct = parseFloat(document.getElementById('mTgt')?.value)         || 8; // Target necessario per la coerenza
-  var days   = parseFloat(document.getElementById('mDays')?.value)        || 10;
-  var pay    = parseFloat(document.getElementById('mPay')?.value)         || 80;
-  var cons   = parseFloat(document.getElementById('mConsistency')?.value) || 30;
+  var tgtPct = parseFloat(document.getElementById('mTgt')?.value)         || 8;
+  var cons   = parseFloat(document.getElementById('mConsistency')?.value) || 0; // Se è 0, la coerenza è disattivata
   var assetEl = document.getElementById('mAsset');
   var asset  = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
-  var stratMode = typeof _stratMode !== 'undefined' ? _stratMode : 'personal';
-
-  var pipVal = (typeof _chPipVal === 'function') ? _chPipVal(asset) : 10;
-
-  var maxDDusd   = size * (maxDD / 100);
-  var dailyDDusd = size * (ddd  / 100);
   var isTrailing = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
+  var pipVal = (typeof _chPipVal === 'function') ? _chPipVal(asset) : 10;
+  var dailyDDusd = size * (ddd  / 100);
 
-  // ── 1. MODALITÀ PROP+PROP: Logica originale invariata ──
-  if(stratMode==='prop2'||stratMode==='futures_prop'||stratMode==='futures_futures'){
-    var size2  = parseFloat(document.getElementById('mSize2')?.value) || 0;
-    var dd2    = parseFloat(document.getElementById('mDD2')?.value)   || 6;
-    var days2  = parseFloat(document.getElementById('mDays2')?.value) || 10;
-    if(size2<=0){alert('Inserisci la dimensione della Prop 2.');return;}
-    var ddT1=size*(maxDD/100), ddT2=size2*(dd2/100);
-    var ggM=Math.max(days,days2);
-    var l1=Math.floor((ddT1/ggM/(pipVal*100))*100)/100;
-    var l2=Math.floor((ddT2/ggM/(pipVal*100))*100)/100;
-    if(l1<0.01)l1=0.01; if(l2<0.01)l2=0.01;
-    var sE=document.getElementById('mSlPips'), tE=document.getElementById('mTpPips'), lE=document.getElementById('mLots');
-    if(sE)sE.value=100; if(tE)tE.value=100; if(lE)lE.value=l1;
-    calcPreview();
-    alert('CALCOLO AUTOMATICO PROP+PROP\n\nAsset: '+asset+' | $'+pipVal+'/pip\nGiorni max: '+ggM+'\n\nProp 1 \u2192 '+l1+' lot (DD $'+ddT1.toFixed(0)+')\nProp 2 \u2192 '+l2+' lot (DD $'+ddT2.toFixed(0)+')\nSL=TP=100 pip');
-    return;
+  // 1. SCELTA STRATEGICA RR
+  // Se cons > 0 usiamo RR 1:2 (prudente per coerenza), se cons è 0 usiamo RR 1:3 (aggressivo)
+  var rrMultiplier = (cons > 0) ? 2 : 3;
+  
+  // 2. IMPOSTAZIONE PIPS (SL largo 100 pip come richiesto)
+  var pipsSL = 100;
+  var pipsTP = pipsSL * rrMultiplier;
+
+  // 3. CALCOLO LIMITI MONETARI
+  var targetProp = size * (tgtPct / 100);
+  var tp_dollar_ideale;
+
+  if(cons > 0) {
+      // Se c'è coerenza, il TP non deve superare il limite (95% del consentito)
+      var maxProfitConsentito = targetProp * (cons / 100);
+      tp_dollar_ideale = maxProfitConsentito * 0.95;
+  } else {
+      // Se NON c'è coerenza, puntiamo a fare il 25% del target totale in un solo trade
+      tp_dollar_ideale = targetProp * 0.25;
   }
 
-  // ── 2. CERVELLO ANTI-PROP (Per Prop vs Hedge e Challenge singole) ──
-  var targetProp = size * (tgtPct / 100);
+  // 4. REGOLA SOPRAVVIVENZA DD (Trailing vs Fisso)
+  var rischioMax = isTrailing ? (dailyDDusd * 0.25) : (dailyDDusd * 0.40);
+  var sl_dollar_ideale = tp_dollar_ideale / rrMultiplier;
 
-  // A. Regola Coerenza (Stealth Mode)
-  // Calcoliamo il limite fatale e ci fermiamo al 95% per stare sotto i radar
-  var maxProfitConsentito = targetProp * (cons / 100);
-  var tp_dollar_ideale = maxProfitConsentito * 0.95;
-
-  // B. Regola Sopravvivenza Trailing DD
-  // Se c'è il trailing, stiamo larghissimi e rischiamo max il 25% del Daily DD. Se è fisso, il 33%.
-  var rischioMax = isTrailing ? (dailyDDusd * 0.25) : (dailyDDusd * 0.33);
-
-  // C. Rischio/Rendimento 1:2
-  var sl_dollar_ideale = tp_dollar_ideale / 2;
-
-  // Se lo Stop Loss in dollari (per tenere l'1:2) supera il nostro limite di sopravvivenza, scaliamo le taglie
+  // Se lo SL monetario è troppo pesante per il DD, scaliamo i lotti
   if (sl_dollar_ideale > rischioMax) {
       sl_dollar_ideale = rischioMax;
-      tp_dollar_ideale = sl_dollar_ideale * 2;
+      tp_dollar_ideale = sl_dollar_ideale * rrMultiplier;
   }
 
-  // D. Trasformazione in Pips standard (SL 50, TP 100)
-  var pipsSL = 50;
-  var pipsTP = 100;
-
+  // 5. CALCOLO LOTTI FINALI
   var lottiIdeali = tp_dollar_ideale / (pipsTP * pipVal);
-  lottiIdeali = Math.floor(lottiIdeali * 100) / 100; // Arrotonda sempre per difetto per sicurezza
+  lottiIdeali = Math.floor(lottiIdeali * 100) / 100;
   if (lottiIdeali < 0.01) lottiIdeali = 0.01;
 
-  // Calcolo finale reale che avremo
-  var profittoReale = lottiIdeali * pipsTP * pipVal;
-  var perditaReale = lottiIdeali * pipsSL * pipVal;
+  // 6. APPLICAZIONE AI CAMPI
+  document.getElementById('mSlPips').value = pipsSL;
+  document.getElementById('mTpPips').value = pipsTP;
+  document.getElementById('mLots').value = lottiIdeali;
 
-  // E. Iniezione nei campi a schermo
-  var sE=document.getElementById('mSlPips');
-  var tE=document.getElementById('mTpPips');
-  var lE=document.getElementById('mLots');
-  if(sE) sE.value = pipsSL;
-  if(tE) tE.value = pipsTP;
-  if(lE) lE.value = lottiIdeali;
+  calcPreview();
 
-  calcPreview(); // Aggiorna i tuoi bellissimi box colorati!
+  // 7. REPORT TATTICO
+  var msgCoerenza = (cons > 0) 
+      ? "• Coerenza attiva ("+cons+"%): RR 1:2 impostato per non sforare." 
+      : "• Coerenza DISATTIVATA: RR 1:3 impostato per profitto massimo.";
 
-  // F. Report Finale a schermo
   alert(
-      "🛡️ SETUP ANTI-PROP CALCOLATO!\n\n" +
-      "Lotti Ottimizzati: " + lottiIdeali + "\n" +
-      "Stop Loss: " + pipsSL + " pip (-$" + perditaReale.toFixed(0) + ")\n" +
-      "Take Profit: " + pipsTP + " pip (+$" + profittoReale.toFixed(0) + ")\n\n" +
-      "💡 PERCHÉ SEI AL SICURO:\n" +
-      "• Coerenza Rispettata: Il profitto è sotto il limite fatale di $" + maxProfitConsentito.toFixed(0) + ".\n" +
-      "• Drawdown Protetto: Rischi solo il " + (isTrailing ? "25%" : "33%") + " del tuo limite giornaliero.\n" +
-      "• RR Matematico: Rischio:Rendimento 1:2 puro."
+      "🛡️ SETUP OTTIMIZZATO CALCOLATO!\n\n" +
+      "Lotti: " + lottiIdeali + "\n" +
+      "SL: " + pipsSL + " pip | TP: " + pipsTP + " pip (RR 1:" + rrMultiplier + ")\n\n" +
+      "💡 ANALISI:\n" +
+      msgCoerenza + "\n" +
+      "• SL Largo: 100 pip per assorbire la volatilità.\n" +
+      "• Sicurezza: Rischio trade limitato al " + (isTrailing ? "25%" : "40%") + " del Daily DD."
   );
 }
   var _ddTrailing = false;
