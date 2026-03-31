@@ -11526,9 +11526,11 @@ function setTheme(themeMode) {
 
   try{localStorage.setItem('ph_account',JSON.stringify(accountData));}catch(e){}
 
-  var panel=document.getElementById('accDropPanel');
+var panel=document.getElementById('accDropPanel');
 
   if(panel&&panel.style.display!=='none') panel.innerHTML=renderAccountDrop();
+
+  if(typeof calcPreview==='function') calcPreview();
 
 }
 
@@ -12312,7 +12314,7 @@ function toggleTheme(){
 
 
   var panel=document.getElementById('accDropPanel');if(panel&&panel.style.display!=='none')panel.innerHTML=renderAccountDrop();
-
+  if(typeof calcPreview==='function') calcPreview();
 
 
 }
