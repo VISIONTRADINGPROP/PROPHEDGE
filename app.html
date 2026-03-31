@@ -5300,76 +5300,50 @@ var sA_net  = sA_gain - cost - (spreadCostHedge * maxLossTrades);
 }
 
 function autoCalcPips(){
-  var size   = parseFloat(document.getElementById('mSize')?.value)        || 100000;
-  var tgtPct = parseFloat(document.getElementById('mTgt')?.value)         || 8;
-  var cons   = parseFloat(document.getElementById('mConsistency')?.value) || 0;
-  var ddd    = parseFloat(document.getElementById('mDDD')?.value)         || 3;
+  var size = parseFloat(document.getElementById('mSize')?.value) || 100000;
+  var cost = parseFloat(document.getElementById('mCost')?.value) || 500;
+  var tgtPct = parseFloat(document.getElementById('mTgt')?.value) || 8;
+  var cons = parseFloat(document.getElementById('mConsistency')?.value) || 0;
+  var days = parseFloat(document.getElementById('mDays')?.value) || 10;
   var assetEl = document.getElementById('mAsset');
-  var asset  = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
-  var isTrailing = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
-  var stratMode = typeof _stratMode !== 'undefined' ? _stratMode : 'personal';
+  var asset = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
   var pipVal = (typeof _chPipVal === 'function') ? _chPipVal(asset) : 10;
-  
-  // ── PROP+PROP (Lasciamo intatta la tua vecchia logica per non rompere nulla) ──
+  var stratMode = typeof _stratMode !== 'undefined' ? _stratMode : 'personal';
+
   if(stratMode==='prop2'||stratMode==='futures_prop'||stratMode==='futures_futures'){
     var size2 = parseFloat(document.getElementById('mSize2')?.value) || 0;
     var maxDD = parseFloat(document.getElementById('mDD')?.value) || 6;
     var dd2 = parseFloat(document.getElementById('mDD2')?.value) || 6;
-    var days = parseFloat(document.getElementById('mDays')?.value) || 10;
-    var days2 = parseFloat(document.getElementById('mDays2')?.value) || 10;
-    if(size2<=0){alert('Inserisci la dimensione della Prop 2.');return;}
-    var ddT1=size*(maxDD/100), ddT2=size2*(dd2/100);
-    var ggM=Math.max(days,days2);
-    var l1=Math.floor((ddT1/ggM/(pipVal*100))*100)/100;
+    var ddT1 = size*(maxDD/100), ddT2 = size2*(dd2/100);
+    var ggM = Math.max(parseFloat(document.getElementById('mDays')?.value)||10, parseFloat(document.getElementById('mDays2')?.value)||10);
+    var l1 = Math.floor((ddT1/ggM/(pipVal*100))*100)/100;
     if(l1<0.01) l1=0.01;
-    document.getElementById('mSlPips').value=100;
-    document.getElementById('mTpPips').value=100;
-    document.getElementById('mLots').value=l1;
+    document.getElementById('mSlPips').value = 100;
+    document.getElementById('mTpPips').value = 100;
+    document.getElementById('mLots').value = l1;
     calcPreview();
     return;
   }
 
-  // ── 1. LA TUA REGOLA SUI PIPS E RR ──
+  // CALCOLO PERFETTO PER CONTO LIVE (Nessun suicidio)
   var rrMult = (cons > 0) ? 2 : 3;
   var pipsSL = 100;
-  var pipsTP = pipsSL * rrMult; // Sarà 200 o 300 in base alla consistenza
+  var pipsTP = pipsSL * rrMult;
 
-  // ── 2. CALCOLO LIMITI PER NON SFORARE ──
-  var targetProp = size * (tgtPct / 100);
-  // Se c'è consistenza ci fermiamo al 95% del limite. Altrimenti puntiamo al 25% del target.
-  var tp_dollar_ideale = (cons > 0) ? (targetProp * (cons / 100) * 0.95) : (targetProp * 0.25);
-  
-  var dailyDDusd = size * (ddd / 100);
-  var rischioMax = isTrailing ? (dailyDDusd * 0.25) : (dailyDDusd * 0.40);
-  var sl_dollar_ideale = tp_dollar_ideale / rrMult;
+  var targetPropUsd = size * (tgtPct / 100);
 
-  // Se lo Stop Loss in dollari è troppo vicino al Daily DD, scaliamo tutto
-  if (sl_dollar_ideale > rischioMax) {
-      sl_dollar_ideale = rischioMax;
-      tp_dollar_ideale = sl_dollar_ideale * rrMult;
-  }
+  // Dividiamo il target per i GIORNI MINIMI. Piccoli passi costanti!
+  var tpIdealeUsd = targetPropUsd / days;
 
-  // ── 3. CALCOLO DEI LOTTI ──
-  var lottiIdeali = tp_dollar_ideale / (pipsTP * pipVal);
-  lottiIdeali = Math.floor(lottiIdeali * 100) / 100;
-  if (lottiIdeali < 0.01) lottiIdeali = 0.01;
+  var lottiProp = tpIdealeUsd / (pipsTP * pipVal);
+  lottiProp = Math.floor(lottiProp * 100) / 100;
+  if (lottiProp < 0.01) lottiProp = 0.01;
 
-  // ── 4. ASSEGNAZIONE AI CAMPI DEL SITO ──
   document.getElementById('mSlPips').value = pipsSL;
   document.getElementById('mTpPips').value = pipsTP;
-  document.getElementById('mLots').value = lottiIdeali;
+  document.getElementById('mLots').value = lottiProp;
 
   calcPreview();
-
-  // Alert di conferma per farti vedere che ha applicato la tua regola
-  alert(
-      "✅ CALCOLO ESEGUITO\n\n" +
-      "Regola Consistenza: " + (cons > 0 ? cons + "% (Attiva)" : "Assente") + "\n" +
-      "Risk:Reward applicato: 1:" + rrMult + "\n" +
-      "Stop Loss: " + pipsSL + " pip\n" +
-      "Take Profit: " + pipsTP + " pip\n" +
-      "Lotti calcolati: " + lottiIdeali
-  );
 }
 
   var _ddTrailing = false;
