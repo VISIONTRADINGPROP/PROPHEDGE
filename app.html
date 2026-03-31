@@ -5455,75 +5455,144 @@ var c = calcChallenge(p);
 
   // ── RIMOSSE INSTANT FUNDED E 2 STEP COME RICHIESTO ──
 
-  if(stratMode === 'challenge_1step' || stratMode === 'personal'){
-      // 1. Box Valore Singolo Trade
-      var tradeHtml = `
+ // ── 1. SESSIONE: CHALLENGE 1 STEP (Valutazione Standard) ──
+  if(stratMode === 'challenge_1step'){
+      var spreadHedgeSingolo = (spread || 0) * c.pipVal * c.contractMultHedge * c.hedgeLots;
+      var nettoRealeFallimento = c.sA_gain - cost - (spreadHedgeSingolo * c.maxLossTrades);
+      var costoRealePassaggio = c.sB_los + cost + (spreadHedgeSingolo * c.winsNeeded);
+
+      var htmlChallenge = `
       <div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
           <div style="flex:1; min-width:240px; background:rgba(56,189,248,0.08); padding:15px; border-radius:10px; border:1px solid var(--teal);">
-              <h4 style="color:var(--teal); margin:0 0 10px 0; font-family:var(--fd); font-size:12px; letter-spacing:1px;">🎯 CONTO PROP (SOLDI VIRTUALI)</h4>
-              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP Prop (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.propTP.toFixed(2)}</b></p>
-              <p style="font-size:14px; color:#fff;">🔻 SL Prop (${p.slPips} pip): <b style="color:#F87171;">- $${c.propSL.toFixed(2)}</b></p>
-              <hr style="border-color:rgba(255,255,255,0.1); margin:10px 0">
-              <p style="font-size:11px; color:var(--t3);">Lotti: ${p.lots} | Pip Val: $${c.pipVal.toFixed(2)}</p>
+              <h4 style="color:var(--teal); margin:0 0 10px 0; font-family:var(--fd); font-size:12px;">🎯 PROP (VALUTAZIONE)</h4>
+              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.propTP.toFixed(2)}</b></p>
+              <p style="font-size:14px; color:#fff;">🔻 SL (${p.slPips} pip): <b style="color:#F87171;">- $${c.propSL.toFixed(2)}</b></p>
           </div>
           <div style="flex:1; min-width:240px; background:rgba(167,139,250,0.08); padding:15px; border-radius:10px; border:1px solid var(--violet);">
-              <h4 style="color:var(--violet); margin:0 0 10px 0; font-family:var(--fd); font-size:12px; letter-spacing:1px;">🛡️ CONTO PERSONALE (SOLDI REALI)</h4>
-              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP Reale (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.hedgeTP.toFixed(2)}</b></p>
-              <p style="font-size:14px; color:#fff;">🔻 SL Reale (${p.slPips} pip): <b style="color:#F87171;">- $${c.hedgeSL.toFixed(2)}</b></p>
-              <hr style="border-color:rgba(255,255,255,0.1); margin:10px 0">
-              <p style="font-size:11px; color:var(--t3);">Lotti coperti: ${c.hedgeLots}</p>
+              <h4 style="color:var(--violet); margin:0 0 10px 0; font-family:var(--fd); font-size:12px;">🛡️ PERSONALE (REALE)</h4>
+              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.hedgeTP.toFixed(2)}</b></p>
+              <p style="font-size:14px; color:#fff;">🔻 SL (${p.slPips} pip): <b style="color:#F87171;">- $${c.hedgeSL.toFixed(2)}</b></p>
           </div>
       </div>
-      `;
-
-      // 2. Calcoli Bilancio Reale Fine Ciclo
-      var spreadHedgeSingolo = (spread || 0) * c.pipVal * c.contractMultHedge * c.hedgeLots;
-      var spreadTotaleA = spreadHedgeSingolo * c.maxLossTrades;
-      var spreadTotaleB = spreadHedgeSingolo * c.winsNeeded;
-
-      // Scenario A: Prop Fallita (La Prop brucia, il Personale prende i TP veri)
-      var nettoRealeFallimento = c.sA_gain - cost - spreadTotaleA;
-
-      // Scenario B: Prop Passata (Passi lo step della Prop, il Personale paga gli SL veri)
-      // NESSUN PAYOUT SOMMATO. Solo costi reali.
-      var costoRealePassaggio = c.sB_los + cost + spreadTotaleB;
-
-      var cicloHtml = `
-      <div style="background:var(--bg2); padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); margin-top:15px;">
-          <h3 style="color:#fff; margin:0 0 15px 0; font-family:var(--fd); text-align:center; font-size:14px; text-transform:uppercase; letter-spacing:1px;">⚖️ BILANCIO A FINE CICLO (SOLO SOLDI REALI)</h3>
+      <div style="background:var(--bg2); padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
+          <h3 style="color:#fff; margin:0 0 15px 0; font-family:var(--fd); text-align:center; font-size:14px;">⚖️ BILANCIO FINE FASE</h3>
           <div style="display:flex; gap:15px; flex-wrap:wrap;">
-              
               <div style="flex:1; min-width:240px; background:rgba(248,113,113,0.05); border:1px solid rgba(248,113,113,0.4); padding:15px; border-radius:8px;">
-                  <h4 style="color:#F87171; margin-top:0; font-family:var(--fd);">❌ SCENARIO A: PROP FALLITA</h4>
-                  <p style="font-size:11px; color:var(--t3); margin-bottom:10px;">La Prop prende <b>${c.maxLossTrades} Stop Loss</b> e salta. Il tuo conto Personale incassa i Take Profit veri.</p>
-                  <ul style="font-size:12px; color:#fff; padding-left:15px; margin-bottom:10px; line-height:1.6;">
-                      <li>Costo Challenge Persa: <span style="color:#F87171">-$${cost.toFixed(2)}</span></li>
-                      <li>TP incassati sul Personale: <span style="color:var(--green)">+$${c.sA_gain.toFixed(2)}</span></li>
-                  </ul>
-                  <div style="border-top:1px dashed rgba(255,255,255,0.1); padding-top:10px; font-weight:bold; font-size:14px;">
-                      Netto Reale in tasca: <span style="color:${nettoRealeFallimento >= 0 ? 'var(--green)' : '#F87171'}">${nettoRealeFallimento >= 0 ? '+' : ''}$${nettoRealeFallimento.toFixed(2)}</span>
-                  </div>
+                  <h4 style="color:#F87171; margin-top:0;">❌ PROP FALLITA</h4>
+                  <div style="margin-top:10px; font-weight:bold;">Netto in tasca: <span style="color:${nettoRealeFallimento >= 0 ? 'var(--green)' : '#F87171'}">$${nettoRealeFallimento.toFixed(2)}</span></div>
               </div>
-
               <div style="flex:1; min-width:240px; background:rgba(52,211,153,0.05); border:1px solid rgba(52,211,153,0.4); padding:15px; border-radius:8px;">
-                  <h4 style="color:var(--green); margin-top:0; font-family:var(--fd);">✅ SCENARIO B: PROP PASSATA</h4>
-                  <p style="font-size:11px; color:var(--t3); margin-bottom:10px;">La Prop prende <b>${c.winsNeeded} Take Profit</b>. Passi lo step, ma il tuo conto Personale ha pagato gli Stop Loss veri.</p>
-                  <ul style="font-size:12px; color:#fff; padding-left:15px; margin-bottom:10px; line-height:1.6;">
-                      <li>Costo Challenge Iniziale: <span style="color:#F87171">-$${cost.toFixed(2)}</span></li>
-                      <li>SL pagati sul Personale: <span style="color:#F87171">-$${c.sB_los.toFixed(2)}</span></li>
-                  </ul>
-                  <div style="border-top:1px dashed rgba(255,255,255,0.1); padding-top:10px; font-weight:bold; font-size:14px;">
-                      Costo reale per passare: <span style="color:#F87171">-$${costoRealePassaggio.toFixed(2)}</span>
-                  </div>
+                  <h4 style="color:var(--green); margin-top:0;">✅ PROP PASSATA</h4>
+                  <div style="margin-top:10px; font-weight:bold;">Costo reale passaggio: <span style="color:#F87171">-$${costoRealePassaggio.toFixed(2)}</span></div>
               </div>
-
           </div>
-      </div>
-      `;
-      box.innerHTML = tradeHtml + cicloHtml;
-      return; 
+      </div>`;
+      box.innerHTML = htmlChallenge;
+      return;
   }
 
+  // ── 2. SESSIONE: PROP + PERSONALE (CONTO LIVE FUNDED) ──
+  if(stratMode === 'personal'){
+      var targetConsistenza = (cons > 0) ? (c.propTP / (cons / 100)) : (size * (tgtPct/100));
+      var limitDDperc = maxDD / 100;
+      var propTargetSoldi = size * (tgtPct/100);
+      var payoutNettoProp = propTargetSoldi * (pay / 100);
+      
+      var simHtml = `
+      <div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:240px; background:rgba(56,189,248,0.08); padding:15px; border-radius:10px; border:1px solid var(--teal);">
+              <h4 style="color:var(--teal); margin:0 0 10px 0; font-family:var(--fd); font-size:12px;">🎯 PROP LIVE (Genera Payout)</h4>
+              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP Trade (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.propTP.toFixed(2)}</b></p>
+              <p style="font-size:14px; color:#fff;">🔻 SL Trade (${p.slPips} pip): <b style="color:#F87171;">- $${c.propSL.toFixed(2)}</b></p>
+          </div>
+          <div style="flex:1; min-width:240px; background:rgba(167,139,250,0.08); padding:15px; border-radius:10px; border:1px solid var(--violet);">
+              <h4 style="color:var(--violet); margin:0 0 10px 0; font-family:var(--fd); font-size:12px;">🛡️ PERSONALE (Copertura Reale)</h4>
+              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP Trade (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.hedgeTP.toFixed(2)}</b></p>
+              <p style="font-size:14px; color:#fff;">🔻 SL Trade (${p.slPips} pip): <b style="color:#F87171;">- $${c.hedgeSL.toFixed(2)}</b></p>
+          </div>
+      </div>
+
+      <div style="background:var(--bg2); padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); margin-bottom:15px;">
+          <h3 style="color:var(--teal); margin:0 0 10px 0; font-family:var(--fd); font-size:14px; text-transform:uppercase;">🔴 SIMULATORE CICLO LIVE</h3>
+          
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+              <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                  <span style="font-size:10px; color:var(--t3);">Tetto Consistenza ${cons > 0 ? '('+cons+'%)' : '(Assente)'}:</span><br>
+                  <strong style="color:#fff; font-size:14px;">Obiettivo ciclo: $${targetConsistenza.toFixed(2)}</strong>
+              </div>
+              <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;">
+                  <span style="font-size:10px; color:var(--t3);">Regola DD Base (${maxDD}%):</span><br>
+                  <strong style="color:var(--amber); font-size:14px;">${p.trailingDD ? '📉 Pavimento Trailing (HWM)' : '📌 Drawdown Statico'}</strong>
+              </div>
+          </div>
+
+          <table style="width:100%; text-align:left; border-collapse:collapse; font-size:11px; font-family:var(--fm);">
+              <thead>
+                  <tr style="border-bottom:1px solid rgba(255,255,255,0.2); color:var(--t3);">
+                      <th style="padding:5px;">Trade</th>
+                      <th style="padding:5px;">Balance Prop</th>
+                      <th style="padding:5px; color:var(--amber);">Pavimento Morte</th>
+                      <th style="padding:5px; color:#F87171;">Perdita Personale Reale</th>
+                      <th style="padding:5px;">Stato</th>
+                  </tr>
+              </thead>
+              <tbody>`;
+
+      var currentBalance = size;
+      var hwm = size;
+      var lossPersonaleCumulata = 0;
+      var statusProp = "";
+      var tradesNecessari = Math.ceil(targetConsistenza / c.propTP);
+      if(tradesNecessari < 1) tradesNecessari = 1;
+
+      for(var i=1; i<=tradesNecessari; i++) {
+          currentBalance += c.propTP;
+          lossPersonaleCumulata += c.hedgeSL;
+          
+          if(currentBalance > hwm) hwm = currentBalance;
+          var limiteMorte = p.trailingDD ? (hwm - (hwm * limitDDperc)) : (size - (size * limitDDperc));
+
+          if(i === tradesNecessari) statusProp = "✅ PAYOUT SBLOCCATO";
+          else statusProp = "🟡 IN CORSO";
+
+          simHtml += `
+          <tr style="border-bottom:1px dashed rgba(255,255,255,0.05);">
+              <td style="padding:8px;">T. ${i}</td>
+              <td style="padding:8px; color:var(--green); font-weight:bold;">$${currentBalance.toFixed(2)}</td>
+              <td style="padding:8px; color:var(--amber);">$${limiteMorte.toFixed(2)}</td>
+              <td style="padding:8px; color:#F87171;">-$${lossPersonaleCumulata.toFixed(2)}</td>
+              <td style="padding:8px; font-weight:bold;">${statusProp}</td>
+          </tr>`;
+      }
+
+      simHtml += `</tbody></table>`;
+
+      // Analisi Scenari Live (Guadagno su entrambe le fasi)
+      var spreadSingolo = (spread || 0) * c.pipVal * c.contractMultHedge * c.hedgeLots;
+      var spesaFail = cost + (spreadSingolo * c.maxLossTrades);
+      var nettoScenarioA = (c.maxLossTrades * c.hedgeTP) - spesaFail;
+      
+      var spesaWin = (lossPersonaleCumulata) + (spreadSingolo * tradesNecessari);
+      var nettoScenarioB = payoutNettoProp - spesaWin;
+
+      simHtml += `
+          <div style="margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+              <div style="flex:1; background:rgba(248,113,113,0.05); border:1px solid rgba(248,113,113,0.4); padding:10px; border-radius:8px;">
+                  <div style="font-size:10px; color:var(--t3);">❌ SCENARIO A (Prop Bruciata):</div>
+                  <div style="font-size:14px; font-weight:bold; color:${nettoScenarioA >= 0 ? 'var(--green)' : '#F87171'}">Netto: ${nettoScenarioA >= 0 ? '+' : ''}$${nettoScenarioA.toFixed(2)}</div>
+                  <div style="font-size:9px; color:var(--t3); margin-top:3px;">TP Personali - Costo Prop</div>
+              </div>
+              <div style="flex:1; background:rgba(52,211,153,0.05); border:1px solid rgba(52,211,153,0.4); padding:10px; border-radius:8px;">
+                  <div style="font-size:10px; color:var(--t3);">✅ SCENARIO B (Target Raggiunto):</div>
+                  <div style="font-size:14px; font-weight:bold; color:${nettoScenarioB >= 0 ? 'var(--green)' : '#F87171'}">Netto: ${nettoScenarioB >= 0 ? '+' : ''}$${nettoScenarioB.toFixed(2)}</div>
+                  <div style="font-size:9px; color:var(--t3); margin-top:3px;">Payout (${pay}%) - Perdita Personale Reale</div>
+              </div>
+          </div>
+      </div>`;
+
+      box.innerHTML = simHtml;
+      return;
+  }
 
 
   var spreadRiga = spread>0
