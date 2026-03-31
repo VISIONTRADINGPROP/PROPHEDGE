@@ -1,63 +1,68 @@
-// api/support-send.js
 import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req, res) {
+  // Configurazione CORS per permettere le chiamate dal sito
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Metodo non consentito' });
 
-  const { ticket_id, message, user_email, user_name } = req.body;
+  const { ticket_id, message, user, name } = req.body;
   const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
   try {
-    // 1. CONTEGGIO TICKET ATTIVI (Ultime 24 ore)
+    // 1. LIMITE 9 TICKET: Conta quanti ticket diversi sono stati creati nelle ultime 24 ore
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { data: activeTickets } = await sb
+    
+    const { data: recentMsgs, error: countError } = await sb
       .from('support_messages')
       .select('ticket_id')
       .gt('created_at', yesterday);
 
-    // Estraiamo i ticket unici
-    const uniqueTickets = [...new Set(activeTickets.map(t => t.ticket_id))];
+    if (countError) throw countError;
 
-    // 2. BLOCCO SE > 9 (tranne se il ticket esiste già nella conversazione attuale)
-    if (uniqueTickets.length >= 9 && !uniqueTickets.includes(ticket_id)) {
+    // Estraiamo la lista dei Ticket ID univoci
+    const activeTickets = [...new Set(recentMsgs.map(m => m.ticket_id))];
+
+    // Se abbiamo già 9 ticket e quello attuale NON è tra quelli (è nuovo), blocchiamo
+    if (activeTickets.length >= 9 && !activeTickets.includes(ticket_id)) {
       return res.status(429).json({ 
-        error: 'Tutti gli operatori sono occupati. Massimo 9 ticket attivi raggiunti. Riprova più tardi.' 
+        error: 'Tutti i nostri 9 operatori sono attualmente impegnati in altre chat. Riprova tra qualche ora.' 
       });
     }
 
-    // 3. INVIO A TELEGRAM (senza Markdown per evitare crash)
-    const TELEGRAM_BOT_TOKEN = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA';
-    const TELEGRAM_CHAT_ID   = '998979042';
+    // 2. INVIO A TELEGRAM
+    const BOT_TOKEN = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA';
+    const CHAT_ID = '998979042';
 
-    const telegramText = 
-      `🆕 NUOVO MESSAGGIO\n` +
-      `👤 Utente: ${user_name || 'Sconosciuto'}\n` +
-      `📧 Email: ${user_email || 'N/D'}\n` +
-      `🎫 TICKET: ${ticket_id}\n\n` +
-      `💬 Messaggio:\n${message}`;
-
-    const telegramRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    const tgRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: telegramText })
+      body: JSON.stringify({
+        chat_id: CHAT_ID,
+        text: message // Il messaggio arriva già formattato dal sito con il Ticket ID
+      })
     });
 
-    // 4. SALVATAGGIO MESSAGGIO UTENTE SU SUPABASE
+    if (!tgRes.ok) throw new Error('Errore invio Telegram');
+
+    // 3. SALVATAGGIO SU SUPABASE (Messaggio utente)
+    // Se il messaggio è quello di apertura (contiene 🔴), lo salviamo come info utente
     await sb.from('support_messages').insert({
       ticket_id,
       sender: 'user',
       text: message,
-      operator_msg: false
+      operator_msg: false,
+      role: 'user',    // Per compatibilità vecchia struttura
+      content: message // Per compatibilità vecchia struttura
     });
 
     return res.status(200).json({ success: true });
 
   } catch (err) {
+    console.error('Error:', err);
     return res.status(500).json({ error: err.message });
   }
 }
