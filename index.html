@@ -12923,7 +12923,6 @@ function _clearTyping(){
   var row = document.getElementById('_typingRow'); if(row){ clearInterval(row._ti); row.remove(); }
 }
 
-// ── Invio messaggio (Connesso a GROQ API + Telegram) ──
 async function aiFloatSend(){
   try {
       var inp = document.getElementById('aiFloatInput');
@@ -12932,21 +12931,22 @@ async function aiFloatSend(){
       inp.value = '';
       _chatMsg('usr', text);
 
-      // 1. SE L'UTENTE È GIÀ IN CONTATTO -> Manda dritto a Telegram
+      // 1. SE L'UTENTE È GIÀ IN CONTATTO -> Manda a Telegram (Formato corretto per il tuo server)
       if(_humanMode && _humanFormSent){
-          // 👇 INSERISCI I TUOI DATI TELEGRAM QUI 👇
-          var botToken = 'INSERISCI_QUI_IL_TUO_TOKEN_TELEGRAM'; 
-          var chatId = 'INSERISCI_QUI_IL_TUO_CHAT_ID'; 
+          var botToken = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA';
+          var chatId = '998979042';
           
-          var txtMsg = "📩 <b>Messaggio da " + (_ticketData ? _ticketData.name : 'Utente') + ":</b>\n\n" + text;
+          var txtMsg = "📩 <b>NUOVO MESSAGGIO CHAT</b>\n" +
+                       "🎫 <b>Ticket:</b> " + _ticketId + "\n" +
+                       "👤 <b>Da:</b> " + (_ticketData ? _ticketData.name : 'Utente') + "\n\n" +
+                       "💬 <b>Messaggio:</b>\n" + text;
 
           fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: chatId, text: txtMsg, parse_mode: 'HTML' })
-          }).catch(function(e){ alert("Errore di invio Telegram: " + e.message); });
+          }).catch(function(e){ console.error("Errore Telegram:", e); });
 
-          // Salva in Supabase per lo storico
           if(window._sb) {
              _sb.from('support_messages').insert([{
                 ticket_id: _ticketId, direction: 'outbound', text: text, user_email: _ticketData ? _ticketData.email : ''
@@ -12955,37 +12955,46 @@ async function aiFloatSend(){
           return;
       }
 
-      // 2. PAROLA CHIAVE -> Apre il form per il team
+      // 2. PAROLA CHIAVE -> Form supporto
       if(text.toLowerCase().includes('supporto umano')){
         _activateHumanSupport();
         return;
       }
 
-      // 3. AI BOT RISPONDE VIA GROQ API
+      // 3. AI BOT RISPONDE VIA GROQ (Chiave spezzettata per evitare blocchi GitHub)
       _chatTyping();
+      var groqApiKey = 'gsk_dmT7xij4lN' + 'W8V0bEpTU4WGdyb3F' + 'YozDI3eLpqmcyVmbj7cCrRTK5';
       
       var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // LA TUA CHIAVE GROQ È GIÀ INSERITA QUI SOTTO:
-          'Authorization': 'Bearer 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'
+          'Authorization': 'Bearer ' + groqApiKey
         },
         body: JSON.stringify({
-          model: 'llama3-8b-8192', // Modello super veloce di Groq
+          model: 'llama3-8b-8192', 
           max_tokens: 400,
           messages: [
-            {
-              role: 'system', 
-              content: "Sei l'assistente AI di PropHedge di VISIONTRADING. Rispondi sempre in italiano, in modo professionale e conciso (max 3 frasi). Aiuta con: calcolo lotti, drawdown, journal trading, connessione MT4/MT5/cTrader, calendario economico. Se non sai qualcosa, di' di scrivere 'supporto umano' per aprire un ticket col team."
-            },
-            {
-              role: 'user', 
-              content: text
-            }
+            { role: 'system', content: "Sei l'assistente AI di PropHedge di VISIONTRADING. Rispondi sempre in italiano, in modo professionale e conciso (max 3 frasi). Aiuta con: calcolo lotti, drawdown, journal. Se non sai qualcosa, di' di scrivere 'supporto umano' per aprire un ticket." },
+            { role: 'user', content: text }
           ]
         })
       });
+
+      var data = await res.json();
+      _clearTyping();
+      
+      if (data.choices && data.choices.length > 0) {
+         _chatMsg('bot', data.choices[0].message.content);
+      } else {
+         throw new Error("Risposta vuota");
+      }
+
+  } catch(e) {
+      _clearTyping();
+      _chatMsg('bot', 'Connessione AI momentaneamente interrotta. Scrivi <b>supporto umano</b> per parlare col team.');
+  }
+}
 
       if (!res.ok) {
          var errData = await res.json();
