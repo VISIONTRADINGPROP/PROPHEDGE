@@ -13061,174 +13061,132 @@ function _activateHumanSupport(){
 
 // ── Submit form: invia ticket e apre la chat ──
 function _submitContact(){
-  try {
-      var nEl = document.getElementById('_hcfName');
-      var eEl = document.getElementById('_hcfEmail');
-      var name  = nEl ? nEl.value.trim() : '';
-      var email = eEl ? eEl.value.trim() : '';
-      
-      if(!name){  if(nEl){nEl.style.borderColor='#F87171'; nEl.focus();} return; }
-      if(!email || !email.includes('@')){ if(eEl){eEl.style.borderColor='#F87171'; eEl.focus();} return; }
+    var nEl = document.getElementById('_hcfName');
+    var eEl = document.getElementById('_hcfEmail');
+    var name  = nEl ? nEl.value.trim() : '';
+    var email = eEl ? eEl.value.trim() : '';
 
-      _humanFormSent = true;
-      _ticketData = {name: name, email: email};
+    if(!name){  if(nEl){nEl.style.borderColor='#F87171'; nEl.focus();} return; }
+    if(!email || !email.includes('@')){ if(eEl){eEl.style.borderColor='#F87171'; eEl.focus();} return; }
 
-      var fr = document.getElementById('_humanForm');
-      if(fr) fr.remove();
+    _humanFormSent = true;
+    _ticketData = {name: name, email: email};
 
-      var ir = document.querySelector('#aiFloatPanel .ai-input-row');
-      if(ir) ir.style.display = 'flex';
-      var inp = document.getElementById('aiFloatInput');
-      if(inp){ inp.placeholder = 'Scrivi il tuo messaggio...'; inp.focus(); }
+    var fr = document.getElementById('_humanForm');
+    if(fr) fr.remove();
 
-      _chatMsg('bot', '\u23F3 <b>In attesa di un operatore...</b>\nRiceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.');
+    var ir = document.querySelector('#aiFloatPanel .ai-input-row');
+    if(ir) ir.style.display = 'flex';
+    var inp = document.getElementById('aiFloatInput');
+    if(inp){ inp.placeholder = 'Scrivi il tuo messaggio...'; inp.focus(); }
 
-      // 🔴 INVIA NOTIFICA A TELEGRAM (Salta il server rotto)
-      var botToken = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA'; 
-      var chatId = '998979042'; 
-      var txtMsg = "🚨 <b>NUOVO TICKET SUPPORTO</b> 🚨\n\n👤 Nome: " + name + "\n✉️ Email: " + email + "\n🎫 Ticket: " + _ticketId;
+    _chatMsg('bot', '\u23F3 <b>In attesa di un operatore...</b><br>Riceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.');
 
-      fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
+    // INVIA NOTIFICA A TELEGRAM (Usa i tuoi dati)
+    var botToken = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA';
+    var chatId = '998979042';
+    var txtMsg = "🚨 <b>NUOVO TICKET SUPPORTO</b> 🚨\n\n👤 Nome: " + name + "\n✉️ Email: " + email + "\n🎫 Ticket: " + _ticketId;
+
+    fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ chat_id: chatId, text: txtMsg, parse_mode: 'HTML' })
-      }).catch(function(e) { console.error("Errore notifica Telegram:", e); });
+    }).catch(function(e){ console.error(e); });
 
-      _startPoll();
-  } catch(e) {
-      console.error('Errore form:', e.message);
-  }
+    _startPoll();
 }
 
-// ── Polling: cerca risposte dell'operatore ogni 3 secondi su Supabase ──
+// ── Polling: cerca risposte dell'operatore su Supabase ──
 var _tgOffset = 0;
 function _startPoll(){
-  if(_pollTimer) return;
-  _pollTimer = setInterval(async function(){
-    if(!_humanMode || !_ticketId) return;
-    try {
-      var since = _lastMsgAt || new Date(Date.now() - 86400000).toISOString();
-      var res = await _sb
-        .from('support_messages')
-        .select('id, text, created_at')
-        .eq('ticket_id', _ticketId)
-        .eq('direction', 'inbound')
-        .gt('created_at', since)
-        .order('created_at', {ascending: true});
+    if(_pollTimer) return;
+    _pollTimer = setInterval(async function(){
+        if(!_humanMode || !_ticketId) return;
+        try {
+            var since = _lastMsgAt || new Date(Date.now() - 86400000).toISOString();
+            var res = await window._sb
+                .from('support_messages')
+                .select('id, text, created_at')
+                .eq('ticket_id', _ticketId)
+                .eq('direction', 'inbound')
+                .gt('created_at', since)
+                .order('created_at', {ascending: true});
 
-      if(res && res.data && res.data.length > 0){
-        res.data.forEach(function(m){
-          if(m && m.text) _showOpMsg(m.text);
-        });
-        _lastMsgAt = res.data[res.data.length - 1].created_at;
-      }
-    } catch(e1){
-      console.error('Errore polling Supabase:', e1);
-    }
-  }, 3000);
+            if(res && res.data && res.data.length > 0){
+                res.data.forEach(function(m){
+                    if(m && m.text) _showOpMsg(m.text);
+                });
+                _lastMsgAt = res.data[res.data.length - 1].created_at;
+            }
+        } catch(e1){}
+    }, 3000);
 }
 
 // ── Mostra risposta operatore ──
 function _showOpMsg(text){
-  if(!text || !text.trim()) return;
-  if(!_operatorOnline){
-    _operatorOnline = true;
-    var op = _assignedOp || {n:'un operatore', img:''};
-    var statusEl = document.querySelector('#aiFloatPanel .ai-status');
-    if(statusEl){
-      statusEl.innerHTML =
-        '<span class="ai-dot" style="background:#34D399;box-shadow:0 0 6px #34D399;animation:pu 1s infinite"></span>' +
-        (op.img ? '<img src="' + op.img + '" style="width:20px;height:20px;border-radius:50%;margin:0 5px 0 4px;vertical-align:middle;object-fit:cover">' : ' ') +
-        '<span>Sei in linea con <b>' + op.n + '</b></span>';
+    if(!text || !text.trim()) return;
+    if(!_operatorOnline){
+        _operatorOnline = true;
+        var op = _assignedOp || {n:'un operatore', img:''};
+        var statusEl = document.querySelector('#aiFloatPanel .ai-status');
+        if(statusEl){
+            statusEl.innerHTML = '<span class="ai-dot" style="background:#34D399;box-shadow:0 0 6px #34D399;animation:pu 1s infinite"></span>' +
+                (op.img ? '<img src="' + op.img + '" style="width:20px;height:20px;border-radius:50%;margin:0 5px 0 4px;vertical-align:middle;object-fit:cover">' : ' ') +
+                '<span>Sei in linea con <b>' + op.n + '</b></span>';
+        }
+        _chatMsg('support', '\uD83D\uDFE2 <b>Sei in linea con ' + op.n + '!</b>');
     }
-    _chatMsg('support', '\uD83D\uDFE2 <b>Sei in linea con ' + op.n + '!</b>');
-  }
-  _chatMsg('support', text.trim());
-  _lastMsgAt = new Date().toISOString();
+    _chatMsg('support', text.trim());
+    _lastMsgAt = new Date().toISOString();
 }
 
 function _stopPoll(){
-  if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
+    if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
 }
 
-// ── Invio messaggio (Connesso a GROQ API + Telegram) ──
-async function aiFloatSend(){
-  try {
-      var inp = document.getElementById('aiFloatInput');
-      var text = inp ? inp.value.trim() : '';
-      if(!text) return;
-      inp.value = '';
-      _chatMsg('usr', text);
+// ── Invio messaggio (BOT LOCALE SICURO + TELEGRAM) ──
+function aiFloatSend(){
+    var inp = document.getElementById('aiFloatInput');
+    if(!inp) return;
+    var text = inp.value.trim();
+    if(!text) return;
+    inp.value = '';
+    _chatMsg('usr', text);
 
-      // 1. SE L'UTENTE E' GIA' IN CONTATTO CON TE -> Manda dritto a Telegram
-      if(_humanMode && _humanFormSent){
-          var botToken = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA'; 
-          var chatId = '998979042'; 
-          var txtMsg = "📩 <b>Messaggio da " + (_ticketData ? _ticketData.name : 'Utente') + ":</b>\n\n" + text;
+    // 1. SE L'UTENTE E' GIA' IN CONTATTO -> Manda dritto a Telegram
+    if(_humanMode && _humanFormSent){
+        var botToken = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA';
+        var chatId = '998979042';
+        var txtMsg = "📩 <b>Messaggio da " + (_ticketData ? _ticketData.name : 'Utente') + ":</b>\n\n" + text;
 
-          fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
+        fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ chat_id: chatId, text: txtMsg, parse_mode: 'HTML' })
-          }).catch(function(e){ console.error("Errore Telegram", e); });
+        }).catch(function(e){ console.error(e); });
 
-          // Salva in Supabase
-          if(window._sb) {
-             _sb.from('support_messages').insert([{
-                ticket_id: _ticketId, direction: 'outbound', text: text, user_email: _ticketData ? _ticketData.email : ''
-             }]).catch(function(e){});
-          }
-          return;
-      }
+        if(window._sb) {
+           window._sb.from('support_messages').insert([{
+              ticket_id: _ticketId, direction: 'outbound', text: text, user_email: _ticketData ? _ticketData.email : ''
+           }]).catch(function(e){});
+        }
+        return;
+    }
 
-      // 2. PAROLA CHIAVE -> Apre il form per il team
-      if(text.toLowerCase().includes('supporto umano')){
+    // 2. PAROLA CHIAVE -> Apre il form per il team
+    if(text.toLowerCase().includes('supporto umano')){
         _activateHumanSupport();
         return;
-      }
+    }
 
-      // 3. AI BOT RISPONDE VIA GROQ API (La chiave è divisa in 3 pezzi per fregare GitHub!)
-      _chatTyping();
-      var groqApiKey = 'gsk_dmT7xij4lN' + 'W8V0bEpTU4WGdyb3F' + 'YozDI3eLpqmcyVmbj7cCrRTK5';
-      
-      var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + groqApiKey
-        },
-        body: JSON.stringify({
-          model: 'llama3-8b-8192', 
-          max_tokens: 400,
-          messages: [
-            {
-              role: 'system', 
-              content: "Sei l'assistente AI di PropHedge di VISIONTRADING. Rispondi sempre in italiano, in modo professionale e conciso. Aiuta con: calcolo lotti, drawdown, journal trading. Se non sai qualcosa, di' all'utente di scrivere 'supporto umano' per aprire un ticket col team."
-            },
-            {
-              role: 'user', 
-              content: text
-            }
-          ]
-        })
-      });
-
-      var data = await res.json();
-      _clearTyping();
-      
-      if (data.choices && data.choices.length > 0) {
-         _chatMsg('bot', data.choices[0].message.content);
-      } else {
-         _chatMsg('bot', 'Errore API Groq. Scrivi "supporto umano" per parlare col team.');
-      }
-
-  } catch(e) {
-      _clearTyping();
-      _chatMsg('bot', 'Connessione AI interrotta. Scrivi <b>supporto umano</b> per parlare col team.');
-      console.error('Errore API:', e);
-  }
+    // 3. RISPOSTA LOCALE AUTOMATICA (Indistruttibile)
+    _chatTyping();
+    setTimeout(function(){
+        _clearTyping();
+        _chatMsg('bot', 'Ciao! L\'assistente AI è attualmente offline per manutenzione.<br><br>Per parlare direttamente con il team operativo, scrivi la parola <b>supporto umano</b>.');
+    }, 500);
 }
-
+  
 // ══ INIT ════════════════════════════════════════════════════════════
 
 
