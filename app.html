@@ -13026,6 +13026,7 @@ function _activateHumanSupport(){
   msgs.scrollTop = msgs.scrollHeight;
 }
 
+// ── Submit form dati ──
 // ── Submit form: invia ticket e apre la chat ──
 function _submitContact(){
   var nEl = document.getElementById('_hcfName');
@@ -13049,36 +13050,33 @@ function _submitContact(){
   if(inp){ inp.placeholder = 'Scrivi il tuo messaggio...'; inp.focus(); }
 
   // 3. Messaggio "in attesa"
-  _chatMsg('bot', '\u23F3 <b>In attesa di un operatore...</b>\nRiceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.');
+  _chatMsg('bot',
+    '\u23F3 <b>In attesa di un operatore...</b>\n' +
+    'Riceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.'
+  );
 
-  // 4. INVIA NOTIFICA DIRETTA A TELEGRAM (CON ALLARMI)
-  var botToken = 'INSERISCI_IL_TUO_TOKEN_QUI'; 
-  var chatId = 'INSERISCI_IL_TUO_CHAT_ID_QUI'; 
-
-  var txtMsg = "🚨 <b>NUOVO TICKET SUPPORTO</b> 🚨\n\n👤 <b>Nome:</b> " + name + "\n✉️ <b>Email:</b> " + email + "\n🎫 <b>Ticket:</b> " + _ticketId;
-  var url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
-
-  fetch(url, {
+  // 4. Invia ticket a Telegram via API server
+  // Il server riceve nome+email+ticket_id e manda un messaggio al tuo bot Telegram
+  // Tu apri Telegram e rispondi — la risposta torner\u00e0 qui via polling Supabase
+  fetch('/api/support-contact', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: chatId, text: txtMsg, parse_mode: 'HTML' })
-  })
-  .then(function(res) {
-     if(!res.ok) {
-        res.json().then(function(err){ 
-            alert("❌ ERRORE TELEGRAM:\n" + err.description); 
-        });
-     }
-  })
-  .catch(function(e){ 
-      alert("❌ ERRORE DI CONNESSIONE:\n" + e.message); 
-  });
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      ticket_id: _ticketId,
+      name: name,
+      email: email,
+      operator: _assignedOp ? _assignedOp.n : ''
+    })
+  }).catch(function(){});
 
   // 5. Avvia polling risposte
   _startPoll();
 }
 
 // ── Polling: cerca risposte dell'operatore ogni 3 secondi ──
+// Strategia a cascata:
+//   1. Supabase diretto (tabella support_messages) — pi\u00f9 affidabile
+//   2. API server /api/support-poll — fallback
 var _tgOffset = 0;
 
 function _startPoll(){
@@ -13086,7 +13084,10 @@ function _startPoll(){
   _pollTimer = setInterval(async function(){
     if(!_humanMode || !_ticketId) return;
 
-    // Supabase diretto (tabella support_messages)
+    var found = false;
+
+    // Metodo 1: Supabase diretto
+    // Il server (webhook Telegram) inserisce i messaggi dell'operatore in questa tabella
     try {
       var since = _lastMsgAt || new Date(Date.now() - 86400000).toISOString();
       var res = await _sb
@@ -13102,10 +13103,29 @@ function _startPoll(){
           if(m && m.text) _showOpMsg(m.text);
         });
         _lastMsgAt = res.data[res.data.length - 1].created_at;
+        found = true;
       }
-    } catch(e1){
-      console.error('Errore polling Supabase:', e1);
-    }
+    } catch(e1){}
+
+    if(found) return;
+
+    // Metodo 2: API server /api/support-poll
+    try {
+      var r = await fetch(
+        '/api/support-poll?ticket_id=' + encodeURIComponent(_ticketId) +
+        '&since=' + encodeURIComponent(_lastMsgAt || '')
+      );
+      if(r.ok){
+        var d = await r.json();
+        if(d && Array.isArray(d.messages) && d.messages.length){
+          d.messages.forEach(function(m){
+            if(m && m.text) _showOpMsg(m.text);
+          });
+          _lastMsgAt = new Date().toISOString();
+        }
+      }
+    } catch(e2){}
+
   }, 3000);
 }
 
@@ -13135,6 +13155,7 @@ function _showOpMsg(text){
 function _stopPoll(){
   if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
 }
+
 
 // ══ INIT ════════════════════════════════════════════════════════════
 
