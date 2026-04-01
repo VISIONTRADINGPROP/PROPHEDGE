@@ -13025,68 +13025,53 @@ function _activateHumanSupport(){
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-// ── Submit form dati ──
 // ── Submit form: invia ticket e apre la chat ──
 function _submitContact(){
-  var nEl = document.getElementById('_hcfName');
-  var eEl = document.getElementById('_hcfEmail');
-  var name  = nEl ? nEl.value.trim() : '';
-  var email = eEl ? eEl.value.trim() : '';
-  if(!name){  if(nEl){nEl.style.borderColor='#F87171'; nEl.focus();} return; }
-  if(!email || !email.includes('@')){ if(eEl){eEl.style.borderColor='#F87171'; eEl.focus();} return; }
+  try {
+      var nEl = document.getElementById('_hcfName');
+      var eEl = document.getElementById('_hcfEmail');
+      var name  = nEl ? nEl.value.trim() : '';
+      var email = eEl ? eEl.value.trim() : '';
+      
+      if(!name){  if(nEl){nEl.style.borderColor='#F87171'; nEl.focus();} return; }
+      if(!email || !email.includes('@')){ if(eEl){eEl.style.borderColor='#F87171'; eEl.focus();} return; }
 
-  _humanFormSent = true;
-  _ticketData = {name: name, email: email};
+      _humanFormSent = true;
+      _ticketData = {name: name, email: email};
 
-  // 1. Rimuovi il form dalla chat
-  var fr = document.getElementById('_humanForm');
-  if(fr) fr.remove();
+      var fr = document.getElementById('_humanForm');
+      if(fr) fr.remove();
 
-  // 2. Mostra input bar (forza display:flex)
-  var ir = document.querySelector('#aiFloatPanel .ai-input-row');
-  if(ir) ir.style.display = 'flex';
-  var inp = document.getElementById('aiFloatInput');
-  if(inp){ inp.placeholder = 'Scrivi il tuo messaggio...'; inp.focus(); }
+      var ir = document.querySelector('#aiFloatPanel .ai-input-row');
+      if(ir) ir.style.display = 'flex';
+      var inp = document.getElementById('aiFloatInput');
+      if(inp){ inp.placeholder = 'Scrivi il tuo messaggio...'; inp.focus(); }
 
-  // 3. Messaggio "in attesa"
-  _chatMsg('bot',
-    '\u23F3 <b>In attesa di un operatore...</b>\n' +
-    'Riceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.'
-  );
+      _chatMsg('bot', '\u23F3 <b>In attesa di un operatore...</b>\nRiceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.');
 
-  // 4. Invia ticket a Telegram via API server
-  // Il server riceve nome+email+ticket_id e manda un messaggio al tuo bot Telegram
-  // Tu apri Telegram e rispondi — la risposta torner\u00e0 qui via polling Supabase
-  fetch('/api/support-contact', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      ticket_id: _ticketId,
-      name: name,
-      email: email,
-      operator: _assignedOp ? _assignedOp.n : ''
-    })
-  }).catch(function(){});
+      // 🔴 INVIA NOTIFICA A TELEGRAM (Salta il server rotto)
+      var botToken = 'INSERISCI_QUI_IL_TUO_TOKEN_TELEGRAM'; 
+      var chatId = 'INSERISCI_QUI_IL_TUO_CHAT_ID'; 
+      var txtMsg = "🚨 <b>NUOVO TICKET SUPPORTO</b> 🚨\n\n👤 Nome: " + name + "\n✉️ Email: " + email + "\n🎫 Ticket: " + _ticketId;
 
-  // 5. Avvia polling risposte
-  _startPoll();
+      fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: txtMsg, parse_mode: 'HTML' })
+      }).catch(function(e) { console.error("Errore notifica Telegram:", e); });
+
+      _startPoll();
+  } catch(e) {
+      alert('Errore form contatto: ' + e.message);
+  }
 }
 
-// ── Polling: cerca risposte dell'operatore ogni 3 secondi ──
-// Strategia a cascata:
-//   1. Supabase diretto (tabella support_messages) — pi\u00f9 affidabile
-//   2. API server /api/support-poll — fallback
+// ── Polling: cerca risposte dell'operatore ogni 3 secondi su Supabase ──
 var _tgOffset = 0;
-
 function _startPoll(){
   if(_pollTimer) return;
   _pollTimer = setInterval(async function(){
     if(!_humanMode || !_ticketId) return;
-
-    var found = false;
-
-    // Metodo 1: Supabase diretto
-    // Il server (webhook Telegram) inserisce i messaggi dell'operatore in questa tabella
     try {
       var since = _lastMsgAt || new Date(Date.now() - 86400000).toISOString();
       var res = await _sb
@@ -13102,49 +13087,26 @@ function _startPoll(){
           if(m && m.text) _showOpMsg(m.text);
         });
         _lastMsgAt = res.data[res.data.length - 1].created_at;
-        found = true;
       }
-    } catch(e1){}
-
-    if(found) return;
-
-    // Metodo 2: API server /api/support-poll
-    try {
-      var r = await fetch(
-        '/api/support-poll?ticket_id=' + encodeURIComponent(_ticketId) +
-        '&since=' + encodeURIComponent(_lastMsgAt || '')
-      );
-      if(r.ok){
-        var d = await r.json();
-        if(d && Array.isArray(d.messages) && d.messages.length){
-          d.messages.forEach(function(m){
-            if(m && m.text) _showOpMsg(m.text);
-          });
-          _lastMsgAt = new Date().toISOString();
-        }
-      }
-    } catch(e2){}
-
+    } catch(e1){
+      console.error('Errore polling Supabase:', e1);
+    }
   }, 3000);
 }
 
-// ── Mostra risposta operatore — prima volta annuncia "sei in linea" ──
+// ── Mostra risposta operatore ──
 function _showOpMsg(text){
   if(!text || !text.trim()) return;
   if(!_operatorOnline){
     _operatorOnline = true;
     var op = _assignedOp || {n:'un operatore', img:''};
-    // Aggiorna header
     var statusEl = document.querySelector('#aiFloatPanel .ai-status');
     if(statusEl){
       statusEl.innerHTML =
         '<span class="ai-dot" style="background:#34D399;box-shadow:0 0 6px #34D399;animation:pu 1s infinite"></span>' +
-        (op.img
-          ? '<img src="' + op.img + '" style="width:20px;height:20px;border-radius:50%;margin:0 5px 0 4px;vertical-align:middle;object-fit:cover">'
-          : ' ') +
+        (op.img ? '<img src="' + op.img + '" style="width:20px;height:20px;border-radius:50%;margin:0 5px 0 4px;vertical-align:middle;object-fit:cover">' : ' ') +
         '<span>Sei in linea con <b>' + op.n + '</b></span>';
     }
-    // Messaggio "sei in linea"
     _chatMsg('support', '\uD83D\uDFE2 <b>Sei in linea con ' + op.n + '!</b>');
   }
   _chatMsg('support', text.trim());
@@ -13153,6 +13115,87 @@ function _showOpMsg(text){
 
 function _stopPoll(){
   if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
+}
+
+// ── Invio messaggio (Connesso a GROQ API + Telegram) ──
+async function aiFloatSend(){
+  try {
+      var inp = document.getElementById('aiFloatInput');
+      var text = inp ? inp.value.trim() : '';
+      if(!text) return;
+      inp.value = '';
+      _chatMsg('usr', text);
+
+      // 1. SE L'UTENTE E' GIA' IN CONTATTO CON TE -> Manda dritto a Telegram
+      if(_humanMode && _humanFormSent){
+          var botToken = 'INSERISCI_QUI_IL_TUO_TOKEN_TELEGRAM'; 
+          var chatId = 'INSERISCI_QUI_IL_TUO_CHAT_ID'; 
+          var txtMsg = "📩 <b>Messaggio da " + (_ticketData ? _ticketData.name : 'Utente') + ":</b>\n\n" + text;
+
+          fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatId, text: txtMsg, parse_mode: 'HTML' })
+          }).catch(function(e){ alert("Errore di invio Telegram: " + e.message); });
+
+          // Salva in Supabase per lo storico
+          if(window._sb) {
+             _sb.from('support_messages').insert([{
+                ticket_id: _ticketId, direction: 'outbound', text: text, user_email: _ticketData ? _ticketData.email : ''
+             }]).catch(function(e){});
+          }
+          return;
+      }
+
+      // 2. SE L'UTENTE SCRIVE LA PAROLA CHIAVE -> Apre il form per il team
+      if(text.toLowerCase().includes('supporto umano')){
+        _activateHumanSupport();
+        return;
+      }
+
+      // 3. AI BOT RISPONDE VIA GROQ API (LLaMA 3 8B)
+      _chatTyping();
+      
+      // 🔴 INSERISCI QUI LA TUA CHIAVE API DI GROQ
+      var groqApiKey = 'INSERISCI_QUI_LA_TUA_CHIAVE_GROQ';
+      
+      var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + groqApiKey
+        },
+        body: JSON.stringify({
+          model: 'llama3-8b-8192', // Modello super veloce di Groq
+          max_tokens: 400,
+          messages: [
+            {
+              role: 'system', 
+              content: "Sei l'assistente AI di PropHedge di VISIONTRADING. Rispondi sempre in italiano, in modo professionale e conciso (max 3 frasi). Aiuta con: calcolo lotti, drawdown, journal trading, connessione MT4/MT5/cTrader, calendario economico. Se non sai qualcosa, di' di scrivere 'supporto umano' per aprire un ticket col team."
+            },
+            {
+              role: 'user', 
+              content: text
+            }
+          ]
+        })
+      });
+
+      var data = await res.json();
+      _clearTyping();
+      
+      if (data.choices && data.choices.length > 0) {
+         var reply = data.choices[0].message.content;
+         _chatMsg('bot', reply);
+      } else {
+         throw new Error("Nessuna risposta da Groq");
+      }
+
+  } catch(e) {
+      _clearTyping();
+      _chatMsg('bot', 'Connessione AI interrotta. Scrivi <b>supporto umano</b> per parlare col team.');
+      console.error('Errore API Groq/Telegram:', e);
+  }
 }
 
 
