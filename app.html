@@ -13049,21 +13049,30 @@ function _submitContact(){
   if(inp){ inp.placeholder = 'Scrivi il tuo messaggio...'; inp.focus(); }
 
   // 3. Messaggio "in attesa"
-  _chatMsg('bot',
-    '\u23F3 <b>In attesa di un operatore...</b>\n' +
-    'Riceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.'
-  );
+  _chatMsg('bot', '\u23F3 <b>In attesa di un operatore...</b>\nRiceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.');
 
-  // 4. INVIA NOTIFICA DIRETTA A TELEGRAM
-  const botToken = 'INSERISCI_IL_TUO_TOKEN_QUI';
-  const chatId = 'INSERISCI_IL_TUO_CHAT_ID_QUI';
-  const txtMsg = "🚨 <b>NUOVO TICKET SUPPORTO</b> 🚨\n\n👤 <b>Nome:</b> " + name + "\n✉️ <b>Email:</b> " + email + "\n🎫 <b>Ticket ID:</b> " + _ticketId;
+  // 4. INVIA NOTIFICA DIRETTA A TELEGRAM (CON ALLARMI)
+  var botToken = 'INSERISCI_IL_TUO_TOKEN_QUI'; 
+  var chatId = 'INSERISCI_IL_TUO_CHAT_ID_QUI'; 
 
-  fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+  var txtMsg = "🚨 <b>NUOVO TICKET SUPPORTO</b> 🚨\n\n👤 <b>Nome:</b> " + name + "\n✉️ <b>Email:</b> " + email + "\n🎫 <b>Ticket:</b> " + _ticketId;
+  var url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
+
+  fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ chat_id: chatId, text: txtMsg, parse_mode: 'HTML' })
-  }).catch(function(e){ console.error('Errore Telegram:', e); });
+  })
+  .then(function(res) {
+     if(!res.ok) {
+        res.json().then(function(err){ 
+            alert("❌ ERRORE TELEGRAM:\n" + err.description); 
+        });
+     }
+  })
+  .catch(function(e){ 
+      alert("❌ ERRORE DI CONNESSIONE:\n" + e.message); 
+  });
 
   // 5. Avvia polling risposte
   _startPoll();
@@ -13126,7 +13135,6 @@ function _showOpMsg(text){
 function _stopPoll(){
   if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
 }
-
 
 // ══ INIT ════════════════════════════════════════════════════════════
 
