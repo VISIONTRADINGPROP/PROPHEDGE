@@ -13085,7 +13085,11 @@ function _submitContact(){
     // INVIA NOTIFICA A TELEGRAM (Usa i tuoi dati)
     var botToken = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA';
     var chatId = '998979042';
-    var txtMsg = "🚨 <b>NUOVO TICKET SUPPORTO</b> 🚨\n\n👤 Nome: " + name + "\n✉️ Email: " + email + "\n🎫 Ticket: " + _ticketId;
+   // Cerca questa riga dentro _submitContact e sostituiscila:
+var txtMsg = "🚨 <b>NUOVO TICKET SUPPORTO</b> 🚨\n\n" +
+             "👤 <b>Nome:</b> " + name + "\n" +
+             "✉️ <b>Email:</b> " + email + "\n" +
+             "🎫 <b>Ticket:</b> " + _ticketId;
 
     fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
         method: 'POST',
