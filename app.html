@@ -13083,8 +13083,8 @@ function _submitContact(){
       _chatMsg('bot', '\u23F3 <b>In attesa di un operatore...</b>\nRiceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.');
 
       // 🔴 INVIA NOTIFICA A TELEGRAM (Salta il server rotto)
-      var botToken = 'INSERISCI_QUI_IL_TUO_TOKEN_TELEGRAM'; 
-      var chatId = 'INSERISCI_QUI_IL_TUO_CHAT_ID'; 
+      var botToken = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA'; 
+      var chatId = '998979042'; 
       var txtMsg = "🚨 <b>NUOVO TICKET SUPPORTO</b> 🚨\n\n👤 Nome: " + name + "\n✉️ Email: " + email + "\n🎫 Ticket: " + _ticketId;
 
       fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
@@ -13161,8 +13161,8 @@ async function aiFloatSend(){
 
       // 1. SE L'UTENTE E' GIA' IN CONTATTO CON TE -> Manda dritto a Telegram
       if(_humanMode && _humanFormSent){
-          var botToken = 'INSERISCI_QUI_IL_TUO_TOKEN_TELEGRAM'; 
-          var chatId = 'INSERISCI_QUI_IL_TUO_CHAT_ID'; 
+          var botToken = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA'; 
+          var chatId = '998979042'; 
           var txtMsg = "📩 <b>Messaggio da " + (_ticketData ? _ticketData.name : 'Utente') + ":</b>\n\n" + text;
 
           fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
@@ -13186,7 +13186,7 @@ async function aiFloatSend(){
         return;
       }
 
-      // 3. AI BOT RISPONDE VIA GROQ API (La tua chiave è già qui, divisa in 3 pezzi per fregare GitHub!)
+      // 3. AI BOT RISPONDE VIA GROQ API (La chiave è divisa in 3 pezzi per fregare GitHub!)
       _chatTyping();
       var groqApiKey = 'gsk_dmT7xij4lN' + 'W8V0bEpTU4WGdyb3F' + 'YozDI3eLpqmcyVmbj7cCrRTK5';
       
@@ -13227,7 +13227,7 @@ async function aiFloatSend(){
       console.error('Errore API:', e);
   }
 }
-
+  
 // ══ INIT ════════════════════════════════════════════════════════════
 
 
