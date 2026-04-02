@@ -12923,98 +12923,56 @@ function _clearTyping(){
   var row = document.getElementById('_typingRow'); if(row){ clearInterval(row._ti); row.remove(); }
 }
 
+// ── Invio messaggio ──
 async function aiFloatSend(){
-  try {
-      var inp = document.getElementById('aiFloatInput');
-      var text = inp ? inp.value.trim() : '';
-      if(!text) return;
-      inp.value = '';
-      _chatMsg('usr', text);
+  var inp = document.getElementById('aiFloatInput');
+  var text = inp ? inp.value.trim() : '';
+  if(!text) return;
+  inp.value = '';
+  _chatMsg('usr', text);
 
-      // 1. SE L'UTENTE È GIÀ IN CONTATTO -> Manda a Telegram (Formato corretto per il tuo server)
-      if(_humanMode && _humanFormSent){
-          var botToken = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA';
-          var chatId = '998979042';
-          
-          var txtMsg = "📩 <b>NUOVO MESSAGGIO CHAT</b>\n" +
-                       "🎫 <b>Ticket:</b> " + _ticketId + "\n" +
-                       "👤 <b>Da:</b> " + (_ticketData ? _ticketData.name : 'Utente') + "\n\n" +
-                       "💬 <b>Messaggio:</b>\n" + text;
-
-          fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: chatId, text: txtMsg, parse_mode: 'HTML' })
-          }).catch(function(e){ console.error("Errore Telegram:", e); });
-
-          if(window._sb) {
-             _sb.from('support_messages').insert([{
-                ticket_id: _ticketId, direction: 'outbound', text: text, user_email: _ticketData ? _ticketData.email : ''
-             }]).catch(function(e){});
-          }
-          return;
-      }
-
-      // 2. PAROLA CHIAVE -> Form supporto
-      if(text.toLowerCase().includes('supporto umano')){
-        _activateHumanSupport();
-        return;
-      }
-
-      // 3. AI BOT RISPONDE VIA GROQ (Chiave spezzettata per evitare blocchi GitHub)
-      _chatTyping();
-      var groqApiKey = 'gsk_dmT7xij4lN' + 'W8V0bEpTU4WGdyb3F' + 'YozDI3eLpqmcyVmbj7cCrRTK5';
-      
-      var res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + groqApiKey
-        },
+  // Modalità umana attiva → manda a Telegram
+  if(_humanMode && _humanFormSent){
+    try{
+      await fetch('/api/support-send',{
+        method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          model: 'llama3-8b-8192', 
-          max_tokens: 400,
-          messages: [
-            { role: 'system', content: "Sei l'assistente AI di PropHedge di VISIONTRADING. Rispondi sempre in italiano, in modo professionale e conciso (max 3 frasi). Aiuta con: calcolo lotti, drawdown, journal. Se non sai qualcosa, di' di scrivere 'supporto umano' per aprire un ticket." },
-            { role: 'user', content: text }
-          ]
+          ticket_id: _ticketId,
+          message: text,
+          user: (_ticketData && _ticketData.email) || '',
+          name: (_ticketData && _ticketData.name) || ''
         })
       });
-
-      var data = await res.json();
-      _clearTyping();
-      
-      if (data.choices && data.choices.length > 0) {
-         _chatMsg('bot', data.choices[0].message.content);
-      } else {
-         throw new Error("Risposta vuota");
-      }
-
-  } catch(e) {
-      _clearTyping();
-      _chatMsg('bot', 'Connessione AI momentaneamente interrotta. Scrivi <b>supporto umano</b> per parlare col team.');
+    }catch(e){}
+    return;
   }
-}
 
-      if (!res.ok) {
-         var errData = await res.json();
-         throw new Error(errData.error?.message || "Errore status: " + res.status);
-      }
+  // Parola chiave → attiva supporto umano
+  if(text.toLowerCase().includes('supporto umano')){
+    _activateHumanSupport();
+    return;
+  }
 
-      var data = await res.json();
-      _clearTyping();
-      
-      if (data.choices && data.choices.length > 0) {
-         var reply = data.choices[0].message.content;
-         _chatMsg('bot', reply);
-      } else {
-         throw new Error("Nessuna risposta da Groq");
-      }
-
-  } catch(e) {
-      _clearTyping();
-      alert("ERRORE GROQ/CHAT:\n" + e.message); // <-- Popup di emergenza se fallisce
-      _chatMsg('bot', 'Connessione AI interrotta. Scrivi <b>supporto umano</b> per parlare col team.');
+  // AI bot risponde via Claude API
+  _chatTyping();
+  try{
+    var res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:400,
+        system:'Sei l\'assistente AI di PropHedge di VISIONTRADING. Rispondi in italiano, in modo conciso (max 3 frasi). Aiuta con: calcolo lotti, drawdown, journal trading, connessione MT4/MT5/cTrader, calendario economico, prop firm challenge. Se chiedono supporto umano di\' di scrivere "supporto umano".',
+        messages:[{role:'user',content:text}]
+      })
+    });
+    var data = await res.json();
+    _clearTyping();
+    var reply = (data.content && data.content[0] && data.content[0].text) || 'Riprova tra un momento.';
+    _chatMsg('bot', reply);
+  }catch(e){
+    _clearTyping();
+    _chatMsg('bot','Risposta AI non disponibile. Scrivi <b>supporto umano</b> per parlare con il team.');
   }
 }
 
@@ -13068,138 +13026,137 @@ function _activateHumanSupport(){
   msgs.scrollTop = msgs.scrollHeight;
 }
 
+// ── Submit form dati ──
 // ── Submit form: invia ticket e apre la chat ──
 function _submitContact(){
-    var nEl = document.getElementById('_hcfName');
-    var eEl = document.getElementById('_hcfEmail');
-    var name  = nEl ? nEl.value.trim() : '';
-    var email = eEl ? eEl.value.trim() : '';
+  var nEl = document.getElementById('_hcfName');
+  var eEl = document.getElementById('_hcfEmail');
+  var name  = nEl ? nEl.value.trim() : '';
+  var email = eEl ? eEl.value.trim() : '';
+  if(!name){  if(nEl){nEl.style.borderColor='#F87171'; nEl.focus();} return; }
+  if(!email || !email.includes('@')){ if(eEl){eEl.style.borderColor='#F87171'; eEl.focus();} return; }
 
-    if(!name){  if(nEl){nEl.style.borderColor='#F87171'; nEl.focus();} return; }
-    if(!email || !email.includes('@')){ if(eEl){eEl.style.borderColor='#F87171'; eEl.focus();} return; }
+  _humanFormSent = true;
+  _ticketData = {name: name, email: email};
 
-    _humanFormSent = true;
-    _ticketData = {name: name, email: email};
+  // 1. Rimuovi il form dalla chat
+  var fr = document.getElementById('_humanForm');
+  if(fr) fr.remove();
 
-    var fr = document.getElementById('_humanForm');
-    if(fr) fr.remove();
+  // 2. Mostra input bar (forza display:flex)
+  var ir = document.querySelector('#aiFloatPanel .ai-input-row');
+  if(ir) ir.style.display = 'flex';
+  var inp = document.getElementById('aiFloatInput');
+  if(inp){ inp.placeholder = 'Scrivi il tuo messaggio...'; inp.focus(); }
 
-    var ir = document.querySelector('#aiFloatPanel .ai-input-row');
-    if(ir) ir.style.display = 'flex';
-    var inp = document.getElementById('aiFloatInput');
-    if(inp){ inp.placeholder = 'Scrivi il tuo messaggio...'; inp.focus(); }
+  // 3. Messaggio "in attesa"
+  _chatMsg('bot',
+    '\u23F3 <b>In attesa di un operatore...</b>\n' +
+    'Riceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.'
+  );
 
-    _chatMsg('bot', '\u23F3 <b>In attesa di un operatore...</b><br>Riceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.');
+  // 4. Invia ticket a Telegram via API server
+  // Il server riceve nome+email+ticket_id e manda un messaggio al tuo bot Telegram
+  // Tu apri Telegram e rispondi — la risposta torner\u00e0 qui via polling Supabase
+  fetch('/api/support-contact', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      ticket_id: _ticketId,
+      name: name,
+      email: email,
+      operator: _assignedOp ? _assignedOp.n : ''
+    })
+  }).catch(function(){});
 
-    // INVIA NOTIFICA A TELEGRAM (Usa i tuoi dati)
-    var botToken = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA';
-    var chatId = '998979042';
-   // Cerca questa riga dentro _submitContact e sostituiscila:
-var txtMsg = "🚨 <b>NUOVO TICKET SUPPORTO</b> 🚨\n\n" +
-             "👤 <b>Nome:</b> " + name + "\n" +
-             "✉️ <b>Email:</b> " + email + "\n" +
-             "🎫 <b>Ticket:</b> " + _ticketId;
-
-    fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: txtMsg, parse_mode: 'HTML' })
-    }).catch(function(e){ console.error(e); });
-
-    _startPoll();
+  // 5. Avvia polling risposte
+  _startPoll();
 }
 
-// ── Polling: cerca risposte dell'operatore su Supabase ──
+// ── Polling: cerca risposte dell'operatore ogni 3 secondi ──
+// Strategia a cascata:
+//   1. Supabase diretto (tabella support_messages) — pi\u00f9 affidabile
+//   2. API server /api/support-poll — fallback
 var _tgOffset = 0;
-function _startPoll(){
-    if(_pollTimer) return;
-    _pollTimer = setInterval(async function(){
-        if(!_humanMode || !_ticketId) return;
-        try {
-            var since = _lastMsgAt || new Date(Date.now() - 86400000).toISOString();
-            var res = await window._sb
-                .from('support_messages')
-                .select('id, text, created_at')
-                .eq('ticket_id', _ticketId)
-                .eq('direction', 'inbound')
-                .gt('created_at', since)
-                .order('created_at', {ascending: true});
 
-            if(res && res.data && res.data.length > 0){
-                res.data.forEach(function(m){
-                    if(m && m.text) _showOpMsg(m.text);
-                });
-                _lastMsgAt = res.data[res.data.length - 1].created_at;
-            }
-        } catch(e1){}
-    }, 3000);
+function _startPoll(){
+  if(_pollTimer) return;
+  _pollTimer = setInterval(async function(){
+    if(!_humanMode || !_ticketId) return;
+
+    var found = false;
+
+    // Metodo 1: Supabase diretto
+    // Il server (webhook Telegram) inserisce i messaggi dell'operatore in questa tabella
+    try {
+      var since = _lastMsgAt || new Date(Date.now() - 86400000).toISOString();
+      var res = await _sb
+        .from('support_messages')
+        .select('id, text, created_at')
+        .eq('ticket_id', _ticketId)
+        .eq('direction', 'inbound')
+        .gt('created_at', since)
+        .order('created_at', {ascending: true});
+
+      if(res && res.data && res.data.length > 0){
+        res.data.forEach(function(m){
+          if(m && m.text) _showOpMsg(m.text);
+        });
+        _lastMsgAt = res.data[res.data.length - 1].created_at;
+        found = true;
+      }
+    } catch(e1){}
+
+    if(found) return;
+
+    // Metodo 2: API server /api/support-poll
+    try {
+      var r = await fetch(
+        '/api/support-poll?ticket_id=' + encodeURIComponent(_ticketId) +
+        '&since=' + encodeURIComponent(_lastMsgAt || '')
+      );
+      if(r.ok){
+        var d = await r.json();
+        if(d && Array.isArray(d.messages) && d.messages.length){
+          d.messages.forEach(function(m){
+            if(m && m.text) _showOpMsg(m.text);
+          });
+          _lastMsgAt = new Date().toISOString();
+        }
+      }
+    } catch(e2){}
+
+  }, 3000);
 }
 
-// ── Mostra risposta operatore ──
+// ── Mostra risposta operatore — prima volta annuncia "sei in linea" ──
 function _showOpMsg(text){
-    if(!text || !text.trim()) return;
-    if(!_operatorOnline){
-        _operatorOnline = true;
-        var op = _assignedOp || {n:'un operatore', img:''};
-        var statusEl = document.querySelector('#aiFloatPanel .ai-status');
-        if(statusEl){
-            statusEl.innerHTML = '<span class="ai-dot" style="background:#34D399;box-shadow:0 0 6px #34D399;animation:pu 1s infinite"></span>' +
-                (op.img ? '<img src="' + op.img + '" style="width:20px;height:20px;border-radius:50%;margin:0 5px 0 4px;vertical-align:middle;object-fit:cover">' : ' ') +
-                '<span>Sei in linea con <b>' + op.n + '</b></span>';
-        }
-        _chatMsg('support', '\uD83D\uDFE2 <b>Sei in linea con ' + op.n + '!</b>');
+  if(!text || !text.trim()) return;
+  if(!_operatorOnline){
+    _operatorOnline = true;
+    var op = _assignedOp || {n:'un operatore', img:''};
+    // Aggiorna header
+    var statusEl = document.querySelector('#aiFloatPanel .ai-status');
+    if(statusEl){
+      statusEl.innerHTML =
+        '<span class="ai-dot" style="background:#34D399;box-shadow:0 0 6px #34D399;animation:pu 1s infinite"></span>' +
+        (op.img
+          ? '<img src="' + op.img + '" style="width:20px;height:20px;border-radius:50%;margin:0 5px 0 4px;vertical-align:middle;object-fit:cover">'
+          : ' ') +
+        '<span>Sei in linea con <b>' + op.n + '</b></span>';
     }
-    _chatMsg('support', text.trim());
-    _lastMsgAt = new Date().toISOString();
+    // Messaggio "sei in linea"
+    _chatMsg('support', '\uD83D\uDFE2 <b>Sei in linea con ' + op.n + '!</b>');
+  }
+  _chatMsg('support', text.trim());
+  _lastMsgAt = new Date().toISOString();
 }
 
 function _stopPoll(){
-    if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
+  if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
 }
 
-// ── Invio messaggio (BOT LOCALE SICURO + TELEGRAM) ──
-function aiFloatSend(){
-    var inp = document.getElementById('aiFloatInput');
-    if(!inp) return;
-    var text = inp.value.trim();
-    if(!text) return;
-    inp.value = '';
-    _chatMsg('usr', text);
 
-    // 1. SE L'UTENTE E' GIA' IN CONTATTO -> Manda dritto a Telegram
-    if(_humanMode && _humanFormSent){
-        var botToken = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA';
-        var chatId = '998979042';
-        var txtMsg = "📩 <b>Messaggio da " + (_ticketData ? _ticketData.name : 'Utente') + ":</b>\n\n" + text;
-
-        fetch('https://api.telegram.org/bot' + botToken + '/sendMessage', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: chatId, text: txtMsg, parse_mode: 'HTML' })
-        }).catch(function(e){ console.error(e); });
-
-        if(window._sb) {
-           window._sb.from('support_messages').insert([{
-              ticket_id: _ticketId, direction: 'outbound', text: text, user_email: _ticketData ? _ticketData.email : ''
-           }]).catch(function(e){});
-        }
-        return;
-    }
-
-    // 2. PAROLA CHIAVE -> Apre il form per il team
-    if(text.toLowerCase().includes('supporto umano')){
-        _activateHumanSupport();
-        return;
-    }
-
-    // 3. RISPOSTA LOCALE AUTOMATICA (Indistruttibile)
-    _chatTyping();
-    setTimeout(function(){
-        _clearTyping();
-        _chatMsg('bot', 'Ciao! L\'assistente AI è attualmente offline per manutenzione.<br><br>Per parlare direttamente con il team operativo, scrivi la parola <b>supporto umano</b>.');
-    }, 500);
-}
-  
 // ══ INIT ════════════════════════════════════════════════════════════
 
 
@@ -13246,9 +13203,89 @@ function _sgn(n) { return n >= 0 ? '+' : ''; }
    Solo cons bassa (≤30%)  → RR 1:2
    Cons ≥ 50% o assente    → RR 1:3 possibile
    ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   _calcPersonalLots() — funzione CONDIVISA
+   Chiamata sia da autoCalcPips() che da _openSimPersonal().
+   Garantisce che calcolatore e simulatore diano SEMPRE gli stessi
+   valori al centesimo, indipendentemente dall'ordine dei click.
+   ═══════════════════════════════════════════════════════════════════ */
+function _calcPersonalLots() {
+  var size     = parseFloat(document.getElementById('mSize')?.value)        || 100000;
+  var cost     = parseFloat(document.getElementById('mCost')?.value)        || 1500;
+  var maxDD    = parseFloat(document.getElementById('mDD')?.value)          || 6;
+  var ddd      = parseFloat(document.getElementById('mDDD')?.value)         || 3;
+  var tgtPct   = parseFloat(document.getElementById('mTgt')?.value)         || 8;
+  var days     = parseFloat(document.getElementById('mDays')?.value)        || 10;
+  var cons     = parseFloat(document.getElementById('mConsistency')?.value) || 0;
+  var isTrail  = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
+  var asset    = (document.getElementById('mAsset')?.value || 'GOLD:10').split(':')[0];
+  var pipVal   = typeof _chPipVal === 'function' ? _chPipVal(asset) : 10;
+
+  var tgtUsd     = size * (tgtPct / 100);
+  var maxDDusd   = size * (maxDD  / 100);
+  var dailyDDusd = size * (ddd    / 100);
+  var hasCons    = cons > 0 && cons < 100;
+  var consLimit  = hasCons ? tgtUsd * (cons / 100) : Infinity;
+
+  /* Base $ per trade */
+  var baseUsd = isFinite(consLimit) ? consLimit : dailyDDusd;
+  baseUsd = Math.min(baseUsd, dailyDDusd);
+
+  /* Penalità trailing × consistenza */
+  var penalty;
+  if (isTrail && hasCons) {
+    penalty = cons<=25?0.25:cons<=35?0.33:cons<=50?0.50:cons<=70?0.70:0.85;
+  } else if (isTrail) {
+    penalty = 0.70;
+  } else if (hasCons) {
+    penalty = cons<=30?0.65:cons<=60?0.80:0.90;
+  } else {
+    penalty = 1.00;
+  }
+
+  var targetUsd = baseUsd * penalty;
+
+  /* Trova pip e lots (RR 1:1) — iterazione [200,150,100,80,60,50] */
+  var bestPips = 100, bestLots = 0.01;
+  var pipOpts  = [200, 150, 100, 80, 60, 50];
+  for (var pi = 0; pi < pipOpts.length; pi++) {
+    var p = pipOpts[pi];
+    var l = Math.floor((targetUsd / (p * pipVal)) * 100) / 100;
+    if (l >= 0.01) { bestPips = p; bestLots = l; break; }
+  }
+  if (bestLots < 0.01) bestLots = 0.01;
+
+  /* Lotto personale */
+  var lossAmt  = bestLots * bestPips * pipVal;
+  var nLossMax = lossAmt > 0 ? Math.floor(maxDDusd / lossAmt) : 10;
+  if (nLossMax < 1) nLossMax = 1;
+
+  var lotPers = (cost * 1.20) / (nLossMax * bestPips * pipVal);
+  lotPers = Math.ceil(lotPers * 100) / 100;
+  if (lotPers < 0.01) lotPers = 0.01;
+  if (lotPers >= bestLots) lotPers = Math.max(0.01, Math.floor((bestLots - 0.01) * 100) / 100);
+
+  return {
+    lots:    bestLots,
+    lotPers: lotPers,
+    pip:     bestPips,
+    pipVal:  pipVal,
+    propWin: bestLots * bestPips * pipVal,
+    hedgeWin: lotPers * bestPips * pipVal,
+    nLossMax: nLossMax
+  };
+}
+
 function autoCalcPips() {
 
-  /* ── Modalità NON-personal: logica base ── */
+  /* ── Challenge 1 Step: calcolo dedicato ── */
+  if (typeof stratMode !== 'undefined' && stratMode === 'challenge_1step') {
+    _autoCalcChallenge1();
+    return;
+  }
+
+  /* ── Modalità NON-personal: invariata ── */
   if (typeof stratMode === 'undefined' || stratMode !== 'personal') {
     var sz  = parseFloat(document.getElementById('mSize')?.value)  || 100000;
     var tg  = parseFloat(document.getElementById('mTgt')?.value)   || 8;
@@ -13264,95 +13301,86 @@ function autoCalcPips() {
     return;
   }
 
-  /* ── PERSONAL MODE: Bicchiere di Cristallo ── */
-  var size      = parseFloat(document.getElementById('mSize')?.value)        || 100000;
-  var cost      = parseFloat(document.getElementById('mCost')?.value)        || 1500;
-  var maxDD     = parseFloat(document.getElementById('mDD')?.value)          || 6;
-  var ddd       = parseFloat(document.getElementById('mDDD')?.value)         || 3;
-  var tgtPct    = parseFloat(document.getElementById('mTgt')?.value)         || 8;
-  var days      = parseFloat(document.getElementById('mDays')?.value)        || 10;
-  var cons      = parseFloat(document.getElementById('mConsistency')?.value) || 0;
-  var isTrail   = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
-  var asset     = (document.getElementById('mAsset')?.value || 'GOLD:10').split(':')[0];
-  var pipVal    = typeof _chPipVal === 'function' ? _chPipVal(asset) : 10;
+  /* ══════════════════════════════════════════════════════════════════
+     PERSONAL MODE — Bicchiere di Cristallo (RR 1:1)
 
-  var tgtUsd     = size * (tgtPct / 100);
-  var maxDDusd   = size * (maxDD  / 100);
-  var dailyDDusd = size * (ddd    / 100);
+     REGOLA FONDAMENTALE:
+     Con Prop BUY + Personale SELL sullo stesso asset:
+     → SL = TP sempre (RR 1:1): i livelli si corrispondono sempre
+     → Se il trade prop va in SL, il personale chiude TP nello stesso punto
 
-  /* ── Determina RR ── */
-  var hasCons = cons > 0 && cons < 100;
-  var consLow = hasCons && cons <= 30;
-  var consHigh= hasCons && cons >= 50;
+     IL PROBLEMA DELLA SIZE TROPPO ALTA:
+     Esempio: trailing + cons 25%, target $6000
+     → consLimit per trade = $1500
+     → Con 0.75 lot × 100 pip × $10 = $750... ma usiamo 200 pip → $1500
+     → Ogni WIN alza il DDline di: $1500 × (1 - 6%) = $1410
+     → Dopo 3 WIN: DDline ≈ $98.230 (era $94.000)
+     → Servono solo 4 STOP consecutivi per bruciare la prop
+     → Suicidio con trailing + bassa consistenza!
 
-  var slPips, tpPips, rrNote;
-  if (isTrail && consLow) {
-    slPips=100; tpPips=200;
-    rrNote='RR 1:2 — Trailing+Cons≤30%: pavimento mobile pericoloso, tetto basso → size ridotta al minimo';
-  } else if (isTrail && !hasCons) {
-    slPips=100; tpPips=200;
-    rrNote='RR 1:2 — Trailing attivo: dopo il 1° TP il buffer reale si riduce pericolosamente';
-  } else if (!isTrail && consLow) {
-    slPips=100; tpPips=200;
-    rrNote='RR 1:2 — Cons≤30%: tetto basso, ogni trade grande rischia violazione e squalifica';
-  } else if (consHigh || !hasCons) {
-    slPips=100; tpPips=300;
-    rrNote='RR 1:3 — Cons≥50% o assente: soffitto alto, più margine di manovra disponibile';
-  } else {
-    slPips=100; tpPips=200;
-    rrNote='RR 1:2 — Zona intermedia: prudenza consigliata';
-  }
+     SOLUZIONE: ridurre la size proporzionalmente alla pericolosità
+     del combinato trailing DD + consistenza bassa.
+     Più è bassa la consistenza % E più il trailing è attivo,
+     più la size deve essere ridotta (ma non azzerata).
+     Più la consistenza è alta (o assente) E più il DD è statico,
+     più possiamo alzare la size.
+  ══════════════════════════════════════════════════════════════════ */
 
-  /* ── Lotti ottimali ── */
-  var consLimitUsd = hasCons ? tgtUsd*(cons/100) : Infinity;
-  var lotByCons    = isFinite(consLimitUsd) ? consLimitUsd/(tpPips*pipVal) : dailyDDusd/(slPips*pipVal);
-  var lotByDaily   = dailyDDusd/(slPips*pipVal);
-  var lotByTarget  = (tgtUsd/Math.max(1,days))/(tpPips*pipVal);
-  var penalty      = isTrail ? 0.85 : 1.0;  // -15% con trailing: compensa buffer perso
+  /* Usa la funzione condivisa — stessa logica del simulatore */
+  var _c = _calcPersonalLots();
+  var bestLots = _c.lots;
+  var lotPers  = _c.lotPers;
+  var bestPips = _c.pip;
+  var pipVal   = _c.pipVal;
 
-  var lotProp = Math.min(lotByCons, lotByDaily, lotByTarget) * penalty;
-  lotProp = Math.floor(lotProp*100)/100;
-  if (lotProp < 0.01) lotProp = 0.01;
+  /* Applica al form */
+  var slE = document.getElementById('mSlPips'); if (slE) slE.value = bestPips;
+  var tpE = document.getElementById('mTpPips'); if (tpE) tpE.value = bestPips;
+  var ltE = document.getElementById('mLots');   if (ltE) ltE.value = bestLots;
 
-  /* ── Lotto personale: copre 120% del costo se la prop brucia ── */
-  var nLossMax = lotProp>0 ? Math.floor(maxDDusd/(lotProp*slPips*pipVal)) : 10;
-  if (nLossMax < 1) nLossMax = 1;
-  var lotPers = (cost*1.20)/(nLossMax*slPips*pipVal);
-  lotPers = Math.ceil(lotPers*100)/100;
-  if (lotPers < 0.01) lotPers = 0.01;
-  if (lotPers >= lotProp) lotPers = Math.max(0.01, Math.floor((lotProp-0.01)*100)/100);
+  /* ── Toast esplicativo ── */
+  var winLoss      = (bestLots * bestPips * pipVal).toFixed(0);
+  var persGain     = (lotPers  * bestPips * pipVal).toFixed(0);
+  var daysToTarget = winLoss > 0
+    ? Math.ceil(tgtUsd / parseFloat(winLoss))
+    : '?';
 
-  /* ── Applica ── */
-  var slE=document.getElementById('mSlPips'); if(slE) slE.value=slPips;
-  var tpE=document.getElementById('mTpPips'); if(tpE) tpE.value=tpPips;
-  var ltE=document.getElementById('mLots');   if(ltE) ltE.value=lotProp;
+  var trailNote = isTrail
+    ? ' | ⚠ Trail: penalità ' + Math.round(penalty * 100) + '%'
+    : ' | 📌 DD statico';
+  var consNote = hasCons
+    ? ' | Cons.' + cons + '%: max $' + (isFinite(consLimit) ? consLimit.toFixed(0) : '∞') + '/trade'
+    : ' | Nessuna consistenza';
 
-  /* ── Toast ── */
-  var tpUsd=(lotProp*tpPips*pipVal).toFixed(0);
-  var slUsd=(lotProp*slPips*pipVal).toFixed(0);
-  var consStr = hasCons
-    ? 'Cons.'+cons+'%: max $'+consLimitUsd.toFixed(0)+'/trade'
-    : 'Nessuna consistenza';
-  var msg = '⚡ '+rrNote+
-    '\nProp: '+lotProp+' lot (TP +$'+tpUsd+' / SL -$'+slUsd+')'+
-    ' | Pers: '+lotPers+' lot | '+consStr;
+  var msg =
+    '⚡ ' + noteReason + '\n' +
+    'RR 1:1 → ' + bestPips + ' pip | Prop: ' + bestLots +
+    ' lot ±$' + winLoss +
+    ' | Pers: ' + lotPers + ' lot (cop. ±$' + persGain + ')\n' +
+    'Trade per target: ~' + daysToTarget + trailNote + consNote;
 
-  var old=document.getElementById('_phCalcToast'); if(old) old.remove();
-  var toast=document.createElement('div');
-  toast.id='_phCalcToast';
-  toast.style.cssText='position:fixed;bottom:120px;left:50%;transform:translateX(-50%);'+
-    'background:linear-gradient(135deg,#0EA5E9,#7C3AED);color:#fff;font-weight:600;'+
-    'font-family:"DM Sans",sans-serif;font-size:11px;padding:12px 22px;border-radius:40px;'+
-    'z-index:99999;box-shadow:0 6px 28px rgba(56,189,248,.5);max-width:92vw;text-align:center;'+
-    'line-height:1.6;transition:opacity .4s;pointer-events:none;white-space:pre-line';
-  toast.textContent=msg;
+  var old = document.getElementById('_phCalcToast'); if (old) old.remove();
+  var toast = document.createElement('div');
+  toast.id = '_phCalcToast';
+  toast.style.cssText =
+    'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);' +
+    'background:linear-gradient(135deg,#0EA5E9,#7C3AED);color:#fff;font-weight:600;' +
+    'font-family:"DM Sans",sans-serif;font-size:11px;padding:14px 26px;border-radius:40px;' +
+    'z-index:99999;box-shadow:0 6px 28px rgba(56,189,248,.5);max-width:92vw;text-align:center;' +
+    'line-height:1.7;transition:opacity .4s;pointer-events:none;white-space:pre-line';
+  toast.textContent = msg;
   document.body.appendChild(toast);
-  setTimeout(function(){toast.style.opacity='0';
-    setTimeout(function(){if(toast.parentNode)toast.parentNode.removeChild(toast);},500);
-  },5500);
+  setTimeout(function () {
+    toast.style.opacity = '0';
+    setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 500);
+  }, 6500);
+
+  /* Salva i valori calcolati → il simulatore li usa IDENTICI */
+  window._phCalcPersonal = { lots:bestLots, lotPers:lotPers, pip:bestPips, pipVal:pipVal };
 
   if (typeof calcPreview === 'function') calcPreview();
 }
+
 
 /* ═══════════════════════════════════════════════════════════════════
    2. OPEN SIMULATOR — routing per modalità
@@ -13360,6 +13388,8 @@ function autoCalcPips() {
 function openSimulator() {
   if (typeof stratMode !== 'undefined' && stratMode === 'personal') {
     _openSimPersonal();
+  } else if (typeof stratMode !== 'undefined' && stratMode === 'challenge_1step') {
+    _openSimChallenge1();
   } else {
     _openSimOther();
   }
@@ -13415,28 +13445,30 @@ function _openSimPersonal() {
   s.consistency =parseFloat(document.getElementById('mConsistency')?.value)||30;
   s.trailLock   =parseFloat(document.getElementById('mTrailLock')?.value)||0;
   s.isTrail     =(typeof _ddTrailing!=='undefined')?_ddTrailing:false;
-  s.slPips      =parseFloat(document.getElementById('mSlPips')?.value)||100;
-  s.tpPips      =parseFloat(document.getElementById('mTpPips')?.value)||200;
-  s.lots        =parseFloat(document.getElementById('mLots')?.value)||0.15;
-  s.asset       =(document.getElementById('mAsset')?.value||'GOLD:10').split(':')[0];
-  s.pipVal      =typeof _chPipVal==='function'?_chPipVal(s.asset):10;
-  s.rows        =31;
-  s.propTarget  =s.size*(s.tgtPct/100);
-  s.maxDDusd    =s.size*(s.maxDD/100);
-  s.propWin     =s.lots*s.tpPips*s.pipVal;
-  s.propLoss    =s.lots*s.slPips*s.pipVal;
-  s.consLimit   =s.consistency>0 ? s.propTarget*(s.consistency/100) : Infinity;
+  /* ── Usa la stessa funzione condivisa del calcolatore ──────────────
+     _calcPersonalLots() usa ESATTAMENTE lo stesso algoritmo di
+     autoCalcPips() → valori identici al centesimo SEMPRE,
+     indipendentemente dall'ordine dei click.
+  ─────────────────────────────────────────────────────────────────── */
+  var _c = _calcPersonalLots();
 
-  /* Lotto personale */
-  var nLossMax=s.propLoss>0?Math.floor(s.maxDDusd/s.propLoss):10;
-  if(nLossMax<1)nLossMax=1;
-  var lP=(s.cost*1.20)/(nLossMax*s.slPips*s.pipVal);
-  lP=Math.ceil(lP*100)/100;
-  if(lP<0.01)lP=0.01;
-  if(lP>=s.lots)lP=Math.max(0.01,Math.floor((s.lots-0.01)*100)/100);
-  s.lotPers =lP;
-  s.hedgeWin =s.lotPers*s.tpPips*s.pipVal;
-  s.hedgeLoss=s.lotPers*s.slPips*s.pipVal;
+  s.lots   = _c.lots;
+  s.slPips = _c.pip;
+  s.tpPips = _c.pip;     /* RR 1:1: SL = TP */
+  s.pipVal = _c.pipVal;
+  s.lotPers= _c.lotPers;
+
+  s.asset      = (document.getElementById('mAsset')?.value||'GOLD:10').split(':')[0];
+  s.rows       = 31;
+  s.propTarget = s.size*(s.tgtPct/100);
+  s.maxDDusd   = s.size*(s.maxDD/100);
+  s.propWin    = s.lots * s.slPips * s.pipVal;   /* ±$ per trade prop */
+  s.propLoss   = s.lots * s.slPips * s.pipVal;
+  s.consLimit  = s.consistency>0 ? s.propTarget*(s.consistency/100) : Infinity;
+
+  /* hedgeWin = hedgeLoss = lotPers × pip × pipVal (RR 1:1) */
+  s.hedgeWin  = s.lotPers * s.slPips * s.pipVal;
+  s.hedgeLoss = s.lotPers * s.slPips * s.pipVal;
 
   /* Reset se parametri cambiati */
   var nk=[s.size,s.maxDD,s.tgtPct,s.pay,s.minDays,s.isTrail,s.trailLock,s.consistency,s.propWin,s.propLoss].join('|');
@@ -13493,7 +13525,7 @@ function _simPS_setupModal() {
         _psTh('Balance Prop','right','var(--t3)')+
         _psTh('P&L Prop','right','var(--t3)')+
         _psTh(ddLbl,'right','var(--red)')+
-        _psTh(cLbl,'center','var(--amber)')+
+        _psTh(cLbl,'center','var(--amber)','min-width:200px')+
         _psTh('Conto Pers.','right','var(--violet)')+
         _psTh('Payout Pot.','right','var(--teal)')+
         '</tr>';
@@ -13510,10 +13542,11 @@ function _psKpi(id,lbl,val,clr){
     '<div id="'+id+'" style="font-size:14px;font-weight:800;font-family:var(--fd);color:'+clr+'">'+val+'</div>'+
     '</div>';
 }
-function _psTh(lbl,align,clr){
+function _psTh(lbl,align,clr,extraStyle){
   return '<th style="padding:8px 6px;font-size:9px;color:'+(clr||'var(--t3)')+
     ';font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;text-align:'+
-    align+';border-bottom:1px solid var(--border);white-space:nowrap">'+lbl+'</th>';
+    align+';border-bottom:1px solid var(--border);white-space:nowrap'+(extraStyle?';'+extraStyle:'')+'">'
+    +lbl+'</th>';
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -13548,7 +13581,7 @@ function _simPS_buildTable() {
     html+='<td id="simPS_'+r+'_bal" style="padding:5px 8px;text-align:right;font-size:11px;font-family:var(--fd)">—</td>';
     html+='<td id="simPS_'+r+'_pnl" style="padding:5px 8px;text-align:right;font-size:11px;font-family:var(--fd)">—</td>';
     html+='<td id="simPS_'+r+'_ddl" style="padding:5px 8px;text-align:right;font-size:11px;font-family:var(--fd)">—</td>';
-    html+='<td id="simPS_'+r+'_con" style="padding:5px 8px;text-align:center;font-size:10px;font-family:var(--fd)">—</td>';
+    html+='<td id="simPS_'+r+'_con" style="padding:5px 8px;text-align:center;font-size:9px;font-family:var(--fd);white-space:nowrap;min-width:200px">—</td>';
     html+='<td id="simPS_'+r+'_per" style="padding:5px 8px;text-align:right;font-size:11px;font-family:var(--fd)">—</td>';
     html+='<td id="simPS_'+r+'_pay" style="padding:5px 8px;text-align:right;font-size:11px;font-family:var(--fd)">—</td>';
     html+='</tr>';
@@ -13583,6 +13616,7 @@ function _simPS_calc() {
   var gameOver   =false;
   var targetHit  =false;
   var cycleEndRow=-1;
+  var bestDayPnl=0; /* miglior P&L positivo di una singola riga, per calcolo consistenza */
 
   for(var i=0;i<s.rows;i++){
     var r   =i+1;
@@ -13636,6 +13670,8 @@ function _simPS_calc() {
       propPnlCum+=rowPropPnl;
       persPnlCum+=rowPersPnl;
       bal=s.size+propPnlCum;
+      /* Aggiorna miglior giornata (solo valori positivi) */
+      if(rowPropPnl > bestDayPnl) bestDayPnl = rowPropPnl;
 
       /* ─────────────────────────────────────────
          TRAILING DD
@@ -13656,21 +13692,35 @@ function _simPS_calc() {
       }
       /* DD STATICO → ddLine rimane sempre s.size×(1-maxDD%) */
 
-      /* ─────────────────────────────────────────
-         CHECK CONSISTENZA
-         Regola: ogni singolo WIN non può generare
-         più di cons% del propTarget
-         ───────────────────────────────────────── */
-      var consOk=true,consTxt='—',consClr='var(--t3)',consBg='';
-      if(s.consistency>0&&isFinite(s.consLimit)){
-        if(s.propWin>s.consLimit){
-          consOk=false;
-          consTxt='⚠ $'+s.propWin.toFixed(0)+'>$'+s.consLimit.toFixed(0);
-          consClr='var(--red)';
-          consBg='rgba(248,113,113,.07)';
+      /* ── CHECK CONSISTENZA ─────────────────────────────────────────
+         Regola: miglior giornata / cons% = totale minimo per prelevare
+         Esempio: bestDay $2000, cons 50% → devi fare almeno $4000 totali
+         Formato: $[cum attuale] = $[minimo richiesto]
+         ROSSO OFF = soglia non ancora raggiunta (normale mentre si traderebbe)
+         VERDE ON  = cumulative >= richiesto → payout sbloccato
+      ─────────────────────────────────────────────────────────────── */
+      var consOk=true, consTxt='—', consClr='var(--t3)', consBg='';
+      if (s.consistency > 0) {
+        /* Minimo richiesto = miglior giorno / (cons% / 100) */
+        var required = bestDayPnl > 0
+          ? Math.ceil(bestDayPnl / (s.consistency / 100))
+          : Math.ceil(s.propTarget * (s.consistency / 100) / (s.consistency / 100));
+        /* Se non c'è ancora nessuna giornata positiva: mostra — */
+        if (bestDayPnl <= 0) {
+          consTxt = '—';
+          consClr = 'var(--t3)';
+        } else if (propPnlCum >= required) {
+          /* ✓ Soglia raggiunta → VERDE ON */
+          consOk  = true;
+          consTxt = '$' + propPnlCum.toFixed(0) + ' = $' + required.toFixed(0) + '  ✓ ON';
+          consClr = 'var(--green)';
+          consBg  = 'rgba(52,211,153,.06)';
         } else {
-          consTxt=w>0?'✓ ok':'ok';
-          consClr=w>0?'var(--green)':'var(--t3)';
+          /* ✗ Soglia non ancora raggiunta → ROSSO OFF */
+          consOk  = false;
+          consTxt = '$' + propPnlCum.toFixed(0) + ' = $' + required.toFixed(0) + '  ✗ OFF';
+          consClr = 'var(--red)';
+          consBg  = 'rgba(248,113,113,.06)';
         }
       }
 
@@ -13807,7 +13857,15 @@ function _simPS_showEndCard(type,row,propPnl,persPnl,ddLine,bal){
    8. SIM RESET — routing per modalità
    ═══════════════════════════════════════════════════════════════════ */
 function simReset(){
-  if(typeof stratMode!=='undefined'&&stratMode==='personal'){
+  if(typeof stratMode!=='undefined'&&stratMode==='challenge_1step'){
+    for(var i=0;i<_simCH1.rows;i++){
+      _simCH1.data[i]={w:'',l:''};
+      var wE=document.getElementById('simCH1_w_'+(i+1)); if(wE)wE.value='';
+      var lE=document.getElementById('simCH1_l_'+(i+1)); if(lE)lE.value='';
+    }
+    var oldC=document.getElementById('_simCH1_cycleCard'); if(oldC)oldC.remove();
+    _simCH1_calc();
+  } else if(typeof stratMode!=='undefined'&&stratMode==='personal'){
     for(var i=0;i<_simPS.rows;i++){
       _simPS.data[i]={w:'',l:''};
       var wE=document.getElementById('simPS_w_'+(i+1)); if(wE)wE.value='';
@@ -13826,6 +13884,810 @@ function simReset(){
 }
 
 // ── Fine modulo PropHedge Personal Mode v2 ──
+
+// ═══════════════════════════════════════════════════════════════════
+// CHALLENGE 1 STEP MODULE — PropHedge
+// Sessione: Challenge 1 Step (prop virtuale + personale reale)
+//
+// LOGICA FONDAMENTALE:
+//   Prop = soldi VIRTUALI (costo già pagato con il fee della challenge)
+//   Personale = soldi REALI
+//
+//   Obiettivo 1 (prop FALLISCE):
+//     → conto personale deve recuperare più possibile del costo
+//     → idealmente ci guadagniamo
+//
+//   Obiettivo 2 (prop PASSA):
+//     → minimizziamo la perdita sul personale (ammortizziamo il costo)
+//     → aumentiamo il capitale virtuale (andiamo live)
+//
+//   Lotto personale: abbastanza PICCOLO da non essere un peso se prop vince,
+//   abbastanza GRANDE da recuperare il costo se prop brucia.
+// ═══════════════════════════════════════════════════════════════════
+
+/* ── Stato simulatore Challenge 1 Step ── */
+var _simCH1 = {
+  size:0, cost:0, maxDD:0, ddd:0, tgtPct:0, pay:0, minDays:0,
+  isTrail:false, trailLock:0, consistency:0,
+  slPips:100, tpPips:100, lots:0, lotPers:0, pipVal:10, asset:'GOLD',
+  propWin:0, propLoss:0, persWin:0, persLoss:0,
+  propTarget:0, maxDDusd:0, consLimit:0,
+  rows:31, data:[]
+};
+var _simCH1_cacheKey = '';
+
+/* ── Helper setCell ── */
+function _simCH1_setCell(r, col, txt, clr, bg) {
+  var el = document.getElementById('simCH1_'+r+'_'+col);
+  if (!el) return;
+  el.textContent = txt;
+  el.style.color = clr || 'var(--t2)';
+  el.style.background = bg || '';
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   AUTO-CALC CHALLENGE 1 STEP
+   ════════════════════════════════════════════════════════════════════ */
+function _autoCalcChallenge1() {
+  var size     = parseFloat(document.getElementById('mSize')?.value)        || 100000;
+  var cost     = parseFloat(document.getElementById('mCost')?.value)        || 1500;
+  var maxDD    = parseFloat(document.getElementById('mDD')?.value)          || 6;
+  var ddd      = parseFloat(document.getElementById('mDDD')?.value)         || 3;
+  var tgtPct   = parseFloat(document.getElementById('mTgt')?.value)         || 8;
+  var days     = parseFloat(document.getElementById('mDays')?.value)        || 10;
+  var cons     = parseFloat(document.getElementById('mConsistency')?.value) || 0;
+  var isTrail  = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
+  var asset    = (document.getElementById('mAsset')?.value || 'GOLD:10').split(':')[0];
+  var pipVal   = typeof _chPipVal === 'function' ? _chPipVal(asset) : 10;
+  var covPct   = parseFloat(document.getElementById('ch1Cov')?.value) || 85;
+
+  var tgtUsd     = size * (tgtPct / 100);
+  var maxDDusd   = size * (maxDD  / 100);
+  var dailyDDusd = size * (ddd    / 100);
+  var hasCons    = cons > 0 && cons < 100;
+
+  /* ── Lotto PROP: rispetta daily DD e target × penalità trailing/cons ── */
+  var tgtGiorno  = tgtUsd / Math.max(1, days);
+  var lotByDaily = (dailyDDusd * 0.90) / (100 * pipVal);
+  var lotByTgt   = tgtGiorno / (100 * pipVal);
+  var penalty = 1.0;
+  if (isTrail && hasCons) {
+    penalty = cons <= 25 ? 0.30 : cons <= 35 ? 0.40 : cons <= 50 ? 0.55 : cons <= 70 ? 0.75 : 0.90;
+  } else if (isTrail) { penalty = 0.75;
+  } else if (hasCons && cons <= 30) { penalty = 0.70; }
+
+  var lot = Math.min(lotByDaily, lotByTgt) * penalty;
+  lot = Math.floor(lot * 100) / 100;
+  if (lot < 0.01) lot = 0.01;
+
+  var tradeAmt = lot * 100 * pipVal;  /* $ per trade (RR 1:1) */
+
+  /* ── Calcola nLossMax e winsNeeded ── */
+  var nLossMax  = tradeAmt > 0 ? Math.floor(maxDDusd / tradeAmt) : 10;
+  if (nLossMax < 1) nLossMax = 1;
+  var winsNeed  = tradeAmt > 0 ? Math.ceil(tgtUsd / tradeAmt) : 10;
+
+  /* ── Lotto PERSONALE: bilanciato tra recupero se fallisce e costo se passa ──
+     OBIETTIVO 1 (prop fallisce): recuperare covPct% del costo
+       → lotPers = (cost × covPct/100) / (nLossMax × 100 pip × pipVal)
+
+     OBIETTIVO 2 (prop passa): perdere al minimo
+       → extra_cost_if_passes = lotPers × winsNeed × 100 × pipVal
+       → con covPct=30%: extra ≈ cost × 0.30 × (winsNeed/nLossMax) ≈ 35-40%
+
+     ESEMPIO ($500 challenge, GOLD, nLossMax=6, winsNeed=7, covPct=30%):
+       lotPers = (500×0.30) / (6×100×10) = 150/6000 = 0.025 lot → $25/trade
+       Se fallisce: +$25 × 6 = +$150 recupero = 30% del costo ✓
+       Se passa:    -$25 × 7 = -$175 extra → totale $675 (+35%) ✓ (non $1410!)
+  ── */
+  var lotPers = (cost * (covPct / 100)) / (nLossMax * bestPips * pipVal);
+  lotPers = Math.ceil(lotPers * 1000) / 1000;
+  if (lotPers < 0.001) lotPers = 0.001;
+  if (lotPers >= lot)  lotPers = Math.max(0.001, Math.floor((lot * 0.5) * 1000) / 1000);
+
+  /* ── Applica ── */
+  var slE = document.getElementById('mSlPips'); if (slE) slE.value = bestPips;
+  var tpE = document.getElementById('mTpPips'); if (tpE) tpE.value = bestPips;
+  var ltE = document.getElementById('mLots');   if (ltE) ltE.value = lot;
+
+  /* ── Calcola scenari per toast ── */
+  var persPerTrade  = lotPers * bestPips * pipVal;
+  var recoverFail   = (lotPers * nLossMax * bestPips * pipVal).toFixed(0);
+  var extraCostPass = (lotPers * winsNeed  * bestPips * pipVal).toFixed(0);
+  var costoTotPass  = (cost + parseFloat(extraCostPass)).toFixed(0);
+  var nettoFail     = (-cost + parseFloat(recoverFail)).toFixed(0);
+  var recCovPct     = Math.round(parseFloat(recoverFail) / cost * 100);
+
+  var msg =
+    '🎯 Challenge 1 Step — RR 1:1 | '+bestPips+' pip\n' +
+    'Prop: ' + lot + ' lot  ±$' + tradeAmt.toFixed(0) + '/trade\n' +
+    'Personale: ' + lotPers + ' lot  ±$' + persPerTrade.toFixed(0) + '/trade\n' +
+    '✅ Se prop PASSA: costo tot $' + costoTotPass + ' (+$' + extraCostPass + ' sul pers)\n' +
+    '🔄 Se prop FALLISCE: recuperi $' + recoverFail + ' (' + recCovPct + '% del costo)\n' +
+    '   Netto se fallisce: ' + (parseFloat(nettoFail)>=0?'+':'')+nettoFail + '$';
+
+  var old = document.getElementById('_phCalcToast'); if (old) old.remove();
+  var toast = document.createElement('div');
+  toast.id = '_phCalcToast';
+  toast.style.cssText =
+    'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);' +
+    'background:linear-gradient(135deg,#1d4ed8,#0EA5E9);color:#fff;font-weight:600;' +
+    'font-family:"DM Sans",sans-serif;font-size:11px;padding:14px 26px;border-radius:40px;' +
+    'z-index:99999;box-shadow:0 6px 28px rgba(29,78,216,.5);max-width:92vw;text-align:center;' +
+    'line-height:1.7;transition:opacity .4s;pointer-events:none;white-space:pre-line';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(function () {
+    toast.style.opacity = '0';
+    setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 500);
+  }, 7000);
+
+  if (typeof calcPreview === 'function') calcPreview();
+}
+/* ════════════════════════════════════════════════════════════════════
+   OPEN SIMULATOR — Challenge 1 Step
+   ════════════════════════════════════════════════════════════════════ */
+function _openSimChallenge1() {
+  var s = _simCH1;
+
+  s.size        = parseFloat(document.getElementById('mSize')?.value)        || 100000;
+  s.cost        = parseFloat(document.getElementById('mCost')?.value)        || 1500;
+  s.maxDD       = parseFloat(document.getElementById('mDD')?.value)          || 6;
+  s.ddd         = parseFloat(document.getElementById('mDDD')?.value)         || 3;
+  s.tgtPct      = parseFloat(document.getElementById('mTgt')?.value)         || 8;
+  s.pay         = parseFloat(document.getElementById('mPay')?.value)         || 80;
+  s.minDays     = parseFloat(document.getElementById('mDays')?.value)        || 10;
+  s.consistency = parseFloat(document.getElementById('mConsistency')?.value) || 0;
+  s.trailLock   = parseFloat(document.getElementById('mTrailLock')?.value)   || 0;
+  s.isTrail     = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
+  s.slPips      = parseFloat(document.getElementById('mSlPips')?.value)      || 100;
+  s.tpPips      = parseFloat(document.getElementById('mTpPips')?.value)      || 100;
+  s.lots        = parseFloat(document.getElementById('mLots')?.value)        || 0.10;
+  s.covPct      = parseFloat(document.getElementById('ch1Cov')?.value)       || 30;
+  s.asset       = (document.getElementById('mAsset')?.value || 'GOLD:10').split(':')[0];
+  s.pipVal      = typeof _chPipVal === 'function' ? _chPipVal(s.asset) : 10;
+  s.rows        = 31;
+
+  s.propTarget  = s.size * (s.tgtPct / 100);
+  s.maxDDusd    = s.size * (s.maxDD  / 100);
+
+  /* RR 1:1: SL = TP = slPips */
+  s.propWin     = s.lots * s.slPips * s.pipVal;
+  s.propLoss    = s.lots * s.slPips * s.pipVal;
+  s.consLimit   = s.consistency > 0 ? s.propTarget * (s.consistency / 100) : Infinity;
+
+  /* Lotto personale bilanciato (stesso calcolo di autoCalcChallenge1) */
+  var nLossMax = s.propLoss > 0 ? Math.floor(s.maxDDusd / s.propLoss) : 10;
+  if (nLossMax < 1) nLossMax = 1;
+  var lP = (s.cost * (s.covPct / 100)) / (nLossMax * s.slPips * s.pipVal);
+  lP = Math.ceil(lP * 1000) / 1000;
+  if (lP < 0.001) lP = 0.001;
+  if (lP >= s.lots) lP = Math.max(0.001, Math.floor((s.lots * 0.5) * 1000) / 1000);
+  s.lotPers = lP;
+
+  /* RR 1:1: pers guadagna/perde lo stesso pip del prop */
+  s.persWin  = s.lotPers * s.slPips * s.pipVal;
+  s.persLoss = s.lotPers * s.slPips * s.pipVal;
+
+  /* Reset se parametri cambiano */
+  var nk = [s.size, s.cost, s.maxDD, s.tgtPct, s.pay, s.minDays,
+    s.isTrail, s.trailLock, s.consistency, s.covPct, s.propWin].join('|');
+  if (nk !== _simCH1_cacheKey || !s.data || !s.data.length) {
+    _simCH1_cacheKey = nk;
+    s.data = [];
+    for (var i = 0; i < s.rows; i++) s.data.push({ w: '', l: '' });
+  }
+
+  _simCH1_setupModal();
+  document.getElementById('simModal').style.display = 'block';
+}
+/* ════════════════════════════════════════════════════════════════════
+   SETUP MODAL — Challenge 1 Step
+   ════════════════════════════════════════════════════════════════════ */
+function _simCH1_setupModal() {
+  var s = _simCH1;
+  var ddLbl = s.isTrail ? '📈 DD TRAILING' : '📌 DD STATICO';
+  var hasCons = s.consistency > 0;
+
+  /* Subtitle */
+  var sub = document.getElementById('simSubtitle');
+  if (sub) sub.textContent =
+    '🎯 ' + s.asset +
+    ' | Prop (VIRTUALE): ' + s.lots + ' lot  TP/SL ±$' + s.propWin.toFixed(0) +
+    ' | Pers (REALE): ' + s.lotPers + ' lot  ±$' + s.persWin.toFixed(0) +
+    ' | ' + ddLbl + ' ' + s.maxDD + '%' +
+    (hasCons ? ' | Cons.' + s.consistency + '%' : '') +
+    ' | Min ' + s.minDays + ' trade | Target $' + s.propTarget.toFixed(0);
+
+  /* KPI */
+  var kpis = document.getElementById('simKpis');
+  if (kpis) {
+    kpis.style.gridTemplateColumns = 'repeat(6,1fr)';
+    kpis.innerHTML =
+      _simCH1_kpi('simKpiBalance',  'Balance Prop',      '—', 'var(--teal)') +
+      _simCH1_kpi('simKpiDdline',   ddLbl,               '—', 'var(--red)') +
+      _simCH1_kpi('simKpiPropCum',  'P&L Prop cum.',     '—', 'var(--t2)') +
+      _simCH1_kpi('simKpiPersCum',  'Pers. cum.',        '—', 'var(--violet)') +
+      _simCH1_kpi('simKpiPayout',   'Payout pot.',       '—', '#60a5fa') +
+      _simCH1_kpi('simKpiNetto',    'Netto (spese+pers)','-$'+s.cost, 'var(--amber)');
+  }
+
+  /* Header tabella — 9 colonne */
+  var tbl = document.getElementById('simTable');
+  if (tbl) {
+    var thead = tbl.querySelector('thead');
+    if (thead) {
+      var th = function(lbl, align, clr, mw) {
+        return '<th style="padding:8px 6px;font-size:9px;color:'+(clr||'var(--t3)')+
+          ';font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;'+
+          'text-align:'+align+';border-bottom:1px solid var(--border);white-space:nowrap'+
+          (mw?';min-width:'+mw:'')+'">' + lbl + '</th>';
+      };
+      thead.innerHTML =
+        '<tr style="background:var(--bg3)">' +
+        th('Trade #',          'center', 'var(--t3)') +
+        th('WIN',              'center', 'var(--green)') +
+        th('STOP',             'center', 'var(--red)') +
+        th('Balance Prop',     'right',  'var(--teal)') +
+        th('P&L Prop',         'right',  'var(--t3)') +
+        th(ddLbl,              'right',  'var(--red)') +
+        th(hasCons ? 'Cons.'+s.consistency+'%' : 'Cons.', 'center', 'var(--amber)', '170px') +
+        th('Pers. REALE',      'right',  'var(--violet)') +
+        th('Payout',           'right',  '#60a5fa') +
+        th('NETTO',            'right',  'var(--amber)') +
+        '</tr>';
+    }
+  }
+
+  _simCH1_buildTable();
+  _simCH1_calc();
+}
+
+function _simCH1_kpi(id, lbl, val, clr) {
+  return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;'+
+    'padding:8px;text-align:center">' +
+    '<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;'+
+    'margin-bottom:3px">' + lbl + '</div>' +
+    '<div id="' + id + '" style="font-size:13px;font-weight:800;font-family:var(--fd);color:' +
+    clr + '">' + val + '</div></div>';
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   BUILD TABLE — Challenge 1 Step (10 colonne)
+   ════════════════════════════════════════════════════════════════════ */
+function _simCH1_buildTable() {
+  var s = _simCH1;
+  var tbody = document.getElementById('simTbody');
+  if (!tbody) return;
+
+  var html = '';
+  for (var i = 0; i < s.rows; i++) {
+    var r    = i + 1;
+    var d    = s.data[i] || { w: '', l: '' };
+    var isMin = r <= s.minDays;
+    var icon  = isMin ? '⏳' : '✓';
+    var ic    = isMin ? 'var(--amber)' : 'var(--green)';
+
+    html += '<tr id="simCH1_row_' + r + '">';
+
+    /* Trade # */
+    html += '<td style="padding:4px 8px;text-align:center;font-size:11px;'+
+      'font-family:var(--fd);color:'+ic+';font-weight:'+(isMin?700:400)+
+      ';white-space:nowrap">' + icon + ' ' + r + '</td>';
+
+    /* WIN input */
+    html += '<td style="padding:3px 4px;text-align:center">' +
+      '<input type="number" id="simCH1_w_'+r+'" value="'+(d.w||'')+'" '+
+      'min="0" max="20" placeholder="0" '+
+      'oninput="_simCH1.data['+i+'].w=this.value;_simCH1_calc()" '+
+      'style="width:48px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);'+
+      'color:var(--green);border-radius:6px;padding:4px;font-size:12px;font-weight:700;'+
+      'text-align:center;outline:none;font-family:var(--fd)"></td>';
+
+    /* STOP input */
+    html += '<td style="padding:3px 4px;text-align:center">' +
+      '<input type="number" id="simCH1_l_'+r+'" value="'+(d.l||'')+'" '+
+      'min="0" max="20" placeholder="0" '+
+      'oninput="_simCH1.data['+i+'].l=this.value;_simCH1_calc()" '+
+      'style="width:48px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);'+
+      'color:var(--red);border-radius:6px;padding:4px;font-size:12px;font-weight:700;'+
+      'text-align:center;outline:none;font-family:var(--fd)"></td>';
+
+    /* Celle calcolate: bal, pnl, ddl, con, per, pay, net */
+    var tdStyle = 'padding:5px 8px;text-align:right;font-size:11px;font-family:var(--fd)';
+    html += '<td id="simCH1_'+r+'_bal" style="'+tdStyle+'">—</td>';
+    html += '<td id="simCH1_'+r+'_pnl" style="'+tdStyle+'">—</td>';
+    html += '<td id="simCH1_'+r+'_ddl" style="'+tdStyle+'">—</td>';
+    html += '<td id="simCH1_'+r+'_con" style="padding:5px 8px;text-align:center;font-size:9px;font-family:var(--fd);white-space:nowrap;min-width:170px">—</td>';
+    html += '<td id="simCH1_'+r+'_per" style="'+tdStyle+'">—</td>';
+    html += '<td id="simCH1_'+r+'_pay" style="'+tdStyle+'">—</td>';
+    html += '<td id="simCH1_'+r+'_net" style="'+tdStyle+';font-weight:700">—</td>';
+    html += '</tr>';
+  }
+  tbody.innerHTML = html;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   CALC ENGINE — Challenge 1 Step
+   Formula DD trailing: DDline = HWM × (1 - DD%/100)
+   Netto = -cost + persPnlCum + payoutSoFar
+   ════════════════════════════════════════════════════════════════════ */
+function _simCH1_calc() {
+  var s = _simCH1;
+  if (!s.size) return;
+
+  var old = document.getElementById('_simCH1_cycleCard');
+  if (old) old.remove();
+
+  var hwm         = s.size;
+  var bal         = s.size;
+  var ddLine      = s.size * (1 - s.maxDD / 100);
+  var propPnlCum  = 0;
+  var persPnlCum  = 0;    /* P&L REALE cumulativo conto personale */
+  var gameOver    = false;
+  var targetHit   = false;
+  var cycleEndRow = -1;
+  var bestDayPnl  = 0;
+
+  function sgn(n) { return n >= 0 ? '+' : ''; }
+
+  for (var i = 0; i < s.rows; i++) {
+    var d   = s.data[i] || { w:'', l:'' };
+    var w   = parseInt(d.w) || 0;
+    var l   = parseInt(d.l) || 0;
+    var has = (d.w !== '' && d.w !== null) || (d.l !== '' && d.l !== null);
+
+    /* ── IIFE per catturare correttamente r, w, l, has e tutti i cumulativi ── */
+    (function(rr, ww, ll, hasRow) {
+      var row = document.getElementById('simCH1_row_' + rr);
+      function sc(col, txt, clr, bg) { _simCH1_setCell(rr, col, txt, clr, bg); }
+
+      /* ── Dopo game over ── */
+      if (gameOver) {
+        sc('bal','🔴','var(--red)','rgba(248,113,113,.04)');
+        ['pnl','ddl','con','per','pay','net'].forEach(function(c){sc(c,'—','var(--t3)');});
+        if(row) row.style.background='rgba(248,113,113,.025)';
+        return;
+      }
+      /* ── Dopo target raggiunto (vuota) ── */
+      if (targetHit && !hasRow) {
+        sc('bal','🏁','#60a5fa','rgba(96,165,250,.025)');
+        ['pnl','ddl','con','per','pay','net'].forEach(function(c){sc(c,'—','var(--t3)');});
+        if(row) row.style.background='rgba(96,165,250,.02)';
+        return;
+      }
+
+      /* ── Riga VUOTA: mostra running total attuale ── */
+      if (!hasRow) {
+        var netProj = -s.cost + persPnlCum;  /* netto corrente senza payout */
+        sc('bal','$'+bal.toFixed(0),'var(--t3)');
+        sc('pnl','—','var(--t3)');
+        sc('ddl','$'+ddLine.toFixed(0),'rgba(248,113,113,.35)');
+        sc('con','—','var(--t3)');
+        /* PERS. REALE cumulativo: mostra quanto è stato speso/guadagnato fin qui sul personale */
+        sc('per', persPnlCum!==0 ? (sgn(persPnlCum)+'$'+Math.abs(persPnlCum).toFixed(0)) : '—',
+          persPnlCum>0?'var(--green)':persPnlCum<0?'var(--red)':'var(--t3)');
+        sc('pay','—','var(--t3)');
+        sc('net',(netProj>=0?'+':'')+netProj.toFixed(0)+'$',netProj>=0?'var(--green)':'var(--amber)');
+        if(row) row.style.background = rr<=s.minDays?'rgba(251,191,36,.02)':'';
+        return;
+      }
+
+      /* ── P&L reale questa riga ──
+         Prop BUY (virtuale):
+           WIN  → prop +propWin,  personale -persLoss (pers SELL → perde)
+           STOP → prop -propLoss, personale +persWin  (pers SELL → guadagna)
+      ── */
+      var rowPropPnl = ww * s.propWin  - ll * s.propLoss;
+      var rowPersPnl = ll * s.persWin  - ww * s.persLoss;
+
+      propPnlCum += rowPropPnl;
+      persPnlCum += rowPersPnl;
+      bal = s.size + propPnlCum;
+
+      if (rowPropPnl > bestDayPnl) bestDayPnl = rowPropPnl;
+
+      /* ── Trailing DD: DDline = HWM × (1 - DD%/100) ── */
+      if (s.isTrail && bal > hwm) {
+        hwm = bal;
+        var lockThr = s.size + s.propTarget * (s.trailLock / 100);
+        ddLine = (s.trailLock > 0 && hwm >= lockThr)
+          ? s.size * (1 - s.maxDD / 100)
+          : hwm * (1 - s.maxDD / 100);
+      }
+
+      /* ── Consistenza: miglior giorno / cons% = minimo richiesto ── */
+      var consTxt='—', consClr='var(--t3)', consBg='';
+      if (s.consistency > 0) {
+        var required = bestDayPnl > 0
+          ? Math.ceil(bestDayPnl / (s.consistency / 100)) : 0;
+        if (required > 0) {
+          if (propPnlCum >= required) {
+            consTxt='$'+propPnlCum.toFixed(0)+' = $'+required.toFixed(0)+'  ✓ ON';
+            consClr='var(--green)'; consBg='rgba(52,211,153,.06)';
+          } else {
+            consTxt='$'+propPnlCum.toFixed(0)+' = $'+required.toFixed(0)+'  ✗ OFF';
+            consClr='var(--red)'; consBg='rgba(248,113,113,.06)';
+          }
+        }
+      }
+
+      /* ── NETTO = -costo + P&L personale cumulativo + payout (solo se target hit) ──
+         Questo è il VERO bilancio: quanto abbiamo speso/guadagnato in totale
+         dal momento che abbiamo iniziato la challenge.
+         Progredisce riga per riga → più trade passano, più è preciso.
+      ── */
+      var payoutNow = (propPnlCum >= s.propTarget && rr >= s.minDays && s.pay > 0)
+        ? propPnlCum * (s.pay / 100) : 0;
+      var netNow = -s.cost + persPnlCum + payoutNow;
+
+      /* ── Game over ── */
+      if (bal <= ddLine + 0.01) {
+        gameOver = true; cycleEndRow = rr;
+        sc('bal','$'+bal.toFixed(0),'var(--red)','rgba(248,113,113,.14)');
+        sc('pnl',sgn(rowPropPnl)+rowPropPnl.toFixed(0)+'$','var(--red)');
+        sc('ddl','$'+ddLine.toFixed(0),'var(--red)');
+        sc('con','🔴 PROP BRUCIATA','var(--red)');
+        /* PERS. REALE: mostra cumulativo (quanto ho guadagnato/perso in totale) */
+        sc('per',sgn(persPnlCum)+'$'+Math.abs(persPnlCum).toFixed(0),
+          persPnlCum>=0?'var(--green)':'var(--red)');
+        sc('pay','—','var(--t3)');
+        sc('net',(netNow>=0?'+':'')+netNow.toFixed(0)+'$',
+          netNow>=0?'var(--green)':'var(--red)','rgba(248,113,113,.07)');
+        if(row) row.style.background='rgba(248,113,113,.1)';
+        _simCH1_showEndCard('gameover', rr, propPnlCum, persPnlCum, ddLine, bal, payoutNow, netNow);
+        return;
+      }
+
+      /* ── Target raggiunto ── */
+      if (!targetHit && propPnlCum >= s.propTarget && rr >= s.minDays) {
+        targetHit = true; cycleEndRow = rr;
+      }
+
+      /* ── Visualizzazione normale ── */
+      sc('bal','$'+bal.toFixed(0), bal>=s.size?'var(--green)':'var(--red)');
+      sc('pnl',sgn(rowPropPnl)+rowPropPnl.toFixed(0)+'$', rowPropPnl>=0?'var(--green)':'var(--red)');
+      sc('ddl','$'+ddLine.toFixed(0),'var(--red)');
+      sc('con',consTxt,consClr,consBg);
+      /* PERS. REALE cumulativo: permette di vedere l'accumulo in tempo reale */
+      sc('per',sgn(persPnlCum)+'$'+Math.abs(persPnlCum).toFixed(0),
+        persPnlCum>0?'var(--green)':persPnlCum<0?'var(--red)':'var(--t3)');
+      sc('pay',payoutNow>0?'+$'+payoutNow.toFixed(0):(rr<s.minDays?'⏳':'—'),
+        payoutNow>0?'#60a5fa':'var(--t3)');
+      sc('net',(netNow>=0?'+':'')+netNow.toFixed(0)+'$',
+        netNow>=0?'var(--green)':'var(--amber)');
+
+      if (row) {
+        if (targetHit && rr===cycleEndRow) row.style.background='rgba(96,165,250,.1)';
+        else if (rr>=s.minDays)            row.style.background='rgba(96,165,250,.025)';
+        else                               row.style.background='rgba(251,191,36,.025)';
+      }
+
+      if (targetHit && rr===cycleEndRow) {
+        _simCH1_showEndCard('target', rr, propPnlCum, persPnlCum, ddLine, bal, payoutNow, netNow);
+      }
+
+    })(i+1, w, l, has);
+  }
+
+  /* ── KPI finali ── */
+  var payFin = propPnlCum >= s.propTarget ? propPnlCum*(s.pay/100) : 0;
+  var netFin = -s.cost + persPnlCum + payFin;
+  function sgn2(n){return n>=0?'+':'';}
+  function kSet(id,v,c){var e=document.getElementById(id);if(e){e.textContent=v;e.style.color=c||'var(--t)';}}
+  kSet('simKpiBalance','$'+bal.toFixed(0),     bal>=s.size?'var(--green)':'var(--red)');
+  kSet('simKpiDdline', '$'+ddLine.toFixed(0),  'var(--red)');
+  kSet('simKpiPropCum',sgn2(propPnlCum)+propPnlCum.toFixed(0)+'$',propPnlCum>=0?'var(--green)':'var(--red)');
+  kSet('simKpiPersCum',sgn2(persPnlCum)+'$'+Math.abs(persPnlCum).toFixed(0),persPnlCum>0?'var(--green)':persPnlCum<0?'var(--red)':'var(--t3)');
+  kSet('simKpiPayout', payFin>0?'+$'+payFin.toFixed(0):'—', payFin>0?'#60a5fa':'var(--t3)');
+  kSet('simKpiNetto',  (netFin>=0?'+':'')+netFin.toFixed(0)+'$', netFin>=0?'var(--green)':'var(--amber)');
+}
+/* ════════════════════════════════════════════════════════════════════
+   END CARD — Challenge 1 Step
+   ════════════════════════════════════════════════════════════════════ */
+function _simCH1_showEndCard(type, row, propPnl, persPnl, ddLine, bal, payout, netto) {
+  var s = _simCH1;
+  var tbody = document.getElementById('simTbody');
+  if (!tbody) return;
+
+  var old = document.getElementById('_simCH1_cycleCard');
+  if (old) old.remove();
+
+  var isGO   = type === 'gameover';
+  /* Copertura = quanto del costo è stato recuperato col personale */
+  var covPct = s.cost > 0 ? Math.min(100, Math.round(Math.max(0, persPnl) / s.cost * 100)) : 0;
+
+  var bg  = isGO ? 'rgba(248,113,113,.1)'  : 'rgba(96,165,250,.08)';
+  var bdr = isGO ? 'rgba(248,113,113,.35)' : 'rgba(96,165,250,.28)';
+  var clr = isGO ? '#F87171'               : '#60a5fa';
+
+  var title = isGO
+    ? '🔴 PROP BRUCIATA — Challenge fallita al trade #' + row
+    : '🎯 CHALLENGE SUPERATA — Target raggiunto al trade #' + row + '!';
+
+  var items = isGO ? [
+    { l:'Trade #',           v:String(row) },
+    { l:'Balance Prop',      v:'$'+bal.toFixed(0) },
+    { l:'DD Line',           v:'$'+ddLine.toFixed(0) },
+    { l:'P&L Prop (virtuale)',v:(propPnl>=0?'+':'')+propPnl.toFixed(0)+'$', c:'var(--t3)' },
+    { l:'P&L Pers. (REALE)', v:(persPnl>=0?'+':'')+persPnl.toFixed(0)+'$',
+      c:persPnl>=0?'var(--green)':'var(--red)' },
+    { l:'Copertura costo',   v:covPct+'%',
+      c:covPct>=80?'var(--green)':covPct>=50?'var(--amber)':'var(--red)' },
+    { l:'NETTO IN TASCA',    v:(netto>=0?'+':'')+netto.toFixed(0)+'$',
+      c:netto>=0?'var(--green)':'var(--red)', big:true }
+  ] : [
+    { l:'Trade raggiunto',   v:String(row) },
+    { l:'P&L Prop (virtuale)',v:'+$'+propPnl.toFixed(0), c:'var(--teal)' },
+    { l:'Payout '+s.pay+'%', v:payout>0?'+$'+payout.toFixed(0):'—',
+      c:payout>0?'#60a5fa':'var(--t3)' },
+    { l:'P&L Pers. (REALE)', v:(persPnl>=0?'+':'')+persPnl.toFixed(0)+'$',
+      c:persPnl>=0?'var(--green)':'var(--red)' },
+    { l:'Costo challenge',   v:'-$'+s.cost, c:'var(--amber)' },
+    { l:'Copertura costo',   v:covPct+'%',
+      c:covPct>=80?'var(--green)':covPct>=50?'var(--amber)':'var(--red)' },
+    { l:'NETTO IN TASCA',    v:(netto>=0?'+':'')+netto.toFixed(0)+'$',
+      c:netto>=0?'var(--green)':'var(--red)', big:true }
+  ];
+
+  var html = '<div style="margin:14px 0;background:'+bg+';border:2px solid '+bdr+
+    ';border-radius:14px;padding:18px">'+
+    '<div style="font-size:14px;font-weight:800;font-family:var(--fh);color:'+clr+
+    ';margin-bottom:14px">'+title+'</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px">';
+
+  items.forEach(function(it) {
+    html += '<div style="background:rgba(0,0,0,.25);border-radius:9px;padding:11px;text-align:center">'+
+      '<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;'+
+      'letter-spacing:.08em;margin-bottom:5px">'+it.l+'</div>'+
+      '<div style="font-size:'+(it.big?'22px':'15px')+';font-weight:'+(it.big?800:600)+
+      ';font-family:var(--fd);color:'+(it.c||'var(--t)')+'">'+it.v+'</div></div>';
+  });
+
+  /* Note scenario */
+  var note = isGO
+    ? '💡 La prop è bruciata. Il conto personale ha recuperato il '+covPct+
+      '% del costo challenge. ' +
+      (netto >= 0 ? 'Sei in profitto netto! 🎉' : 'Costo residuo: $'+Math.abs(netto).toFixed(0)+'.')
+    : '💡 Challenge superata! Ora puoi andare live. ' +
+      'Il costo netto per andare live è ' +
+      (netto >= 0 ? '$0 (sei in profitto!)' : '$'+Math.abs(netto).toFixed(0)) + '.';
+
+  html += '</div><div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);'+
+    'font-size:10px;color:var(--t2);font-family:var(--fd);line-height:1.8">'+note+'</div></div>';
+
+  var tr = document.createElement('tr');
+  tr.id = '_simCH1_cycleCard';
+  tr.innerHTML = '<td colspan="10">' + html + '</td>';
+  tbody.appendChild(tr);
+  setTimeout(function () {
+    var el = document.getElementById('_simCH1_cycleCard');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 120);
+}
+
+
+/* Sovrascrive _renderChallenge1 dell'HTML per mostrare i lotti prominenti */
+_renderChallenge1 = function(box, size, cost, maxDD, ddd, days, pay, cons, sl, tp, asset) {
+  var pv      = _chPipVal(asset);
+  var tgtPct  = parseFloat(document.getElementById('mTgt')?.value)  || 8;
+  var covPct  = parseFloat(document.getElementById('ch1Cov')?.value) || 85;
+  var isTrail = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
+
+  var tgtUsd     = size * (tgtPct / 100);
+  var maxDDusd   = size * (maxDD  / 100);
+  var dailyDDusd = size * (ddd    / 100);
+  var hasCons    = cons > 0 && cons < 100;
+
+  /* Lotto prop */
+  var tgtGiorno = tgtUsd / Math.max(1, days);
+  var lotByD    = (dailyDDusd * 0.90) / (sl * pv);
+  var lotByT    = tgtGiorno / (tp * pv);
+  var penalty   = 1.0;
+  if (isTrail && hasCons) {
+    penalty = cons<=25?0.30:cons<=35?0.40:cons<=50?0.55:cons<=70?0.75:0.90;
+  } else if (isTrail) { penalty=0.75; } else if (hasCons&&cons<=30) { penalty=0.70; }
+  var lot = Math.floor(Math.min(lotByD, lotByT) * penalty * 100) / 100;
+  if (lot < 0.01) lot = 0.01;
+
+  var tradeAmt = lot * sl * pv;
+  var nLossMax = tradeAmt>0 ? Math.floor(maxDDusd/tradeAmt) : 10;
+  if (nLossMax<1) nLossMax=1;
+  var winsNeed = tradeAmt>0 ? Math.ceil(tgtUsd/tradeAmt) : 10;
+
+  /* Lotto personale bilanciato */
+  var lotPers = (cost * (covPct/100)) / (nLossMax * sl * pv);
+  lotPers = Math.ceil(lotPers * 1000) / 1000;
+  if (lotPers < 0.001) lotPers = 0.001;
+  if (lotPers >= lot)  lotPers = Math.max(0.001, Math.floor(lot*0.5*1000)/1000);
+
+  var persPerTrade  = lotPers * sl * pv;
+  var propPerTrade  = lot * sl * pv;
+  var recoverFail   = lotPers * nLossMax * sl * pv;
+  var extraCostPass = lotPers * winsNeed  * sl * pv;
+  var costoTotPass  = cost + extraCostPass;
+  var nettoFail     = -cost + recoverFail;
+  var recCovPct     = Math.round(recoverFail / cost * 100);
+
+  var ddLabel  = isTrail ? '📈 Trailing' : '📌 Statico';
+  var sgn      = function(n){return n>=0?'+':'-';};
+  var col      = function(n){return n>=0?'var(--green)':'var(--red)';};
+
+  box.innerHTML =
+    '<div class="prev" style="padding:0">'
+
+    /* ── Header ── */
+    +'<div style="padding:14px 16px 0;margin-bottom:16px">'
+    +'<div style="font-size:16px;font-weight:800;font-family:var(--fh);color:var(--t)">🎯 Challenge 1 Step</div>'
+    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:2px">'
+    +asset+' $'+pv+'/pip · Target '+tgtPct+'% · DD '+maxDD+'% '+ddLabel
+    +(hasCons?' · Cons.'+cons+'%':'')+' · Copertura '+covPct+'%</div>'
+    +'</div>'
+
+    /* ── Lotti in grande (come Prop+Personale) ── */
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;padding:0 14px">'
+
+    /* Prop */
+    +'<div style="background:rgba(56,189,248,.08);border:2px solid var(--teal);border-radius:12px;padding:16px">'
+    +'<div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:var(--fd)">🎯 PROP (VALUTAZIONE)</div>'
+    +'<div style="font-size:36px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+lot+' <span style="font-size:16px">Lot</span></div>'
+    +'<div style="font-size:12px;color:var(--t2)">WIN/LOSS: <b style="color:var(--green)">±$'+propPerTrade.toFixed(0)+'</b> per trade</div>'
+    +'<div style="font-size:10px;color:var(--t3);margin-top:6px;font-family:var(--fd)">Conto virtuale · '+sl+' pip SL/TP</div>'
+    +'</div>'
+
+    /* Personale */
+    +'<div style="background:rgba(167,139,250,.08);border:2px solid var(--violet);border-radius:12px;padding:16px">'
+    +'<div style="font-size:10px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:var(--fd)">🛡️ PERSONALE (REALE)</div>'
+    +'<div style="font-size:36px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+lotPers+' <span style="font-size:16px">Lot</span></div>'
+    +'<div style="font-size:12px;color:var(--t2)">WIN/LOSS: <b style="color:var(--amber)">±$'+persPerTrade.toFixed(0)+'</b> per trade</div>'
+    +'<div style="font-size:10px;color:var(--t3);margin-top:6px;font-family:var(--fd)">Conto reale · copre '+covPct+'% costo</div>'
+    +'</div>'
+    +'</div>'
+
+    /* ── KPI rapidi ── */
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;padding:0 14px">'
+    +'<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center">'
+    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">WIN necessari</div>'
+    +'<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:var(--green)">'+winsNeed+'</div>'
+    +'</div>'
+    +'<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center">'
+    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">Max STOP</div>'
+    +'<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:var(--red)">'+nLossMax+'</div>'
+    +'</div>'
+    +'<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center">'
+    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">Target $</div>'
+    +'<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+tgtUsd.toFixed(0)+'</div>'
+    +'</div>'
+    +'<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center">'
+    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">Copertura</div>'
+    +'<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:'+(recCovPct>=80?'var(--green)':recCovPct>=50?'var(--amber)':'var(--red)')+'">'+recCovPct+'%</div>'
+    +'</div>'
+    +'</div>'
+
+    /* ── Bilancio 2 scenari ── */
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 14px 14px">'
+
+    /* Prop fallisce */
+    +'<div style="background:rgba(248,113,113,.07);border:1.5px solid rgba(248,113,113,.35);border-radius:12px;padding:14px">'
+    +'<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">❌ PROP FALLITA</div>'
+    +'<div style="font-size:11px;color:var(--t2);line-height:2;font-family:var(--fd)">'
+    +'Personale guadagna: <b style="color:var(--green)">+$'+recoverFail.toFixed(0)+'</b><br>'
+    +'Costo challenge: <b style="color:var(--red)">-$'+cost+'</b><br>'
+    +'<hr style="border-color:rgba(248,113,113,.2);margin:4px 0">'
+    +'Netto: <b style="font-size:18px;color:'+col(nettoFail)+'">$'+nettoFail.toFixed(0)+'</b>'
+    +'</div>'
+    +'</div>'
+
+    /* Prop passa */
+    +'<div style="background:rgba(96,165,250,.07);border:1.5px solid rgba(96,165,250,.35);border-radius:12px;padding:14px">'
+    +'<div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">✅ PROP PASSATA</div>'
+    +'<div style="font-size:11px;color:var(--t2);line-height:2;font-family:var(--fd)">'
+    +'Personale perde: <b style="color:var(--red)">-$'+extraCostPass.toFixed(0)+'</b><br>'
+    +'Costo challenge: <b style="color:var(--red)">-$'+cost+'</b><br>'
+    +'<hr style="border-color:rgba(96,165,250,.2);margin:4px 0">'
+    +'Costo tot live: <b style="font-size:18px;color:var(--amber)">$'+costoTotPass.toFixed(0)+'</b>'
+    +'</div>'
+    +'</div>'
+
+    +'</div></div>';
+};
+
+
+/* CH1 HOOK: dopo calcPreview originale, mostra lotti in grande */
+(function() {
+  if (typeof calcPreview !== 'function') return;
+  var _origCP = calcPreview;
+  calcPreview = function() {
+    _origCP();
+    if (typeof stratMode !== 'undefined' && stratMode === 'challenge_1step') {
+      try { _ch1RebuildPreview(); } catch(e) {}
+    }
+  };
+})();
+
+function _ch1RebuildPreview() {
+  var box = document.getElementById('mPreview');
+  if (!box) return;
+  var size   = parseFloat(document.getElementById('mSize')&&document.getElementById('mSize').value)||100000;
+  var cost   = parseFloat(document.getElementById('mCost')&&document.getElementById('mCost').value)||1500;
+  var maxDD  = parseFloat(document.getElementById('mDD')&&document.getElementById('mDD').value)||6;
+  var tgtPct = parseFloat(document.getElementById('mTgt')&&document.getElementById('mTgt').value)||8;
+  var cons   = parseFloat(document.getElementById('mConsistency')&&document.getElementById('mConsistency').value)||0;
+  var covPct = parseFloat(document.getElementById('ch1Cov')&&document.getElementById('ch1Cov').value)||85;
+  var isTrail= (typeof _ddTrailing!=='undefined')?_ddTrailing:false;
+  var asset  = (document.getElementById('mAsset')&&document.getElementById('mAsset').value||'GOLD:10').split(':')[0];
+  var pipVal = typeof _chPipVal==='function'?_chPipVal(asset):10;
+  var pip    = Math.min(
+    parseFloat(document.getElementById('mSlPips')&&document.getElementById('mSlPips').value)||100,
+    parseFloat(document.getElementById('mTpPips')&&document.getElementById('mTpPips').value)||100
+  );
+  var lot = parseFloat(document.getElementById('mLots')&&document.getElementById('mLots').value)||0.10;
+  if(lot<0.01)lot=0.01;
+  var tgtUsd=size*(tgtPct/100), maxDDusd=size*(maxDD/100);
+  var hasCons=cons>0&&cons<100;
+  var tradeAmt=lot*pip*pipVal;
+  var nLossMax=tradeAmt>0?Math.floor(maxDDusd/tradeAmt):10; if(nLossMax<1)nLossMax=1;
+  var winsNeed=tradeAmt>0?Math.ceil(tgtUsd/tradeAmt):10;
+  var lotPers=(cost*(covPct/100))/(nLossMax*pip*pipVal);
+  lotPers=Math.ceil(lotPers*1000)/1000;
+  if(lotPers<0.001)lotPers=0.001;
+  if(lotPers>=lot)lotPers=Math.max(0.001,Math.floor(lot*0.5*1000)/1000);
+  var ppt=lotPers*pip*pipVal;
+  var rf=lotPers*nLossMax*pip*pipVal;
+  var ep=lotPers*winsNeed*pip*pipVal;
+  var ctPass=cost+ep;
+  var nFail=-cost+rf;
+  var rcPct=Math.round(rf/cost*100);
+  var ddLbl=isTrail?'TRAILING':'STATICO';
+  var colNF=nFail>=0?'var(--green)':'var(--red)';
+  var g='<b style="color:var(--green)">'; var r='<b style="color:var(--red)">'; var eb='</b>';
+
+  var html='<div class="prev" style="padding:0">';
+  html+='<div style="padding:14px 16px 10px"><div style="font-size:15px;font-weight:800;font-family:var(--fh);color:var(--t)">🎯 Challenge 1 Step</div>';
+  html+='<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:2px">'+asset+' · '+pip+' pip · Target '+tgtPct+'% · DD '+maxDD+'% '+ddLbl+(hasCons?' · Cons.'+cons+'%':'')+' · Rec.'+covPct+'%</div></div>';
+
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;padding:0 14px">';
+  html+='<div style="background:rgba(56,189,248,.08);border:2px solid var(--teal);border-radius:12px;padding:16px">';
+  html+='<div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--fd)">🎯 PROP (VALUTAZIONE)</div>';
+  html+='<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:var(--teal);line-height:1;margin-bottom:8px">'+lot+' <span style="font-size:16px;opacity:.7">Lot</span></div>';
+  html+='<div style="font-size:12px;color:var(--t2);line-height:1.9">TP ('+pip+' pip): '+g+'+$'+tradeAmt.toFixed(0)+eb+'<br>SL ('+pip+' pip): '+r+'-$'+tradeAmt.toFixed(0)+eb+'</div></div>';
+
+  html+='<div style="background:rgba(167,139,250,.08);border:2px solid var(--violet);border-radius:12px;padding:16px">';
+  html+='<div style="font-size:10px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--fd)">🛡️ PERSONALE (REALE)</div>';
+  html+='<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:var(--violet);line-height:1;margin-bottom:8px">'+lotPers+' <span style="font-size:16px;opacity:.7">Lot</span></div>';
+  html+='<div style="font-size:12px;color:var(--t2);line-height:1.9">TP (se Prop perde): '+g+'+$'+ppt.toFixed(0)+eb+'<br>SL (se Prop vince): '+r+'-$'+ppt.toFixed(0)+eb+'</div></div>';
+  html+='</div>';
+
+  html+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;padding:0 14px">';
+  var kpis=[['WIN',winsNeed,'var(--green)'],['Max STOP',nLossMax,'var(--red)'],
+            ['Target','$'+tgtUsd.toFixed(0),'var(--amber)'],
+            ['Recupero',rcPct+'%',rcPct>=80?'var(--green)':rcPct>=50?'var(--amber)':'var(--red)']];
+  for(var ki=0;ki<kpis.length;ki++){
+    var k=kpis[ki];
+    html+='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">'+k[0]+'</div><div style="font-size:18px;font-weight:800;font-family:var(--fd);color:'+k[2]+'">'+k[1]+'</div></div>';
+  }
+  html+='</div>';
+
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px">';
+  html+='<div style="background:rgba(248,113,113,.07);border:1.5px solid rgba(248,113,113,.3);border-radius:11px;padding:13px">';
+  html+='<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">❌ PROP FALLITA</div>';
+  html+='<div style="font-size:11px;color:var(--t2);line-height:2.2;font-family:var(--fd)">Costo: '+r+'-$'+cost+eb+'<br>Pers. recupera: '+g+'+$'+rf.toFixed(0)+eb+'</div>';
+  html+='<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(248,113,113,.2);display:flex;justify-content:space-between;align-items:center">';
+  html+='<span style="font-size:9px;color:var(--t3)">NETTO</span>';
+  html+='<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+colNF+'">'+(nFail>=0?'+':'')+nFail.toFixed(0)+'$</span></div></div>';
+
+  html+='<div style="background:rgba(96,165,250,.07);border:1.5px solid rgba(96,165,250,.3);border-radius:11px;padding:13px">';
+  html+='<div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">✅ PROP PASSATA</div>';
+  html+='<div style="font-size:11px;color:var(--t2);line-height:2.2;font-family:var(--fd)">Costo: '+r+'-$'+cost+eb+'<br>Pers. perde: '+r+'-$'+ep.toFixed(0)+eb+'</div>';
+  html+='<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(96,165,250,.2);display:flex;justify-content:space-between;align-items:center">';
+  html+='<span style="font-size:9px;color:var(--t3)">COSTO LIVE</span>';
+  html+='<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+ctPass.toFixed(0)+'</span></div></div>';
+  html+='</div></div>';
+
+  box.innerHTML=html;
+}
+
+// ── Fine modulo Challenge 1 Step ──
 
 
 window.addEventListener('DOMContentLoaded',function(){
