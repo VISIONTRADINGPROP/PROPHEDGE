@@ -3998,6 +3998,13 @@ function doRegisterFree(){
         <button type="button" onclick="autoCalcPips()" style="width:100%;background:linear-gradient(135deg,rgba(56,189,248,.22),rgba(0,229,204,.10));border:2px solid var(--teal);color:var(--teal);border-radius:10px;padding:11px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--fd);letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 0 18px rgba(56,189,248,.18);transition:all .18s" onmouseover="this.style.background='linear-gradient(135deg,rgba(56,189,248,.35),rgba(56,189,248,.18))';this.style.boxShadow='0 0 28px rgba(56,189,248,.35)'" onmouseout="this.style.background='linear-gradient(135deg,rgba(56,189,248,.22),rgba(0,229,204,.10))';this.style.boxShadow='0 0 18px rgba(56,189,248,.18)'">⚡ Calcolo Automatico Lotti &amp; Pip</button>
         <div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-align:center;margin-top:4px;letter-spacing:.04em">Trova il miglior RR (1:1 / 1:2 / 1:3) in base ai tuoi parametri</div>
       </div>
+      <!-- LOTTI MANUALI CH1 -->
+      <div id="ch1LotsRow" style="display:none;margin-bottom:8px">
+        <div class="fr2">
+          <div class="f"><label>Lotti Prop (manuale)</label><input id="ch1Lots" type="number" step="0.01" min="0.01" placeholder="auto" oninput="calcPreview()"></div>
+          <div class="f"><label>Lotti Personale (manuale)</label><input id="ch1LotsPers" type="number" step="0.01" min="0.01" placeholder="auto" oninput="calcPreview()"></div>
+        </div>
+      </div>
       <!-- SIMULATORE INTERATTIVO -->
       <div style="margin-bottom:12px">
         <button type="button" onclick="openSimulator()" style="width:100%;background:linear-gradient(135deg,rgba(167,139,250,.18),rgba(124,58,237,.10));border:2px solid var(--violet);color:var(--violet);border-radius:10px;padding:10px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--fd);letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s" onmouseover="this.style.background='linear-gradient(135deg,rgba(167,139,250,.3),rgba(124,58,237,.2))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(167,139,250,.18),rgba(124,58,237,.10))'">📊 Simulatore Giorno per Giorno</button>
@@ -4005,7 +4012,10 @@ function doRegisterFree(){
       </div>
 
       <div class="f" id="lotsRow">
-<div class="f"><label>Lotti Conto Prop</label><input id="mLots" type="number" value="0.15" step="0.01" min="0.01" oninput="calcPreview()"></div>
+        <div class="fr2">
+          <div class="f"><label>Lotti Conto Prop</label><input id="mLots" type="number" value="0.15" step="0.01" min="0.01" oninput="calcPreview()"></div>
+          <div class="f"><label>Lotti Conto Personale</label><input id="mLotsHedge" type="number" step="0.01" min="0.01" placeholder="auto" oninput="calcPreview()"></div>
+        </div>
       </div>
       <div class="fr2">
        <div class="f"><label>Stop Loss (pip)</label><input id="mSlPips" type="number" value="100" step="1" min="1" oninput="calcPreview()"></div>
@@ -4053,12 +4063,15 @@ function doRegisterFree(){
   </div>
 
   <!-- Campi Challenge 1 Step -->
+
+
+  <!-- Campi Challenge 1 Step -->
   <div id="ch1Fields" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
     <div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:var(--fd)">🎯 Parametri Challenge 1 Step</div>
-    <div class="fr2" style="margin-bottom:6px">
-      <div class="f"><label>Profit target step (%)</label><input id="ch1Tgt" type="number" value="8" step="0.5" min="1" oninput="calcPreview()"></div>
-      <div class="f"><label>Copertura personale (%)</label><input id="ch1Cov" type="number" value="50" step="10" min="0" max="100" oninput="calcPreview()">
-        <div class="hint">% del costo challenge da coprire col personale</div></div>
+    <div class="f" style="margin-bottom:6px">
+      <label>Copertura personale (%)</label>
+      <input id="ch1Cov" type="number" value="50" step="10" min="0" max="100" oninput="calcPreview()">
+      <div class="hint">% del costo challenge da coprire col personale</div>
     </div>
     <div class="fr2">
       <div class="f"><label>Spread prop step (pip)</label><input id="ch1SpProp" type="number" value="0.3" step="0.1" min="0" oninput="calcPreview()"></div>
@@ -4928,12 +4941,14 @@ function setMode(m) {
     if(microGrp) microGrp.style.display='none';
     if(futuresNote) futuresNote.style.display='none';
     var lotsR=document.getElementById('lotsRow'); if(lotsR) lotsR.style.display='none';
+    var ch1LotsR=document.getElementById('ch1LotsRow'); if(ch1LotsR) ch1LotsR.style.display='';
     var ch1=document.getElementById('ch1Fields'); if(ch1) ch1.style.display='';
     var ch2=document.getElementById('ch2Fields'); if(ch2) ch2.style.display='none';
   } else {
     var pC1b=document.getElementById('modeChallenge1');
     if(pC1b){pC1b.style.background='var(--bg3)';pC1b.style.borderColor='var(--border)';}
     var ch1b=document.getElementById('ch1Fields'); if(ch1b) ch1b.style.display='none';
+    var ch1LotsRb=document.getElementById('ch1LotsRow'); if(ch1LotsRb) ch1LotsRb.style.display='none';
   }
 
   // ── Challenge 2 Step ──
@@ -5501,10 +5516,15 @@ var c = calcChallenge(p);
       var slPropUsd = c.propSL;   // lots × sl × pipVal
       var tradePerBruciare = Math.floor(maxLossPropUsd / slPropUsd);
       if (tradePerBruciare < 1) tradePerBruciare = 1;
-      var hedgeLotsLive = cost / (tradePerBruciare * sl * c.pipVal);
-      hedgeLotsLive = Math.floor(hedgeLotsLive * 100) / 100;
+      var _manualHedge = parseFloat(document.getElementById('mLotsHedge')?.value) || 0;
+      var hedgeLotsLive;
+      if (_manualHedge > 0) {
+        hedgeLotsLive = Math.round(_manualHedge * 100) / 100;
+      } else {
+        hedgeLotsLive = (cost + 150) / (tradePerBruciare * sl * c.pipVal);
+        hedgeLotsLive = Math.round(hedgeLotsLive * 100) / 100;
+      }
       if(hedgeLotsLive < 0.01) hedgeLotsLive = 0.01;
-      if(hedgeLotsLive >= c.propLots) hedgeLotsLive = Math.max(0.01, Math.floor((c.propLots - 0.01)*100)/100);
 
       var hedgeTpUsd = hedgeLotsLive * sl  * c.pipVal;   // pers guadagna quando prop perde (colpisce SL)
       var hedgeSlUsd = hedgeLotsLive * tp  * c.pipVal;   // pers perde quando prop vince (colpisce TP)
@@ -13417,6 +13437,7 @@ function autoCalcPips() {
   var slE = document.getElementById('mSlPips'); if (slE) slE.value = bestPips;
   var tpE = document.getElementById('mTpPips'); if (tpE) tpE.value = bestPips;
   var ltE = document.getElementById('mLots');   if (ltE) ltE.value = bestLots;
+  var ltHE = document.getElementById('mLotsHedge'); if (ltHE) ltHE.value = lotPers;
 
   /* ── Toast esplicativo (usa solo variabili in scope) ── */
   var winLoss      = (bestLots * bestPips * pipVal).toFixed(0);
@@ -13546,20 +13567,26 @@ function _openSimPersonal() {
     var _propSL   = _fLots * _fSl * s.pipVal;
     var _nLoss    = _propSL > 0 ? Math.floor(_maxDDusd / _propSL) : 10;
     if (_nLoss < 1) _nLoss = 1;
-    s.lotPers = s.cost / (_nLoss * _fSl * s.pipVal);
-    s.lotPers = Math.floor(s.lotPers * 100) / 100;
+    /* Legge mLotsHedge se impostato manualmente, altrimenti calcola con garanzia +150 */
+    var _manualHedge = parseFloat(document.getElementById('mLotsHedge')?.value) || 0;
+    if (_manualHedge >= 0.01) {
+      s.lotPers = Math.round(_manualHedge * 100) / 100;
+    } else {
+      s.lotPers = (s.cost + 150) / (_nLoss * _fSl * s.pipVal);
+      s.lotPers = Math.round(s.lotPers * 100) / 100;
+    }
     if (s.lotPers < 0.01) s.lotPers = 0.01;
-    if (s.lotPers >= s.lots) s.lotPers = Math.max(0.01, Math.floor((s.lots - 0.01) * 100) / 100);
   } else {
     /* FALLBACK: autoCalc se il form è vuoto */
     s.lots   = _c.lots;
     s.slPips = _c.pip;
     s.tpPips = _c.pip;
-    s.lotPers= _c.lotPers;
+    s.lotPers= Math.round(_c.lotPers * 100) / 100;
     /* Aggiorna anche il form per coerenza */
     var _slE = document.getElementById('mSlPips'); if (_slE) _slE.value = _c.pip;
     var _tpE = document.getElementById('mTpPips'); if (_tpE) _tpE.value = _c.pip;
     var _ltE = document.getElementById('mLots');   if (_ltE) _ltE.value = _c.lots;
+    var _lhE = document.getElementById('mLotsHedge'); if (_lhE) _lhE.value = s.lotPers;
   }
 
   s.asset      = (document.getElementById('mAsset')?.value||'GOLD:10').split(':')[0];
@@ -14061,7 +14088,7 @@ function _autoCalcChallenge1() {
   } else if (hasCons && cons <= 30) { penalty = 0.70; }
 
   var lot = Math.min(lotByDaily, lotByTgt) * penalty;
-  lot = Math.floor(lot * 100) / 100;
+  lot = Math.round(lot * 100) / 100;
   if (lot < 0.01) lot = 0.01;
 
   var tradeAmt = lot * 100 * pipVal;  /* $ per trade (RR 1:1) */
@@ -14071,28 +14098,16 @@ function _autoCalcChallenge1() {
   if (nLossMax < 1) nLossMax = 1;
   var winsNeed  = tradeAmt > 0 ? Math.ceil(tgtUsd / tradeAmt) : 10;
 
-  /* ── Lotto PERSONALE: bilanciato tra recupero se fallisce e costo se passa ──
-     OBIETTIVO 1 (prop fallisce): recuperare covPct% del costo
-       → lotPers = (cost × covPct/100) / (nLossMax × 100 pip × pipVal)
-
-     OBIETTIVO 2 (prop passa): perdere al minimo
-       → extra_cost_if_passes = lotPers × winsNeed × 100 × pipVal
-       → con covPct=30%: extra ≈ cost × 0.30 × (winsNeed/nLossMax) ≈ 35-40%
-
-     ESEMPIO ($500 challenge, GOLD, nLossMax=6, winsNeed=7, covPct=30%):
-       lotPers = (500×0.30) / (6×100×10) = 150/6000 = 0.025 lot → $25/trade
-       Se fallisce: +$25 × 6 = +$150 recupero = 30% del costo ✓
-       Se passa:    -$25 × 7 = -$175 extra → totale $675 (+35%) ✓ (non $1410!)
-  ── */
   var lotPers = (cost * (covPct / 100)) / (nLossMax * bestPips * pipVal);
-  lotPers = Math.ceil(lotPers * 1000) / 1000;
-  if (lotPers < 0.001) lotPers = 0.001;
-  if (lotPers >= lot)  lotPers = Math.max(0.001, Math.floor((lot * 0.5) * 1000) / 1000);
+  lotPers = Math.round(lotPers * 100) / 100;
+  if (lotPers < 0.01) lotPers = 0.01;
 
   /* ── Applica ── */
   var slE = document.getElementById('mSlPips'); if (slE) slE.value = bestPips;
   var tpE = document.getElementById('mTpPips'); if (tpE) tpE.value = bestPips;
   var ltE = document.getElementById('mLots');   if (ltE) ltE.value = lot;
+  var ch1L  = document.getElementById('ch1Lots');     if (ch1L)  ch1L.value  = lot;
+  var ch1LP = document.getElementById('ch1LotsPers'); if (ch1LP) ch1LP.value = lotPers;
 
   /* ── Calcola scenari per toast ── */
   var persPerTrade  = lotPers * bestPips * pipVal;
@@ -14146,7 +14161,10 @@ function _openSimChallenge1() {
   s.isTrail     = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
   s.slPips      = parseFloat(document.getElementById('mSlPips')?.value)      || 100;
   s.tpPips      = parseFloat(document.getElementById('mTpPips')?.value)      || 100;
-  s.lots        = parseFloat(document.getElementById('mLots')?.value)        || 0.10;
+  /* Legge lotto prop da ch1Lots (manuale) o mLots (auto) */
+  var _ch1LotsM = parseFloat(document.getElementById('ch1Lots')?.value) || 0;
+  s.lots = _ch1LotsM >= 0.01 ? Math.round(_ch1LotsM * 100) / 100
+         : Math.round((parseFloat(document.getElementById('mLots')?.value) || 0.10) * 100) / 100;
   s.covPct      = parseFloat(document.getElementById('ch1Cov')?.value)       || 30;
   s.asset       = (document.getElementById('mAsset')?.value || 'GOLD:10').split(':')[0];
   s.pipVal      = typeof _chPipVal === 'function' ? _chPipVal(s.asset) : 10;
@@ -14160,14 +14178,17 @@ function _openSimChallenge1() {
   s.propLoss    = s.lots * s.slPips * s.pipVal;
   s.consLimit   = s.consistency > 0 ? s.propTarget * (s.consistency / 100) : Infinity;
 
-  /* Lotto personale bilanciato (stesso calcolo di autoCalcChallenge1) */
+  /* Lotto personale: usa ch1LotsPers se manuale, altrimenti calcola */
+  var _ch1LPM = parseFloat(document.getElementById('ch1LotsPers')?.value) || 0;
   var nLossMax = s.propLoss > 0 ? Math.floor(s.maxDDusd / s.propLoss) : 10;
   if (nLossMax < 1) nLossMax = 1;
-  var lP = (s.cost * (s.covPct / 100)) / (nLossMax * s.slPips * s.pipVal);
-  lP = Math.ceil(lP * 1000) / 1000;
-  if (lP < 0.001) lP = 0.001;
-  if (lP >= s.lots) lP = Math.max(0.001, Math.floor((s.lots * 0.5) * 1000) / 1000);
-  s.lotPers = lP;
+  if (_ch1LPM >= 0.01) {
+    s.lotPers = Math.round(_ch1LPM * 100) / 100;
+  } else {
+    var lP = (s.cost * (s.covPct / 100)) / (nLossMax * s.slPips * s.pipVal);
+    s.lotPers = Math.round(lP * 100) / 100;
+    if (s.lotPers < 0.01) s.lotPers = 0.01;
+  }
 
   /* RR 1:1: pers guadagna/perde lo stesso pip del prop */
   s.persWin  = s.lotPers * s.slPips * s.pipVal;
@@ -14591,7 +14612,7 @@ _renderChallenge1 = function(box, size, cost, maxDD, ddd, days, pay, cons, sl, t
   if (isTrail && hasCons) {
     penalty = cons<=25?0.30:cons<=35?0.40:cons<=50?0.55:cons<=70?0.75:0.90;
   } else if (isTrail) { penalty=0.75; } else if (hasCons&&cons<=30) { penalty=0.70; }
-  var lot = Math.floor(Math.min(lotByD, lotByT) * penalty * 100) / 100;
+  var lot = Math.round(Math.min(lotByD, lotByT) * penalty * 100) / 100;
   if (lot < 0.01) lot = 0.01;
 
   var tradeAmt = lot * sl * pv;
@@ -14601,9 +14622,8 @@ _renderChallenge1 = function(box, size, cost, maxDD, ddd, days, pay, cons, sl, t
 
   /* Lotto personale bilanciato */
   var lotPers = (cost * (covPct/100)) / (nLossMax * sl * pv);
-  lotPers = Math.ceil(lotPers * 1000) / 1000;
-  if (lotPers < 0.001) lotPers = 0.001;
-  if (lotPers >= lot)  lotPers = Math.max(0.001, Math.floor(lot*0.5*1000)/1000);
+  lotPers = Math.round(lotPers * 100) / 100;
+  if (lotPers < 0.01) lotPers = 0.01;
 
   var persPerTrade  = lotPers * sl * pv;
   var propPerTrade  = lot * sl * pv;
@@ -14733,9 +14753,8 @@ function _ch1RebuildPreview() {
   var nLossMax=tradeAmt>0?Math.floor(maxDDusd/tradeAmt):10; if(nLossMax<1)nLossMax=1;
   var winsNeed=tradeAmt>0?Math.ceil(tgtUsd/tradeAmt):10;
   var lotPers=(cost*(covPct/100))/(nLossMax*pip*pipVal);
-  lotPers=Math.ceil(lotPers*1000)/1000;
-  if(lotPers<0.001)lotPers=0.001;
-  if(lotPers>=lot)lotPers=Math.max(0.001,Math.floor(lot*0.5*1000)/1000);
+  lotPers=Math.round(lotPers*100)/100;
+  if(lotPers<0.01)lotPers=0.01;
   var ppt=lotPers*pip*pipVal;
   var rf=lotPers*nLossMax*pip*pipVal;
   var ep=lotPers*winsNeed*pip*pipVal;
