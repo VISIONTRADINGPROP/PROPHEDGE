@@ -1962,6 +1962,66 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
 
       <button onclick="openConsent()" style="background:linear-gradient(135deg,#7C3AED,#38BDF8);border:none;color:#fff;border-radius:16px;padding:26px 80px;font-size:22px;font-weight:700;cursor:pointer;font-family:var(--fc);letter-spacing:.12em;text-transform:uppercase;display:inline-flex;align-items:center;gap:14px;transition:all .3s;box-shadow:0 0 60px rgba(124,58,237,.55),0 12px 40px rgba(56,189,248,.3),inset 0 1px 0 rgba(255,255,255,.15)" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 0 80px rgba(124,58,237,.7),0 16px 48px rgba(56,189,248,.4),inset 0 1px 0 rgba(255,255,255,.2)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 0 60px rgba(124,58,237,.55),0 12px 40px rgba(56,189,248,.3),inset 0 1px 0 rgba(255,255,255,.15)'">&#9658;&nbsp; Entra nel software</button>
 
+      <!-- ═══ DYNAMIC PREVIEW CARD ═══ -->
+      <div style="margin-top:24px;position:relative;width:100%;max-width:560px;opacity:0;animation:spUp .8s ease .6s forwards">
+        <div style="position:absolute;top:14px;left:12px;right:12px;bottom:0;background:rgba(167,139,250,.04);border:0.5px solid rgba(167,139,250,.07);border-radius:14px;z-index:1"></div>
+        <div style="position:absolute;top:7px;left:6px;right:6px;bottom:0;background:rgba(56,189,248,.05);border:0.5px solid rgba(56,189,248,.09);border-radius:14px;z-index:2"></div>
+        <div style="position:relative;z-index:3;background:#0d1230;border:1px solid #1c1f3a;border-radius:14px;padding:16px 20px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
+            <div>
+              <div style="font-family:'Syne','DM Sans',sans-serif;font-size:28px;font-weight:900;color:#e8eaf6;letter-spacing:-.04em;line-height:1;transition:opacity .3s,transform .3s" id="spSessWord">Personale</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#363b60;margin-top:3px;letter-spacing:.04em;transition:opacity .3s" id="spSessRest">hedging · GOLD · 0.03 lot hedge</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-family:'Syne','DM Sans',sans-serif;font-size:46px;font-weight:900;letter-spacing:-.06em;line-height:1;transition:color .4s,opacity .3s,transform .3s;color:#34D399" id="spPct">+45%</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.12em;color:#363b60;margin-top:2px">copertura costo</div>
+            </div>
+          </div>
+          <div style="height:0.5px;background:rgba(255,255,255,.06);margin:10px 0"></div>
+          <div style="display:flex;gap:0;align-items:flex-end;margin-bottom:14px">
+            <div style="flex:1">
+              <div style="font-family:'Syne','DM Sans',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.04em;line-height:1;transition:color .4s,opacity .3s" id="spV1" style="color:#F87171">$46k</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#363b60;margin-top:4px">DD Line</div>
+            </div>
+            <div style="flex:1;border-left:0.5px solid rgba(255,255,255,.06);padding-left:14px">
+              <div style="font-family:'Syne','DM Sans',sans-serif;font-size:24px;font-weight:800;letter-spacing:-.04em;line-height:1;transition:color .4s,opacity .3s" id="spV2" style="color:#38BDF8">$48.2k</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#363b60;margin-top:4px">Balance Prop</div>
+            </div>
+            <div style="flex:1;border-left:0.5px solid rgba(255,255,255,.06);padding-left:14px">
+              <div style="font-family:'Syne','DM Sans',sans-serif;font-size:30px;font-weight:900;letter-spacing:-.05em;line-height:1;transition:color .4s,opacity .3s" id="spV3" style="color:#34D399">+$920</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#363b60;margin-top:4px">P&amp;L Personale</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <div style="flex:1;position:relative;padding-bottom:5px;padding-right:5px">
+              <div style="position:absolute;inset:0;margin:5px 5px 0 0;background:rgba(255,255,255,.015);border:0.5px solid rgba(255,255,255,.04);border-radius:8px"></div>
+              <div style="position:absolute;inset:0;margin:3px 3px 0 0;background:rgba(255,255,255,.025);border:0.5px solid rgba(255,255,255,.06);border-radius:8px"></div>
+              <div style="position:relative;z-index:2;background:#0a0e24;border:0.5px solid #1c1f3a;border-radius:8px;padding:8px 11px">
+                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.03em;color:#A78BFA;transition:color .4s" id="spS1">5%</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#363b60;margin-top:2px">Target Prop</div>
+              </div>
+            </div>
+            <div style="flex:1;position:relative;padding-bottom:5px;padding-right:5px">
+              <div style="position:absolute;inset:0;margin:5px 5px 0 0;background:rgba(255,255,255,.015);border:0.5px solid rgba(255,255,255,.04);border-radius:8px"></div>
+              <div style="position:absolute;inset:0;margin:3px 3px 0 0;background:rgba(255,255,255,.025);border:0.5px solid rgba(255,255,255,.06);border-radius:8px"></div>
+              <div style="position:relative;z-index:2;background:#0a0e24;border:0.5px solid #1c1f3a;border-radius:8px;padding:8px 11px">
+                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.03em;color:#FBBF24;transition:color .4s" id="spS2">12/31</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#363b60;margin-top:2px">Trade Fatti</div>
+              </div>
+            </div>
+            <div style="flex:1;position:relative;padding-bottom:5px">
+              <div style="position:absolute;inset:0;margin:5px 5px 0 0;background:rgba(255,255,255,.015);border:0.5px solid rgba(255,255,255,.04);border-radius:8px"></div>
+              <div style="position:absolute;inset:0;margin:3px 3px 0 0;background:rgba(255,255,255,.025);border:0.5px solid rgba(255,255,255,.06);border-radius:8px"></div>
+              <div style="position:relative;z-index:2;background:#0a0e24;border:0.5px solid #1c1f3a;border-radius:8px;padding:8px 11px">
+                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.03em;color:#F87171;transition:color .4s" id="spS3">4%</div>
+                <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#363b60;margin-top:2px">Max DD</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ═══ FINE DYNAMIC CARD ═══ -->
+
 
 
     </div>
@@ -2427,6 +2487,52 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
 
 
 
+
+
+/* ── SPLASH CARD: rotazione sessioni ── */
+(function(){
+  var sessions=[
+    {word:'Challenge',rest:'1 step · GOLD · 0.05 lot prop',pct:'+61%',pctC:'#34D399',v1:'$94k',v1c:'#F87171',v2:'$103k',v2c:'#38BDF8',v3:'+$1,840',v3c:'#34D399',s1:'8%',s1c:'#A78BFA',s2:'7/31',s2c:'#FBBF24',s3:'6%',s3c:'#F87171'},
+    {word:'Personale',rest:'hedging · GOLD · 0.03 lot hedge',pct:'+45%',pctC:'#34D399',v1:'$46k',v1c:'#F87171',v2:'$48.2k',v2c:'#38BDF8',v3:'+$920',v3c:'#34D399',s1:'5%',s1c:'#A78BFA',s2:'12/31',s2c:'#FBBF24',s3:'4%',s3c:'#F87171'},
+    {word:'Challenge',rest:'2 step ph.1 · NAS100 · 0.02 lot',pct:'-18%',pctC:'#F87171',v1:'$197k',v1c:'#F87171',v2:'$198.8k',v2c:'#38BDF8',v3:'-$240',v3c:'#F87171',s1:'10%',s1c:'#A78BFA',s2:'3/31',s2c:'#FBBF24',s3:'5%',s3c:'#F87171'},
+    {word:'Challenge',rest:'1 step · EURUSD · 0.10 lot prop',pct:'+78%',pctC:'#34D399',v1:'$5.7k',v1c:'#F87171',v2:'$6.1k',v2c:'#38BDF8',v3:'+$580',v3c:'#34D399',s1:'8%',s1c:'#A78BFA',s2:'15/31',s2c:'#FBBF24',s3:'4%',s3c:'#F87171'}
+  ];
+  var idx=0;
+  var ids=['spSessWord','spSessRest','spPct','spV1','spV2','spV3','spS1','spS2','spS3'];
+  function fadeAll(out){
+    ids.forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el)return;
+      el.style.transition='opacity .28s ease,transform .28s ease';
+      el.style.opacity=out?'0':'1';
+      el.style.transform=out?'translateY(6px)':'translateY(0)';
+    });
+  }
+  function applySession(s){
+    var el;
+    el=document.getElementById('spSessWord'); if(el)el.textContent=s.word;
+    el=document.getElementById('spSessRest'); if(el)el.textContent=s.rest;
+    el=document.getElementById('spPct');      if(el){el.textContent=s.pct;el.style.color=s.pctC;}
+    el=document.getElementById('spV1');       if(el){el.textContent=s.v1;el.style.color=s.v1c;}
+    el=document.getElementById('spV2');       if(el){el.textContent=s.v2;el.style.color=s.v2c;}
+    el=document.getElementById('spV3');       if(el){el.textContent=s.v3;el.style.color=s.v3c;}
+    el=document.getElementById('spS1');       if(el){el.textContent=s.s1;el.style.color=s.s1c;}
+    el=document.getElementById('spS2');       if(el){el.textContent=s.s2;el.style.color=s.s2c;}
+    el=document.getElementById('spS3');       if(el){el.textContent=s.s3;el.style.color=s.s3c;}
+  }
+  function switchSess(){
+    fadeAll(true);
+    setTimeout(function(){
+      idx=(idx+1)%sessions.length;
+      applySession(sessions[idx]);
+      fadeAll(false);
+    },300);
+  }
+  setTimeout(function(){
+    applySession(sessions[idx]);
+    setInterval(switchSess,4200);
+  },900);
+})();
 
 function openConsent(){document.getElementById('consentOverlay').style.display='flex';}
 
@@ -3740,15 +3846,11 @@ function doRegisterFree(){
 
       <div style="display:flex;gap:8px;margin-left:auto;margin-right:10px">
 
-
+        <button class="btn-g" onclick="resetModal()" style="border-color:var(--amber);color:var(--amber)" title="Reimposta tutti i campi">↺ Reset</button>
 
         <button class="btn-g" onclick="closeModal()">Annulla</button>
 
-
-
         <button class="btn-p" onclick="doAdd()">+ Aggiungi sfida</button>
-
-
 
       </div>
 
@@ -4001,8 +4103,8 @@ function doRegisterFree(){
       <!-- LOTTI MANUALI CH1 -->
       <div id="ch1LotsRow" style="display:none;margin-bottom:8px">
         <div class="fr2">
-          <div class="f"><label>Lotti Prop (manuale)</label><input id="ch1Lots" type="number" step="0.01" min="0.01" placeholder="auto" oninput="calcPreview()"></div>
-          <div class="f"><label>Lotti Personale (manuale)</label><input id="ch1LotsPers" type="number" step="0.01" min="0.01" placeholder="auto" oninput="calcPreview()"></div>
+          <div class="f"><label>Lotti Prop (manuale)</label><input id="ch1Lots" type="number" step="0.01" min="0.01" placeholder="auto" oninput="_ch1ManualLotChange()"></div>
+          <div class="f"><label>Lotti Personale (manuale)</label><input id="ch1LotsPers" type="number" step="0.01" min="0.01" placeholder="auto" oninput="_ch1ManualLotChange()"></div>
         </div>
       </div>
       <!-- SIMULATORE INTERATTIVO -->
@@ -4115,7 +4217,7 @@ function doRegisterFree(){
 
 
 
-   </div><div class="mb-right"><div id="mPreview"></div></div>
+   </div><div class="mb-right"><div id="mPreview"></div><div id="mInlineSim" style="margin-top:14px"></div></div>
 
     </div>
 
@@ -4178,7 +4280,7 @@ function doRegisterFree(){
     </div>
 
     <!-- Tabella -->
-    <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border)">
+    <div id="simTableWrap" style="max-height:440px;overflow-y:auto;overflow-x:auto;border-radius:8px;border:1px solid var(--border)">
       <table style="width:100%;border-collapse:collapse" id="simTable">
         <thead>
           <tr style="background:var(--bg3)">
@@ -5506,6 +5608,7 @@ var c = calcChallenge(p);
         +'<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+costoRealePassaggio.toFixed(0)+'</span></div></div>';
       htmlChallenge += '</div></div>';
       box.innerHTML = htmlChallenge;
+      setTimeout(_renderInlineSim, 30);
       return;
   }
 
@@ -5606,87 +5709,11 @@ var c = calcChallenge(p);
         +'<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+_costoPass.toFixed(0)+'</span></div></div>';
       simHtml += '</div>'; /* fine scenari */
 
-      /* ── TABELLA SIMULAZIONE GIORNI ── */
-      simHtml += '<div style="padding:0 14px 14px">';
-      simHtml += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow-x:auto">';
-      simHtml += '<div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">'
-        +'<div style="width:3px;height:11px;background:linear-gradient(var(--teal),var(--violet));border-radius:2px"></div>'
-        +'<div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">🔴 SIMULATORE GIORNO DOPO GIORNO (LIVE)</div>'
-        +'</div>';
-      simHtml += '<table style="width:100%;border-collapse:collapse;font-size:11px;font-family:var(--fm);min-width:700px">'
-        +'<thead><tr style="background:var(--bg3)">'
-        +'<th style="padding:10px 8px;text-align:left;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">1. GIORNO</th>'
-        +'<th style="padding:10px 8px;text-align:right;font-size:9px;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">2. PnL PROP</th>'
-        +'<th style="padding:10px 8px;text-align:right;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">3. BALANCE PROP</th>'
-        +'<th style="padding:10px 8px;text-align:right;font-size:9px;color:var(--amber);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">4. DD STATICO</th>'
-        +(cons>0?'<th style="padding:10px 8px;text-align:center;font-size:9px;color:#60a5fa;font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">5. CONSISTENZA '+cons+'%</th>':'')
-        +'<th style="padding:10px 8px;text-align:right;font-size:9px;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">6. CUMULATIVO PERS.</th>'
-        +'<th style="padding:10px 8px;text-align:right;font-size:9px;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">7. PAYOUT '+pay+'%</th>'
-        +'</tr></thead><tbody>';
-
-      var currentBalance = size;
-      var hwm = size;
-      var cumPersonale = 0;
-      var isViolated = false;
-
-      for(var i=1; i<=days; i++) {
-          var pnlProp = c.propTP;
-          var pnlPers = -hedgeSlUsd;
-
-          currentBalance += pnlProp;
-          cumPersonale += pnlPers;
-          if(currentBalance > hwm) hwm = currentBalance;
-
-          var limiteMorte = p.trailingDD ? (hwm - (hwm * limitDDperc)) : (size - (size * limitDDperc));
-          var tettoConsistenza = cons > 0 ? (targetConsistenzaUsd * (cons/100)) : 0;
-          var tettoText = cons > 0 ? 'Tetto: $'+tettoConsistenza.toFixed(0) : '';
-          var violazioneText = '';
-          if(cons > 0 && pnlProp > tettoConsistenza) {
-              violazioneText = ' <b style="color:var(--red)">(VIOLATA!)</b>';
-              isViolated = true;
-          }
-
-          var payoutAttuale = (currentBalance > size) ? (currentBalance - size) * (pay/100) : 0;
-          var _isMinDay = i <= days;
-          var _balCol = currentBalance >= size ? 'var(--green)' : 'var(--red)';
-          var _persCol = cumPersonale >= 0 ? 'var(--green)' : 'var(--red)';
-          var _rowBg = i%2===0 ? 'rgba(167,139,250,.02)' : '';
-
-          simHtml += '<tr style="border-bottom:1px solid var(--border);background:'+_rowBg+'">'
-            +'<td style="padding:8px 10px;font-weight:700;font-family:var(--fd);font-size:11px">Giorno '+i+'</td>'
-            +'<td style="padding:8px;text-align:right;font-family:var(--fd);font-size:11px;color:var(--green);font-weight:700">+$'+pnlProp.toFixed(0)+'</td>'
-            +'<td style="padding:8px;text-align:right;font-family:var(--fd);font-size:11px;color:'+_balCol+';font-weight:600">$'+currentBalance.toFixed(0)+'</td>'
-            +'<td style="padding:8px;text-align:right;font-family:var(--fd);font-size:11px;color:var(--amber)">$'+limiteMorte.toFixed(0)+'</td>'
-            +(cons>0?'<td style="padding:8px;text-align:center;font-family:var(--fd);font-size:10px;color:#60a5fa">'+tettoText+violazioneText+'</td>':'')
-            +'<td style="padding:8px;text-align:right;font-family:var(--fd);font-size:11px;color:'+_persCol+';font-weight:700">'+(cumPersonale>=0?'+':'')+'$'+cumPersonale.toFixed(0)+'</td>'
-            +'<td style="padding:8px;text-align:right;font-family:var(--fd);font-size:11px;color:var(--teal);font-weight:700">+$'+payoutAttuale.toFixed(0)+'</td>'
-            +'</tr>';
-      }
-
-      simHtml += '</tbody></table></div></div>'; /* fine tabella e padding */
-
-      var finaleProp = currentBalance - size;
-      var finalePayout = finaleProp * (pay/100);
-      var utileNetto = finalePayout + cumPersonale;
-
-      if(isViolated) {
-          simHtml += '<div style="margin:0 14px 14px;background:rgba(248,113,113,.1);border:1px solid var(--red);padding:14px;border-radius:10px;text-align:center">'
-            +'<div style="font-size:14px;font-weight:800;color:var(--red);margin-bottom:4px">🚨 REGOLA CONSISTENZA VIOLATA</div>'
-            +'<div style="font-size:12px;color:var(--t2)">I lotti sono troppo alti. Riduci la size per non superare il tetto per trade.</div>'
-            +'</div>';
-      } else {
-          /* ── SUMMARY FINALE ── */
-          simHtml += '<div style="margin:0 14px 14px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.2);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">';
-          simHtml += '<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:4px">Payout Sbloccato ('+pay+'%)</div>'
-            +'<div style="font-size:22px;color:var(--teal);font-weight:800;font-family:var(--fd)">+$'+finalePayout.toFixed(0)+'</div></div>';
-          simHtml += '<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:4px">PnL Personale Reale</div>'
-            +'<div style="font-size:22px;color:'+(cumPersonale>=0?'var(--green)':'var(--red)')+';font-weight:800;font-family:var(--fd)">'+(cumPersonale>=0?'+':'')+'$'+cumPersonale.toFixed(0)+'</div></div>';
-          simHtml += '<div style="text-align:right"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:4px">UTILE NETTO (FINE CICLO)</div>'
-            +'<div style="font-size:28px;color:'+(utileNetto>=0?'var(--green)':'var(--red)')+';font-weight:800;font-family:var(--fd)">'+(utileNetto>=0?'+':'')+'$'+utileNetto.toFixed(0)+'</div></div>';
-          simHtml += '</div>';
-      }
+      /* ── Il simulatore giorno per giorno è ora inline interattivo sotto il preview ── */
       simHtml += '</div>'; /* fine div root */
       box.innerHTML = simHtml;
+      /* Aggiorna simulatore inline dopo il preview */
+      setTimeout(_renderInlineSim, 30);
       return;
   }
 
@@ -6133,6 +6160,118 @@ function openModal(){
 }
 
 function closeModal(){ document.getElementById('modalOv').style.display='none'; }
+
+function resetModal(){
+  var defaults = {
+    mName:'', mSize:'100000', mCost:'1500', mDD:'6', mDDD:'3',
+    mTgt:'8', mPay:'80', mDays:'10', mSpread:'0', mConsistency:'0',
+    mSlPips:'100', mTpPips:'100', mLots:'', mLotsHedge:'',
+    mTrailLock:'0', mSize2:'', mCost2:'', mDD2:'6', mDays2:'10', mPay2:'80',
+    ch1Lots:'', ch1LotsPers:'', ch1Cov:'50', ch1SpProp:'0.3', ch1SpPers:'0.3',
+    mPipVProp:'', mPipVHedge:''
+  };
+  Object.keys(defaults).forEach(function(id){
+    var el = document.getElementById(id);
+    if(el){ el.value = defaults[id]; el.style.outline=''; el.style.background=''; }
+  });
+  var logo = document.getElementById('mLogo');
+  if(logo){ logo.innerHTML = '?'; logo.style.background = 'var(--bg3)'; }
+  var domEl = document.getElementById('mDomain');
+  if(domEl) domEl.value = '';
+  /* Azzera stato 70% CH1 */
+  if(typeof _simCH1 !== 'undefined'){
+    _simCH1._above70Active = false;
+    _simCH1._lotPersHalved = 0;
+  }
+  /* Ricalcola */
+  if(typeof calcPreview === 'function') calcPreview();
+}
+
+/* ═══════════════════════════════════════════
+   PERSISTENZA DATI SIMULATORE (localStorage)
+   I dati trade sopravvivono alla chiusura
+   ═══════════════════════════════════════════ */
+function _saveSimData() {
+  try {
+    /* FIX: salva solo se c'è almeno un trade realmente inserito (w o l non vuoti) */
+    function _hasRealData(arr){
+      if(!arr||!arr.length)return false;
+      for(var i=0;i<arr.length;i++){if(arr[i].w!==''||arr[i].l!=='')return true;}
+      return false;
+    }
+    if(_simCH1 && _hasRealData(_simCH1.data))
+      localStorage.setItem('ph_ch1_data', JSON.stringify(_simCH1.data));
+    if(_simPS && _hasRealData(_simPS.data))
+      localStorage.setItem('ph_ps_data', JSON.stringify(_simPS.data));
+    if(_iSim && _hasRealData(_iSim.data)){
+      localStorage.setItem('ph_isim_data', JSON.stringify(_iSim.data));
+      localStorage.setItem('ph_isim_session', _iSim.session||'');
+    }
+  } catch(e) {}
+}
+
+function _loadSimData() {
+  try {
+    var d1 = localStorage.getItem('ph_ch1_data');
+    if(d1 && typeof _simCH1 !== 'undefined'){
+      var parsed = JSON.parse(d1);
+      if(Array.isArray(parsed) && parsed.length) _simCH1.data = parsed;
+    }
+    var d2 = localStorage.getItem('ph_ps_data');
+    if(d2 && typeof _simPS !== 'undefined'){
+      var parsed2 = JSON.parse(d2);
+      if(Array.isArray(parsed2) && parsed2.length) _simPS.data = parsed2;
+    }
+    var d3 = localStorage.getItem('ph_isim_data');
+    if(d3 && typeof _iSim !== 'undefined'){
+      var parsed3 = JSON.parse(d3);
+      if(Array.isArray(parsed3) && parsed3.length){
+        _iSim.data = parsed3;
+        _iSim.session = localStorage.getItem('ph_isim_session')||'';
+      }
+    }
+  } catch(e) {}
+}
+
+/* ── Sync manuale lotti Challenge 1 Step → calcolatore + simulatore ── */
+function _ch1ManualLotChange() {
+  /* 1. Aggiorna il preview del calcolatore */
+  if (typeof calcPreview === 'function') calcPreview();
+
+  /* 2. Se il simulatore è aperto e ha parametri, aggiorna in tempo reale */
+  var s = _simCH1;
+  if (!s.size) return; /* simulatore non ancora aperto */
+
+  var newLots = parseFloat(document.getElementById('ch1Lots')?.value) || 0;
+  var newLP   = parseFloat(document.getElementById('ch1LotsPers')?.value) || 0;
+
+  var changed = false;
+  if (newLots >= 0.01 && Math.round(newLots*100) !== Math.round(s.lots*100)) {
+    s.lots     = Math.round(newLots * 100) / 100;
+    s.propWin  = s.lots * s.slPips * s.pipVal;
+    s.propLoss = s.lots * s.slPips * s.pipVal;
+    changed = true;
+  }
+  if (newLP >= 0.01 && Math.round(newLP*100) !== Math.round(s.lotPers*100)) {
+    s.lotPers  = Math.round(newLP * 100) / 100;
+    s.persWin  = s.lotPers * s.slPips * s.pipVal;
+    s.persLoss = s.lotPers * s.slPips * s.pipVal;
+    changed = true;
+  }
+
+  if (changed) {
+    /* Aggiorna il subtitle del simulatore con i nuovi valori */
+    var sub = document.getElementById('simSubtitle');
+    if (sub) {
+      sub.textContent = '🎯 '+s.asset+
+        ' | Prop (VIRTUALE): '+s.lots+' lot  TP/SL ±$'+s.propWin.toFixed(0)+
+        ' | Pers (REALE): '+s.lotPers+' lot  ±$'+s.persWin.toFixed(0)+
+        ' | Min '+s.minDays+' trade | Target $'+s.propTarget.toFixed(0);
+    }
+    /* Ricalcola il simulatore */
+    if (typeof _simCH1_calc === 'function') _simCH1_calc();
+  }
+}
 
 
 
@@ -13610,6 +13749,9 @@ function _openSimPersonal() {
   }
 
   _simPS_setupModal();
+  /* Sync: inline sim usa stesso array dati del modale */
+  _iSim.data    = _simPS.data;
+  _iSim.session = 'personal';
   document.getElementById('simModal').style.display='block';
 }
 
@@ -13687,14 +13829,28 @@ function _simPS_buildTable() {
   var s=_simPS;
   var tbody=document.getElementById('simTbody');
   if(!tbody)return;
+  /* Stile sticky per header tabella */
+  var thead=document.querySelector('#simTable thead');
+  if(thead) thead.style.cssText='position:sticky;top:0;z-index:2';
+
   var html='';
+  /* Calcola quante righe mostrare: fino all'ultima con dati + 2 extra, min 2 */
+  var lastFilled=-1;
+  for(var j=0;j<s.rows;j++){
+    var dj=s.data[j]||{w:'',l:''};
+    if(dj.w!==''||dj.l!=='') lastFilled=j;
+  }
+  var showUpTo=Math.min(s.rows-1, lastFilled+2); /* +2 righe vuote dopo l'ultima con dati */
+  if(showUpTo<1) showUpTo=1; /* almeno 2 righe visibili (0 e 1) */
+
   for(var i=0;i<s.rows;i++){
     var r=i+1;
     var d=s.data[i]||{w:'',l:''};
     var isMin=r<=s.minDays;
     var icon=isMin?'⏳':'✓';
     var ic=isMin?'var(--amber)':'var(--green)';
-    html+='<tr id="simPS_row_'+r+'">';
+    var hidden=i>showUpTo?'display:none;':'';
+    html+='<tr id="simPS_row_'+r+'" style="'+hidden+'">';
     html+='<td style="padding:4px 8px;text-align:center;font-size:11px;font-family:var(--fd);'+
       'color:'+ic+';font-weight:'+(isMin?700:400)+';white-space:nowrap">'+icon+' '+r+'</td>';
     html+='<td style="padding:3px 4px;text-align:center">'+
@@ -13735,19 +13891,71 @@ function _simPS_calc() {
   var s=_simPS;
   if(!s.size)return;
 
-  /* Rimuovi card fine ciclo precedente */
+  /* Pulisci card e banner precedenti */
   var oldCard=document.getElementById('_simPS_cycleCard');
   if(oldCard)oldCard.remove();
+  document.querySelectorAll('._simPS_banner70').forEach(function(b){b.remove();});
 
   var hwm        =s.size;
   var bal        =s.size;
-  var ddLine     =s.size*(1-s.maxDD/100);  // iniziale uguale per entrambi i tipi
+  var ddLine     =s.size*(1-s.maxDD/100);
   var propPnlCum =0;
   var persPnlCum =0;
   var gameOver   =false;
   var targetHit  =false;
   var cycleEndRow=-1;
-  var bestDayPnl=0; /* miglior P&L positivo di una singola riga, per calcolo consistenza */
+  var bestDayPnl =0;
+
+  /* ── Lotti originali per il ricalcolo 70% ── */
+  var lotPersOrig  = s.lotPers;
+  var hedgeWinOrig = s.hedgeWin;
+  var hedgeLossOrig= s.hedgeLoss;
+  var above70      = false;
+  var thresh70     = s.propTarget * 0.70;
+
+  /* Lotti/profitti correnti (cambiano al 70%) */
+  var curHedgeWin  = s.hedgeWin;
+  var curHedgeLoss = s.hedgeLoss;
+
+  function halveLot(l){
+    var r=Math.round(l*100);
+    if(r>=10)return Math.round(r/2)/100;
+    if(r>=5) return 0.02;
+    return 0.01;
+  }
+
+  function insertPS70Banner(rr, isGreen){
+    var refRow=document.getElementById('simPS_row_'+rr);
+    if(!refRow)return;
+    var existing=document.getElementById('_simPS_b70_'+rr);
+    if(existing)existing.remove();
+    var bg  =isGreen?'rgba(52,211,153,.14)':'rgba(248,113,113,.14)';
+    var bdr =isGreen?'#34D399':'#F87171';
+    var clr =isGreen?'#34D399':'#F87171';
+    var newPers=isGreen?halveLot(lotPersOrig):lotPersOrig;
+    var newPersWL=(newPers*s.slPips*s.pipVal).toFixed(0);
+    var origPersWL=(lotPersOrig*s.slPips*s.pipVal).toFixed(0);
+    var msg=isGreen
+      ?'🟢&nbsp;&nbsp;70% DEL TARGET RAGGIUNTO — RICALCOLO LOTTI&nbsp;&nbsp;|&nbsp;&nbsp;'
+        +'Prop mantiene <b style="color:var(--teal)">'+s.lots+' lot</b>'
+        +'&nbsp;&nbsp;→&nbsp;&nbsp;'
+        +'Personale dimezzato: <b style="color:var(--violet)">'+newPers+' lot</b>'
+        +' <span style="font-size:10px;color:var(--t3)">(±$'+newPersWL+'/trade)</span>'
+      :'🔴&nbsp;&nbsp;SCESO SOTTO 70% — LOTTI RIPRISTINATI&nbsp;&nbsp;|&nbsp;&nbsp;'
+        +'Prop <b style="color:var(--teal)">'+s.lots+' lot</b>'
+        +'&nbsp;&nbsp;|&nbsp;&nbsp;'
+        +'Personale torna a <b style="color:var(--violet)">'+lotPersOrig+' lot</b>'
+        +' <span style="font-size:10px;color:var(--t3)">(±$'+origPersWL+'/trade)</span>';
+    var tr=document.createElement('tr');
+    tr.className='_simPS_banner70';
+    tr.id='_simPS_b70_'+rr;
+    tr.innerHTML='<td colspan="9" style="padding:0">'
+      +'<div style="background:'+bg+';border-top:2.5px solid '+bdr+';border-bottom:2.5px solid '+bdr
+      +';padding:10px 18px;display:flex;align-items:center;justify-content:center">'
+      +'<div style="font-size:12px;font-weight:800;font-family:var(--fd);color:'+clr
+      +';text-align:center;letter-spacing:.03em">'+msg+'</div></div></td>';
+    refRow.after(tr);
+  }
 
   for(var i=0;i<s.rows;i++){
     var r   =i+1;
@@ -13757,30 +13965,25 @@ function _simPS_calc() {
     var has =(d.w!==''&&d.w!==null)||(d.l!==''&&d.l!==null);
     var row =document.getElementById('simPS_row_'+r);
 
-    /* Cattura r nel closure per sc */
-    (function(rr){
+    /* ─── Snapshot lotti correnti per questa riga ─── */
+    var _hw=curHedgeWin, _hl=curHedgeLoss;
+
+    (function(rr,_w,_l,_has,_row,__hw,__hl){
       var sc=function(col,txt,clr,bg){_simPS_setCell(rr,col,txt,clr,bg);};
 
-      /* ── Riga dopo GAME OVER ── */
       if(gameOver){
         sc('bal','🔴','var(--red)','rgba(248,113,113,.04)');
-        sc('pnl','—','var(--t3)');sc('ddl','—','var(--t3)');
-        sc('con','—','var(--t3)');sc('per','—','var(--t3)');sc('pay','—','var(--t3)');
-        if(row)row.style.background='rgba(248,113,113,.025)';
+        ['pnl','ddl','con','per','pay'].forEach(function(c){sc(c,'—','var(--t3)');});
+        if(_row)_row.style.background='rgba(248,113,113,.025)';
         return;
       }
-
-      /* ── Riga dopo TARGET raggiunto (vuota) ── */
-      if(targetHit&&!has){
+      if(targetHit&&!_has){
         sc('bal','🏁','var(--teal)','rgba(52,211,153,.025)');
-        sc('pnl','—','var(--t3)');sc('ddl','—','var(--t3)');
-        sc('con','—','var(--t3)');sc('per','—','var(--t3)');sc('pay','—','var(--t3)');
-        if(row)row.style.background='rgba(52,211,153,.02)';
+        ['pnl','ddl','con','per','pay'].forEach(function(c){sc(c,'—','var(--t3)');});
+        if(_row)_row.style.background='rgba(52,211,153,.02)';
         return;
       }
-
-      /* ── Riga VUOTA — proiezione grigia ── */
-      if(!has){
+      if(!_has){
         sc('bal','$'+bal.toFixed(0),'var(--t3)');
         sc('pnl','—','var(--t3)');
         sc('ddl','$'+ddLine.toFixed(0),'rgba(248,113,113,.4)');
@@ -13788,125 +13991,128 @@ function _simPS_calc() {
         sc('per','—','var(--t3)');
         var proj=(propPnlCum>0&&rr>=s.minDays)?(propPnlCum*(s.pay/100)):0;
         sc('pay',proj>0?'+$'+proj.toFixed(0):'—',proj>0?'var(--teal)':'var(--t3)');
-        if(row)row.style.background=rr<=s.minDays?'rgba(251,191,36,.02)':'';
+        if(_row)_row.style.background=rr<=s.minDays?'rgba(251,191,36,.02)':'';
         return;
       }
 
-      /* ─────────────────────────────────────────
-         P&L REALE questa riga (non cumulativo)
-         ───────────────────────────────────────── */
-      var rowPropPnl = w*s.propWin  - l*s.propLoss;
-      var rowPersPnl = l*s.hedgeWin - w*s.hedgeLoss;
+      var rowPropPnl=_w*s.propWin-_l*s.propLoss;
+      var rowPersPnl=_l*__hw-_w*__hl;  /* usa hedge win/loss correnti */
 
       propPnlCum+=rowPropPnl;
       persPnlCum+=rowPersPnl;
       bal=s.size+propPnlCum;
-      /* Aggiorna miglior giornata (solo valori positivi) */
-      if(rowPropPnl > bestDayPnl) bestDayPnl = rowPropPnl;
+      if(rowPropPnl>bestDayPnl)bestDayPnl=rowPropPnl;
 
-      /* ─────────────────────────────────────────
-         TRAILING DD
-         DDline = HWM × (1 − DD%/100)
-         HWM sale solo se balance supera il max
-         ───────────────────────────────────────── */
       if(s.isTrail){
         if(bal>hwm){
           hwm=bal;
           var lockThr=s.size+s.propTarget*(s.trailLock/100);
-          if(s.trailLock>0&&hwm>=lockThr){
-            ddLine=s.size*(1-s.maxDD/100); /* Trail Lock: torna fisso */
-          } else {
-            ddLine=hwm*(1-s.maxDD/100);    /* Trailing attivo */
-          }
+          ddLine=(s.trailLock>0&&hwm>=lockThr)?s.size*(1-s.maxDD/100):hwm*(1-s.maxDD/100);
         }
-        /* Se balance scende → HWM e DDline rimangono invariati */
       }
-      /* DD STATICO → ddLine rimane sempre s.size×(1-maxDD%) */
 
-      /* ── CHECK CONSISTENZA ─────────────────────────────────────────
-         Regola: miglior giornata / cons% = totale minimo per prelevare
-         Esempio: bestDay $2000, cons 50% → devi fare almeno $4000 totali
-         Formato: $[cum attuale] = $[minimo richiesto]
-         ROSSO OFF = soglia non ancora raggiunta (normale mentre si traderebbe)
-         VERDE ON  = cumulative >= richiesto → payout sbloccato
-      ─────────────────────────────────────────────────────────────── */
-      var consOk=true, consTxt='—', consClr='var(--t3)', consBg='';
-      if (s.consistency > 0) {
-        /* Minimo richiesto = miglior giorno / (cons% / 100) */
-        var required = bestDayPnl > 0
-          ? Math.ceil(bestDayPnl / (s.consistency / 100))
-          : Math.ceil(s.propTarget * (s.consistency / 100) / (s.consistency / 100));
-        /* Se non c'è ancora nessuna giornata positiva: mostra — */
-        if (bestDayPnl <= 0) {
-          consTxt = '—';
-          consClr = 'var(--t3)';
-        } else if (propPnlCum >= required) {
-          /* ✓ Soglia raggiunta → VERDE ON */
-          consOk  = true;
-          consTxt = '$' + propPnlCum.toFixed(0) + ' = $' + required.toFixed(0) + '  ✓ ON';
-          consClr = 'var(--green)';
-          consBg  = 'rgba(52,211,153,.06)';
+      /* ── CONTROLLO 70% — dopo aver aggiornato propPnlCum ── */
+      if(!gameOver&&!targetHit){
+        var now70=propPnlCum>=thresh70;
+        if(now70&&!above70){
+          above70=true;
+          var newLP=halveLot(lotPersOrig);
+          curHedgeWin =newLP*s.slPips*s.pipVal;
+          curHedgeLoss=newLP*s.tpPips*s.pipVal;
+          insertPS70Banner(rr,true);
+          /* Aggiorna campo calcolatore */
+          var elLH=document.getElementById('mLotsHedge');
+          if(elLH){elLH.value=newLP;elLH.style.outline='2px solid #34D399';elLH.style.background='rgba(52,211,153,.10)';}
+          if(typeof calcPreview==='function')setTimeout(calcPreview,80);
+        } else if(!now70&&above70){
+          above70=false;
+          curHedgeWin =hedgeWinOrig;
+          curHedgeLoss=hedgeLossOrig;
+          insertPS70Banner(rr,false);
+          var elLH2=document.getElementById('mLotsHedge');
+          if(elLH2){elLH2.value=lotPersOrig;elLH2.style.outline='2px solid #F87171';elLH2.style.background='rgba(248,113,113,.08)';
+            setTimeout(function(){elLH2.style.outline='';elLH2.style.background='';},3000);}
+          if(typeof calcPreview==='function')setTimeout(calcPreview,80);
+        }
+      }
+
+      var consOk=true,consTxt='—',consClr='var(--t3)',consBg='';
+      if(s.consistency>0&&bestDayPnl>0){
+        var required=Math.ceil(bestDayPnl/(s.consistency/100));
+        if(propPnlCum>=required){
+          consOk=true;consTxt='$'+propPnlCum.toFixed(0)+' = $'+required.toFixed(0)+'  ✓ ON';
+          consClr='var(--green)';consBg='rgba(52,211,153,.06)';
         } else {
-          /* ✗ Soglia non ancora raggiunta → ROSSO OFF */
-          consOk  = false;
-          consTxt = '$' + propPnlCum.toFixed(0) + ' = $' + required.toFixed(0) + '  ✗ OFF';
-          consClr = 'var(--red)';
-          consBg  = 'rgba(248,113,113,.06)';
+          consOk=false;consTxt='$'+propPnlCum.toFixed(0)+' = $'+required.toFixed(0)+'  ✗ OFF';
+          consClr='var(--red)';consBg='rgba(248,113,113,.06)';
         }
       }
 
-      /* ─────────────────────────────────────────
-         GAME OVER: balance ≤ DD Line
-         ───────────────────────────────────────── */
       if(bal<=ddLine+0.01){
-        gameOver=true;
-        cycleEndRow=rr;
+        gameOver=true;cycleEndRow=rr;
         sc('bal','$'+bal.toFixed(0),'var(--red)','rgba(248,113,113,.14)');
         sc('pnl',_sgn(rowPropPnl)+rowPropPnl.toFixed(0)+'$','var(--red)');
         sc('ddl','$'+ddLine.toFixed(0),'var(--red)');
         sc('con','🔴 BRUCIATA','var(--red)');
         sc('per',_sgn(rowPersPnl)+rowPersPnl.toFixed(0)+'$',rowPersPnl>=0?'var(--green)':'var(--red)');
         sc('pay','$0','var(--t3)');
-        if(row)row.style.background='rgba(248,113,113,.1)';
+        if(_row)_row.style.background='rgba(248,113,113,.1)';
         _simPS_showEndCard('gameover',rr,propPnlCum,persPnlCum,ddLine,bal);
         return;
       }
 
-      /* ─────────────────────────────────────────
-         TARGET RAGGIUNTO: propPnl ≥ propTarget
-         (solo dopo giorni minimi)
-         ───────────────────────────────────────── */
       var payoutNow=(propPnlCum>0&&rr>=s.minDays)?(propPnlCum*(s.pay/100)):0;
       if(!targetHit&&propPnlCum>=s.propTarget&&rr>=s.minDays){
-        targetHit=true;
-        cycleEndRow=rr;
+        targetHit=true;cycleEndRow=rr;
       }
 
-      /* ── Visualizzazione normale ── */
-      sc('bal','$'+bal.toFixed(0),                               bal>=s.size?'var(--green)':'var(--red)');
-      sc('pnl',_sgn(rowPropPnl)+rowPropPnl.toFixed(0)+'$',      rowPropPnl>=0?'var(--green)':'var(--red)');
-      sc('ddl','$'+ddLine.toFixed(0),                           'var(--red)');
+      sc('bal','$'+bal.toFixed(0),                       bal>=s.size?'var(--green)':'var(--red)');
+      sc('pnl',_sgn(rowPropPnl)+rowPropPnl.toFixed(0)+'$',rowPropPnl>=0?'var(--green)':'var(--red)');
+      sc('ddl','$'+ddLine.toFixed(0),'var(--red)');
       sc('con',consTxt,consClr,consBg);
-      sc('per',_sgn(rowPersPnl)+rowPersPnl.toFixed(0)+'$',      rowPersPnl>=0?'var(--green)':'var(--red)');
+      sc('per',_sgn(rowPersPnl)+rowPersPnl.toFixed(0)+'$',rowPersPnl>=0?'var(--green)':'var(--red)');
       sc('pay',payoutNow>0?'+$'+payoutNow.toFixed(0):(rr<s.minDays?'⏳':'$0'),
-         payoutNow>0?'var(--teal)':'var(--t3)');
+        payoutNow>0?'var(--teal)':'var(--t3)');
 
-      if(row){
-        if(targetHit&&rr===cycleEndRow)     row.style.background='rgba(52,211,153,.1)';
-        else if(!consOk)                    row.style.background='rgba(248,113,113,.04)';
-        else if(rr>=s.minDays)              row.style.background='rgba(52,211,153,.025)';
-        else                                row.style.background='rgba(251,191,36,.025)';
+      if(_row){
+        if(targetHit&&rr===cycleEndRow)  _row.style.background='rgba(52,211,153,.1)';
+        else if(!consOk)                 _row.style.background='rgba(248,113,113,.04)';
+        else if(rr>=s.minDays)           _row.style.background='rgba(52,211,153,.025)';
+        else                             _row.style.background='rgba(251,191,36,.025)';
       }
 
-      /* Card target raggiunto */
       if(targetHit&&rr===cycleEndRow){
         _simPS_showEndCard('target',rr,propPnlCum,persPnlCum,ddLine,bal);
       }
 
-    })(r); /* fine IIFE */
-  } /* fine for */
+    })(r,w,l,has,row,_hw,_hl);
+  }
 
-  /* ── Aggiorna KPI header ── */
+  /* ── Rivela riga successiva dinamicamente ── */
+  (function(){
+    var lastFilled=-1;
+    for(var j=0;j<s.rows;j++){
+      var dj=s.data[j]||{};
+      if(dj.w!==''||dj.l!=='')lastFilled=j;
+    }
+    var revealUpTo=Math.min(s.rows-1,lastFilled+2);
+    if(revealUpTo<1)revealUpTo=1;
+    for(var k=0;k<s.rows;k++){
+      var el=document.getElementById('simPS_row_'+(k+1));
+      if(el)el.style.display=k<=revealUpTo?'':'none';
+    }
+    /* Auto-scroll all'ultima riga con dati */
+    if(lastFilled>=0){
+      var wrap=document.getElementById('simTableWrap');
+      var lastRow=document.getElementById('simPS_row_'+(lastFilled+1));
+      if(wrap&&lastRow)setTimeout(function(){
+        var offset=lastRow.offsetTop-wrap.offsetTop;
+        if(offset>wrap.scrollTop+wrap.clientHeight-60)wrap.scrollTop=offset-wrap.clientHeight+80;
+      },50);
+    }
+  })();
+
+  /* ── KPI header ── */
   var payFin=propPnlCum>0?(propPnlCum*(s.pay/100)):0;
   var netFin=payFin+persPnlCum-s.cost;
   function kSet(id,v,c){var el=document.getElementById(id);if(el){el.textContent=v;el.style.color=c||'var(--t)';}}
@@ -13916,6 +14122,9 @@ function _simPS_calc() {
   kSet('simKpiPersCum',_sgn(persPnlCum)+persPnlCum.toFixed(0)+'$',persPnlCum>=0?'var(--green)':'var(--red)');
   kSet('simKpiPayout', payFin>0?'+$'+payFin.toFixed(0):'$0',      payFin>0?'var(--teal)':'var(--t3)');
   kSet('simKpiNetto',  _sgn(netFin)+netFin.toFixed(0)+'$',         netFin>=0?'var(--green)':'var(--red)');
+
+  /* Salva dati trade in localStorage */
+  _saveSimData();
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -13987,30 +14196,90 @@ function _simPS_showEndCard(type,row,propPnl,persPnl,ddLine,bal){
 /* ═══════════════════════════════════════════════════════════════════
    8. SIM RESET — routing per modalità
    ═══════════════════════════════════════════════════════════════════ */
+/* ── Sincronizza _iSim.data con il simulatore modale attivo ─────────
+   Dopo questa chiamata, modifiche a _iSim.data[i] modificano anche
+   _simCH1.data[i] (o _simPS.data[i]) e viceversa — stesso array.
+──────────────────────────────────────────────────────────────────── */
+function _syncSimData() {
+  var sess = (typeof stratMode !== 'undefined') ? stratMode : 'personal';
+  if (sess === 'challenge_1step') {
+    if (_simCH1.data && _simCH1.data.length) {
+      _iSim.data = _simCH1.data;   /* stessa referenza → sync automatico */
+    }
+  } else if (sess === 'personal') {
+    if (_simPS.data && _simPS.data.length) {
+      _iSim.data = _simPS.data;
+    }
+  }
+  _iSim.session = sess;
+}
+
 function simReset(){
   if(typeof stratMode!=='undefined'&&stratMode==='challenge_1step'){
-    for(var i=0;i<_simCH1.rows;i++){
-      _simCH1.data[i]={w:'',l:''};
-      var wE=document.getElementById('simCH1_w_'+(i+1)); if(wE)wE.value='';
-      var lE=document.getElementById('simCH1_l_'+(i+1)); if(lE)lE.value='';
-    }
+    /* Ricrea array dati pulito */
+    _simCH1.data = [];
+    for(var i=0;i<_simCH1.rows;i++) _simCH1.data.push({w:'',l:''});
+    /* FIX: azzera cache key così _openSimChallenge1 rigenera sempre i dati */
+    _simCH1_cacheKey = '';
+    /* Sincronizza inline sim */
+    _iSim.data = _simCH1.data;
+    _iSim.session = 'challenge_1step';
+    /* Azzera stato 70% */
+    _simCH1._above70Active = false;
+    _simCH1._lotPersHalved = 0;
+    /* FIX: rimuovi TUTTI i dati simulatore dal localStorage (incluso isim) */
+    try{localStorage.removeItem('ph_ch1_data');}catch(e){}
+    try{localStorage.removeItem('ph_isim_data');}catch(e){}
+    try{localStorage.removeItem('ph_isim_session');}catch(e){}
+    /* Rimuovi card fine ciclo e banner */
     var oldC=document.getElementById('_simCH1_cycleCard'); if(oldC)oldC.remove();
-    _simCH1_calc();
-  } else if(typeof stratMode!=='undefined'&&stratMode==='personal'){
-    for(var i=0;i<_simPS.rows;i++){
-      _simPS.data[i]={w:'',l:''};
-      var wE=document.getElementById('simPS_w_'+(i+1)); if(wE)wE.value='';
-      var lE=document.getElementById('simPS_l_'+(i+1)); if(lE)lE.value='';
+    document.querySelectorAll('._simCH1_banner70').forEach(function(b){b.remove();});
+    /* Ricostruisci tabella modale (se aperta) e ricalcola */
+    if(document.getElementById('simModal') &&
+       document.getElementById('simModal').style.display !== 'none') {
+      _simCH1_buildTable();
     }
+    /* FIX: non chiamare _simCH1_calc() qui perché richiama _saveSimData()
+       che riscriverebbe subito i dati appena cancellati dal localStorage.
+       Aggiorna solo i KPI a zero e ricostruisci l'inline sim. */
+    var kpiIds=['simKpiBalance','simKpiDdline','simKpiPropCum','simKpiPersCum','simKpiPayout','simKpiNetto'];
+    kpiIds.forEach(function(id){var e=document.getElementById(id);if(e){e.textContent='—';e.style.color='var(--t3)';}});
+    /* Aggiorna inline sim e preview */
+    setTimeout(function(){
+      _renderInlineSim();
+      if(typeof calcPreview==='function') calcPreview();
+    }, 30);
+
+  } else if(typeof stratMode!=='undefined'&&stratMode==='personal'){
+    _simPS.data = [];
+    for(var i=0;i<_simPS.rows;i++) _simPS.data.push({w:'',l:''});
+    /* FIX: azzera cache key */
+    if(typeof _simPS_cacheKey !== 'undefined') _simPS_cacheKey = '';
+    _iSim.data = _simPS.data;
+    _iSim.session = 'personal';
+    /* FIX: rimuovi tutti i dati simulatore dal localStorage */
+    try{localStorage.removeItem('ph_ps_data');}catch(e){}
+    try{localStorage.removeItem('ph_isim_data');}catch(e){}
+    try{localStorage.removeItem('ph_isim_session');}catch(e){}
     var old=document.getElementById('_simPS_cycleCard'); if(old)old.remove();
-    _simPS_calc();
+    document.querySelectorAll('._simPS_banner70').forEach(function(b){b.remove();});
+    if(document.getElementById('simModal') &&
+       document.getElementById('simModal').style.display !== 'none') {
+      _simPS_buildTable();
+    }
+    /* FIX: azzera KPI senza chiamare _simPS_calc che riscrive localStorage */
+    var kpiIdsPS=['simKpiBalance','simKpiDdline','simKpiPropCum','simKpiPersCum','simKpiPayout','simKpiNetto'];
+    kpiIdsPS.forEach(function(id){var e=document.getElementById(id);if(e){e.textContent='—';e.style.color='var(--t3)';}});
+    setTimeout(function(){ _renderInlineSim(); }, 30);
+
   } else {
     for(var j=0;j<(_simState.rows||31);j++){
       if(_simState.data&&_simState.data[j])_simState.data[j]={w:'',l:''};
       var wE2=document.getElementById('simW_'+(j+1)); if(wE2)wE2.value='';
       var lE2=document.getElementById('simL_'+(j+1)); if(lE2)lE2.value='';
     }
-    if(typeof simCalc==='function')simCalc();
+    if(typeof simCalc==='function') simCalc();
+    setTimeout(function(){ _renderInlineSim(); }, 30);
   }
 }
 
@@ -14043,7 +14312,10 @@ var _simCH1 = {
   slPips:100, tpPips:100, lots:0, lotPers:0, pipVal:10, asset:'GOLD',
   propWin:0, propLoss:0, persWin:0, persLoss:0,
   propTarget:0, maxDDusd:0, consLimit:0,
-  rows:31, data:[]
+  rows:31, data:[],
+  /* Stato 70% persistente — usato anche da _ch1RebuildPreview */
+  _above70Active: false,
+  _lotPersHalved: 0
 };
 var _simCH1_cacheKey = '';
 
@@ -14204,6 +14476,9 @@ function _openSimChallenge1() {
   }
 
   _simCH1_setupModal();
+  /* Sync: inline sim usa stesso array dati del modale */
+  _iSim.data    = _simCH1.data;
+  _iSim.session = 'challenge_1step';
   document.getElementById('simModal').style.display = 'block';
 }
 /* ════════════════════════════════════════════════════════════════════
@@ -14284,6 +14559,18 @@ function _simCH1_buildTable() {
   var s = _simCH1;
   var tbody = document.getElementById('simTbody');
   if (!tbody) return;
+  /* Stile sticky per header */
+  var thead = document.querySelector('#simTable thead');
+  if (thead) thead.style.cssText = 'position:sticky;top:0;z-index:2';
+
+  /* Calcola quante righe mostrare */
+  var lastFilled = -1;
+  for (var j = 0; j < s.rows; j++) {
+    var dj = s.data[j] || { w:'', l:'' };
+    if (dj.w !== '' || dj.l !== '') lastFilled = j;
+  }
+  var showUpTo = Math.min(s.rows-1, lastFilled+2);
+  if (showUpTo < 1) showUpTo = 1;
 
   var html = '';
   for (var i = 0; i < s.rows; i++) {
@@ -14292,8 +14579,9 @@ function _simCH1_buildTable() {
     var isMin = r <= s.minDays;
     var icon  = isMin ? '⏳' : '✓';
     var ic    = isMin ? 'var(--amber)' : 'var(--green)';
+    var hidden = i > showUpTo ? 'display:none;' : '';
 
-    html += '<tr id="simCH1_row_' + r + '">';
+    html += '<tr id="simCH1_row_' + r + '" style="'+hidden+'">';
 
     /* Trade # */
     html += '<td style="padding:4px 8px;text-align:center;font-size:11px;'+
@@ -14341,70 +14629,158 @@ function _simCH1_calc() {
   var s = _simCH1;
   if (!s.size) return;
 
-  var old = document.getElementById('_simCH1_cycleCard');
-  if (old) old.remove();
+  /* ── Pulisci card di fine ciclo e banner 70% precedenti ── */
+  var oldCard = document.getElementById('_simCH1_cycleCard');
+  if (oldCard) oldCard.remove();
+  document.querySelectorAll('._simCH1_banner70').forEach(function(b){ b.remove(); });
 
+  /* ── Stato simulazione ── */
   var hwm         = s.size;
   var bal         = s.size;
   var ddLine      = s.size * (1 - s.maxDD / 100);
   var propPnlCum  = 0;
-  var persPnlCum  = 0;    /* P&L REALE cumulativo conto personale */
+  var persPnlCum  = 0;
   var gameOver    = false;
   var targetHit   = false;
   var cycleEndRow = -1;
   var bestDayPnl  = 0;
 
+  /* ── Lotti ORIGINALI — salvati all'inizio, non cambiano mai ── */
+  var lotsOrig    = s.lots;
+  var lotPersOrig = s.lotPers;
+
+  /* ── Lotti CORRENTI — cambiano al 70% ── */
+  var curLots    = lotsOrig;
+  var curLotPers = lotPersOrig;
+
+  /* ── Profitti/perdite per trade (aggiornati quando cambiano i lotti) ── */
+  var propWin  = curLots    * s.slPips * s.pipVal;
+  var propLoss = curLots    * s.slPips * s.pipVal;
+  var persWin  = curLotPers * s.slPips * s.pipVal;
+  var persLoss = curLotPers * s.slPips * s.pipVal;
+
+  /* ── Flag stato 70% ── */
+  var above70 = false;
+
+  /* ── Soglia 70% ── */
+  var thresh70 = s.propTarget * 0.70;
+
+  /* ── Helper: dimezza lotto secondo le regole ── */
+  function halveLot(l) {
+    var r = Math.round(l * 100);
+    if (r >= 10) return Math.round(r / 2) / 100;  /* 0.10→0.05, 0.20→0.10 … */
+    if (r >= 5)  return 0.02;                       /* 0.05→0.02 */
+    return 0.01;
+  }
+
+  /* ── Helper: inserisce banner 70% come riga della tabella DOPO la riga rr ── */
+  function insert70Banner(rr, isGreen) {
+    var refRow = document.getElementById('simCH1_row_' + rr);
+    if (!refRow) return;
+    var existing = document.getElementById('_simCH1_b70_' + rr);
+    if (existing) existing.remove();
+
+    var bg  = isGreen ? 'rgba(52,211,153,.14)'  : 'rgba(248,113,113,.14)';
+    var bdr = isGreen ? '#34D399'               : '#F87171';
+    var clr = isGreen ? '#34D399'               : '#F87171';
+
+    var newPers = isGreen ? halveLot(lotPersOrig) : lotPersOrig;
+    var newPersWinLoss = (newPers * s.slPips * s.pipVal).toFixed(0);
+    var origPersWinLoss = (lotPersOrig * s.slPips * s.pipVal).toFixed(0);
+
+    var msg = isGreen
+      ? '🟢&nbsp;&nbsp;70% DEL TARGET RAGGIUNTO — RICALCOLO LOTTI&nbsp;&nbsp;|&nbsp;&nbsp;'
+        + 'Prop mantiene <b style="color:var(--teal)">' + lotsOrig + ' lot</b>'
+        + '&nbsp;&nbsp;→&nbsp;&nbsp;'
+        + 'Personale dimezzato: <b style="color:var(--violet)">' + newPers + ' lot</b>'
+        + ' <span style="font-size:10px;color:var(--t3)">(±$' + newPersWinLoss + '/trade)</span>'
+      : '🔴&nbsp;&nbsp;SCESO SOTTO 70% — LOTTI RIPRISTINATI&nbsp;&nbsp;|&nbsp;&nbsp;'
+        + 'Prop <b style="color:var(--teal)">' + lotsOrig + ' lot</b>'
+        + '&nbsp;&nbsp;|&nbsp;&nbsp;'
+        + 'Personale torna a <b style="color:var(--violet)">' + lotPersOrig + ' lot</b>'
+        + ' <span style="font-size:10px;color:var(--t3)">(±$' + origPersWinLoss + '/trade)</span>';
+
+    var tr = document.createElement('tr');
+    tr.className = '_simCH1_banner70';
+    tr.id = '_simCH1_b70_' + rr;
+    tr.innerHTML =
+      '<td colspan="10" style="padding:0">'
+      + '<div style="'
+        + 'background:' + bg + ';'
+        + 'border-top:2.5px solid ' + bdr + ';'
+        + 'border-bottom:2.5px solid ' + bdr + ';'
+        + 'padding:10px 18px;'
+        + 'display:flex;align-items:center;justify-content:center;gap:10px'
+      + '">'
+        + '<div style="'
+          + 'font-size:12px;font-weight:800;font-family:var(--fd);'
+          + 'color:' + clr + ';text-align:center;letter-spacing:.03em'
+        + '">' + msg + '</div>'
+      + '</div>'
+      + '</td>';
+
+    refRow.after(tr);
+  }
+
+  /* ── Helper segno ── */
   function sgn(n) { return n >= 0 ? '+' : ''; }
 
+  /* ══════════════════════════════════════════════════════
+     LOOP PRINCIPALE
+  ══════════════════════════════════════════════════════ */
   for (var i = 0; i < s.rows; i++) {
     var d   = s.data[i] || { w:'', l:'' };
     var w   = parseInt(d.w) || 0;
     var l   = parseInt(d.l) || 0;
     var has = (d.w !== '' && d.w !== null) || (d.l !== '' && d.l !== null);
 
-    /* ── IIFE per catturare correttamente r, w, l, has e tutti i cumulativi ── */
-    (function(rr, ww, ll, hasRow) {
+    /* ── IIFE: cattura rr, ww, ll, hasRow per evitare closure bugs ── */
+    (function(rr, ww, ll, hasRow,
+              _propWin, _propLoss, _persWin, _persLoss) {
+
       var row = document.getElementById('simCH1_row_' + rr);
       function sc(col, txt, clr, bg) { _simCH1_setCell(rr, col, txt, clr, bg); }
 
-      /* ── Dopo game over ── */
+      /* ── Già game over: griglia grigia ── */
       if (gameOver) {
         sc('bal','🔴','var(--red)','rgba(248,113,113,.04)');
         ['pnl','ddl','con','per','pay','net'].forEach(function(c){sc(c,'—','var(--t3)');});
-        if(row) row.style.background='rgba(248,113,113,.025)';
-        return;
-      }
-      /* ── Dopo target raggiunto (vuota) ── */
-      if (targetHit && !hasRow) {
-        sc('bal','🏁','#60a5fa','rgba(96,165,250,.025)');
-        ['pnl','ddl','con','per','pay','net'].forEach(function(c){sc(c,'—','var(--t3)');});
-        if(row) row.style.background='rgba(96,165,250,.02)';
+        if (row) row.style.background = 'rgba(248,113,113,.025)';
         return;
       }
 
-      /* ── Riga VUOTA: mostra running total attuale ── */
+      /* ── Già target: griglia blu chiaro ── */
+      if (targetHit && !hasRow) {
+        sc('bal','🏁','#60a5fa','rgba(96,165,250,.025)');
+        ['pnl','ddl','con','per','pay','net'].forEach(function(c){sc(c,'—','var(--t3)');});
+        if (row) row.style.background = 'rgba(96,165,250,.02)';
+        return;
+      }
+
+      /* ── Riga vuota: mostra proiezione corrente ── */
       if (!hasRow) {
-        var netProj = -s.cost + persPnlCum;  /* netto corrente senza payout */
+        var netProj = -s.cost + persPnlCum;
         sc('bal','$'+bal.toFixed(0),'var(--t3)');
         sc('pnl','—','var(--t3)');
         sc('ddl','$'+ddLine.toFixed(0),'rgba(248,113,113,.35)');
         sc('con','—','var(--t3)');
-        /* PERS. REALE cumulativo: mostra quanto è stato speso/guadagnato fin qui sul personale */
-        sc('per', persPnlCum!==0 ? (sgn(persPnlCum)+'$'+Math.abs(persPnlCum).toFixed(0)) : '—',
+        sc('per', persPnlCum !== 0
+          ? (sgn(persPnlCum)+'$'+Math.abs(persPnlCum).toFixed(0))
+          : '—',
           persPnlCum>0?'var(--green)':persPnlCum<0?'var(--red)':'var(--t3)');
         sc('pay','—','var(--t3)');
-        sc('net',(netProj>=0?'+':'')+netProj.toFixed(0)+'$',netProj>=0?'var(--green)':'var(--amber)');
-        if(row) row.style.background = rr<=s.minDays?'rgba(251,191,36,.02)':'';
+        sc('net',(netProj>=0?'+':'')+netProj.toFixed(0)+'$',
+          netProj>=0?'var(--green)':'var(--amber)');
+        if (row) row.style.background = rr<=s.minDays?'rgba(251,191,36,.02)':'';
         return;
       }
 
-      /* ── P&L reale questa riga ──
-         Prop BUY (virtuale):
-           WIN  → prop +propWin,  personale -persLoss (pers SELL → perde)
-           STOP → prop -propLoss, personale +persWin  (pers SELL → guadagna)
-      ── */
-      var rowPropPnl = ww * s.propWin  - ll * s.propLoss;
-      var rowPersPnl = ll * s.persWin  - ww * s.persLoss;
+      /* ────────────────────────────────────────────────
+         Calcola P&L riga usando i lotti CORRENTI
+         (passati come parametri all'IIFE per snapshot)
+      ──────────────────────────────────────────────── */
+      var rowPropPnl = ww * _propWin  - ll * _propLoss;
+      var rowPersPnl = ll * _persWin  - ww * _persLoss;
 
       propPnlCum += rowPropPnl;
       persPnlCum += rowPersPnl;
@@ -14412,39 +14788,83 @@ function _simCH1_calc() {
 
       if (rowPropPnl > bestDayPnl) bestDayPnl = rowPropPnl;
 
-      /* ── Trailing DD: DDline = HWM × (1 - DD%/100) ── */
+      /* ── Trailing DD ── */
       if (s.isTrail && bal > hwm) {
         hwm = bal;
         var lockThr = s.size + s.propTarget * (s.trailLock / 100);
         ddLine = (s.trailLock > 0 && hwm >= lockThr)
           ? s.size * (1 - s.maxDD / 100)
-          : hwm * (1 - s.maxDD / 100);
+          : hwm   * (1 - s.maxDD / 100);
       }
 
-      /* ── Consistenza: miglior giorno / cons% = minimo richiesto ── */
+      /* ── Consistenza ── */
       var consTxt='—', consClr='var(--t3)', consBg='';
-      if (s.consistency > 0) {
-        var required = bestDayPnl > 0
-          ? Math.ceil(bestDayPnl / (s.consistency / 100)) : 0;
-        if (required > 0) {
-          if (propPnlCum >= required) {
-            consTxt='$'+propPnlCum.toFixed(0)+' = $'+required.toFixed(0)+'  ✓ ON';
-            consClr='var(--green)'; consBg='rgba(52,211,153,.06)';
-          } else {
-            consTxt='$'+propPnlCum.toFixed(0)+' = $'+required.toFixed(0)+'  ✗ OFF';
-            consClr='var(--red)'; consBg='rgba(248,113,113,.06)';
-          }
+      if (s.consistency > 0 && bestDayPnl > 0) {
+        var required = Math.ceil(bestDayPnl / (s.consistency / 100));
+        if (propPnlCum >= required) {
+          consTxt='$'+propPnlCum.toFixed(0)+' ≥ $'+required.toFixed(0)+'  ✓';
+          consClr='var(--green)'; consBg='rgba(52,211,153,.06)';
+        } else {
+          consTxt='$'+propPnlCum.toFixed(0)+' < $'+required.toFixed(0)+'  ✗';
+          consClr='var(--red)'; consBg='rgba(248,113,113,.06)';
         }
       }
 
-      /* ── NETTO = -costo + P&L personale cumulativo + payout (solo se target hit) ──
-         Questo è il VERO bilancio: quanto abbiamo speso/guadagnato in totale
-         dal momento che abbiamo iniziato la challenge.
-         Progredisce riga per riga → più trade passano, più è preciso.
-      ── */
+      /* ── Payout e netto ── */
       var payoutNow = (propPnlCum >= s.propTarget && rr >= s.minDays && s.pay > 0)
         ? propPnlCum * (s.pay / 100) : 0;
       var netNow = -s.cost + persPnlCum + payoutNow;
+
+      /* ── CONTROLLO 70% — eseguito CON propPnlCum già aggiornato ──
+         Avviene dopo il calcolo della riga corrente, quindi il banner
+         appare SOTTO questa riga e i nuovi lotti sono usati dalla
+         riga SUCCESSIVA (curLots/curLotPers vengono aggiornati qui,
+         la prossima iterazione li passerà all'IIFE).
+      ── */
+      if (!gameOver && !targetHit) {
+        var now70 = propPnlCum >= thresh70;
+
+        if (now70 && !above70) {
+          /* ───── SUPERATO IL 70% ───── */
+          above70    = true;
+          curLotPers = halveLot(lotPersOrig);
+          /* Aggiorna valori per prossime righe */
+          persWin  = curLotPers * s.slPips * s.pipVal;
+          persLoss = curLotPers * s.slPips * s.pipVal;
+
+          /* Salva stato persistente → _ch1RebuildPreview lo leggerà */
+          _simCH1._above70Active = true;
+          _simCH1._lotPersHalved = curLotPers;
+
+          /* Pannello VERDE nel simulatore */
+          insert70Banner(rr, true);
+
+          /* Aggiorna campo calcolatore ch1LotsPers */
+          var elLP = document.getElementById('ch1LotsPers');
+          if (elLP) { elLP.value = curLotPers; elLP.style.outline='2px solid #34D399'; elLP.style.background='rgba(52,211,153,.10)'; }
+          /* Ricalcola preview calcolatore — ora userà _simCH1._above70Active */
+          if (typeof calcPreview === 'function') setTimeout(calcPreview, 80);
+
+        } else if (!now70 && above70) {
+          /* ───── SCESO SOTTO IL 70% ───── */
+          above70    = false;
+          curLotPers = lotPersOrig;
+          persWin    = curLotPers * s.slPips * s.pipVal;
+          persLoss   = curLotPers * s.slPips * s.pipVal;
+
+          /* Ripristina stato persistente */
+          _simCH1._above70Active = false;
+          _simCH1._lotPersHalved = 0;
+
+          /* Pannello ROSSO nel simulatore */
+          insert70Banner(rr, false);
+
+          /* Ripristina campo calcolatore ch1LotsPers */
+          var elLP2 = document.getElementById('ch1LotsPers');
+          if (elLP2) { elLP2.value = ''; elLP2.style.outline=''; elLP2.style.background=''; }
+          if (typeof calcPreview === 'function') setTimeout(calcPreview, 80);
+        }
+      }
 
       /* ── Game over ── */
       if (bal <= ddLine + 0.01) {
@@ -14453,13 +14873,12 @@ function _simCH1_calc() {
         sc('pnl',sgn(rowPropPnl)+rowPropPnl.toFixed(0)+'$','var(--red)');
         sc('ddl','$'+ddLine.toFixed(0),'var(--red)');
         sc('con','🔴 PROP BRUCIATA','var(--red)');
-        /* PERS. REALE: mostra cumulativo (quanto ho guadagnato/perso in totale) */
         sc('per',sgn(persPnlCum)+'$'+Math.abs(persPnlCum).toFixed(0),
           persPnlCum>=0?'var(--green)':'var(--red)');
         sc('pay','—','var(--t3)');
         sc('net',(netNow>=0?'+':'')+netNow.toFixed(0)+'$',
           netNow>=0?'var(--green)':'var(--red)','rgba(248,113,113,.07)');
-        if(row) row.style.background='rgba(248,113,113,.1)';
+        if (row) row.style.background = 'rgba(248,113,113,.1)';
         _simCH1_showEndCard('gameover', rr, propPnlCum, persPnlCum, ddLine, bal, payoutNow, netNow);
         return;
       }
@@ -14471,10 +14890,10 @@ function _simCH1_calc() {
 
       /* ── Visualizzazione normale ── */
       sc('bal','$'+bal.toFixed(0), bal>=s.size?'var(--green)':'var(--red)');
-      sc('pnl',sgn(rowPropPnl)+rowPropPnl.toFixed(0)+'$', rowPropPnl>=0?'var(--green)':'var(--red)');
+      sc('pnl',sgn(rowPropPnl)+rowPropPnl.toFixed(0)+'$',
+        rowPropPnl>=0?'var(--green)':'var(--red)');
       sc('ddl','$'+ddLine.toFixed(0),'var(--red)');
       sc('con',consTxt,consClr,consBg);
-      /* PERS. REALE cumulativo: permette di vedere l'accumulo in tempo reale */
       sc('per',sgn(persPnlCum)+'$'+Math.abs(persPnlCum).toFixed(0),
         persPnlCum>0?'var(--green)':persPnlCum<0?'var(--red)':'var(--t3)');
       sc('pay',payoutNow>0?'+$'+payoutNow.toFixed(0):(rr<s.minDays?'⏳':'—'),
@@ -14492,7 +14911,11 @@ function _simCH1_calc() {
         _simCH1_showEndCard('target', rr, propPnlCum, persPnlCum, ddLine, bal, payoutNow, netNow);
       }
 
-    })(i+1, w, l, has);
+    })(i+1, w, l, has,
+       propWin, propLoss, persWin, persLoss);
+    /* ↑ Passa snapshot dei lotti CORRENTI all'IIFE di questa riga.
+         Se durante la riga il 70% viene superato, persWin/persLoss
+         vengono aggiornati per la riga SUCCESSIVA.                */
   }
 
   /* ── KPI finali ── */
@@ -14500,12 +14923,47 @@ function _simCH1_calc() {
   var netFin = -s.cost + persPnlCum + payFin;
   function sgn2(n){return n>=0?'+':'';}
   function kSet(id,v,c){var e=document.getElementById(id);if(e){e.textContent=v;e.style.color=c||'var(--t)';}}
-  kSet('simKpiBalance','$'+bal.toFixed(0),     bal>=s.size?'var(--green)':'var(--red)');
-  kSet('simKpiDdline', '$'+ddLine.toFixed(0),  'var(--red)');
-  kSet('simKpiPropCum',sgn2(propPnlCum)+propPnlCum.toFixed(0)+'$',propPnlCum>=0?'var(--green)':'var(--red)');
-  kSet('simKpiPersCum',sgn2(persPnlCum)+'$'+Math.abs(persPnlCum).toFixed(0),persPnlCum>0?'var(--green)':persPnlCum<0?'var(--red)':'var(--t3)');
-  kSet('simKpiPayout', payFin>0?'+$'+payFin.toFixed(0):'—', payFin>0?'#60a5fa':'var(--t3)');
-  kSet('simKpiNetto',  (netFin>=0?'+':'')+netFin.toFixed(0)+'$', netFin>=0?'var(--green)':'var(--amber)');
+  kSet('simKpiBalance','$'+bal.toFixed(0),      bal>=s.size?'var(--green)':'var(--red)');
+  kSet('simKpiDdline', '$'+ddLine.toFixed(0),   'var(--red)');
+  kSet('simKpiPropCum',sgn2(propPnlCum)+propPnlCum.toFixed(0)+'$',
+    propPnlCum>=0?'var(--green)':'var(--red)');
+  kSet('simKpiPersCum',sgn2(persPnlCum)+'$'+Math.abs(persPnlCum).toFixed(0),
+    persPnlCum>0?'var(--green)':persPnlCum<0?'var(--red)':'var(--t3)');
+  kSet('simKpiPayout', payFin>0?'+$'+payFin.toFixed(0):'—',
+    payFin>0?'#60a5fa':'var(--t3)');
+  kSet('simKpiNetto',  (netFin>=0?'+':'')+netFin.toFixed(0)+'$',
+    netFin>=0?'var(--green)':'var(--amber)');
+
+  /* Salva stato persistente 70% */
+  _simCH1._above70Active = above70;
+  if (!above70) _simCH1._lotPersHalved = 0;
+
+  /* Salva dati trade in localStorage */
+  _saveSimData();
+
+  /* ── Rivela riga successiva dinamicamente + auto-scroll ── */
+  (function(){
+    var s2=_simCH1;
+    var lastFilled=-1;
+    for(var j=0;j<s2.rows;j++){
+      var dj=s2.data[j]||{};
+      if(dj.w!==''||dj.l!=='')lastFilled=j;
+    }
+    var revealUpTo=Math.min(s2.rows-1,lastFilled+2);
+    if(revealUpTo<1)revealUpTo=1;
+    for(var k=0;k<s2.rows;k++){
+      var el=document.getElementById('simCH1_row_'+(k+1));
+      if(el)el.style.display=k<=revealUpTo?'':'none';
+    }
+    if(lastFilled>=0){
+      var wrap=document.getElementById('simTableWrap');
+      var lastRow=document.getElementById('simCH1_row_'+(lastFilled+1));
+      if(wrap&&lastRow)setTimeout(function(){
+        var off=lastRow.offsetTop-wrap.offsetTop;
+        if(off>wrap.scrollTop+wrap.clientHeight-60)wrap.scrollTop=off-wrap.clientHeight+80;
+      },50);
+    }
+  })();
 }
 /* ════════════════════════════════════════════════════════════════════
    END CARD — Challenge 1 Step
@@ -14604,26 +15062,38 @@ _renderChallenge1 = function(box, size, cost, maxDD, ddd, days, pay, cons, sl, t
   var dailyDDusd = size * (ddd    / 100);
   var hasCons    = cons > 0 && cons < 100;
 
-  /* Lotto prop */
-  var tgtGiorno = tgtUsd / Math.max(1, days);
-  var lotByD    = (dailyDDusd * 0.90) / (sl * pv);
-  var lotByT    = tgtGiorno / (tp * pv);
-  var penalty   = 1.0;
-  if (isTrail && hasCons) {
-    penalty = cons<=25?0.30:cons<=35?0.40:cons<=50?0.55:cons<=70?0.75:0.90;
-  } else if (isTrail) { penalty=0.75; } else if (hasCons&&cons<=30) { penalty=0.70; }
-  var lot = Math.round(Math.min(lotByD, lotByT) * penalty * 100) / 100;
-  if (lot < 0.01) lot = 0.01;
+  /* Lotto prop: preferisce manuale ch1Lots se inserito */
+  var ch1LotsM = parseFloat(document.getElementById('ch1Lots')?.value) || 0;
+  var lot;
+  if (ch1LotsM >= 0.01) {
+    lot = Math.round(ch1LotsM * 100) / 100;
+  } else {
+    var tgtGiorno = tgtUsd / Math.max(1, days);
+    var lotByD    = (dailyDDusd * 0.90) / (sl * pv);
+    var lotByT    = tgtGiorno / (tp * pv);
+    var penalty   = 1.0;
+    if (isTrail && hasCons) {
+      penalty = cons<=25?0.30:cons<=35?0.40:cons<=50?0.55:cons<=70?0.75:0.90;
+    } else if (isTrail) { penalty=0.75; } else if (hasCons&&cons<=30) { penalty=0.70; }
+    lot = Math.round(Math.min(lotByD, lotByT) * penalty * 100) / 100;
+    if (lot < 0.01) lot = 0.01;
+  }
 
   var tradeAmt = lot * sl * pv;
   var nLossMax = tradeAmt>0 ? Math.floor(maxDDusd/tradeAmt) : 10;
   if (nLossMax<1) nLossMax=1;
   var winsNeed = tradeAmt>0 ? Math.ceil(tgtUsd/tradeAmt) : 10;
 
-  /* Lotto personale bilanciato */
-  var lotPers = (cost * (covPct/100)) / (nLossMax * sl * pv);
-  lotPers = Math.round(lotPers * 100) / 100;
-  if (lotPers < 0.01) lotPers = 0.01;
+  /* Lotto personale: preferisce manuale ch1LotsPers se inserito */
+  var ch1LotsPersM = parseFloat(document.getElementById('ch1LotsPers')?.value) || 0;
+  var lotPers;
+  if (ch1LotsPersM >= 0.01) {
+    lotPers = Math.round(ch1LotsPersM * 100) / 100;
+  } else {
+    lotPers = (cost * (covPct/100)) / (nLossMax * sl * pv);
+    lotPers = Math.round(lotPers * 100) / 100;
+    if (lotPers < 0.01) lotPers = 0.01;
+  }
 
   var persPerTrade  = lotPers * sl * pv;
   var propPerTrade  = lot * sl * pv;
@@ -14726,95 +15196,489 @@ _renderChallenge1 = function(box, size, cost, maxDD, ddd, days, pay, cons, sl, t
     if (typeof stratMode !== 'undefined' && stratMode === 'challenge_1step') {
       try { _ch1RebuildPreview(); } catch(e) {}
     }
+    /* Aggiorna sempre il simulatore inline */
+    setTimeout(_renderInlineSim, 40);
   };
 })();
 
 function _ch1RebuildPreview() {
   var box = document.getElementById('mPreview');
   if (!box) return;
-  var size   = parseFloat(document.getElementById('mSize')&&document.getElementById('mSize').value)||100000;
-  var cost   = parseFloat(document.getElementById('mCost')&&document.getElementById('mCost').value)||1500;
-  var maxDD  = parseFloat(document.getElementById('mDD')&&document.getElementById('mDD').value)||6;
-  var tgtPct = parseFloat(document.getElementById('mTgt')&&document.getElementById('mTgt').value)||8;
-  var cons   = parseFloat(document.getElementById('mConsistency')&&document.getElementById('mConsistency').value)||0;
-  var covPct = parseFloat(document.getElementById('ch1Cov')&&document.getElementById('ch1Cov').value)||85;
-  var isTrail= (typeof _ddTrailing!=='undefined')?_ddTrailing:false;
-  var asset  = (document.getElementById('mAsset')&&document.getElementById('mAsset').value||'GOLD:10').split(':')[0];
-  var pipVal = typeof _chPipVal==='function'?_chPipVal(asset):10;
-  var pip    = Math.min(
-    parseFloat(document.getElementById('mSlPips')&&document.getElementById('mSlPips').value)||100,
-    parseFloat(document.getElementById('mTpPips')&&document.getElementById('mTpPips').value)||100
-  );
-  var lot = parseFloat(document.getElementById('mLots')&&document.getElementById('mLots').value)||0.10;
-  if(lot<0.01)lot=0.01;
-  var tgtUsd=size*(tgtPct/100), maxDDusd=size*(maxDD/100);
-  var hasCons=cons>0&&cons<100;
-  var tradeAmt=lot*pip*pipVal;
-  var nLossMax=tradeAmt>0?Math.floor(maxDDusd/tradeAmt):10; if(nLossMax<1)nLossMax=1;
-  var winsNeed=tradeAmt>0?Math.ceil(tgtUsd/tradeAmt):10;
-  var lotPers=(cost*(covPct/100))/(nLossMax*pip*pipVal);
-  lotPers=Math.round(lotPers*100)/100;
-  if(lotPers<0.01)lotPers=0.01;
-  var ppt=lotPers*pip*pipVal;
-  var rf=lotPers*nLossMax*pip*pipVal;
-  var ep=lotPers*winsNeed*pip*pipVal;
-  var ctPass=cost+ep;
-  var nFail=-cost+rf;
-  var rcPct=Math.round(rf/cost*100);
-  var ddLbl=isTrail?'TRAILING':'STATICO';
-  var colNF=nFail>=0?'var(--green)':'var(--red)';
-  var g='<b style="color:var(--green)">'; var r='<b style="color:var(--red)">'; var eb='</b>';
 
-  var html='<div class="prev" style="padding:0">';
-  html+='<div style="padding:14px 16px 10px"><div style="font-size:15px;font-weight:800;font-family:var(--fh);color:var(--t)">🎯 Challenge 1 Step</div>';
-  html+='<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:2px">'+asset+' · '+pip+' pip · Target '+tgtPct+'% · DD '+maxDD+'% '+ddLbl+(hasCons?' · Cons.'+cons+'%':'')+' · Rec.'+covPct+'%</div></div>';
+  /* ── Leggi tutti i parametri dal form ── */
+  function gv(id, def){ var e=document.getElementById(id); return e ? (parseFloat(e.value)||def) : def; }
+  var size    = gv('mSize',100000);
+  var cost    = gv('mCost',1500);
+  var maxDD   = gv('mDD',6);
+  var ddd     = gv('mDDD',3);
+  var tgtPct  = gv('mTgt',8);
+  var days    = gv('mDays',10);
+  var cons    = gv('mConsistency',0);
+  var covPct  = gv('ch1Cov',85);
+  var isTrail = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
+  var asset   = ((document.getElementById('mAsset')&&document.getElementById('mAsset').value)||'GOLD:10').split(':')[0];
+  var pipVal  = typeof _chPipVal === 'function' ? _chPipVal(asset) : 10;
+  var sl      = gv('mSlPips',100);
 
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;padding:0 14px">';
-  html+='<div style="background:rgba(56,189,248,.08);border:2px solid var(--teal);border-radius:12px;padding:16px">';
-  html+='<div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--fd)">🎯 PROP (VALUTAZIONE)</div>';
-  html+='<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:var(--teal);line-height:1;margin-bottom:8px">'+lot+' <span style="font-size:16px;opacity:.7">Lot</span></div>';
-  html+='<div style="font-size:12px;color:var(--t2);line-height:1.9">TP ('+pip+' pip): '+g+'+$'+tradeAmt.toFixed(0)+eb+'<br>SL ('+pip+' pip): '+r+'-$'+tradeAmt.toFixed(0)+eb+'</div></div>';
+  var tgtUsd     = size * (tgtPct / 100);
+  var maxDDusd   = size * (maxDD  / 100);
+  var dailyDDusd = size * (ddd    / 100);
+  var hasCons    = cons > 0 && cons < 100;
 
-  html+='<div style="background:rgba(167,139,250,.08);border:2px solid var(--violet);border-radius:12px;padding:16px">';
-  html+='<div style="font-size:10px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--fd)">🛡️ PERSONALE (REALE)</div>';
-  html+='<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:var(--violet);line-height:1;margin-bottom:8px">'+lotPers+' <span style="font-size:16px;opacity:.7">Lot</span></div>';
-  html+='<div style="font-size:12px;color:var(--t2);line-height:1.9">TP (se Prop perde): '+g+'+$'+ppt.toFixed(0)+eb+'<br>SL (se Prop vince): '+r+'-$'+ppt.toFixed(0)+eb+'</div></div>';
-  html+='</div>';
+  /* ── Calcolo lot PROP con penalità trail + cons + giorni ─────────────
+     UGUALE a _autoCalcChallenge1() — sempre ricalcolato dai parametri
+  ──────────────────────────────────────────────────────────────────── */
+  var ch1LotsManual = gv('ch1Lots', 0);
+  var lot;
 
-  html+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;padding:0 14px">';
+  if (ch1LotsManual >= 0.01) {
+    /* Manuale: l'utente ha digitato esplicitamente il lotto prop */
+    lot = Math.round(ch1LotsManual * 100) / 100;
+  } else {
+    /* Automatico: calcola da trail + cons + giorni */
+    var tgtGiorno  = tgtUsd / Math.max(1, days);
+    var lotByDaily = (dailyDDusd * 0.90) / (sl * pipVal);
+    var lotByTgt   = tgtGiorno / (sl * pipVal);
+    var penalty    = 1.0;
+    if (isTrail && hasCons) {
+      penalty = cons<=25?0.30:cons<=35?0.40:cons<=50?0.55:cons<=70?0.75:0.90;
+    } else if (isTrail) {
+      penalty = 0.75;
+    } else if (hasCons && cons <= 30) {
+      penalty = 0.70;
+    }
+    lot = Math.round(Math.min(lotByDaily, lotByTgt) * penalty * 100) / 100;
+    if (lot < 0.01) lot = 0.01;
+    /* Sincronizza i campi form */
+    var mLotsEl = document.getElementById('mLots');
+    if (mLotsEl) mLotsEl.value = lot;
+    var ch1LE = document.getElementById('ch1Lots');
+    if (ch1LE && !ch1LE.value) ch1LE.value = lot;
+  }
+
+  var tradeAmt  = lot * sl * pipVal;
+  var nLossMax  = tradeAmt > 0 ? Math.floor(maxDDusd / tradeAmt) : 10;
+  if (nLossMax < 1) nLossMax = 1;
+  var winsNeed  = tradeAmt > 0 ? Math.ceil(tgtUsd / tradeAmt) : 10;
+
+  /* ── Calcolo lot PERSONALE ───────────────────────────────────────────
+     Usa il manuale se inserito; altrimenti formula covPct.
+     Se il simulatore ha raggiunto il 70% → mostra lotto dimezzato.
+  ──────────────────────────────────────────────────────────────────── */
+  var ch1LPManual = gv('ch1LotsPers', 0);
+  var lotPers;
+
+  if (ch1LPManual >= 0.01) {
+    lotPers = Math.round(ch1LPManual * 100) / 100;
+  } else {
+    lotPers = (cost * (covPct / 100)) / (nLossMax * sl * pipVal);
+    lotPers = Math.round(lotPers * 100) / 100;
+    if (lotPers < 0.01) lotPers = 0.01;
+    /* Sincronizza campo form */
+    var ch1LPE = document.getElementById('ch1LotsPers');
+    if (ch1LPE && !ch1LPE.value) ch1LPE.value = lotPers;
+  }
+
+  /* ── Se il simulatore è sopra il 70% → mostra lotto dimezzato ── */
+  var lotPersDisplay = lotPers;
+  var above70Active  = (_simCH1 && _simCH1._above70Active);
+  if (above70Active && _simCH1._lotPersHalved > 0) {
+    lotPersDisplay = _simCH1._lotPersHalved;
+  }
+
+  var ppt      = lotPersDisplay * sl * pipVal;
+  var rf       = lotPersDisplay * nLossMax * sl * pipVal;
+  var ep       = lotPersDisplay * winsNeed  * sl * pipVal;
+  var ctPass   = cost + ep;
+  var nFail    = -cost + rf;
+  var rcPct    = Math.round(rf / cost * 100);
+  var ddLbl    = isTrail ? 'TRAILING' : 'STATICO';
+  var colNF    = nFail >= 0 ? 'var(--green)' : 'var(--red)';
+  var g = '<b style="color:var(--green)">'; var r = '<b style="color:var(--red)">'; var eb = '</b>';
+
+  var html = '<div class="prev" style="padding:0">';
+  html += '<div style="padding:14px 16px 10px">'
+        + '<div style="font-size:15px;font-weight:800;font-family:var(--fh);color:var(--t)">🎯 Challenge 1 Step</div>'
+        + '<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:2px">'
+        + asset+' · '+sl+' pip · Target '+tgtPct+'% · DD '+maxDD+'% '+ddLbl
+        + (hasCons?' · Cons.'+cons+'%':'') + ' · '+days+' gg min · Rec.'+covPct+'%</div></div>';
+
+  /* ── Banner 70% se attivo ── */
+  if (above70Active && _simCH1._lotPersHalved > 0) {
+    html += '<div style="margin:0 14px 12px;background:rgba(52,211,153,.12);border:2px solid #34D399;border-radius:10px;padding:9px 14px;font-size:11px;font-weight:800;font-family:var(--fd);color:#34D399;text-align:center">'
+          + '🟢 70% TARGET RAGGIUNTO — Personale dimezzato a <b>'+_simCH1._lotPersHalved+' lot</b>'
+          + '</div>';
+  }
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;padding:0 14px">';
+  html += '<div style="background:rgba(56,189,248,.08);border:2px solid var(--teal);border-radius:12px;padding:16px">'
+        + '<div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--fd)">🎯 PROP (VALUTAZIONE)</div>'
+        + '<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:var(--teal);line-height:1;margin-bottom:8px">'+lot+' <span style="font-size:16px;opacity:.7">Lot</span></div>'
+        + '<div style="font-size:12px;color:var(--t2);line-height:1.9">TP/SL ('+sl+' pip): '+g+'±$'+tradeAmt.toFixed(0)+eb+'</div></div>';
+
+  html += '<div style="background:rgba(167,139,250,.08);border:2px solid var(--violet);border-radius:12px;padding:16px'
+        + (above70Active ? ';outline:2px solid #34D399' : '') + '">'
+        + '<div style="font-size:10px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--fd)">🛡️ PERSONALE (REALE)</div>'
+        + '<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:'+(above70Active?'#34D399':'var(--violet)')+';line-height:1;margin-bottom:8px">'+lotPersDisplay+' <span style="font-size:16px;opacity:.7">Lot</span></div>'
+        + '<div style="font-size:12px;color:var(--t2);line-height:1.9">TP (se Prop perde): '+g+'+$'+ppt.toFixed(0)+eb+'<br>SL (se Prop vince): '+r+'-$'+ppt.toFixed(0)+eb+'</div></div>';
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;padding:0 14px">';
   var kpis=[['WIN',winsNeed,'var(--green)'],['Max STOP',nLossMax,'var(--red)'],
             ['Target','$'+tgtUsd.toFixed(0),'var(--amber)'],
             ['Recupero',rcPct+'%',rcPct>=80?'var(--green)':rcPct>=50?'var(--amber)':'var(--red)']];
-  for(var ki=0;ki<kpis.length;ki++){
+  for (var ki=0; ki<kpis.length; ki++) {
     var k=kpis[ki];
-    html+='<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">'+k[0]+'</div><div style="font-size:18px;font-weight:800;font-family:var(--fd);color:'+k[2]+'">'+k[1]+'</div></div>';
+    html += '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">'
+          + '<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">'+k[0]+'</div>'
+          + '<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:'+k[2]+'">'+k[1]+'</div></div>';
   }
-  html+='</div>';
+  html += '</div>';
 
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px">';
-  html+='<div style="background:rgba(248,113,113,.07);border:1.5px solid rgba(248,113,113,.3);border-radius:11px;padding:13px">';
-  html+='<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">❌ PROP FALLITA</div>';
-  html+='<div style="font-size:11px;color:var(--t2);line-height:2.2;font-family:var(--fd)">Costo: '+r+'-$'+cost+eb+'<br>Pers. recupera: '+g+'+$'+rf.toFixed(0)+eb+'</div>';
-  html+='<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(248,113,113,.2);display:flex;justify-content:space-between;align-items:center">';
-  html+='<span style="font-size:9px;color:var(--t3)">NETTO</span>';
-  html+='<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+colNF+'">'+(nFail>=0?'+':'')+nFail.toFixed(0)+'$</span></div></div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px">';
+  html += '<div style="background:rgba(248,113,113,.07);border:1.5px solid rgba(248,113,113,.3);border-radius:11px;padding:13px">'
+        + '<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">❌ PROP FALLITA</div>'
+        + '<div style="font-size:11px;color:var(--t2);line-height:2.2;font-family:var(--fd)">Costo: '+r+'-$'+cost+eb+'<br>Pers. recupera: '+g+'+$'+rf.toFixed(0)+eb+'</div>'
+        + '<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(248,113,113,.2);display:flex;justify-content:space-between;align-items:center">'
+        + '<span style="font-size:9px;color:var(--t3)">NETTO</span>'
+        + '<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+colNF+'">'+(nFail>=0?'+':'')+nFail.toFixed(0)+'$</span></div></div>';
 
-  html+='<div style="background:rgba(96,165,250,.07);border:1.5px solid rgba(96,165,250,.3);border-radius:11px;padding:13px">';
-  html+='<div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">✅ PROP PASSATA</div>';
-  html+='<div style="font-size:11px;color:var(--t2);line-height:2.2;font-family:var(--fd)">Costo: '+r+'-$'+cost+eb+'<br>Pers. perde: '+r+'-$'+ep.toFixed(0)+eb+'</div>';
-  html+='<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(96,165,250,.2);display:flex;justify-content:space-between;align-items:center">';
-  html+='<span style="font-size:9px;color:var(--t3)">COSTO LIVE</span>';
-  html+='<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+ctPass.toFixed(0)+'</span></div></div>';
-  html+='</div></div>';
+  html += '<div style="background:rgba(96,165,250,.07);border:1.5px solid rgba(96,165,250,.3);border-radius:11px;padding:13px">'
+        + '<div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">✅ PROP PASSATA</div>'
+        + '<div style="font-size:11px;color:var(--t2);line-height:2.2;font-family:var(--fd)">Costo: '+r+'-$'+cost+eb+'<br>Pers. perde: '+r+'-$'+ep.toFixed(0)+eb+'</div>'
+        + '<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(96,165,250,.2);display:flex;justify-content:space-between;align-items:center">'
+        + '<span style="font-size:9px;color:var(--t3)">COSTO LIVE</span>'
+        + '<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+ctPass.toFixed(0)+'</span></div></div>';
+  html += '</div></div>';
 
-  box.innerHTML=html;
+  box.innerHTML = html;
 }
 
 // ── Fine modulo Challenge 1 Step ──
 
 
+/* ═══════════════════════════════════════════════════════════════════
+   SIMULATORE INLINE — appare direttamente nel pannello calcolatore
+   Si aggiorna ad ogni calcPreview() ma i dati trade sono persistenti.
+   ═══════════════════════════════════════════════════════════════════ */
+var _iSim = {
+  session : '',   /* 'personal' | 'challenge_1step' | 'other' */
+  data    : [],   /* [{w:'',l:''}] — PERSISTE tra i ricalcoli */
+  rows    : 40,
+  /* parametri snapshot dell'ultimo calcPreview */
+  size:0,cost:0,maxDD:0,tgtPct:0,pay:0,minDays:0,
+  lots:0,lotPers:0,slPips:0,tpPips:0,pipVal:10,asset:'GOLD',
+  isTrail:false,trailLock:0,consistency:0,
+  propWin:0,propLoss:0,persWin:0,persLoss:0,
+  propTarget:0,maxDDusd:0
+};
+
+function _renderInlineSim() {
+  var box = document.getElementById('mInlineSim');
+  if (!box) return;
+
+  /* Sincronizza data array con il simulatore modale */
+  _syncSimData();
+
+  var session = (typeof stratMode !== 'undefined') ? stratMode : 'personal';
+
+  /* ── Leggi parametri correnti dal form ── */
+  function gf(id,def){ var e=document.getElementById(id); return e?parseFloat(e.value)||def:def; }
+  var size    = gf('mSize',100000);
+  var cost    = gf('mCost',1500);
+  var maxDD   = gf('mDD',6);
+  var tgtPct  = gf('mTgt',8);
+  var pay     = gf('mPay',80);
+  var minDays = gf('mDays',10);
+  var isTrail = (typeof _ddTrailing!=='undefined')?_ddTrailing:false;
+  var assetEl = document.getElementById('mAsset');
+  var asset   = assetEl ? assetEl.value.split(':')[0] : 'GOLD';
+  var pipVal  = typeof _chPipVal==='function'?_chPipVal(asset):10;
+  var sl      = gf('mSlPips',100);
+  var tp      = gf('mTpPips',100);
+  var trailLock = gf('mTrailLock',0);
+  var cons    = gf('mConsistency',0);
+  var covPct  = gf('ch1Cov',85);
+
+  var lots, lotPers;
+  if (session === 'challenge_1step') {
+    var ch1L = gf('ch1Lots',0);
+    lots    = ch1L>=0.01 ? ch1L : gf('mLots',0.10);
+    var ch1P = gf('ch1LotsPers',0);
+    var nLM  = lots*sl*pipVal>0 ? Math.floor(size*(maxDD/100)/(lots*sl*pipVal)):10;
+    if(nLM<1)nLM=1;
+    lotPers = ch1P>=0.01 ? ch1P : Math.round((cost*(covPct/100))/(nLM*sl*pipVal)*100)/100;
+    if(lotPers<0.01)lotPers=0.01;
+  } else {
+    lots    = gf('mLots',0.10);
+    var mLH  = gf('mLotsHedge',0);
+    var nLM2 = lots*sl*pipVal>0 ? Math.floor(size*(maxDD/100)/(lots*sl*pipVal)):10;
+    if(nLM2<1)nLM2=1;
+    lotPers = mLH>=0.01 ? mLH : Math.round((cost*1.2)/(nLM2*sl*pipVal)*100)/100;
+    if(lotPers<0.01)lotPers=0.01;
+  }
+
+  var propWin  = lots    * sl * pipVal;
+  var propLoss = lots    * sl * pipVal;
+  var persWin  = lotPers * sl * pipVal;
+  var persLoss = lotPers * sl * pipVal;
+  var propTarget = size * (tgtPct/100);
+  var maxDDusd   = size * (maxDD/100);
+
+  /* ── Inizializza dati solo se sessione cambiata o array vuoto/azzerato ── */
+  var paramKey = [session,size,maxDD,tgtPct,pay,minDays,lots,sl,lotPers].join('|');
+  /* FIX: controlla se ci sono dati REALI (non solo array di oggetti vuoti) */
+  function _iSimHasRealData(){
+    if(!_iSim.data||!_iSim.data.length)return false;
+    for(var kk=0;kk<_iSim.data.length;kk++){
+      var dd=_iSim.data[kk];if(dd&&(dd.w!==''||dd.l!==''))return true;
+    }return false;
+  }
+  if (_iSim.session !== session) {
+    /* Nuova sessione → dati freschi (non caricare quelli della sessione precedente) */
+    _iSim.data = [];
+    for(var k=0;k<_iSim.rows;k++) _iSim.data.push({w:'',l:''});
+    _iSim.session = session;
+  } else if (!_iSimHasRealData()) {
+    /* FIX: array vuoto o azzerato → ricrea sempre fresh */
+    _iSim.data = [];
+    for(var k=0;k<_iSim.rows;k++) _iSim.data.push({w:'',l:''});
+  }
+  /* Aggiorna SEMPRE i parametri (senza azzerare i dati trade) */
+  _iSim._paramKey  = paramKey;
+  _iSim.size=size; _iSim.cost=cost; _iSim.maxDD=maxDD; _iSim.tgtPct=tgtPct;
+  _iSim.pay=pay; _iSim.minDays=minDays; _iSim.lots=lots; _iSim.lotPers=lotPers;
+  _iSim.slPips=sl; _iSim.tpPips=tp; _iSim.pipVal=pipVal; _iSim.asset=asset;
+  _iSim.isTrail=isTrail; _iSim.trailLock=trailLock; _iSim.consistency=cons;
+  _iSim.propWin=propWin; _iSim.propLoss=propLoss;
+  _iSim.persWin=persWin; _iSim.persLoss=persLoss;
+  _iSim.propTarget=propTarget; _iSim.maxDDusd=maxDDusd;
+
+  /* ── Calcola quante righe mostrare ── */
+  var lastFilled=-1;
+  for(var j=0;j<_iSim.rows;j++){
+    var dj=_iSim.data[j]||{};
+    if(dj.w!==''||dj.l!=='')lastFilled=j;
+  }
+  var showUpTo=Math.min(_iSim.rows-1,lastFilled+2);
+  if(showUpTo<1)showUpTo=1;
+
+  /* ── Colonne in base alla sessione ── */
+  var isCH1 = session==='challenge_1step';
+  var subtitle = isCH1
+    ? asset+' | Prop: '+lots+' lot ±$'+propWin.toFixed(0)+'/trade | Personale: '+lotPers+' lot ±$'+persWin.toFixed(0)+'/trade | Target $'+propTarget.toFixed(0)
+    : asset+' | Prop: '+lots+' lot (TP +$'+propWin.toFixed(0)+' SL -$'+propLoss.toFixed(0)+') | Hedge: '+lotPers+' lot | DD '+(isTrail?'TRAILING':'STATICO')+' '+maxDD+'%';
+
+  /* ── Genera HTML ── */
+  var thSt='padding:8px 6px;font-size:9px;font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:2;background:var(--bg3)';
+  var html='<div style="background:var(--bg2);border:1px solid var(--border2);border-radius:12px;overflow:hidden">'
+    +'<div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="width:3px;height:14px;background:linear-gradient(var(--teal),var(--violet));border-radius:2px"></div>'
+        +'<div>'
+          +'<div style="font-size:11px;font-weight:800;color:var(--t);font-family:var(--fh);text-transform:uppercase;letter-spacing:.08em">🔴 SIMULATORE GIORNO PER GIORNO (LIVE)</div>'
+          +'<div id="iSimSubtitle" style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:2px">'+subtitle+'</div>'
+        +'</div>'
+      +'</div>'
+      +'<button onclick="_iSimReset()" style="background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);color:var(--red);border-radius:7px;padding:4px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--fd);white-space:nowrap">🗑 Reset</button>'
+    +'</div>'
+    /* KPI row */
+    +'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:8px 10px;background:var(--bg3);border-bottom:1px solid var(--border)">'
+      +_iSimKpi('iSimKpiBalance','Balance Prop','—','var(--teal)')
+      +_iSimKpi('iSimKpiDDLine','DD Line','—','var(--red)')
+      +_iSimKpi('iSimKpiPropCum','P&L Prop','—','var(--t2)')
+      +_iSimKpi('iSimKpiPersCum','Pers. Cum.','—','var(--violet)')
+      +_iSimKpi('iSimKpiNetto','Netto','—','var(--amber)')
+    +'</div>'
+    /* Table */
+    +'<div id="iSimTableWrap" style="max-height:380px;overflow-y:auto;overflow-x:auto">'
+    +'<table style="width:100%;border-collapse:collapse" id="iSimTable">'
+    +'<thead style="position:sticky;top:0;z-index:2"><tr style="background:var(--bg3)">'
+      +'<th style="'+thSt+';text-align:center;color:var(--t3)">Trade #</th>'
+      +'<th style="'+thSt+';text-align:center;color:var(--green)">WIN</th>'
+      +'<th style="'+thSt+';text-align:center;color:var(--red)">STOP</th>'
+      +'<th style="'+thSt+';text-align:right;color:var(--teal)">Balance</th>'
+      +'<th style="'+thSt+';text-align:right;color:var(--t3)">P&L Prop</th>'
+      +'<th style="'+thSt+';text-align:right;color:var(--red)">DD Line</th>'
+      +(cons>0?'<th style="'+thSt+';text-align:center;color:var(--amber);min-width:160px">Consistenza '+cons+'%</th>':'')
+      +'<th style="'+thSt+';text-align:right;color:var(--violet)">Pers. Reale</th>'
+      +(isCH1?'<th style="'+thSt+';text-align:right;color:#60a5fa">Payout</th>':'')
+      +'<th style="'+thSt+';text-align:right;color:var(--amber)">Netto</th>'
+    +'</tr></thead>'
+    +'<tbody id="iSimTbody">';
+
+  for(var i=0;i<_iSim.rows;i++){
+    var r=i+1;
+    var d=_iSim.data[i]||{w:'',l:''};
+    var isMin=r<=minDays;
+    var ic=isMin?'var(--amber)':'var(--green)';
+    var hidden=i>showUpTo?'style="display:none"':'';
+    var colCount = 8 + (cons>0?1:0) + (isCH1?1:0);
+    html+='<tr id="iSimRow_'+r+'" '+hidden+'>'
+      +'<td style="padding:4px 6px;text-align:center;font-size:10px;font-family:var(--fd);color:'+ic+';font-weight:'+(isMin?700:400)+'">'+(isMin?'⏳':'✓')+' '+r+'</td>'
+      +'<td style="padding:2px 4px;text-align:center"><input type="number" id="iSim_w_'+r+'" value="'+(d.w||'')+'" min="0" max="20" placeholder="0" oninput="_iSim.data['+(i)+'].w=this.value;_iSimCalc();if(typeof _simCH1_calc===\'function\'&&_iSim.session===\'challenge_1step\')_simCH1_calc();if(typeof _simPS_calc===\'function\'&&_iSim.session===\'personal\')_simPS_calc();" style="width:44px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);color:var(--green);border-radius:6px;padding:3px;font-size:12px;font-weight:700;text-align:center;outline:none;font-family:var(--fd)"></td>'
+      +'<td style="padding:2px 4px;text-align:center"><input type="number" id="iSim_l_'+r+'" value="'+(d.l||'')+'" min="0" max="20" placeholder="0" oninput="_iSim.data['+(i)+'].l=this.value;_iSimCalc();if(typeof _simCH1_calc===\'function\'&&_iSim.session===\'challenge_1step\')_simCH1_calc();if(typeof _simPS_calc===\'function\'&&_iSim.session===\'personal\')_simPS_calc();" style="width:44px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.25);color:var(--red);border-radius:6px;padding:3px;font-size:12px;font-weight:700;text-align:center;outline:none;font-family:var(--fd)"></td>'
+      +'<td id="iSimCell_'+r+'_bal" style="padding:4px 6px;text-align:right;font-size:10px;font-family:var(--fd)">—</td>'
+      +'<td id="iSimCell_'+r+'_pnl" style="padding:4px 6px;text-align:right;font-size:10px;font-family:var(--fd)">—</td>'
+      +'<td id="iSimCell_'+r+'_ddl" style="padding:4px 6px;text-align:right;font-size:10px;font-family:var(--fd)">—</td>'
+      +(cons>0?'<td id="iSimCell_'+r+'_con" style="padding:4px 6px;text-align:center;font-size:9px;font-family:var(--fd);min-width:160px">—</td>':'')
+      +'<td id="iSimCell_'+r+'_per" style="padding:4px 6px;text-align:right;font-size:10px;font-family:var(--fd)">—</td>'
+      +(isCH1?'<td id="iSimCell_'+r+'_pay" style="padding:4px 6px;text-align:right;font-size:10px;font-family:var(--fd)">—</td>':'')
+      +'<td id="iSimCell_'+r+'_net" style="padding:4px 6px;text-align:right;font-size:10px;font-family:var(--fd);font-weight:700">—</td>'
+    +'</tr>';
+  }
+  html+='</tbody></table></div></div>';
+  box.innerHTML=html;
+  _iSimCalc();
+}
+
+function _iSimKpi(id,lbl,val,clr){
+  return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:7px;padding:6px;text-align:center">'
+    +'<div style="font-size:7px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">'+lbl+'</div>'
+    +'<div id="'+id+'" style="font-size:12px;font-weight:800;font-family:var(--fd);color:'+clr+'">'+val+'</div></div>';
+}
+
+function _iSimReset(){
+  /* Delega al reset unificato che gestisce entrambi i simulatori */
+  simReset();
+}
+
+function _iSim_sc(r,col,txt,clr,bg){
+  var el=document.getElementById('iSimCell_'+r+'_'+col);
+  if(!el)return;
+  el.textContent=txt; el.style.color=clr||'var(--t2)';
+  if(bg)el.style.background=bg; else el.style.background='';
+}
+
+function _iSimCalc(){
+  var s=_iSim;
+  if(!s.size)return;
+  document.querySelectorAll('._iSim_banner70').forEach(function(b){b.remove();});
+
+  var hwm=s.size,bal=s.size,ddLine=s.size*(1-s.maxDD/100);
+  var propPnlCum=0,persPnlCum=0,bestDay=0;
+  var gameOver=false,targetHit=false,cycleEnd=-1;
+  var above70=false,thresh70=s.propTarget*0.70;
+  var lotPersOrig=s.lotPers,persWinCur=s.persWin,persLossCur=s.persLoss;
+  var isCH1=s.session==='challenge_1step';
+  var cons=s.consistency;
+
+  function halveLot(l){var r=Math.round(l*100);if(r>=10)return Math.round(r/2)/100;if(r>=5)return 0.02;return 0.01;}
+  function sgn(n){return n>=0?'+':'';}
+
+  function insert70(rr,isGreen){
+    var ref=document.getElementById('iSimRow_'+rr);if(!ref)return;
+    var ex=document.getElementById('_iSim_b70_'+rr);if(ex)ex.remove();
+    var colN=8+(cons>0?1:0)+(isCH1?1:0);
+    var bg=isGreen?'rgba(52,211,153,.14)':'rgba(248,113,113,.14)';
+    var bdr=isGreen?'#34D399':'#F87171';
+    var clr=isGreen?'#34D399':'#F87171';
+    var newLP=isGreen?halveLot(lotPersOrig):lotPersOrig;
+    var msg=isGreen
+      ?'🟢 70% DEL TARGET RAGGIUNTO — Prop mantiene <b style="color:var(--teal)">'+s.lots+' lot</b> | Personale dimezzato: <b style="color:var(--violet)">'+newLP+' lot</b>'
+      :'🔴 SCESO SOTTO 70% — Lotti ripristinati: Personale torna a <b style="color:var(--violet)">'+lotPersOrig+' lot</b>';
+    var tr=document.createElement('tr');tr.className='_iSim_banner70';tr.id='_iSim_b70_'+rr;
+    tr.innerHTML='<td colspan="'+colN+'" style="padding:0"><div style="background:'+bg+';border-top:2px solid '+bdr+';border-bottom:2px solid '+bdr+';padding:8px 14px;font-size:11px;font-weight:800;font-family:var(--fd);color:'+clr+';text-align:center">'+msg+'</div></td>';
+    ref.after(tr);
+  }
+
+  for(var i=0;i<s.rows;i++){
+    var r=i+1;
+    var d=s.data[i]||{w:'',l:''};
+    var w=parseInt(d.w)||0,l=parseInt(d.l)||0;
+    var has=(d.w!==''&&d.w!==null)||(d.l!==''&&d.l!==null);
+    var row=document.getElementById('iSimRow_'+r);
+    var _pw=s.propWin,_pl=s.propLoss,_persW=persWinCur,_persL=persLossCur;
+
+    (function(rr,ww,ll,hasRow,pw,pl,persW,persL){
+      var sc=function(col,txt,clr,bg){_iSim_sc(rr,col,txt,clr,bg);};
+      if(gameOver){
+        sc('bal','🔴','var(--red)','rgba(248,113,113,.04)');
+        ['pnl','ddl','con','per','pay','net'].forEach(function(c){sc(c,'—','var(--t3)');});
+        if(row)row.style.background='rgba(248,113,113,.025)';return;
+      }
+      if(targetHit&&!hasRow){
+        sc('bal','🏁','#60a5fa','rgba(96,165,250,.025)');
+        ['pnl','ddl','con','per','pay','net'].forEach(function(c){sc(c,'—','var(--t3)');});
+        if(row)row.style.background='rgba(96,165,250,.02)';return;
+      }
+      if(!hasRow){
+        sc('bal','$'+bal.toFixed(0),'var(--t3)');sc('pnl','—','var(--t3)');
+        sc('ddl','$'+ddLine.toFixed(0),'rgba(248,113,113,.35)');
+        if(cons>0)sc('con','—','var(--t3)');
+        sc('per',persPnlCum!==0?(sgn(persPnlCum)+'$'+Math.abs(persPnlCum).toFixed(0)):'—',persPnlCum>0?'var(--green)':persPnlCum<0?'var(--red)':'var(--t3)');
+        if(isCH1)sc('pay','—','var(--t3)');
+        var np=-s.cost+persPnlCum;sc('net',(np>=0?'+':'')+np.toFixed(0)+'$',np>=0?'var(--green)':'var(--amber)');
+        if(row)row.style.background=rr<=s.minDays?'rgba(251,191,36,.02)':'';return;
+      }
+      var rowPropPnl=ww*pw-ll*pl;
+      var rowPersPnl=ll*persW-ww*persL;
+      propPnlCum+=rowPropPnl;persPnlCum+=rowPersPnl;
+      bal=s.size+propPnlCum;
+      if(rowPropPnl>bestDay)bestDay=rowPropPnl;
+      if(s.isTrail&&bal>hwm){hwm=bal;var lt=s.size+s.propTarget*(s.trailLock/100);ddLine=(s.trailLock>0&&hwm>=lt)?s.size*(1-s.maxDD/100):hwm*(1-s.maxDD/100);}
+      /* 70% check */
+      if(!gameOver&&!targetHit){
+        var now70=propPnlCum>=thresh70;
+        if(now70&&!above70){above70=true;var nLP=halveLot(lotPersOrig);persWinCur=nLP*s.slPips*s.pipVal;persLossCur=nLP*s.slPips*s.pipVal;insert70(rr,true);}
+        else if(!now70&&above70){above70=false;persWinCur=s.persWin;persLossCur=s.persLoss;insert70(rr,false);}
+      }
+      /* cons */
+      var cTxt='—',cClr='var(--t3)',cBg='';
+      if(cons>0&&bestDay>0){var req=Math.ceil(bestDay/(cons/100));if(propPnlCum>=req){cTxt='$'+propPnlCum.toFixed(0)+' ≥ $'+req.toFixed(0)+' ✓';cClr='var(--green)';cBg='rgba(52,211,153,.06)';}else{cTxt='$'+propPnlCum.toFixed(0)+' < $'+req.toFixed(0)+' ✗';cClr='var(--red)';cBg='rgba(248,113,113,.06)';}}
+      var payN=isCH1?(propPnlCum>=s.propTarget&&rr>=s.minDays&&s.pay>0?propPnlCum*(s.pay/100):0):((propPnlCum>0&&rr>=s.minDays)?propPnlCum*(s.pay/100):0);
+      var netN=-s.cost+persPnlCum+payN;
+      if(bal<=ddLine+0.01){
+        gameOver=true;cycleEnd=rr;
+        sc('bal','$'+bal.toFixed(0),'var(--red)','rgba(248,113,113,.14)');
+        sc('pnl',sgn(rowPropPnl)+rowPropPnl.toFixed(0)+'$','var(--red)');
+        sc('ddl','$'+ddLine.toFixed(0),'var(--red)');
+        if(cons>0)sc('con','🔴 GAME OVER','var(--red)');
+        sc('per',sgn(persPnlCum)+'$'+Math.abs(persPnlCum).toFixed(0),persPnlCum>=0?'var(--green)':'var(--red)');
+        if(isCH1)sc('pay','—','var(--t3)');
+        sc('net',(netN>=0?'+':'')+netN.toFixed(0)+'$',netN>=0?'var(--green)':'var(--red)','rgba(248,113,113,.07)');
+        if(row)row.style.background='rgba(248,113,113,.1)';return;
+      }
+      if(!targetHit&&propPnlCum>=s.propTarget&&rr>=s.minDays){targetHit=true;cycleEnd=rr;}
+      sc('bal','$'+bal.toFixed(0),bal>=s.size?'var(--green)':'var(--red)');
+      sc('pnl',sgn(rowPropPnl)+rowPropPnl.toFixed(0)+'$',rowPropPnl>=0?'var(--green)':'var(--red)');
+      sc('ddl','$'+ddLine.toFixed(0),'var(--red)');
+      if(cons>0)sc('con',cTxt,cClr,cBg);
+      sc('per',sgn(persPnlCum)+'$'+Math.abs(persPnlCum).toFixed(0),persPnlCum>0?'var(--green)':persPnlCum<0?'var(--red)':'var(--t3)');
+      if(isCH1)sc('pay',payN>0?'+$'+payN.toFixed(0):(rr<s.minDays?'⏳':'—'),payN>0?'#60a5fa':'var(--t3)');
+      sc('net',(netN>=0?'+':'')+netN.toFixed(0)+'$',netN>=0?'var(--green)':'var(--amber)');
+      if(row){if(targetHit&&rr===cycleEnd)row.style.background='rgba(96,165,250,.1)';else if(rr>=s.minDays)row.style.background='rgba(96,165,250,.025)';else row.style.background='rgba(251,191,36,.025)';}
+    })(r,w,l,has,_pw,_pl,_persW,_persL);
+  }
+
+  /* Rivela righe dinamicamente */
+  (function(){
+    var lf=-1;
+    for(var j=0;j<s.rows;j++){var dj=s.data[j]||{};if(dj.w!==''||dj.l!=='')lf=j;}
+    var ru=Math.min(s.rows-1,lf+2);if(ru<1)ru=1;
+    for(var k=0;k<s.rows;k++){var el=document.getElementById('iSimRow_'+(k+1));if(el)el.style.display=k<=ru?'':'none';}
+    if(lf>=0){var wrap=document.getElementById('iSimTableWrap');var lastR=document.getElementById('iSimRow_'+(lf+1));if(wrap&&lastR)setTimeout(function(){var off=lastR.offsetTop-wrap.offsetTop;if(off>wrap.scrollTop+wrap.clientHeight-50)wrap.scrollTop=off-wrap.clientHeight+70;},50);}
+  })();
+
+  /* KPI */
+  var payF=propPnlCum>=s.propTarget?propPnlCum*(s.pay/100):0;
+  var netF=-s.cost+persPnlCum+payF;
+  function kS(id,v,c){var e=document.getElementById(id);if(e){e.textContent=v;e.style.color=c;}}
+  kS('iSimKpiBalance','$'+bal.toFixed(0),bal>=s.size?'var(--green)':'var(--red)');
+  kS('iSimKpiDDLine','$'+ddLine.toFixed(0),'var(--red)');
+  kS('iSimKpiPropCum',(propPnlCum>=0?'+':'')+propPnlCum.toFixed(0)+'$',propPnlCum>=0?'var(--green)':'var(--red)');
+  kS('iSimKpiPersCum',(persPnlCum>=0?'+':'')+persPnlCum.toFixed(0)+'$',persPnlCum>0?'var(--green)':persPnlCum<0?'var(--red)':'var(--t3)');
+  kS('iSimKpiNetto',(netF>=0?'+':'')+netF.toFixed(0)+'$',netF>=0?'var(--green)':'var(--amber)');
+
+  /* Salva dati in localStorage */
+  _saveSimData();
+}
+
+/* ── Fine modulo simulatore inline ── */
+
 window.addEventListener('DOMContentLoaded',function(){
 
+  _loadSimData();
   loadAccountData();jrnlLoad();buildBot(BOT_ALL);loadFX();
 
   _mkLiveStarted=true;
