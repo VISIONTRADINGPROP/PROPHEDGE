@@ -5434,92 +5434,175 @@ var c = calcChallenge(p);
       var spreadHedgeSingolo = (spread || 0) * c.pipVal * c.contractMultHedge * c.hedgeLots;
       var nettoRealeFallimento = c.sA_gain - cost - (spreadHedgeSingolo * c.maxLossTrades);
       var costoRealePassaggio = c.sB_los + cost + (spreadHedgeSingolo * c.winsNeeded);
+      var _nrfCol = nettoRealeFallimento >= 0 ? 'var(--green)' : 'var(--red)';
+      var _tgt1  = size * (tgtPct/100);
 
-      var htmlChallenge = `
-      <div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
-          <div style="flex:1; min-width:240px; background:rgba(56,189,248,0.08); padding:15px; border-radius:10px; border:1px solid var(--teal);">
-              <h4 style="color:var(--teal); margin:0 0 10px 0; font-family:var(--fd); font-size:12px;">🎯 PROP (VALUTAZIONE)</h4>
-              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.propTP.toFixed(2)}</b></p>
-              <p style="font-size:14px; color:#fff;">🔻 SL (${p.slPips} pip): <b style="color:#F87171;">- $${c.propSL.toFixed(2)}</b></p>
-          </div>
-          <div style="flex:1; min-width:240px; background:rgba(167,139,250,0.08); padding:15px; border-radius:10px; border:1px solid var(--violet);">
-              <h4 style="color:var(--violet); margin:0 0 10px 0; font-family:var(--fd); font-size:12px;">🛡️ PERSONALE (REALE)</h4>
-              <p style="font-size:14px; color:#fff; margin-bottom:5px;">💰 TP (${p.tpPips} pip): <b style="color:var(--green);">+ $${c.hedgeTP.toFixed(2)}</b></p>
-              <p style="font-size:14px; color:#fff;">🔻 SL (${p.slPips} pip): <b style="color:#F87171;">- $${c.hedgeSL.toFixed(2)}</b></p>
-          </div>
-      </div>
-      <div style="background:var(--bg2); padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.1);">
-          <h3 style="color:#fff; margin:0 0 15px 0; font-family:var(--fd); text-align:center; font-size:14px;">⚖️ BILANCIO FINE FASE</h3>
-          <div style="display:flex; gap:15px; flex-wrap:wrap;">
-              <div style="flex:1; min-width:240px; background:rgba(248,113,113,0.05); border:1px solid rgba(248,113,113,0.4); padding:15px; border-radius:8px;">
-                  <h4 style="color:#F87171; margin-top:0;">❌ PROP FALLITA</h4>
-                  <div style="margin-top:10px; font-weight:bold;">Netto in tasca: <span style="color:${nettoRealeFallimento >= 0 ? 'var(--green)' : '#F87171'}">$${nettoRealeFallimento.toFixed(2)}</span></div>
-              </div>
-              <div style="flex:1; min-width:240px; background:rgba(52,211,153,0.05); border:1px solid rgba(52,211,153,0.4); padding:15px; border-radius:8px;">
-                  <h4 style="color:var(--green); margin-top:0;">✅ PROP PASSATA</h4>
-                  <div style="margin-top:10px; font-weight:bold;">Costo reale passaggio: <span style="color:#F87171">-$${costoRealePassaggio.toFixed(2)}</span></div>
-              </div>
-          </div>
-      </div>`;
+      var htmlChallenge = '<div style="padding:0">';
+      /* header */
+      htmlChallenge += '<div style="padding:12px 16px 8px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)">'
+        +'<div style="font-size:14px;font-weight:800;font-family:var(--fh);color:var(--t)">🎯 Challenge 1 Step</div>'
+        +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-left:auto">'+asset+' · '+p.slPips+' pip SL · '+p.tpPips+' pip TP · Target '+tgtPct+'%</div>'
+        +'</div>';
+      /* big lot boxes */
+      htmlChallenge += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 14px 12px">';
+      htmlChallenge += '<div style="background:rgba(56,189,248,.08);border:2px solid var(--teal);border-radius:12px;padding:16px">'
+        +'<div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:var(--fd)">🎯 PROP (VALUTAZIONE)</div>'
+        +'<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:var(--teal);line-height:1;margin-bottom:8px">'+c.propLots+' <span style="font-size:16px;opacity:.7">Lot</span></div>'
+        +'<div style="font-size:12px;color:var(--t2);line-height:2">'
+        +'TP (<b>'+p.tpPips+'</b> pip): <b style="color:var(--green)">+$'+c.propTP.toFixed(0)+'</b><br>'
+        +'SL (<b>'+p.slPips+'</b> pip): <b style="color:var(--red)">-$'+c.propSL.toFixed(0)+'</b>'
+        +'</div></div>';
+      htmlChallenge += '<div style="background:rgba(167,139,250,.08);border:2px solid var(--violet);border-radius:12px;padding:16px">'
+        +'<div style="font-size:10px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:var(--fd)">🛡️ PERSONALE (REALE)</div>'
+        +'<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:var(--violet);line-height:1;margin-bottom:8px">'+c.hedgeLots+' <span style="font-size:16px;opacity:.7">Lot</span></div>'
+        +'<div style="font-size:12px;color:var(--t2);line-height:2">'
+        +'TP (se Prop perde): <b style="color:var(--green)">+$'+c.hedgeTP.toFixed(0)+'</b><br>'
+        +'SL (se Prop vince): <b style="color:var(--red)">-$'+c.hedgeSL.toFixed(0)+'</b>'
+        +'</div></div>';
+      htmlChallenge += '</div>';
+      /* kpi row */
+      htmlChallenge += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 14px 12px">';
+      var _kpis1 = [['WIN necessari',c.winsNeeded,'var(--green)'],['Max STOP',c.maxLossTrades,'var(--red)'],
+                    ['Target $','$'+_tgt1.toFixed(0),'var(--amber)'],['Payout '+pay+'%','+$'+(_tgt1*(pay/100)).toFixed(0),'var(--teal)']];
+      for(var ki=0;ki<_kpis1.length;ki++){
+        var _k=_kpis1[ki];
+        htmlChallenge += '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">'
+          +'<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:4px">'+_k[0]+'</div>'
+          +'<div style="font-size:16px;font-weight:800;font-family:var(--fd);color:'+_k[2]+'">'+_k[1]+'</div></div>';
+      }
+      htmlChallenge += '</div>';
+      /* scenari */
+      htmlChallenge += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 14px 14px">';
+      htmlChallenge += '<div style="background:rgba(248,113,113,.07);border:1.5px solid rgba(248,113,113,.3);border-radius:11px;padding:14px">'
+        +'<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">❌ PROP FALLITA</div>'
+        +'<div style="font-size:11px;color:var(--t2);line-height:2;font-family:var(--fd)">'
+        +'Costo: <b style="color:var(--red)">-$'+cost+'</b><br>'
+        +'Pers. recupera: <b style="color:var(--green)">+$'+c.sA_gain.toFixed(0)+'</b></div>'
+        +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(248,113,113,.2);display:flex;justify-content:space-between;align-items:center">'
+        +'<span style="font-size:9px;color:var(--t3)">NETTO</span>'
+        +'<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+_nrfCol+'">'+(nettoRealeFallimento>=0?'+':'')+nettoRealeFallimento.toFixed(0)+'$</span></div></div>';
+      htmlChallenge += '<div style="background:rgba(96,165,250,.07);border:1.5px solid rgba(96,165,250,.3);border-radius:11px;padding:14px">'
+        +'<div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">✅ PROP PASSATA</div>'
+        +'<div style="font-size:11px;color:var(--t2);line-height:2;font-family:var(--fd)">'
+        +'Costo: <b style="color:var(--red)">-$'+cost+'</b><br>'
+        +'Pers. perde: <b style="color:var(--red)">-$'+c.sB_los.toFixed(0)+'</b></div>'
+        +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(96,165,250,.2);display:flex;justify-content:space-between;align-items:center">'
+        +'<span style="font-size:9px;color:var(--t3)">COSTO LIVE</span>'
+        +'<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+costoRealePassaggio.toFixed(0)+'</span></div></div>';
+      htmlChallenge += '</div></div>';
       box.innerHTML = htmlChallenge;
       return;
   }
 
 // ── 2. SESSIONE: PROP + PERSONALE (CONTO LIVE FUNDED) ──
   if(stratMode === 'personal'){
-      // IL PERSONALE DEVE ESSERE PIÙ PICCOLO DELLA PROP. 
-      // Serve solo a recuperare il COSTO se la prop brucia.
+      /* ── lotPers: formula identica a _openSimPersonal per coerenza assoluta ── */
       var maxLossPropUsd = size * (maxDD / 100);
-      var slPropUsd = c.propSL; 
+      var slPropUsd = c.propSL;   // lots × sl × pipVal
       var tradePerBruciare = Math.floor(maxLossPropUsd / slPropUsd);
       if (tradePerBruciare < 1) tradePerBruciare = 1;
-
-      var tpPersonaleNecessario = cost / tradePerBruciare;
-      var hedgeLotsLive = tpPersonaleNecessario / (p.slPips * c.pipVal); 
+      var hedgeLotsLive = cost / (tradePerBruciare * sl * c.pipVal);
       hedgeLotsLive = Math.floor(hedgeLotsLive * 100) / 100;
       if(hedgeLotsLive < 0.01) hedgeLotsLive = 0.01;
-      
-      // SICUREZZA ASSOLUTA: Lotti Personali MAI superiori alla Prop
-      if(hedgeLotsLive >= c.propLots) hedgeLotsLive = Math.max(0.01, c.propLots - 0.01);
+      if(hedgeLotsLive >= c.propLots) hedgeLotsLive = Math.max(0.01, Math.floor((c.propLots - 0.01)*100)/100);
 
-      var hedgeTpUsd = hedgeLotsLive * p.slPips * c.pipVal; 
-      var hedgeSlUsd = hedgeLotsLive * p.tpPips * c.pipVal; 
+      var hedgeTpUsd = hedgeLotsLive * sl  * c.pipVal;   // pers guadagna quando prop perde (colpisce SL)
+      var hedgeSlUsd = hedgeLotsLive * tp  * c.pipVal;   // pers perde quando prop vince (colpisce TP)
 
       var targetConsistenzaUsd = size * (tgtPct/100);
       var limitDDperc = maxDD / 100;
       var tettoConsistenza = cons > 0 ? (targetConsistenzaUsd * (cons/100)) : 0;
 
-      var simHtml = `
-      <div style="display:flex; gap:15px; margin-bottom:15px; flex-wrap:wrap;">
-          <div style="flex:1; min-width:240px; background:rgba(56,189,248,0.08); padding:15px; border-radius:10px; border:2px solid var(--teal);">
-              <h4 style="color:var(--teal); margin:0 0 10px 0; font-family:var(--fd); font-size:12px; text-transform:uppercase;">🎯 LOTTI PROP (TRAINA)</h4>
-              <div style="font-size:24px; font-weight:800; font-family:var(--fd); color:var(--teal); margin-bottom:5px;">${c.propLots} <span style="font-size:14px">Lot</span></div>
-              <p style="font-size:12px; color:#fff;">Vincita/Trade: <b style="color:var(--green);">+$${c.propTP.toFixed(2)}</b></p>
-              <p style="font-size:12px; color:#fff;">Perdita/Trade: <b style="color:#F87171;">-$${c.propSL.toFixed(2)}</b></p>
-          </div>
-          <div style="flex:1; min-width:240px; background:rgba(167,139,250,0.08); padding:15px; border-radius:10px; border:2px solid var(--violet);">
-              <h4 style="color:var(--violet); margin:0 0 10px 0; font-family:var(--fd); font-size:12px; text-transform:uppercase;">🛡️ LOTTI PERSONALE (COPERTURA LEGGERA)</h4>
-              <div style="font-size:24px; font-weight:800; font-family:var(--fd); color:var(--violet); margin-bottom:5px;">${hedgeLotsLive} <span style="font-size:14px">Lot</span></div>
-              <p style="font-size:12px; color:#fff;">Vincita (se Prop perde): <b style="color:var(--green);">+$${hedgeTpUsd.toFixed(2)}</b></p>
-              <p style="font-size:12px; color:#fff;">Perdita (se Prop vince): <b style="color:#F87171;">-$${hedgeSlUsd.toFixed(2)}</b></p>
-          </div>
-      </div>
+      /* ─── UI REDESIGN: stile Prop+Personale premium ─── */
+      var _kpiCol = function(lbl,val,clr){
+        return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 6px;text-align:center">'
+          +'<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">'+lbl+'</div>'
+          +'<div style="font-size:15px;font-weight:800;font-family:var(--fd);color:'+clr+'">'+val+'</div></div>';
+      };
+      var _nLossDisplay = tradePerBruciare;
+      var _winsNeed = c.propTP > 0 ? Math.ceil(targetConsistenzaUsd / c.propTP) : '?';
+      var _payoutFull = (targetConsistenzaUsd * (pay/100)).toFixed(0);
+      var _recoverFail = (hedgeLotsLive * tradePerBruciare * sl * c.pipVal - cost).toFixed(0);
+      var _nettoFail = parseFloat(_recoverFail);
+      var _nettoFailCol = _nettoFail >= 0 ? 'var(--green)' : 'var(--red)';
 
-      <div style="background:var(--bg2); padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); overflow-x:auto;">
-          <h3 style="color:var(--teal); margin:0 0 15px 0; font-family:var(--fd); font-size:14px; text-transform:uppercase;">🔴 SIMULATORE GIORNO DOPO GIORNO (LIVE)</h3>
-          <table style="width:100%; text-align:left; border-collapse:collapse; font-size:11px; font-family:var(--fm); min-width:800px;">
-              <thead>
-                  <tr style="border-bottom:1px solid rgba(255,255,255,0.2); color:var(--t3);">
-                      <th style="padding:10px;">1. GIORNO</th>
-                      <th style="padding:10px;">2. PnL PROP</th>
-                      <th style="padding:10px;">3. BALANCE PROP</th>
-                      <th style="padding:10px; color:var(--amber);">4. ${p.trailingDD ? 'DD TRAILING' : 'DD STATICO'}</th>
-                      <th style="padding:10px; color:#60a5fa;">5. CONSISTENZA ${cons}%</th>
-                      <th style="padding:10px;">6. CUMULATIVO PERS.</th>
-                      <th style="padding:10px; color:var(--teal);">7. PAYOUT ${pay}%</th>
-                  </tr>
-              </thead>
-              <tbody>`;
+      var simHtml = '<div style="padding:0">';
+
+      /* ── HEADER con asset ── */
+      simHtml += '<div style="padding:12px 16px 8px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)">'
+        +'<div style="font-size:14px;font-weight:800;font-family:var(--fh);color:var(--t)">📊 Prop + Personale</div>'
+        +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-left:auto">'+asset+' · '+sl+' pip SL · '+tp+' pip TP · Target '+tgtPct+'%'+(cons>0?' · Cons.'+cons+'%':'')+' · DD '+maxDD+'%</div>'
+        +'</div>';
+
+      /* ── 2 GRANDI BOX LOTTI ── */
+      simHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 14px 12px">';
+
+      /* PROP BOX */
+      simHtml += '<div style="background:rgba(56,189,248,.08);border:2px solid var(--teal);border-radius:12px;padding:16px">'
+        +'<div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:var(--fd)">🎯 LOTTI PROP (TRAINA)</div>'
+        +'<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:var(--teal);line-height:1;margin-bottom:8px">'+c.propLots+' <span style="font-size:16px;opacity:.7">Lot</span></div>'
+        +'<div style="font-size:12px;color:var(--t2);line-height:2">'
+        +'TP (<b>'+tp+'</b> pip): <b style="color:var(--green)">+$'+c.propTP.toFixed(0)+'</b><br>'
+        +'SL (<b>'+sl+'</b> pip): <b style="color:var(--red)">-$'+c.propSL.toFixed(0)+'</b>'
+        +'</div></div>';
+
+      /* PERSONALE BOX */
+      simHtml += '<div style="background:rgba(167,139,250,.08);border:2px solid var(--violet);border-radius:12px;padding:16px">'
+        +'<div style="font-size:10px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:var(--fd)">🛡️ LOTTI PERSONALE (COPERTURA)</div>'
+        +'<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:var(--violet);line-height:1;margin-bottom:8px">'+hedgeLotsLive+' <span style="font-size:16px;opacity:.7">Lot</span></div>'
+        +'<div style="font-size:12px;color:var(--t2);line-height:2">'
+        +'Vincita (se Prop perde): <b style="color:var(--green)">+$'+hedgeTpUsd.toFixed(0)+'</b><br>'
+        +'Perdita (se Prop vince): <b style="color:var(--red)">-$'+hedgeSlUsd.toFixed(0)+'</b>'
+        +'</div></div>';
+
+      simHtml += '</div>'; /* fine grid lotti */
+
+      /* ── KPI RAPIDI ── */
+      simHtml += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 14px 14px">'
+        +_kpiCol('WIN necessari', _winsNeed, 'var(--green)')
+        +_kpiCol('Max STOP', _nLossDisplay, 'var(--red)')
+        +_kpiCol('Target $', '$'+targetConsistenzaUsd.toFixed(0), 'var(--amber)')
+        +_kpiCol('Payout '+pay+'%', '+$'+_payoutFull, 'var(--teal)')
+        +'</div>';
+
+      /* ── SCENARI ── */
+      simHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 14px 14px">';
+      simHtml += '<div style="background:rgba(248,113,113,.07);border:1.5px solid rgba(248,113,113,.3);border-radius:11px;padding:14px">'
+        +'<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">❌ PROP FALLITA</div>'
+        +'<div style="font-size:11px;color:var(--t2);line-height:2;font-family:var(--fd)">'
+        +'Pers. recupera: <b style="color:var(--green)">+$'+(hedgeTpUsd*tradePerBruciare).toFixed(0)+'</b><br>'
+        +'Costo challenge: <b style="color:var(--red)">-$'+cost.toFixed(0)+'</b></div>'
+        +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(248,113,113,.2);display:flex;justify-content:space-between;align-items:center">'
+        +'<span style="font-size:9px;color:var(--t3);font-family:var(--fd)">NETTO</span>'
+        +'<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+_nettoFailCol+'">'+(_nettoFail>=0?'+':'')+_nettoFail.toFixed(0)+'$</span></div></div>';
+      var _costoPass = cost + hedgeSlUsd * _winsNeed;
+      simHtml += '<div style="background:rgba(96,165,250,.07);border:1.5px solid rgba(96,165,250,.3);border-radius:11px;padding:14px">'
+        +'<div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">✅ PROP PASSATA</div>'
+        +'<div style="font-size:11px;color:var(--t2);line-height:2;font-family:var(--fd)">'
+        +'Pers. perde: <b style="color:var(--red)">-$'+(hedgeSlUsd*_winsNeed).toFixed(0)+'</b><br>'
+        +'Costo challenge: <b style="color:var(--red)">-$'+cost.toFixed(0)+'</b></div>'
+        +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(96,165,250,.2);display:flex;justify-content:space-between;align-items:center">'
+        +'<span style="font-size:9px;color:var(--t3);font-family:var(--fd)">COSTO LIVE</span>'
+        +'<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+_costoPass.toFixed(0)+'</span></div></div>';
+      simHtml += '</div>'; /* fine scenari */
+
+      /* ── TABELLA SIMULAZIONE GIORNI ── */
+      simHtml += '<div style="padding:0 14px 14px">';
+      simHtml += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow-x:auto">';
+      simHtml += '<div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">'
+        +'<div style="width:3px;height:11px;background:linear-gradient(var(--teal),var(--violet));border-radius:2px"></div>'
+        +'<div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">🔴 SIMULATORE GIORNO DOPO GIORNO (LIVE)</div>'
+        +'</div>';
+      simHtml += '<table style="width:100%;border-collapse:collapse;font-size:11px;font-family:var(--fm);min-width:700px">'
+        +'<thead><tr style="background:var(--bg3)">'
+        +'<th style="padding:10px 8px;text-align:left;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">1. GIORNO</th>'
+        +'<th style="padding:10px 8px;text-align:right;font-size:9px;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">2. PnL PROP</th>'
+        +'<th style="padding:10px 8px;text-align:right;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">3. BALANCE PROP</th>'
+        +'<th style="padding:10px 8px;text-align:right;font-size:9px;color:var(--amber);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">4. DD STATICO</th>'
+        +(cons>0?'<th style="padding:10px 8px;text-align:center;font-size:9px;color:#60a5fa;font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">5. CONSISTENZA '+cons+'%</th>':'')
+        +'<th style="padding:10px 8px;text-align:right;font-size:9px;color:var(--violet);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">6. CUMULATIVO PERS.</th>'
+        +'<th style="padding:10px 8px;text-align:right;font-size:9px;color:var(--teal);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border)">7. PAYOUT '+pay+'%</th>'
+        +'</tr></thead><tbody>';
 
       var currentBalance = size;
       var hwm = size;
@@ -5535,57 +5618,54 @@ var c = calcChallenge(p);
           if(currentBalance > hwm) hwm = currentBalance;
 
           var limiteMorte = p.trailingDD ? (hwm - (hwm * limitDDperc)) : (size - (size * limitDDperc));
-          
-          var tettoText = cons > 0 ? "Tetto: $"+tettoConsistenza.toFixed(0) : "N/A";
-          var violazioneText = "";
+          var tettoConsistenza = cons > 0 ? (targetConsistenzaUsd * (cons/100)) : 0;
+          var tettoText = cons > 0 ? 'Tetto: $'+tettoConsistenza.toFixed(0) : '';
+          var violazioneText = '';
           if(cons > 0 && pnlProp > tettoConsistenza) {
-              violazioneText = " <span style=\"color:#F87171;font-weight:bold;\">(VIOLATA!)</span>";
+              violazioneText = ' <b style="color:var(--red)">(VIOLATA!)</b>';
               isViolated = true;
           }
 
           var payoutAttuale = (currentBalance > size) ? (currentBalance - size) * (pay/100) : 0;
-          var colorCumPers = cumPersonale >= 0 ? 'var(--green)' : '#F87171';
+          var _isMinDay = i <= days;
+          var _balCol = currentBalance >= size ? 'var(--green)' : 'var(--red)';
+          var _persCol = cumPersonale >= 0 ? 'var(--green)' : 'var(--red)';
+          var _rowBg = i%2===0 ? 'rgba(167,139,250,.02)' : '';
 
-          simHtml += `
-          <tr style="border-bottom:1px dashed rgba(255,255,255,0.05);">
-              <td style="padding:10px; font-weight:bold;">Giorno ${i}</td>
-              <td style="padding:10px; color:var(--green); font-weight:bold;">+$${pnlProp.toFixed(2)}</td>
-              <td style="padding:10px; color:#fff;">$${currentBalance.toFixed(2)}</td>
-              <td style="padding:10px; color:var(--amber);">$${limiteMorte.toFixed(2)}</td>
-              <td style="padding:10px; color:#60a5fa;">${tettoText}${violazioneText}</td>
-              <td style="padding:10px; color:${colorCumPers}; font-weight:bold;">${cumPersonale >= 0 ? '+' : ''}$${cumPersonale.toFixed(2)}</td>
-              <td style="padding:10px; color:var(--teal); font-weight:bold;">$${payoutAttuale.toFixed(2)}</td>
-          </tr>`;
+          simHtml += '<tr style="border-bottom:1px solid var(--border);background:'+_rowBg+'">'
+            +'<td style="padding:8px 10px;font-weight:700;font-family:var(--fd);font-size:11px">Giorno '+i+'</td>'
+            +'<td style="padding:8px;text-align:right;font-family:var(--fd);font-size:11px;color:var(--green);font-weight:700">+$'+pnlProp.toFixed(0)+'</td>'
+            +'<td style="padding:8px;text-align:right;font-family:var(--fd);font-size:11px;color:'+_balCol+';font-weight:600">$'+currentBalance.toFixed(0)+'</td>'
+            +'<td style="padding:8px;text-align:right;font-family:var(--fd);font-size:11px;color:var(--amber)">$'+limiteMorte.toFixed(0)+'</td>'
+            +(cons>0?'<td style="padding:8px;text-align:center;font-family:var(--fd);font-size:10px;color:#60a5fa">'+tettoText+violazioneText+'</td>':'')
+            +'<td style="padding:8px;text-align:right;font-family:var(--fd);font-size:11px;color:'+_persCol+';font-weight:700">'+(cumPersonale>=0?'+':'')+'$'+cumPersonale.toFixed(0)+'</td>'
+            +'<td style="padding:8px;text-align:right;font-family:var(--fd);font-size:11px;color:var(--teal);font-weight:700">+$'+payoutAttuale.toFixed(0)+'</td>'
+            +'</tr>';
       }
 
-      simHtml += `</tbody></table></div>`;
+      simHtml += '</tbody></table></div></div>'; /* fine tabella e padding */
 
       var finaleProp = currentBalance - size;
       var finalePayout = finaleProp * (pay/100);
       var utileNetto = finalePayout + cumPersonale;
 
       if(isViolated) {
-          simHtml += `<div style="margin-top:15px; background:rgba(248,113,113,0.1); border:1px solid #F87171; padding:15px; border-radius:10px; color:#fff; text-align:center;">
-          <h3 style="color:#F87171; margin:0 0 5px 0;">🚨 REGOLA CONSISTENZA VIOLATA</h3>
-          <p>I lotti inseriti sono troppo alti. Riduci la size per non superare il tetto massimo per trade o verrai squalificato.</p>
-          </div>`;
+          simHtml += '<div style="margin:0 14px 14px;background:rgba(248,113,113,.1);border:1px solid var(--red);padding:14px;border-radius:10px;text-align:center">'
+            +'<div style="font-size:14px;font-weight:800;color:var(--red);margin-bottom:4px">🚨 REGOLA CONSISTENZA VIOLATA</div>'
+            +'<div style="font-size:12px;color:var(--t2)">I lotti sono troppo alti. Riduci la size per non superare il tetto per trade.</div>'
+            +'</div>';
       } else {
-          simHtml += `
-          <div style="margin-top:15px; background:rgba(52,211,153,0.05); border:1px solid rgba(52,211,153,0.4); padding:15px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-              <div>
-                  <div style="font-size:11px; color:var(--t3); text-transform:uppercase;">Payout Sbloccato (${pay}%)</div>
-                  <div style="font-size:18px; color:var(--teal); font-weight:bold;">+$${finalePayout.toFixed(2)}</div>
-              </div>
-              <div>
-                  <div style="font-size:11px; color:var(--t3); text-transform:uppercase;">PnL Personale Reale</div>
-                  <div style="font-size:18px; color:${cumPersonale>=0?'var(--green)':'#F87171'}; font-weight:bold;">${cumPersonale>=0?'+':''}$${cumPersonale.toFixed(2)}</div>
-              </div>
-              <div style="text-align:right;">
-                  <div style="font-size:11px; color:var(--t3); text-transform:uppercase;">UTILE NETTO IN TASCA (FINE CICLO)</div>
-                  <div style="font-size:24px; color:${utileNetto>=0?'var(--green)':'#F87171'}; font-family:var(--fd); font-weight:bold;">${utileNetto>=0?'+':''}$${utileNetto.toFixed(2)}</div>
-              </div>
-          </div>`;
+          /* ── SUMMARY FINALE ── */
+          simHtml += '<div style="margin:0 14px 14px;background:rgba(56,189,248,.05);border:1px solid rgba(56,189,248,.2);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">';
+          simHtml += '<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:4px">Payout Sbloccato ('+pay+'%)</div>'
+            +'<div style="font-size:22px;color:var(--teal);font-weight:800;font-family:var(--fd)">+$'+finalePayout.toFixed(0)+'</div></div>';
+          simHtml += '<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:4px">PnL Personale Reale</div>'
+            +'<div style="font-size:22px;color:'+(cumPersonale>=0?'var(--green)':'var(--red)')+';font-weight:800;font-family:var(--fd)">'+(cumPersonale>=0?'+':'')+'$'+cumPersonale.toFixed(0)+'</div></div>';
+          simHtml += '<div style="text-align:right"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:4px">UTILE NETTO (FINE CICLO)</div>'
+            +'<div style="font-size:28px;color:'+(utileNetto>=0?'var(--green)':'var(--red)')+';font-weight:800;font-family:var(--fd)">'+(utileNetto>=0?'+':'')+'$'+utileNetto.toFixed(0)+'</div></div>';
+          simHtml += '</div>';
       }
+      simHtml += '</div>'; /* fine div root */
       box.innerHTML = simHtml;
       return;
   }
@@ -13338,22 +13418,22 @@ function autoCalcPips() {
   var tpE = document.getElementById('mTpPips'); if (tpE) tpE.value = bestPips;
   var ltE = document.getElementById('mLots');   if (ltE) ltE.value = bestLots;
 
-  /* ── Toast esplicativo ── */
+  /* ── Toast esplicativo (usa solo variabili in scope) ── */
   var winLoss      = (bestLots * bestPips * pipVal).toFixed(0);
   var persGain     = (lotPers  * bestPips * pipVal).toFixed(0);
-  var daysToTarget = winLoss > 0
-    ? Math.ceil(tgtUsd / parseFloat(winLoss))
+  var _tgtPctToast = parseFloat(document.getElementById('mTgt')?.value) || 8;
+  var _sizeToast   = parseFloat(document.getElementById('mSize')?.value) || 100000;
+  var _tgtUsdToast = _sizeToast * (_tgtPctToast / 100);
+  var daysToTarget = parseFloat(winLoss) > 0
+    ? Math.ceil(_tgtUsdToast / parseFloat(winLoss))
     : '?';
-
-  var trailNote = isTrail
-    ? ' | ⚠ Trail: penalità ' + Math.round(penalty * 100) + '%'
-    : ' | 📌 DD statico';
-  var consNote = hasCons
-    ? ' | Cons.' + cons + '%: max $' + (isFinite(consLimit) ? consLimit.toFixed(0) : '∞') + '/trade'
-    : ' | Nessuna consistenza';
+  var _isTrailToast = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
+  var _consToast    = parseFloat(document.getElementById('mConsistency')?.value) || 0;
+  var trailNote = _isTrailToast ? ' | ⚠ Trail attivo' : ' | 📌 DD statico';
+  var consNote  = _consToast > 0 ? ' | Cons. ' + _consToast + '%' : ' | Nessuna consistenza';
 
   var msg =
-    '⚡ ' + noteReason + '\n' +
+    '⚡ Calcolo completato\n' +
     'RR 1:1 → ' + bestPips + ' pip | Prop: ' + bestLots +
     ' lot ±$' + winLoss +
     ' | Pers: ' + lotPers + ' lot (cop. ±$' + persGain + ')\n' +
@@ -13445,33 +13525,57 @@ function _openSimPersonal() {
   s.consistency =parseFloat(document.getElementById('mConsistency')?.value)||30;
   s.trailLock   =parseFloat(document.getElementById('mTrailLock')?.value)||0;
   s.isTrail     =(typeof _ddTrailing!=='undefined')?_ddTrailing:false;
-  /* ── Usa la stessa funzione condivisa del calcolatore ──────────────
-     _calcPersonalLots() usa ESATTAMENTE lo stesso algoritmo di
-     autoCalcPips() → valori identici al centesimo SEMPRE,
-     indipendentemente dall'ordine dei click.
+  /* ── FIX: legge dal form (mLots, mSlPips, mTpPips) — stessa fonte di calcPreview.
+     Questo garantisce che il simulatore usi ESATTAMENTE i valori mostrati
+     nel calcolatore, incluso il lotto inserito manualmente o dall'autoCalc.
+     Se il form è vuoto/zero → fallback a _calcPersonalLots().
   ─────────────────────────────────────────────────────────────────── */
-  var _c = _calcPersonalLots();
+  var _c       = _calcPersonalLots();
+  var _fLots   = parseFloat(document.getElementById('mLots')?.value)   || 0;
+  var _fSl     = parseFloat(document.getElementById('mSlPips')?.value) || 0;
+  var _fTp     = parseFloat(document.getElementById('mTpPips')?.value) || 0;
+  s.pipVal     = _c.pipVal;
 
-  s.lots   = _c.lots;
-  s.slPips = _c.pip;
-  s.tpPips = _c.pip;     /* RR 1:1: SL = TP */
-  s.pipVal = _c.pipVal;
-  s.lotPers= _c.lotPers;
+  if (_fLots >= 0.01 && _fSl >= 1) {
+    /* USA VALORI DEL FORM — identici a quelli del calcolatore */
+    s.lots   = _fLots;
+    s.slPips = _fSl;
+    s.tpPips = _fTp >= 1 ? _fTp : _fSl;
+    /* lotPers: stessa formula di calcPreview(personal) → cost / (nLoss × sl × pipVal) */
+    var _maxDDusd = s.size * (s.maxDD / 100);
+    var _propSL   = _fLots * _fSl * s.pipVal;
+    var _nLoss    = _propSL > 0 ? Math.floor(_maxDDusd / _propSL) : 10;
+    if (_nLoss < 1) _nLoss = 1;
+    s.lotPers = s.cost / (_nLoss * _fSl * s.pipVal);
+    s.lotPers = Math.floor(s.lotPers * 100) / 100;
+    if (s.lotPers < 0.01) s.lotPers = 0.01;
+    if (s.lotPers >= s.lots) s.lotPers = Math.max(0.01, Math.floor((s.lots - 0.01) * 100) / 100);
+  } else {
+    /* FALLBACK: autoCalc se il form è vuoto */
+    s.lots   = _c.lots;
+    s.slPips = _c.pip;
+    s.tpPips = _c.pip;
+    s.lotPers= _c.lotPers;
+    /* Aggiorna anche il form per coerenza */
+    var _slE = document.getElementById('mSlPips'); if (_slE) _slE.value = _c.pip;
+    var _tpE = document.getElementById('mTpPips'); if (_tpE) _tpE.value = _c.pip;
+    var _ltE = document.getElementById('mLots');   if (_ltE) _ltE.value = _c.lots;
+  }
 
   s.asset      = (document.getElementById('mAsset')?.value||'GOLD:10').split(':')[0];
   s.rows       = 31;
   s.propTarget = s.size*(s.tgtPct/100);
   s.maxDDusd   = s.size*(s.maxDD/100);
-  s.propWin    = s.lots * s.slPips * s.pipVal;   /* ±$ per trade prop */
-  s.propLoss   = s.lots * s.slPips * s.pipVal;
+  s.propWin    = s.lots   * s.tpPips * s.pipVal;   /* prop guadagna quando TP colpito */
+  s.propLoss   = s.lots   * s.slPips * s.pipVal;   /* prop perde quando SL colpito */
   s.consLimit  = s.consistency>0 ? s.propTarget*(s.consistency/100) : Infinity;
 
-  /* hedgeWin = hedgeLoss = lotPers × pip × pipVal (RR 1:1) */
+  /* hedge è opposto: guadagna quando prop perde (slPips), perde quando prop vince (tpPips) */
   s.hedgeWin  = s.lotPers * s.slPips * s.pipVal;
-  s.hedgeLoss = s.lotPers * s.slPips * s.pipVal;
+  s.hedgeLoss = s.lotPers * s.tpPips * s.pipVal;
 
-  /* Reset se parametri cambiati */
-  var nk=[s.size,s.maxDD,s.tgtPct,s.pay,s.minDays,s.isTrail,s.trailLock,s.consistency,s.propWin,s.propLoss].join('|');
+  /* Reset se parametri cambiati — include lots e pip per rilevare cambio manuale */
+  var nk=[s.size,s.maxDD,s.tgtPct,s.pay,s.minDays,s.isTrail,s.trailLock,s.consistency,s.lots,s.slPips,s.lotPers].join('|');
   if(nk!==_simPS_cacheKey||!s.data||!s.data.length){
     _simPS_cacheKey=nk;
     s.data=[];
