@@ -1832,7 +1832,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
 
 
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<div id="splashScreen" style="position:fixed;inset:0;z-index:999999;background:#07091a;overflow:hidden;display:flex;align-items:center;justify-content:center">
+<div id="splashScreen" style="position:fixed;inset:0;z-index:999999;background:#07091a;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center">
 
 
 
@@ -1880,9 +1880,10 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
 
 
 
-  <div style="position:relative;z-index:2;width:100%;max-width:1140px;padding:44px 32px 0;display:flex;align-items:center;gap:48px;flex-wrap:wrap;justify-content:center;flex-direction:row-reverse">
+  <div style="position:relative;z-index:2;width:100%;max-width:1140px;padding:32px 32px 0;display:flex;flex-direction:column;align-items:stretch">
 
-
+    <!-- riga: globo + testo -->
+    <div style="display:flex;align-items:center;gap:48px;flex-wrap:wrap;justify-content:center;flex-direction:row-reverse">
 
     <div style="position:relative;width:300px;height:300px;flex-shrink:0">
 
@@ -1963,72 +1964,124 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
       <button onclick="openConsent()" style="background:linear-gradient(135deg,#7C3AED,#38BDF8);border:none;color:#fff;border-radius:16px;padding:26px 80px;font-size:22px;font-weight:700;cursor:pointer;font-family:var(--fc);letter-spacing:.12em;text-transform:uppercase;display:inline-flex;align-items:center;gap:14px;transition:all .3s;box-shadow:0 0 60px rgba(124,58,237,.55),0 12px 40px rgba(56,189,248,.3),inset 0 1px 0 rgba(255,255,255,.15)" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 0 80px rgba(124,58,237,.7),0 16px 48px rgba(56,189,248,.4),inset 0 1px 0 rgba(255,255,255,.2)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 0 60px rgba(124,58,237,.55),0 12px 40px rgba(56,189,248,.3),inset 0 1px 0 rgba(255,255,255,.15)'">&#9658;&nbsp; Entra nel software</button>
 
       <!-- ═══ DYNAMIC PREVIEW CARD ═══ -->
-      <div style="margin-top:24px;position:relative;width:100%;max-width:560px;opacity:0;animation:spUp .8s ease .6s forwards">
-        <div style="position:absolute;top:14px;left:12px;right:12px;bottom:0;background:rgba(167,139,250,.04);border:0.5px solid rgba(167,139,250,.07);border-radius:14px;z-index:1"></div>
-        <div style="position:absolute;top:7px;left:6px;right:6px;bottom:0;background:rgba(56,189,248,.05);border:0.5px solid rgba(56,189,248,.09);border-radius:14px;z-index:2"></div>
-        <div style="position:relative;z-index:3;background:#0d1230;border:1px solid #1c1f3a;border-radius:14px;padding:16px 20px">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
-            <div>
-              <div style="font-family:'Syne','DM Sans',sans-serif;font-size:28px;font-weight:900;color:#e8eaf6;letter-spacing:-.04em;line-height:1;transition:opacity .3s,transform .3s" id="spSessWord">Personale</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#363b60;margin-top:3px;letter-spacing:.04em;transition:opacity .3s" id="spSessRest">hedging · GOLD · 0.03 lot hedge</div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-family:'Syne','DM Sans',sans-serif;font-size:46px;font-weight:900;letter-spacing:-.06em;line-height:1;transition:color .4s,opacity .3s,transform .3s;color:#34D399" id="spPct">+45%</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.12em;color:#363b60;margin-top:2px">copertura costo</div>
-            </div>
-          </div>
-          <div style="height:0.5px;background:rgba(255,255,255,.06);margin:10px 0"></div>
-          <div style="display:flex;gap:0;align-items:flex-end;margin-bottom:14px">
-            <div style="flex:1">
-              <div style="font-family:'Syne','DM Sans',sans-serif;font-size:20px;font-weight:800;letter-spacing:-.04em;line-height:1;transition:color .4s,opacity .3s" id="spV1" style="color:#F87171">$46k</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#363b60;margin-top:4px">DD Line</div>
-            </div>
-            <div style="flex:1;border-left:0.5px solid rgba(255,255,255,.06);padding-left:14px">
-              <div style="font-family:'Syne','DM Sans',sans-serif;font-size:24px;font-weight:800;letter-spacing:-.04em;line-height:1;transition:color .4s,opacity .3s" id="spV2" style="color:#38BDF8">$48.2k</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#363b60;margin-top:4px">Balance Prop</div>
-            </div>
-            <div style="flex:1;border-left:0.5px solid rgba(255,255,255,.06);padding-left:14px">
-              <div style="font-family:'Syne','DM Sans',sans-serif;font-size:30px;font-weight:900;letter-spacing:-.05em;line-height:1;transition:color .4s,opacity .3s" id="spV3" style="color:#34D399">+$920</div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#363b60;margin-top:4px">P&amp;L Personale</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:10px">
-            <div style="flex:1;position:relative;padding-bottom:5px;padding-right:5px">
-              <div style="position:absolute;inset:0;margin:5px 5px 0 0;background:rgba(255,255,255,.015);border:0.5px solid rgba(255,255,255,.04);border-radius:8px"></div>
-              <div style="position:absolute;inset:0;margin:3px 3px 0 0;background:rgba(255,255,255,.025);border:0.5px solid rgba(255,255,255,.06);border-radius:8px"></div>
-              <div style="position:relative;z-index:2;background:#0a0e24;border:0.5px solid #1c1f3a;border-radius:8px;padding:8px 11px">
-                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.03em;color:#A78BFA;transition:color .4s" id="spS1">5%</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#363b60;margin-top:2px">Target Prop</div>
-              </div>
-            </div>
-            <div style="flex:1;position:relative;padding-bottom:5px;padding-right:5px">
-              <div style="position:absolute;inset:0;margin:5px 5px 0 0;background:rgba(255,255,255,.015);border:0.5px solid rgba(255,255,255,.04);border-radius:8px"></div>
-              <div style="position:absolute;inset:0;margin:3px 3px 0 0;background:rgba(255,255,255,.025);border:0.5px solid rgba(255,255,255,.06);border-radius:8px"></div>
-              <div style="position:relative;z-index:2;background:#0a0e24;border:0.5px solid #1c1f3a;border-radius:8px;padding:8px 11px">
-                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.03em;color:#FBBF24;transition:color .4s" id="spS2">12/31</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#363b60;margin-top:2px">Trade Fatti</div>
-              </div>
-            </div>
-            <div style="flex:1;position:relative;padding-bottom:5px">
-              <div style="position:absolute;inset:0;margin:5px 5px 0 0;background:rgba(255,255,255,.015);border:0.5px solid rgba(255,255,255,.04);border-radius:8px"></div>
-              <div style="position:absolute;inset:0;margin:3px 3px 0 0;background:rgba(255,255,255,.025);border:0.5px solid rgba(255,255,255,.06);border-radius:8px"></div>
-              <div style="position:relative;z-index:2;background:#0a0e24;border:0.5px solid #1c1f3a;border-radius:8px;padding:8px 11px">
-                <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;letter-spacing:-.03em;color:#F87171;transition:color .4s" id="spS3">4%</div>
-                <div style="font-family:'JetBrains Mono',monospace;font-size:7px;text-transform:uppercase;letter-spacing:.1em;color:#363b60;margin-top:2px">Max DD</div>
-              </div>
-            </div>
-          </div>
+
+    </div><!-- fine colonna sinistra -->
+
+    </div><!-- fine riga globo+testo -->
+
+    <!-- ═══ SEZIONE 5 FOTO PROFESSIONALI ═══ -->
+    <div style="margin-top:28px;display:grid;grid-template-columns:repeat(5,1fr);gap:0;width:100%;opacity:0;animation:spUp .8s ease .5s forwards;border-radius:12px;overflow:hidden;border:1px solid #1c1f3a">
+
+      <div style="position:relative;overflow:hidden;height:190px">
+        <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&q=85&fit=crop" alt="Conferenza trading" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.72)">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(7,9,26,.94) 0%,transparent 60%)"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:11px 13px">
+          <div style="font-family:var(--fh);font-size:11px;font-weight:700;color:#fff;line-height:1.2">Formazione Live</div>
+          <div style="font-family:var(--fd);font-size:8px;color:#7880a8;margin-top:2px;letter-spacing:.08em;text-transform:uppercase">in presenza</div>
         </div>
+        <div style="position:absolute;top:10px;left:10px;background:rgba(56,189,248,.18);border:1px solid rgba(56,189,248,.35);border-radius:5px;padding:3px 7px;font-family:var(--fd);font-size:7px;font-weight:700;color:#38BDF8;letter-spacing:.1em;text-transform:uppercase">LIVE</div>
       </div>
-      <!-- ═══ FINE DYNAMIC CARD ═══ -->
 
+      <div style="position:relative;overflow:hidden;height:190px;border-left:1px solid #1c1f3a">
+        <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=85&fit=crop" alt="Multi monitor trading" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.68)">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(7,9,26,.94) 0%,transparent 60%)"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:11px 13px">
+          <div style="font-family:var(--fh);font-size:11px;font-weight:700;color:#fff;line-height:1.2">Multi-Schermo</div>
+          <div style="font-family:var(--fd);font-size:8px;color:#7880a8;margin-top:2px;letter-spacing:.08em;text-transform:uppercase">analisi grafici</div>
+        </div>
+        <div style="position:absolute;top:10px;left:10px;background:rgba(167,139,250,.18);border:1px solid rgba(167,139,250,.35);border-radius:5px;padding:3px 7px;font-family:var(--fd);font-size:7px;font-weight:700;color:#A78BFA;letter-spacing:.1em;text-transform:uppercase">PRO</div>
+      </div>
 
+      <div style="position:relative;overflow:hidden;height:190px;border-left:1px solid #1c1f3a">
+        <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&q=85&fit=crop" alt="Analisi strategia" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.7)">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(7,9,26,.94) 0%,transparent 60%)"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:11px 13px">
+          <div style="font-family:var(--fh);font-size:11px;font-weight:700;color:#fff;line-height:1.2">Analisi Prop</div>
+          <div style="font-family:var(--fd);font-size:8px;color:#7880a8;margin-top:2px;letter-spacing:.08em;text-transform:uppercase">strategia hedge</div>
+        </div>
+        <div style="position:absolute;top:10px;left:10px;background:rgba(52,211,153,.18);border:1px solid rgba(52,211,153,.35);border-radius:5px;padding:3px 7px;font-family:var(--fd);font-size:7px;font-weight:700;color:#34D399;letter-spacing:.1em;text-transform:uppercase">HEDGE</div>
+      </div>
+
+      <div style="position:relative;overflow:hidden;height:190px;border-left:1px solid #1c1f3a">
+        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&q=85&fit=crop" alt="Team meeting lavagna" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.7)">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(7,9,26,.94) 0%,transparent 60%)"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:11px 13px">
+          <div style="font-family:var(--fh);font-size:11px;font-weight:700;color:#fff;line-height:1.2">Team Strategy</div>
+          <div style="font-family:var(--fd);font-size:8px;color:#7880a8;margin-top:2px;letter-spacing:.08em;text-transform:uppercase">sessione operativa</div>
+        </div>
+        <div style="position:absolute;top:10px;left:10px;background:rgba(251,191,36,.18);border:1px solid rgba(251,191,36,.35);border-radius:5px;padding:3px 7px;font-family:var(--fd);font-size:7px;font-weight:700;color:#FBBF24;letter-spacing:.1em;text-transform:uppercase">TEAM</div>
+      </div>
+
+      <div style="position:relative;overflow:hidden;height:190px;border-left:1px solid #1c1f3a">
+        <img src="https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=85&fit=crop" alt="Trader grafico" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.68)">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(7,9,26,.94) 0%,transparent 60%)"></div>
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:11px 13px">
+          <div style="font-family:var(--fh);font-size:11px;font-weight:700;color:#fff;line-height:1.2">Challenge Mastery</div>
+          <div style="font-family:var(--fd);font-size:8px;color:#7880a8;margin-top:2px;letter-spacing:.08em;text-transform:uppercase">prop firm trading</div>
+        </div>
+        <div style="position:absolute;top:10px;left:10px;background:rgba(248,113,113,.18);border:1px solid rgba(248,113,113,.35);border-radius:5px;padding:3px 7px;font-family:var(--fd);font-size:7px;font-weight:700;color:#F87171;letter-spacing:.1em;text-transform:uppercase">CHALLENGE</div>
+      </div>
 
     </div>
+    <!-- ═══ FINE SEZIONE FOTO ═══ -->
 
+    <!-- ═══ DYNAMIC PREVIEW CARD — full width, compatta su una riga ═══ -->
+    <div style="margin-top:10px;width:100%;opacity:0;animation:spUp .8s ease .7s forwards;padding-bottom:32px">
+      <div style="background:#0c0f26;border:1px solid #1e2241;border-radius:12px;display:grid;grid-template-columns:auto 1px 1fr 1px 1fr 1px 1fr 1px 1fr 1px 1fr 1px 1fr;align-items:center;overflow:hidden">
 
+        <!-- Sessione + % -->
+        <div style="padding:14px 18px;min-width:160px">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+            <div style="width:6px;height:6px;border-radius:50%;background:#34D399;box-shadow:0 0 6px #34D399;flex-shrink:0;animation:pu 2s infinite"></div>
+            <div style="font-family:var(--fm);font-size:10px;font-weight:600;color:#7880a8;letter-spacing:.05em;text-transform:uppercase;transition:opacity .3s" id="spSessWord">Personale</div>
+          </div>
+          <div style="font-family:var(--fd);font-size:8px;color:#2a2f55;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;transition:opacity .3s" id="spSessRest">hedging · GOLD · 0.03 lot hedge</div>
+          <div style="font-family:var(--fh);font-size:26px;font-weight:800;letter-spacing:-.05em;line-height:1;margin-top:5px;transition:color .4s" id="spPct" style="color:#34D399">+45%</div>
+          <div style="font-family:var(--fd);font-size:7px;color:#2a2f55;text-transform:uppercase;letter-spacing:.1em;margin-top:1px">copertura costo</div>
+        </div>
 
-  </div>
+        <!-- dividers + celle su una riga -->
+        <div style="width:1px;height:100%;background:#1a1e38;align-self:stretch"></div>
+        <div style="padding:12px 16px">
+          <div style="font-family:var(--fd);font-size:7px;color:#363b60;text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px">DD Line</div>
+          <div style="font-family:var(--fh);font-size:20px;font-weight:700;letter-spacing:-.04em;transition:color .4s" id="spV1" style="color:#F87171">$46k</div>
+        </div>
+
+        <div style="width:1px;height:100%;background:#1a1e38;align-self:stretch"></div>
+        <div style="padding:12px 16px">
+          <div style="font-family:var(--fd);font-size:7px;color:#363b60;text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px">Balance Prop</div>
+          <div style="font-family:var(--fh);font-size:20px;font-weight:700;letter-spacing:-.04em;transition:color .4s" id="spV2" style="color:#38BDF8">$48.2k</div>
+        </div>
+
+        <div style="width:1px;height:100%;background:#1a1e38;align-self:stretch"></div>
+        <div style="padding:12px 16px">
+          <div style="font-family:var(--fd);font-size:7px;color:#363b60;text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px">P&amp;L Personale</div>
+          <div style="font-family:var(--fh);font-size:22px;font-weight:800;letter-spacing:-.05em;transition:color .4s" id="spV3" style="color:#34D399">+$920</div>
+        </div>
+
+        <div style="width:1px;height:100%;background:#1a1e38;align-self:stretch"></div>
+        <div style="padding:12px 16px">
+          <div style="font-family:var(--fd);font-size:7px;color:#363b60;text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px">Target Prop</div>
+          <div style="font-family:var(--fh);font-size:20px;font-weight:700;letter-spacing:-.03em;transition:color .4s" id="spS1" style="color:#A78BFA">5%</div>
+        </div>
+
+        <div style="width:1px;height:100%;background:#1a1e38;align-self:stretch"></div>
+        <div style="padding:12px 16px">
+          <div style="font-family:var(--fd);font-size:7px;color:#363b60;text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px">Trade Fatti</div>
+          <div style="font-family:var(--fh);font-size:20px;font-weight:700;letter-spacing:-.03em;transition:color .4s" id="spS2" style="color:#FBBF24">12/31</div>
+        </div>
+
+        <div style="width:1px;height:100%;background:#1a1e38;align-self:stretch"></div>
+        <div style="padding:12px 16px">
+          <div style="font-family:var(--fd);font-size:7px;color:#363b60;text-transform:uppercase;letter-spacing:.12em;margin-bottom:4px">Max DD</div>
+          <div style="font-family:var(--fh);font-size:20px;font-weight:700;letter-spacing:-.03em;transition:color .4s" id="spS3" style="color:#F87171">4%</div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ═══ FINE DYNAMIC CARD ═══ -->
+
+  </div><!-- fine 1140px column wrapper -->
 
 
 
@@ -2510,15 +2563,22 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
   }
   function applySession(s){
     var el;
+    function fmt(v){
+      if(!v)return v;
+      var str=String(v);
+      if(str.slice(-1)==='%') return str.slice(0,-1)+'<span style="font-size:1.18em;vertical-align:-.02em">%</span>';
+      if(/\d$/.test(str)) return str.replace(/(\d[\d,]*)$/,function(m){return '<span style="font-size:1.15em">'+m+'</span>';});
+      return str;
+    }
     el=document.getElementById('spSessWord'); if(el)el.textContent=s.word;
     el=document.getElementById('spSessRest'); if(el)el.textContent=s.rest;
-    el=document.getElementById('spPct');      if(el){el.textContent=s.pct;el.style.color=s.pctC;}
-    el=document.getElementById('spV1');       if(el){el.textContent=s.v1;el.style.color=s.v1c;}
-    el=document.getElementById('spV2');       if(el){el.textContent=s.v2;el.style.color=s.v2c;}
-    el=document.getElementById('spV3');       if(el){el.textContent=s.v3;el.style.color=s.v3c;}
-    el=document.getElementById('spS1');       if(el){el.textContent=s.s1;el.style.color=s.s1c;}
-    el=document.getElementById('spS2');       if(el){el.textContent=s.s2;el.style.color=s.s2c;}
-    el=document.getElementById('spS3');       if(el){el.textContent=s.s3;el.style.color=s.s3c;}
+    el=document.getElementById('spPct');      if(el){el.innerHTML=fmt(s.pct);el.style.color=s.pctC;}
+    el=document.getElementById('spV1');       if(el){el.innerHTML=fmt(s.v1);el.style.color=s.v1c;}
+    el=document.getElementById('spV2');       if(el){el.innerHTML=fmt(s.v2);el.style.color=s.v2c;}
+    el=document.getElementById('spV3');       if(el){el.innerHTML=fmt(s.v3);el.style.color=s.v3c;}
+    el=document.getElementById('spS1');       if(el){el.innerHTML=fmt(s.s1);el.style.color=s.s1c;}
+    el=document.getElementById('spS2');       if(el){el.innerHTML=fmt(s.s2);el.style.color=s.s2c;}
+    el=document.getElementById('spS3');       if(el){el.innerHTML=fmt(s.s3);el.style.color=s.s3c;}
   }
   function switchSess(){
     fadeAll(true);
@@ -5698,12 +5758,12 @@ var c = calcChallenge(p);
         +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(248,113,113,.2);display:flex;justify-content:space-between;align-items:center">'
         +'<span style="font-size:9px;color:var(--t3);font-family:var(--fd)">NETTO</span>'
         +'<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+_nettoFailCol+'">'+(_nettoFail>=0?'+':'')+_nettoFail.toFixed(0)+'$</span></div></div>';
-      var _costoPass = cost + hedgeSlUsd * _winsNeed;
+      var _costoPass = hedgeSlUsd * _winsNeed; // costo prop NON sottratto: conto reale riutilizzabile
       simHtml += '<div style="background:rgba(96,165,250,.07);border:1.5px solid rgba(96,165,250,.3);border-radius:11px;padding:14px">'
         +'<div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">✅ PROP PASSATA</div>'
         +'<div style="font-size:11px;color:var(--t2);line-height:2;font-family:var(--fd)">'
         +'Pers. perde: <b style="color:var(--red)">-$'+(hedgeSlUsd*_winsNeed).toFixed(0)+'</b><br>'
-        +'Costo challenge: <b style="color:var(--red)">-$'+cost.toFixed(0)+'</b></div>'
+        +'Prop riutilizzabile: <b style="color:var(--green)">+$'+cost.toFixed(0)+'</b></div>'
         +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(96,165,250,.2);display:flex;justify-content:space-between;align-items:center">'
         +'<span style="font-size:9px;color:var(--t3);font-family:var(--fd)">COSTO LIVE</span>'
         +'<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+_costoPass.toFixed(0)+'</span></div></div>';
@@ -6193,7 +6253,6 @@ function resetModal(){
    ═══════════════════════════════════════════ */
 function _saveSimData() {
   try {
-    /* FIX: salva solo se c'è almeno un trade realmente inserito (w o l non vuoti) */
     function _hasRealData(arr){
       if(!arr||!arr.length)return false;
       for(var i=0;i<arr.length;i++){if(arr[i].w!==''||arr[i].l!=='')return true;}
@@ -6207,6 +6266,8 @@ function _saveSimData() {
       localStorage.setItem('ph_isim_data', JSON.stringify(_iSim.data));
       localStorage.setItem('ph_isim_session', _iSim.session||'');
     }
+    if(typeof _simState!=='undefined' && _hasRealData(_simState.data))
+      localStorage.setItem('ph_other_data', JSON.stringify(_simState.data));
   } catch(e) {}
 }
 
@@ -6229,6 +6290,11 @@ function _loadSimData() {
         _iSim.data = parsed3;
         _iSim.session = localStorage.getItem('ph_isim_session')||'';
       }
+    }
+    var d4 = localStorage.getItem('ph_other_data');
+    if(d4 && typeof _simState !== 'undefined'){
+      var parsed4 = JSON.parse(d4);
+      if(Array.isArray(parsed4) && parsed4.length) _simState.data = parsed4;
     }
   } catch(e) {}
 }
@@ -11075,6 +11141,7 @@ function simCalc(){
   kpi('simKpiBuffer', '$'+bufFin.toFixed(0), bufFin>maxDDusd*0.4?'var(--amber)':'var(--red)');
   kpi('simKpiPayout', payFin>0?'+$'+payFin.toFixed(0):'$0', payFin>0?'var(--teal)':'var(--t3)');
   kpi('simKpiNetto',  (netFin>=0?'+':'')+netFin.toFixed(0)+'$', netFin>=0?'var(--green)':'var(--red)');
+  _saveSimData();
 }
 
 function simReset(){
@@ -11488,7 +11555,8 @@ function _renderInstantFunded(box, size, cost, maxDD, ddd, minDays, pay, cons, s
       if(!propAlive) break;
     }
     var payoutGross = propAlive && propPnl > 0 ? propPnl * (pay/100) : 0;
-    var netto = payoutGross + persPnl - cost - spreadPaid;
+    // Se la prop è viva (ciclo completato) il costo non si perde — conto reale riutilizzabile
+    var netto = payoutGross + persPnl - (propAlive ? 0 : cost) - spreadPaid;
     return {
       propPnl: propPnl, persPnl: persPnl, payoutGross: payoutGross,
       netto: netto, spreadPaid: spreadPaid, propAlive: propAlive,
@@ -11522,7 +11590,8 @@ function _renderInstantFunded(box, size, cost, maxDD, ddd, minDays, pay, cons, s
       if(bal <= size - maxDDusd + 0.01){ propAlive=false; break; }
     }
     var payoutGross = propAlive && propPnl > 0 ? propPnl * (pay/100) : 0;
-    var netto = payoutGross + persPnl - cost - spreadPaid;
+    // Se la prop è viva (ciclo completato) il costo non si perde — conto reale riutilizzabile
+    var netto = payoutGross + persPnl - (propAlive ? 0 : cost) - spreadPaid;
     return {propPnl,persPnl,payoutGross,netto,spreadPaid,propAlive,tot};
   }
 
@@ -11557,7 +11626,8 @@ function _renderInstantFunded(box, size, cost, maxDD, ddd, minDays, pay, cons, s
       var bufferLeft = Math.max(0, maxDDusd - (hwm - size));
       if(bal <= size - maxDDusd + 0.01){ propAlive=false; }
       var payoutNow = propAlive && propPnl > 0 ? propPnl * (pay/100) : 0;
-      var nettoNow  = payoutNow + persPnl - cost - spreadPaid;
+      // Costo prop: 0 se prop è viva (reale, riutilizzabile), sottratto solo se morta
+      var nettoNow  = payoutNow + persPnl - (propAlive ? 0 : cost) - spreadPaid;
       var balClr = bal >= size ? 'var(--green)' : 'var(--red)';
       var bufClr = bufferLeft > maxDDusd*0.5 ? 'var(--green)' : (bufferLeft > maxDDusd*0.2 ? 'var(--amber)' : 'var(--red)');
       var netClr = nettoNow >= 0 ? 'var(--green)' : 'var(--red)';
@@ -11589,7 +11659,9 @@ function _renderInstantFunded(box, size, cost, maxDD, ddd, minDays, pay, cons, s
       +'Payout '+(pay)+'%: <strong style="color:var(--teal)">+'+s.payoutGross.toFixed(0)+'$</strong><br>'
       +'Conto pers: <strong style="color:'+(s.persPnl>=0?'var(--green)':'var(--red)')+'">'+(s.persPnl>=0?'+':'')+s.persPnl.toFixed(0)+'$</strong><br>'
       +'Spread: <strong style="color:var(--amber)">-'+s.spreadPaid.toFixed(0)+'$</strong><br>'
-      +'Costo challenge: <strong style="color:var(--red)">-'+cost+'$</strong><br>'
+      +(s.propAlive
+        ? 'Costo prop: <strong style="color:var(--green)">$0 (riutilizzabile ✓)</strong>'
+        : 'Costo prop: <strong style="color:var(--red)">-'+cost+'$</strong>')+'<br>'
       +'<div style="margin-top:6px;padding:5px 8px;background:rgba(0,0,0,.2);border-radius:6px;font-size:9px">'
       +'Copertura costo: <strong style="color:'+covClr+'">'+(s.persPnl>=0?cov+'%':'0%')+'</strong> &nbsp;|&nbsp; '
       +'Prop: '+(s.propAlive?'<span style="color:var(--green)">✓ Viva</span>':'<span style="color:var(--red)">✗ Bruciata</span>')
@@ -13048,7 +13120,21 @@ function render(){
 
 
 
-// ══ FLOATING AI CHAT — Supporto AI + Umano Telegram ══════════════
+// ══ FLOATING AI CHAT — Supporto AI (Groq) + Umano (Telegram diretto) ══
+
+// ─────────────────────────────────────────────────────────────────────
+// ⚙️  CONFIGURA QUI LE TUE CREDENZIALI
+// ─────────────────────────────────────────────────────────────────────
+var _GROQ_KEY    = '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';
+var _TG_TOKEN    = '8753887928:AAHg-HQU06rJ90qiqPpt0n5_F3m24mmxXXA';
+var _TG_CHAT_ID  = '998979042';
+
+// Elimina subito il webhook esistente — senza questo getUpdates non funziona
+(function(){
+  fetch('https://api.telegram.org/bot'+_TG_TOKEN+'/deleteWebhook?drop_pending_updates=false',{method:'POST'})
+    .catch(function(){});
+})();
+// ─────────────────────────────────────────────────────────────────────
 
 // ── Variabili globali ──
 var _aiOpen = false, _aiGreeted = false;
@@ -13056,6 +13142,7 @@ var _humanMode = false, _humanFormSent = false;
 var _ticketId = null, _ticketData = null;
 var _pollTimer = null, _lastMsgAt = null;
 var _operatorOnline = false, _assignedOp = null;
+var _tgOffset = 0, _tgMsgId = null; // ID del messaggio ticket inviato a TG
 
 // ── 9 Operatori di supporto ──
 var _staff = [
@@ -13071,6 +13158,64 @@ var _staff = [
 ];
 
 function _genTicket(){ return 'T'+Date.now()+'_'+Math.random().toString(36).slice(2,6).toUpperCase(); }
+
+// ── Invia messaggio a Telegram (direttamente via Bot API) ──
+async function _tgSend(text, replyToMsgId){
+  if(!_TG_TOKEN) return null;
+  try{
+    var body = {chat_id: _TG_CHAT_ID, text: text, parse_mode: 'HTML'};
+    if(replyToMsgId) body.reply_to_message_id = replyToMsgId;
+    var res = await fetch('https://api.telegram.org/bot'+_TG_TOKEN+'/sendMessage',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    return (data.ok && data.result) ? data.result.message_id : null;
+  }catch(e){ return null; }
+}
+
+// ── Inizializza offset all'update più recente (evita messaggi vecchi) ──
+async function _tgInitOffset(){
+  try{
+    var res = await fetch('https://api.telegram.org/bot'+_TG_TOKEN+'/getUpdates?limit=1&offset=-1');
+    var data = await res.json();
+    if(data.ok && data.result && data.result.length){
+      _tgOffset = data.result[data.result.length-1].update_id;
+    }
+  }catch(e){}
+}
+
+// ── Polling Telegram: accetta qualsiasi messaggio umano dopo l'apertura del ticket ──
+function _startPoll(){
+  if(_pollTimer) return;
+  _tgInitOffset(); // parte da adesso, ignora messaggi vecchi
+  _pollTimer = setInterval(async function(){
+    if(!_humanMode || !_ticketId) return;
+    try{
+      var url = 'https://api.telegram.org/bot'+_TG_TOKEN+'/getUpdates?offset='+(_tgOffset+1)+'&limit=20&timeout=0';
+      var res = await fetch(url);
+      var data = await res.json();
+      if(!data.ok || !data.result || !data.result.length) return;
+      data.result.forEach(function(upd){
+        _tgOffset = Math.max(_tgOffset, upd.update_id);
+        var msg = upd.message || upd.edited_message;
+        if(!msg || !msg.text) return;
+        // Ignora messaggi del bot stesso
+        var fromBot = msg.from && msg.from.is_bot;
+        if(fromBot) return;
+        // Ignora messaggi non in questa chat
+        var chatId = msg.chat && (msg.chat.id+'');
+        if(chatId !== _TG_CHAT_ID+'') return;
+        // Qualsiasi messaggio umano → mostrato come risposta operatore
+        _showOpMsg(msg.text);
+      });
+    }catch(e){}
+  }, 2500);
+}
+
+function _stopPoll(){
+  if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
+}
 
 // ── Hover mutuo esclusivo bottoni acquisto ──
 function _bdHover(which){
@@ -13120,7 +13265,7 @@ function toggleAIChat(){
   if(_aiOpen && !_aiGreeted){
     _aiGreeted = true;
     _chatMsg('bot',
-      'Ciao! \uD83D\uDC4B Sono l\u2019assistente AI di PropHedge.\n\n' +
+      'Ciao! 👋 Sono l\'assistente AI di PropHedge.\n\n' +
       'Posso aiutarti con: calcolo lotti, drawdown, journal, connessione MT4/MT5/cTrader, calendar economico e molto altro.\n\n' +
       'Scrivi <b>supporto umano</b> per parlare con un operatore.'
     );
@@ -13135,16 +13280,14 @@ function _chatMsg(role, html){
   var isBot = (role === 'bot' || role === 'support');
   var row = document.createElement('div');
   row.className = 'ai-msg-row' + (isBot ? '' : ' user');
-
   var avaHtml;
   if(role === 'support' && _assignedOp){
     avaHtml = '<img src="'+_assignedOp.img+'" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0">';
   } else if(isBot){
     avaHtml = '<div class="ai-msg-ava bot"><svg width="18" height="18" viewBox="0 0 36 36" fill="none"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="33" cy="7" r="3.2" fill="#A78BFA"/></svg></div>';
   } else {
-    avaHtml = '<div class="ai-msg-ava usr">\uD83D\uDC64</div>';
+    avaHtml = '<div class="ai-msg-ava usr">👤</div>';
   }
-
   row.innerHTML = avaHtml + '<div class="ai-bubble '+(isBot?'bot':'usr')+'">'+html.replace(/\n/g,'<br>')+'</div>';
   msgs.appendChild(row);
   msgs.scrollTop = msgs.scrollHeight;
@@ -13154,9 +13297,9 @@ function _chatMsg(role, html){
 function _chatTyping(){
   var msgs = document.getElementById('aiFloatMsgs'); if(!msgs) return;
   var row = document.createElement('div'); row.className = 'ai-msg-row'; row.id = '_typingRow';
-  row.innerHTML = '<div class="ai-msg-ava bot"><svg width="14" height="14" viewBox="0 0 36 36" fill="none"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#38BDF8" stroke-width="2.8" fill="none"/><circle cx="33" cy="7" r="3.5" fill="#A78BFA"/></svg></div><div class="ai-bubble bot" id="_typingBubble"><span id="_typingDots">\u25CF</span></div>';
+  row.innerHTML = '<div class="ai-msg-ava bot"><svg width="14" height="14" viewBox="0 0 36 36" fill="none"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#38BDF8" stroke-width="2.8" fill="none"/><circle cx="33" cy="7" r="3.5" fill="#A78BFA"/></svg></div><div class="ai-bubble bot" id="_typingBubble"><span id="_typingDots">●</span></div>';
   msgs.appendChild(row); msgs.scrollTop = msgs.scrollHeight;
-  var t=0; row._ti = setInterval(function(){ t=(t+1)%3; var el=document.getElementById('_typingDots'); if(el) el.textContent='\u25CF'.repeat(t+1); },400);
+  var t=0; row._ti = setInterval(function(){ t=(t+1)%3; var el=document.getElementById('_typingDots'); if(el) el.textContent='●'.repeat(t+1); },400);
 }
 function _clearTyping(){
   var row = document.getElementById('_typingRow'); if(row){ clearInterval(row._ti); row.remove(); }
@@ -13172,17 +13315,8 @@ async function aiFloatSend(){
 
   // Modalità umana attiva → manda a Telegram
   if(_humanMode && _humanFormSent){
-    try{
-      await fetch('/api/support-send',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          ticket_id: _ticketId,
-          message: text,
-          user: (_ticketData && _ticketData.email) || '',
-          name: (_ticketData && _ticketData.name) || ''
-        })
-      });
-    }catch(e){}
+    var msgText = '💬 <b>'+(_ticketData ? _ticketData.name : 'Utente')+'</b> ['+_ticketId+']:\n'+text;
+    await _tgSend(msgText, _tgMsgId);
     return;
   }
 
@@ -13192,26 +13326,38 @@ async function aiFloatSend(){
     return;
   }
 
-  // AI bot risponde via Claude API
+  // ── AI risponde via Groq ──
   _chatTyping();
   try{
-    var res = await fetch('https://api.anthropic.com/v1/messages',{
+    var res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+_GROQ_KEY
+      },
       body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:400,
-        system:'Sei l\'assistente AI di PropHedge di VISIONTRADING. Rispondi in italiano, in modo conciso (max 3 frasi). Aiuta con: calcolo lotti, drawdown, journal trading, connessione MT4/MT5/cTrader, calendario economico, prop firm challenge. Se chiedono supporto umano di\' di scrivere "supporto umano".',
-        messages:[{role:'user',content:text}]
+        model: 'llama-3.1-8b-instant',
+        max_tokens: 400,
+        messages:[
+          {role:'system', content:'Sei l\'assistente AI di PropHedge di VISIONTRADING. Rispondi in italiano, in modo conciso (max 3 frasi). Aiuta con: calcolo lotti, drawdown, journal trading, connessione MT4/MT5/cTrader, calendario economico, prop firm challenge. Se chiedono supporto umano di\' di scrivere "supporto umano".'},
+          {role:'user', content: text}
+        ]
       })
     });
     var data = await res.json();
     _clearTyping();
-    var reply = (data.content && data.content[0] && data.content[0].text) || 'Riprova tra un momento.';
+    if(!res.ok){
+      // Mostra l'errore reale da Groq per diagnostica
+      var errMsg = (data.error && data.error.message) || ('Errore '+res.status);
+      _chatMsg('bot','⚠️ Groq: '+errMsg+'<br>Scrivi <b>supporto umano</b> per parlare con il team.');
+      return;
+    }
+    var reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content)
+      || 'Riprova tra un momento.';
     _chatMsg('bot', reply);
   }catch(e){
     _clearTyping();
-    _chatMsg('bot','Risposta AI non disponibile. Scrivi <b>supporto umano</b> per parlare con il team.');
+    _chatMsg('bot','⚠️ Errore connessione AI: '+(e.message||e)+'<br>Scrivi <b>supporto umano</b> per parlare con il team.');
   }
 }
 
@@ -13229,28 +13375,25 @@ function _activateHumanSupport(){
   _lastMsgAt = new Date().toISOString();
   _assignedOp = _staff[Math.floor(Math.random()*_staff.length)];
 
-  // Nascondi quick buttons, nascondi input bar
   var qb = document.getElementById('aiQuickBtns'); if(qb) qb.style.display='none';
   var ir = document.querySelector('#aiFloatPanel .ai-input-row'); if(ir) ir.style.display='none';
 
-  // Aggiorna header
   var title = document.querySelector('#aiFloatPanel .ai-title');
   var statusEl = document.querySelector('#aiFloatPanel .ai-status');
   if(title) title.textContent = 'Supporto Live';
   if(statusEl) statusEl.innerHTML = '<span class="ai-dot" style="background:#FBBF24;box-shadow:0 0 6px #FBBF24;animation:pu 1s infinite"></span><span> In attesa di un operatore...</span>';
 
-  // Inserisci form come bubble
   var msgs = document.getElementById('aiFloatMsgs'); if(!msgs) return;
   var fr = document.createElement('div');
   fr.className = 'ai-msg-row'; fr.id = '_humanForm';
   fr.innerHTML =
     '<div class="ai-msg-ava bot"><svg width="18" height="18" viewBox="0 0 36 36" fill="none"><polyline points="3,27 8,20 13,23 19,12 25,16 33,7" stroke="#38BDF8" stroke-width="2.5" fill="none"/><circle cx="33" cy="7" r="3.2" fill="#A78BFA"/></svg></div>'+
     '<div class="ai-bubble bot" style="width:100%;padding:14px">'+
-      '<div style="font-size:13px;font-weight:700;margin-bottom:6px">\uD83C\uDFA7 Supporto Umano</div>'+
+      '<div style="font-size:13px;font-weight:700;margin-bottom:6px">🎧 Supporto Umano</div>'+
       '<div style="font-size:12px;color:rgba(255,255,255,.7);margin-bottom:12px;line-height:1.5">Inserisci i tuoi dati per essere messo in contatto con un operatore:</div>'+
       '<input id="_hcfName" type="text" placeholder="Nome e Cognome" '+
         'style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.2);border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;font-family:var(--fm);outline:none;margin-bottom:8px;transition:border-color .15s" '+
-        'onfocus="this.style.borderColor=\'#38BDF8\'" onblur="this.style.borderColor=\'rgba(255,255,255,.2)\'">' +
+        'onfocus="this.style.borderColor=\'#38BDF8\'" onblur="this.style.borderColor=\'rgba(255,255,255,.2)\'">'+
       '<input id="_hcfEmail" type="email" placeholder="Email" '+
         'style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.2);border-radius:8px;padding:10px 12px;color:#fff;font-size:13px;font-family:var(--fm);outline:none;margin-bottom:12px;transition:border-color .15s" '+
         'onfocus="this.style.borderColor=\'#38BDF8\'" onblur="this.style.borderColor=\'rgba(255,255,255,.2)\'" '+
@@ -13265,9 +13408,8 @@ function _activateHumanSupport(){
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-// ── Submit form dati ──
-// ── Submit form: invia ticket e apre la chat ──
-function _submitContact(){
+// ── Submit form: invia ticket a Telegram e apre la chat ──
+async function _submitContact(){
   var nEl = document.getElementById('_hcfName');
   var eEl = document.getElementById('_hcfEmail');
   var name  = nEl ? nEl.value.trim() : '';
@@ -13278,121 +13420,53 @@ function _submitContact(){
   _humanFormSent = true;
   _ticketData = {name: name, email: email};
 
-  // 1. Rimuovi il form dalla chat
   var fr = document.getElementById('_humanForm');
   if(fr) fr.remove();
 
-  // 2. Mostra input bar (forza display:flex)
   var ir = document.querySelector('#aiFloatPanel .ai-input-row');
   if(ir) ir.style.display = 'flex';
   var inp = document.getElementById('aiFloatInput');
   if(inp){ inp.placeholder = 'Scrivi il tuo messaggio...'; inp.focus(); }
 
-  // 3. Messaggio "in attesa"
   _chatMsg('bot',
-    '\u23F3 <b>In attesa di un operatore...</b>\n' +
-    'Riceverai risposta a breve. Puoi gi\u00e0 scrivere qui sotto.'
+    '⏳ <b>In attesa di un operatore...</b>\n' +
+    'Riceverai risposta a breve. Puoi già scrivere qui sotto.'
   );
 
-  // 4. Invia ticket a Telegram via API server
-  // Il server riceve nome+email+ticket_id e manda un messaggio al tuo bot Telegram
-  // Tu apri Telegram e rispondi — la risposta torner\u00e0 qui via polling Supabase
-  fetch('/api/support-contact', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      ticket_id: _ticketId,
-      name: name,
-      email: email,
-      operator: _assignedOp ? _assignedOp.n : ''
-    })
-  }).catch(function(){});
+  // Manda ticket a Telegram direttamente via Bot API
+  var ticketMsg =
+    '🎫 <b>NUOVO TICKET SUPPORTO</b>\n' +
+    '━━━━━━━━━━━━━━━━━━\n' +
+    '👤 <b>Nome:</b> ' + name + '\n' +
+    '📧 <b>Email:</b> ' + email + '\n' +
+    '🆔 <b>Ticket:</b> ' + _ticketId + '\n' +
+    '👨‍💼 <b>Operatore:</b> ' + (_assignedOp ? _assignedOp.n : 'N/A') + '\n' +
+    '━━━━━━━━━━━━━━━━━━\n' +
+    'Rispondi a questo messaggio per chattare con il cliente.';
 
-  // 5. Avvia polling risposte
+  _tgMsgId = await _tgSend(ticketMsg);
+
+  // Avvia polling per ricevere risposte
   _startPoll();
 }
 
-// ── Polling: cerca risposte dell'operatore ogni 3 secondi ──
-// Strategia a cascata:
-//   1. Supabase diretto (tabella support_messages) — pi\u00f9 affidabile
-//   2. API server /api/support-poll — fallback
-var _tgOffset = 0;
-
-function _startPoll(){
-  if(_pollTimer) return;
-  _pollTimer = setInterval(async function(){
-    if(!_humanMode || !_ticketId) return;
-
-    var found = false;
-
-    // Metodo 1: Supabase diretto
-    // Il server (webhook Telegram) inserisce i messaggi dell'operatore in questa tabella
-    try {
-      var since = _lastMsgAt || new Date(Date.now() - 86400000).toISOString();
-      var res = await _sb
-        .from('support_messages')
-        .select('id, text, created_at')
-        .eq('ticket_id', _ticketId)
-        .eq('direction', 'inbound')
-        .gt('created_at', since)
-        .order('created_at', {ascending: true});
-
-      if(res && res.data && res.data.length > 0){
-        res.data.forEach(function(m){
-          if(m && m.text) _showOpMsg(m.text);
-        });
-        _lastMsgAt = res.data[res.data.length - 1].created_at;
-        found = true;
-      }
-    } catch(e1){}
-
-    if(found) return;
-
-    // Metodo 2: API server /api/support-poll
-    try {
-      var r = await fetch(
-        '/api/support-poll?ticket_id=' + encodeURIComponent(_ticketId) +
-        '&since=' + encodeURIComponent(_lastMsgAt || '')
-      );
-      if(r.ok){
-        var d = await r.json();
-        if(d && Array.isArray(d.messages) && d.messages.length){
-          d.messages.forEach(function(m){
-            if(m && m.text) _showOpMsg(m.text);
-          });
-          _lastMsgAt = new Date().toISOString();
-        }
-      }
-    } catch(e2){}
-
-  }, 3000);
-}
-
-// ── Mostra risposta operatore — prima volta annuncia "sei in linea" ──
+// ── Mostra risposta operatore ──
 function _showOpMsg(text){
   if(!text || !text.trim()) return;
   if(!_operatorOnline){
     _operatorOnline = true;
     var op = _assignedOp || {n:'un operatore', img:''};
-    // Aggiorna header
     var statusEl = document.querySelector('#aiFloatPanel .ai-status');
     if(statusEl){
       statusEl.innerHTML =
         '<span class="ai-dot" style="background:#34D399;box-shadow:0 0 6px #34D399;animation:pu 1s infinite"></span>' +
-        (op.img
-          ? '<img src="' + op.img + '" style="width:20px;height:20px;border-radius:50%;margin:0 5px 0 4px;vertical-align:middle;object-fit:cover">'
-          : ' ') +
-        '<span>Sei in linea con <b>' + op.n + '</b></span>';
+        (op.img ? '<img src="'+op.img+'" style="width:20px;height:20px;border-radius:50%;margin:0 5px 0 4px;vertical-align:middle;object-fit:cover">' : ' ') +
+        '<span>Sei in linea con <b>'+op.n+'</b></span>';
     }
-    // Messaggio "sei in linea"
-    _chatMsg('support', '\uD83D\uDFE2 <b>Sei in linea con ' + op.n + '!</b>');
+    _chatMsg('support', '🟢 <b>Sei in linea con '+op.n+'!</b>');
   }
   _chatMsg('support', text.trim());
   _lastMsgAt = new Date().toISOString();
-}
-
-function _stopPoll(){
-  if(_pollTimer){ clearInterval(_pollTimer); _pollTimer = null; }
 }
 
 
@@ -13740,13 +13814,15 @@ function _openSimPersonal() {
   s.hedgeWin  = s.lotPers * s.slPips * s.pipVal;
   s.hedgeLoss = s.lotPers * s.tpPips * s.pipVal;
 
-  /* Reset se parametri cambiati — include lots e pip per rilevare cambio manuale */
+  /* Preserva i dati caricati da localStorage — azzera solo se array vuoto */
   var nk=[s.size,s.maxDD,s.tgtPct,s.pay,s.minDays,s.isTrail,s.trailLock,s.consistency,s.lots,s.slPips,s.lotPers].join('|');
-  if(nk!==_simPS_cacheKey||!s.data||!s.data.length){
-    _simPS_cacheKey=nk;
+  if(!s.data||!s.data.length){
     s.data=[];
     for(var i=0;i<s.rows;i++)s.data.push({w:'',l:''});
+  } else if(s.data.length < s.rows){
+    for(var i=s.data.length;i<s.rows;i++)s.data.push({w:'',l:''});
   }
+  _simPS_cacheKey=nk;
 
   _simPS_setupModal();
   /* Sync: inline sim usa stesso array dati del modale */
@@ -14138,8 +14214,10 @@ function _simPS_showEndCard(type,row,propPnl,persPnl,ddLine,bal){
   if(old)old.remove();
 
   var isGO        =type==='gameover';
+  // Se prop passa: conto reale riutilizzabile → costo = $0 in questo ciclo
+  var costThisCycle = isGO ? s.cost : 0;
   var payoutGross =isGO?0:(propPnl*(s.pay/100));
-  var netto       =payoutGross+persPnl-s.cost;
+  var netto       =payoutGross+persPnl-costThisCycle;
   var bg  =isGO?'rgba(248,113,113,.1)' :'rgba(52,211,153,.08)';
   var bdr =isGO?'rgba(248,113,113,.35)':'rgba(52,211,153,.28)';
   var clr =isGO?'#F87171':'#34D399';
@@ -14156,6 +14234,7 @@ function _simPS_showEndCard(type,row,propPnl,persPnl,ddLine,bal){
     {l:'Conto Pers.',   v:_sgn(persPnl)+persPnl.toFixed(0)+'$',
       c:persPnl>=0?'var(--green)':'var(--red)'},
     {l:'Payout',        v:'$0',c:'var(--t3)'},
+    {l:'Costo prop',    v:'-$'+s.cost,c:'var(--amber)'},
     {l:'NETTO IN TASCA',v:_sgn(netto)+netto.toFixed(0)+'$',
       c:netto>=0?'var(--green)':'var(--red)',big:true}
   ]:[
@@ -14164,7 +14243,7 @@ function _simPS_showEndCard(type,row,propPnl,persPnl,ddLine,bal){
     {l:'Payout '+s.pay+'%', v:'+$'+payoutGross.toFixed(0),c:'var(--teal)'},
     {l:'Conto Pers.',       v:_sgn(persPnl)+persPnl.toFixed(0)+'$',
       c:persPnl>=0?'var(--green)':'var(--red)'},
-    {l:'Costo challenge',   v:'-$'+s.cost,c:'var(--amber)'},
+    {l:'Costo prop',        v:'$0 ✓ riutilizzabile',c:'var(--green)'},
     {l:'NETTO IN TASCA',    v:_sgn(netto)+netto.toFixed(0)+'$',
       c:netto>=0?'var(--green)':'var(--red)',big:true}
   ];
@@ -14466,14 +14545,16 @@ function _openSimChallenge1() {
   s.persWin  = s.lotPers * s.slPips * s.pipVal;
   s.persLoss = s.lotPers * s.slPips * s.pipVal;
 
-  /* Reset se parametri cambiano */
+  /* Preserva i dati caricati da localStorage — azzera solo se array vuoto */
   var nk = [s.size, s.cost, s.maxDD, s.tgtPct, s.pay, s.minDays,
     s.isTrail, s.trailLock, s.consistency, s.covPct, s.propWin].join('|');
-  if (nk !== _simCH1_cacheKey || !s.data || !s.data.length) {
-    _simCH1_cacheKey = nk;
+  if (!s.data || !s.data.length) {
     s.data = [];
     for (var i = 0; i < s.rows; i++) s.data.push({ w: '', l: '' });
+  } else if (s.data.length < s.rows) {
+    for (var i = s.data.length; i < s.rows; i++) s.data.push({ w: '', l: '' });
   }
+  _simCH1_cacheKey = nk;
 
   _simCH1_setupModal();
   /* Sync: inline sim usa stesso array dati del modale */
