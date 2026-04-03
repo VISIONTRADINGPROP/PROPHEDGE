@@ -371,7 +371,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 .sc-wrap{font-family:'Inter',system-ui,sans-serif;max-width:1180px;padding-bottom:60px;width:100%;box-sizing:border-box}
 .sc-hero{background:linear-gradient(135deg,#0d1025 0%,#111030 60%,#0d1025 100%);border:1px solid rgba(56,189,248,.2);border-radius:20px;padding:28px 32px;margin-bottom:28px;position:relative;overflow:hidden}
 .sc-hero::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(255,184,0,.1) 0%,transparent 70%);pointer-events:none}
-.sc-hero::after{content:'';position:absolute;bottom:-60px;left:200px;width:220px;height:220px;background:radial-gradient(circle,rgba(99,102,241,.08) 0%,transparent 70%);pointer-events:none}
+.sc-hero::after{content:'';position:absolute;bottom:-60px;left:200px;width:220px;height:clamp(160px,20vh,240px);background:radial-gradient(circle,rgba(99,102,241,.08) 0%,transparent 70%);pointer-events:none}
 .sc-hero-row{display:flex;align-items:center;gap:20px;position:relative;z-index:1}
 .sc-hero-icon{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#38BDF8,#0EA5E9);display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 32px rgba(56,189,248,.45);flex-shrink:0}
 .sc-hero-title{font-size:clamp(18px,2.2vw,26px);font-weight:800;letter-spacing:-.02em;color:#f1f5f9;-webkit-text-fill-color:#f1f5f9;line-height:1.15;letter-spacing:-.025em}
@@ -915,7 +915,7 @@ body{background:var(--bg);color:var(--t);font-family:var(--fm);font-size:14px;fo
 
 .mb-right{overflow-y:auto;padding:20px;background:var(--bg3)}
 
-.msugg{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;z-index:300;box-shadow:0 8px 28px rgba(0,0,0,.6);max-height:220px;overflow-y:auto}
+.msugg{display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;z-index:300;box-shadow:0 8px 28px rgba(0,0,0,.6);max-height:clamp(160px,20vh,240px);overflow-y:auto}
 
 .si{display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s}
 
@@ -1832,7 +1832,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
 
 
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<div id="splashScreen" style="position:fixed;inset:0;z-index:999999;background:#07091a;overflow-y:auto;display:flex;align-items:flex-start;justify-content:center">
+<div id="splashScreen" style="position:fixed;inset:0;z-index:999999;background:#07091a;overflow-y:auto;display:flex;flex-direction:column;align-items:center">
 
 
 
@@ -1880,16 +1880,16 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
 
 
 
-  <div style="position:relative;z-index:2;width:100%;max-width:1140px;padding:32px 32px 0;display:flex;flex-direction:column;align-items:stretch">
+  <div style="position:relative;z-index:2;width:100%;max-width:1400px;height:calc(100vh - 32px);padding:36px 40px 16px;display:grid;grid-template-rows:1fr auto auto;gap:16px;box-sizing:border-box">
 
     <!-- riga: globo + testo -->
-    <div style="display:flex;align-items:center;gap:48px;flex-wrap:wrap;justify-content:center;flex-direction:row-reverse">
+    <div style="display:flex;align-items:center;gap:48px;flex-wrap:nowrap;justify-content:space-between;flex-direction:row-reverse;min-height:0">
 
-    <div style="position:relative;width:300px;height:300px;flex-shrink:0">
+    <div style="position:relative;width:min(380px,38vh);height:min(380px,38vh);flex-shrink:0">
 
 
 
-      <canvas id="globeCanvas" style="position:absolute;inset:0;width:300px;height:300px"></canvas>
+      <canvas id="globeCanvas" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
 
 
 
@@ -1953,15 +1953,11 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
 
 
 
-      <h1 style="font-family:'Playfair Display','Georgia',serif;font-size:clamp(36px,5vw,72px);font-weight:800;color:#e8eaf6;line-height:1.1;margin-bottom:10px;letter-spacing:-.03em">Domina le <span style="color:#38BDF8">Prop Firm</span><br>con il software <span style="color:#A78BFA">PropHedge</span></h1>
+      <h1 style="font-family:'Playfair Display','Georgia',serif;font-size:clamp(36px,5.5vw,80px);font-weight:800;color:#e8eaf6;line-height:1.08;margin-bottom:clamp(10px,1.5vh,20px);letter-spacing:-.03em">Domina le <span style="color:#38BDF8">Prop Firm</span><br>con il software <span style="color:#A78BFA">PropHedge</span></h1>
 
+      <p style="font-family:'DM Sans',sans-serif;font-size:clamp(13px,1.3vw,16px);color:#7880a8;line-height:1.8;margin-bottom:clamp(24px,3vh,44px);max-width:560px">Calcola i lotti, gestisci il drawdown e proteggi il tuo capitale su ogni challenge. Dashboard multi prop firm, hedge automatico e prezzi live su tutti gli asset.</p>
 
-
-      <p style="font-family:'DM Sans',sans-serif;font-size:13px;color:#7880a8;line-height:1.7;margin-bottom:36px;max-width:480px">Calcola i lotti, gestisci il drawdown e proteggi il tuo capitale su ogni challenge. Dashboard multi prop firm, hedge automatico e prezzi live su tutti gli asset.</p>
-
-
-
-      <button onclick="openConsent()" style="background:linear-gradient(135deg,#7C3AED,#38BDF8);border:none;color:#fff;border-radius:16px;padding:26px 80px;font-size:22px;font-weight:700;cursor:pointer;font-family:var(--fc);letter-spacing:.12em;text-transform:uppercase;display:inline-flex;align-items:center;gap:14px;transition:all .3s;box-shadow:0 0 60px rgba(124,58,237,.55),0 12px 40px rgba(56,189,248,.3),inset 0 1px 0 rgba(255,255,255,.15)" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 0 80px rgba(124,58,237,.7),0 16px 48px rgba(56,189,248,.4),inset 0 1px 0 rgba(255,255,255,.2)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 0 60px rgba(124,58,237,.55),0 12px 40px rgba(56,189,248,.3),inset 0 1px 0 rgba(255,255,255,.15)'">&#9658;&nbsp; Entra nel software</button>
+      <button onclick="openConsent()" style="background:linear-gradient(135deg,#7C3AED,#38BDF8);border:none;color:#fff;border-radius:16px;padding:clamp(18px,2vh,28px) clamp(50px,6vw,90px);font-size:clamp(16px,1.8vw,24px);font-weight:700;cursor:pointer;font-family:var(--fc);letter-spacing:.12em;text-transform:uppercase;display:inline-flex;align-items:center;gap:14px;transition:all .3s;box-shadow:0 0 60px rgba(124,58,237,.55),0 12px 40px rgba(56,189,248,.3),inset 0 1px 0 rgba(255,255,255,.15)" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 0 80px rgba(124,58,237,.7),0 16px 48px rgba(56,189,248,.4),inset 0 1px 0 rgba(255,255,255,.2)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 0 60px rgba(124,58,237,.55),0 12px 40px rgba(56,189,248,.3),inset 0 1px 0 rgba(255,255,255,.15)'">&#9658;&nbsp; Entra nel software</button>
 
       <!-- ═══ DYNAMIC PREVIEW CARD ═══ -->
 
@@ -1970,9 +1966,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
     </div><!-- fine riga globo+testo -->
 
     <!-- ═══ SEZIONE 5 FOTO PROFESSIONALI ═══ -->
-    <div style="margin-top:28px;display:grid;grid-template-columns:repeat(5,1fr);gap:0;width:100%;opacity:0;animation:spUp .8s ease .5s forwards;border-radius:12px;overflow:hidden;border:1px solid #1c1f3a">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0;width:100%;opacity:0;animation:spUp .8s ease .5s forwards;border-radius:12px;overflow:hidden;border:1px solid #1c1f3a">
 
-      <div style="position:relative;overflow:hidden;height:190px">
+      <div style="position:relative;overflow:hidden;height:clamp(160px,20vh,240px)">
         <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&q=85&fit=crop" alt="Conferenza trading" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.72)">
         <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(7,9,26,.94) 0%,transparent 60%)"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:11px 13px">
@@ -1982,7 +1978,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
         <div style="position:absolute;top:10px;left:10px;background:rgba(56,189,248,.18);border:1px solid rgba(56,189,248,.35);border-radius:5px;padding:3px 7px;font-family:var(--fd);font-size:7px;font-weight:700;color:#38BDF8;letter-spacing:.1em;text-transform:uppercase">LIVE</div>
       </div>
 
-      <div style="position:relative;overflow:hidden;height:190px;border-left:1px solid #1c1f3a">
+      <div style="position:relative;overflow:hidden;height:clamp(160px,20vh,240px);border-left:1px solid #1c1f3a">
         <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&q=85&fit=crop" alt="Multi monitor trading" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.68)">
         <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(7,9,26,.94) 0%,transparent 60%)"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:11px 13px">
@@ -1992,7 +1988,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
         <div style="position:absolute;top:10px;left:10px;background:rgba(167,139,250,.18);border:1px solid rgba(167,139,250,.35);border-radius:5px;padding:3px 7px;font-family:var(--fd);font-size:7px;font-weight:700;color:#A78BFA;letter-spacing:.1em;text-transform:uppercase">PRO</div>
       </div>
 
-      <div style="position:relative;overflow:hidden;height:190px;border-left:1px solid #1c1f3a">
+      <div style="position:relative;overflow:hidden;height:clamp(160px,20vh,240px);border-left:1px solid #1c1f3a">
         <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=400&q=85&fit=crop" alt="Analisi strategia" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.7)">
         <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(7,9,26,.94) 0%,transparent 60%)"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:11px 13px">
@@ -2002,7 +1998,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
         <div style="position:absolute;top:10px;left:10px;background:rgba(52,211,153,.18);border:1px solid rgba(52,211,153,.35);border-radius:5px;padding:3px 7px;font-family:var(--fd);font-size:7px;font-weight:700;color:#34D399;letter-spacing:.1em;text-transform:uppercase">HEDGE</div>
       </div>
 
-      <div style="position:relative;overflow:hidden;height:190px;border-left:1px solid #1c1f3a">
+      <div style="position:relative;overflow:hidden;height:clamp(160px,20vh,240px);border-left:1px solid #1c1f3a">
         <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&q=85&fit=crop" alt="Team meeting lavagna" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.7)">
         <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(7,9,26,.94) 0%,transparent 60%)"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:11px 13px">
@@ -2012,7 +2008,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
         <div style="position:absolute;top:10px;left:10px;background:rgba(251,191,36,.18);border:1px solid rgba(251,191,36,.35);border-radius:5px;padding:3px 7px;font-family:var(--fd);font-size:7px;font-weight:700;color:#FBBF24;letter-spacing:.1em;text-transform:uppercase">TEAM</div>
       </div>
 
-      <div style="position:relative;overflow:hidden;height:190px;border-left:1px solid #1c1f3a">
+      <div style="position:relative;overflow:hidden;height:clamp(160px,20vh,240px);border-left:1px solid #1c1f3a">
         <img src="https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=400&q=85&fit=crop" alt="Trader grafico" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.68)">
         <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(7,9,26,.94) 0%,transparent 60%)"></div>
         <div style="position:absolute;bottom:0;left:0;right:0;padding:11px 13px">
@@ -2026,7 +2022,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
     <!-- ═══ FINE SEZIONE FOTO ═══ -->
 
     <!-- ═══ DYNAMIC PREVIEW CARD — full width, compatta su una riga ═══ -->
-    <div style="margin-top:10px;width:100%;opacity:0;animation:spUp .8s ease .7s forwards;padding-bottom:32px">
+    <div style="width:100%;opacity:0;animation:spUp .8s ease .7s forwards;padding-bottom:20px">
       <div style="background:#0c0f26;border:1px solid #1e2241;border-radius:12px;display:grid;grid-template-columns:auto 1px 1fr 1px 1fr 1px 1fr 1px 1fr 1px 1fr 1px 1fr;align-items:center;overflow:hidden">
 
         <!-- Sessione + % -->
@@ -2249,7 +2245,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
 
 
 
-    var S=600;gc.width=S;gc.height=S;
+    var S=760;gc.width=S;gc.height=S;
 
 
 
@@ -2257,7 +2253,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
 
 
 
-    var CX=S/2,CY=S/2,R=200;
+    var CX=S/2,CY=S/2,R=260;
 
 
 
@@ -4014,11 +4010,11 @@ function doRegisterFree(){
 
 
 
-        <div class="f"><label>Dimensione ($)</label><input id="mSize" type="number" value="100000" step="10000" oninput="calcPreview()"><div class="sub" id="mSizeEur"></div></div>
+        <div class="f"><label>Dimensione ($)</label><input id="mSize" type="number" value="100000" step="10000" onchange="calcPreviewFull()"><div class="sub" id="mSizeEur"></div></div>
 
 
 
-        <div class="f"><label>Costo challenge ($)</label><input id="mCost" type="number" value="1500" step="50" oninput="calcPreview()"><div class="sub" id="mCostEur"></div></div>
+        <div class="f"><label>Costo challenge ($)</label><input id="mCost" type="number" value="1500" step="50" onchange="calcPreviewFull()"><div class="sub" id="mCostEur"></div></div>
 
 
 
@@ -4035,21 +4031,21 @@ function doRegisterFree(){
             <span>DD totale (%)</span>
             <button id="btnDDType" onclick="_toggleDDType()" title="Tipo di drawdown: Statico (fisso sul capitale iniziale) o Trailing (segue il massimo raggiunto)" style="background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:var(--teal);border-radius:6px;padding:2px 8px;font-size:9px;font-weight:700;cursor:pointer;font-family:var(--fd);letter-spacing:.06em;transition:all .18s">📌 STATICO</button>
           </label>
-          <input id="mDD" type="number" value="6" step="0.5" oninput="calcPreview()">
+          <input id="mDD" type="number" value="6" step="0.5" onchange="calcPreviewFull()">
           <div id="trailLockRow" style="display:none;margin-top:6px">
             <label style="font-size:9px;color:var(--t3);font-family:var(--fd)">🔒 Blocco trailing a profitto (%)</label>
-            <input id="mTrailLock" type="number" value="0" step="0.5" min="0" max="100" oninput="calcPreview()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--t);padding:4px 8px;border-radius:6px;font-size:12px;outline:none;margin-top:3px">
+            <input id="mTrailLock" type="number" value="0" step="0.5" min="0" max="100" onchange="calcPreviewFull()" style="width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--t);padding:4px 8px;border-radius:6px;font-size:12px;outline:none;margin-top:3px">
             <div class="hint" style="font-size:9px">0 = trailing infinito. Es: 50 = il trailing si blocca quando sei in profitto del 50% del target</div>
           </div>
         </div>
 
 
 
-        <div class="f"><label>DD giornaliero (%)</label><input id="mDDD" type="number" value="3" step="0.5" oninput="calcPreview()"></div>
+        <div class="f"><label>DD giornaliero (%)</label><input id="mDDD" type="number" value="3" step="0.5" onchange="calcPreviewFull()"></div>
 
 
 
-        <div id="propTargetField" class="f"><label>Profit target (%)</label><input id="mTgt" type="number" value="6" step="0.5" oninput="calcPreview()"></div>
+        <div id="propTargetField" class="f"><label>Profit target (%)</label><input id="mTgt" type="number" value="6" step="0.5" onchange="calcPreviewFull()"></div>
 
 
 
@@ -4061,11 +4057,11 @@ function doRegisterFree(){
 
 
 
-        <div id="ggChallengeField" class="f"><label>Giorni challenge</label><input id="mDays" type="number" value="5" step="1" min="1" oninput="calcPreview()"></div>
+        <div id="ggChallengeField" class="f"><label>Giorni challenge</label><input id="mDays" type="number" value="5" step="1" min="1" onchange="calcPreviewFull()"></div>
 
 
 
-        <div class="f"><label>Payout (%)</label><input id="mPay" type="number" value="80" step="5" oninput="calcPreview()"></div>
+        <div class="f"><label>Payout (%)</label><input id="mPay" type="number" value="80" step="5" onchange="calcPreviewFull()"></div>
 
 
 
@@ -4075,7 +4071,7 @@ function doRegisterFree(){
 
   <label>Consistenza Prop (%)</label>
 
-  <input id="mConsistency" type="number" value="30" step="5" oninput="calcPreview()">
+  <input id="mConsistency" type="number" value="30" step="5" onchange="calcPreviewFull()">
 
 </div>
 
@@ -4084,15 +4080,15 @@ function doRegisterFree(){
       <div id="prop2Fields" style="display:none">
         <div class="sect">Parametri Prop 2 (copertura)</div>
         <div class="fr2">
-          <div class="f"><label>Dimensione Prop 2 ($)</label><input id="mSize2" type="number" value="10000" step="1000" oninput="calcPreview()"></div>
-          <div class="f"><label>Costo challenge Prop 2 ($)</label><input id="mCost2" type="number" value="100" step="50" oninput="calcPreview()"></div>
+          <div class="f"><label>Dimensione Prop 2 ($)</label><input id="mSize2" type="number" value="10000" step="1000" onchange="calcPreviewFull()"></div>
+          <div class="f"><label>Costo challenge Prop 2 ($)</label><input id="mCost2" type="number" value="100" step="50" onchange="calcPreviewFull()"></div>
         </div>
         <div class="fr2">
-          <div class="f"><label>DD totale Prop 2 (%)</label><input id="mDD2" type="number" value="6" step="0.5" oninput="calcPreview()"></div>
-          <div class="f"><label>Giorni minimi trading <span style="font-size:8px;color:var(--teal)">usa il MAX tra le due prop</span></label><input id="mDays2" type="number" value="10" step="1" min="1" oninput="calcPreview()"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">Es: Prop1=4gg, Prop2=10gg → inserisci 10</div></div>
+          <div class="f"><label>DD totale Prop 2 (%)</label><input id="mDD2" type="number" value="6" step="0.5" onchange="calcPreviewFull()"></div>
+          <div class="f"><label>Giorni minimi trading <span style="font-size:8px;color:var(--teal)">usa il MAX tra le due prop</span></label><input id="mDays2" type="number" value="10" step="1" min="1" onchange="calcPreviewFull()"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">Es: Prop1=4gg, Prop2=10gg → inserisci 10</div></div>
         </div>
         <div class="fr2">
-          <div class="f"><label>Payout Prop 2 (%)</label><input id="mPay2" type="number" value="80" step="5" min="1" max="100" oninput="calcPreview()"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">Payout della Prop 2 — es. 80% → incassi l'80% del profitto</div></div>
+          <div class="f"><label>Payout Prop 2 (%)</label><input id="mPay2" type="number" value="80" step="5" min="1" max="100" onchange="calcPreviewFull()"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-top:3px">Payout della Prop 2 — es. 80% → incassi l'80% del profitto</div></div>
         </div>
       </div>
 
@@ -4175,51 +4171,51 @@ function doRegisterFree(){
 
       <div class="f" id="lotsRow">
         <div class="fr2">
-          <div class="f"><label>Lotti Conto Prop</label><input id="mLots" type="number" value="0.15" step="0.01" min="0.01" oninput="calcPreview()"></div>
-          <div class="f"><label>Lotti Conto Personale</label><input id="mLotsHedge" type="number" step="0.01" min="0.01" placeholder="auto" oninput="calcPreview()"></div>
+          <div class="f"><label>Lotti Conto Prop</label><input id="mLots" type="number" value="0.15" step="0.01" min="0.01" onchange="calcPreviewFull()"></div>
+          <div class="f"><label>Lotti Conto Personale</label><input id="mLotsHedge" type="number" step="0.01" min="0.01" placeholder="auto" onchange="calcPreviewFull()"></div>
         </div>
       </div>
       <div class="fr2">
-       <div class="f"><label>Stop Loss (pip)</label><input id="mSlPips" type="number" value="100" step="1" min="1" oninput="calcPreview()"></div>
-        <div class="f"><label>Take Profit (pip)</label><input id="mTpPips" type="number" value="200" step="1" min="1" oninput="calcPreview()"></div>
+       <div class="f"><label>Stop Loss (pip)</label><input id="mSlPips" type="number" value="100" step="1" min="1" onchange="calcPreviewFull()"></div>
+        <div class="f"><label>Take Profit (pip)</label><input id="mTpPips" type="number" value="200" step="1" min="1" onchange="calcPreviewFull()"></div>
       </div>
 
         <div class="f">
 
          <div class="fr2" style="margin-bottom:10px">
 
-  <div class="f"><label>Contratto Prop (lotti/lot) <span style="font-size:8px;color:var(--teal)">opzionale</span></label><input id="mPipVProp" type="number" step="1" min="1" oninput="calcPreview()" placeholder="es. 10 → lotti ÷10"><div class="hint" style="font-size:9px">Se il broker usa 10 lotti come 1 contratto, inserisci 10</div></div>
+  <div class="f"><label>Contratto Prop (lotti/lot) <span style="font-size:8px;color:var(--teal)">opzionale</span></label><input id="mPipVProp" type="number" step="1" min="1" onchange="calcPreviewFull()" placeholder="es. 10 → lotti ÷10"><div class="hint" style="font-size:9px">Se il broker usa 10 lotti come 1 contratto, inserisci 10</div></div>
 
-  <div class="f"><label>Contratto Personale (lotti/lot) <span style="font-size:8px;color:var(--teal)">opzionale</span></label><input id="mPipVHedge" type="number" step="1" min="1" oninput="calcPreview()" placeholder="es. 10 → lotti ÷10"><div class="hint" style="font-size:9px">Se il broker personale usa 10 lotti come 1 contratto, inserisci 10</div></div>
+  <div class="f"><label>Contratto Personale (lotti/lot) <span style="font-size:8px;color:var(--teal)">opzionale</span></label><input id="mPipVHedge" type="number" step="1" min="1" onchange="calcPreviewFull()" placeholder="es. 10 → lotti ÷10"><div class="hint" style="font-size:9px">Se il broker personale usa 10 lotti come 1 contratto, inserisci 10</div></div>
 
 </div> 
 
   <label>Spread totale (pip) <span style="font-size:8px;color:var(--teal)">Prop + Conto personale — sommali tu</span></label>
 
-  <input id="mSpread" type="number" value="0" step="0.1" min="0" oninput="calcPreview()" placeholder="0 = non considerato">
+  <input id="mSpread" type="number" value="0" step="0.1" min="0" onchange="calcPreviewFull()" placeholder="0 = non considerato">
 
   <!-- Campi aggiuntivi Instant Funded -->
   <div id="ifFields" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
     <div class="fr2" style="margin-bottom:8px">
       <div class="f">
         <label>Trade per giorno</label>
-        <input id="ifTradeDay" type="number" value="1" step="1" min="1" max="10" oninput="calcPreview()">
+        <input id="ifTradeDay" type="number" value="1" step="1" min="1" max="10" onchange="calcPreviewFull()">
         <div class="hint">Quanti trade fai in una giornata</div>
       </div>
       <div class="f">
         <label>Giorni simulazione</label>
-        <input id="ifSimDays" type="number" value="10" step="1" min="1" max="60" oninput="calcPreview()">
+        <input id="ifSimDays" type="number" value="10" step="1" min="1" max="60" onchange="calcPreviewFull()">
         <div class="hint">Giorni totali da simulare (≥ giorni minimi)</div>
       </div>
     </div>
     <div class="fr2">
       <div class="f">
         <label>Spread broker prop (pip)</label>
-        <input id="ifSpreadProp" type="number" value="0.3" step="0.1" min="0" oninput="calcPreview()">
+        <input id="ifSpreadProp" type="number" value="0.3" step="0.1" min="0" onchange="calcPreviewFull()">
       </div>
       <div class="f">
         <label>Spread broker pers (pip)</label>
-        <input id="ifSpreadPers" type="number" value="0.3" step="0.1" min="0" oninput="calcPreview()">
+        <input id="ifSpreadPers" type="number" value="0.3" step="0.1" min="0" onchange="calcPreviewFull()">
       </div>
     </div>
   </div>
@@ -4232,12 +4228,12 @@ function doRegisterFree(){
     <div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:var(--fd)">🎯 Parametri Challenge 1 Step</div>
     <div class="f" style="margin-bottom:6px">
       <label>Copertura personale (%)</label>
-      <input id="ch1Cov" type="number" value="50" step="10" min="0" max="100" oninput="calcPreview()">
+      <input id="ch1Cov" type="number" value="50" step="10" min="0" max="100" onchange="calcPreviewFull()">
       <div class="hint">% del costo challenge da coprire col personale</div>
     </div>
     <div class="fr2">
-      <div class="f"><label>Spread prop step (pip)</label><input id="ch1SpProp" type="number" value="0.3" step="0.1" min="0" oninput="calcPreview()"></div>
-      <div class="f"><label>Spread pers step (pip)</label><input id="ch1SpPers" type="number" value="0.3" step="0.1" min="0" oninput="calcPreview()"></div>
+      <div class="f"><label>Spread prop step (pip)</label><input id="ch1SpProp" type="number" value="0.3" step="0.1" min="0" onchange="calcPreviewFull()"></div>
+      <div class="f"><label>Spread pers step (pip)</label><input id="ch1SpPers" type="number" value="0.3" step="0.1" min="0" onchange="calcPreviewFull()"></div>
     </div>
   </div>
 
@@ -4245,28 +4241,28 @@ function doRegisterFree(){
   <div id="ch2Fields" style="display:none;margin-top:10px;border-top:1px solid var(--border);padding-top:10px">
     <div style="font-size:10px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:var(--fd)">🎯 Step 1 — Parametri</div>
     <div class="fr3" style="margin-bottom:6px">
-      <div class="f"><label>Profit target s1 (%)</label><input id="ch2s1Tgt" type="number" value="8" step="0.5" min="1" oninput="calcPreview()"></div>
-      <div class="f"><label>DD tot s1 (%)</label><input id="ch2s1DD" type="number" value="10" step="0.5" min="1" oninput="calcPreview()"></div>
-      <div class="f"><label>DD daily s1 (%)</label><input id="ch2s1DDD" type="number" value="4" step="0.5" min="1" oninput="calcPreview()"></div>
+      <div class="f"><label>Profit target s1 (%)</label><input id="ch2s1Tgt" type="number" value="8" step="0.5" min="1" onchange="calcPreviewFull()"></div>
+      <div class="f"><label>DD tot s1 (%)</label><input id="ch2s1DD" type="number" value="10" step="0.5" min="1" onchange="calcPreviewFull()"></div>
+      <div class="f"><label>DD daily s1 (%)</label><input id="ch2s1DDD" type="number" value="4" step="0.5" min="1" onchange="calcPreviewFull()"></div>
     </div>
     <div class="fr3" style="margin-bottom:8px">
-      <div class="f"><label>Giorni minimi s1</label><input id="ch2s1Days" type="number" value="5" step="1" min="1" oninput="calcPreview()"></div>
-      <div class="f"><label>Copertura pers s1 (%)</label><input id="ch2s1Cov" type="number" value="50" step="10" min="0" max="100" oninput="calcPreview()">
+      <div class="f"><label>Giorni minimi s1</label><input id="ch2s1Days" type="number" value="5" step="1" min="1" onchange="calcPreviewFull()"></div>
+      <div class="f"><label>Copertura pers s1 (%)</label><input id="ch2s1Cov" type="number" value="50" step="10" min="0" max="100" onchange="calcPreviewFull()">
         <div class="hint">% del costo da coprire col personale nello step 1</div></div>
-      <div class="f"><label>Spread tot s1 (pip)</label><input id="ch2s1Sp" type="number" value="0.6" step="0.1" min="0" oninput="calcPreview()"></div>
+      <div class="f"><label>Spread tot s1 (pip)</label><input id="ch2s1Sp" type="number" value="0.6" step="0.1" min="0" onchange="calcPreviewFull()"></div>
     </div>
 
     <div style="font-size:10px;font-weight:700;color:#a78bfa;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;margin-top:4px;font-family:var(--fd)">🎯🎯 Step 2 — Parametri</div>
     <div class="fr3" style="margin-bottom:6px">
-      <div class="f"><label>Profit target s2 (%)</label><input id="ch2s2Tgt" type="number" value="5" step="0.5" min="1" oninput="calcPreview()"></div>
-      <div class="f"><label>DD tot s2 (%)</label><input id="ch2s2DD" type="number" value="8" step="0.5" min="1" oninput="calcPreview()"></div>
-      <div class="f"><label>DD daily s2 (%)</label><input id="ch2s2DDD" type="number" value="5" step="0.5" min="1" oninput="calcPreview()"></div>
+      <div class="f"><label>Profit target s2 (%)</label><input id="ch2s2Tgt" type="number" value="5" step="0.5" min="1" onchange="calcPreviewFull()"></div>
+      <div class="f"><label>DD tot s2 (%)</label><input id="ch2s2DD" type="number" value="8" step="0.5" min="1" onchange="calcPreviewFull()"></div>
+      <div class="f"><label>DD daily s2 (%)</label><input id="ch2s2DDD" type="number" value="5" step="0.5" min="1" onchange="calcPreviewFull()"></div>
     </div>
     <div class="fr3">
-      <div class="f"><label>Giorni minimi s2</label><input id="ch2s2Days" type="number" value="5" step="1" min="1" oninput="calcPreview()"></div>
-      <div class="f"><label>Copertura pers s2 (%)</label><input id="ch2s2Cov" type="number" value="50" step="10" min="0" max="100" oninput="calcPreview()">
+      <div class="f"><label>Giorni minimi s2</label><input id="ch2s2Days" type="number" value="5" step="1" min="1" onchange="calcPreviewFull()"></div>
+      <div class="f"><label>Copertura pers s2 (%)</label><input id="ch2s2Cov" type="number" value="50" step="10" min="0" max="100" onchange="calcPreviewFull()">
         <div class="hint">% del costo accumulato da coprire nello step 2</div></div>
-      <div class="f"><label>Spread tot s2 (pip)</label><input id="ch2s2Sp" type="number" value="0.6" step="0.1" min="0" oninput="calcPreview()"></div>
+      <div class="f"><label>Spread tot s2 (pip)</label><input id="ch2s2Sp" type="number" value="0.6" step="0.1" min="0" onchange="calcPreviewFull()"></div>
     </div>
   </div>
 
@@ -6197,6 +6193,22 @@ box.innerHTML =
 
   +'</div>';
 
+}
+
+/* ── calcPreviewFull: usato da onchange su tutti i campi parametro ──
+   In CH1: ricalcola lotti (_autoCalcChallenge1) poi aggiorna preview.
+   Nelle altre modalità: chiama solo calcPreview normalmente.
+─────────────────────────────────────────────────────────────────── */
+var _inAutoCalc = false;
+function calcPreviewFull() {
+  if (typeof stratMode !== 'undefined' && stratMode === 'challenge_1step'
+      && typeof _autoCalcChallenge1 === 'function' && !_inAutoCalc) {
+    _inAutoCalc = true;
+    _autoCalcChallenge1();
+    _inAutoCalc = false;
+  } else {
+    if (typeof calcPreview === 'function') calcPreview();
+  }
 }
 
 
@@ -14298,29 +14310,31 @@ function simReset(){
     /* Ricrea array dati pulito */
     _simCH1.data = [];
     for(var i=0;i<_simCH1.rows;i++) _simCH1.data.push({w:'',l:''});
-    /* FIX: azzera cache key così _openSimChallenge1 rigenera sempre i dati */
+    /* Azzera cache key */
     _simCH1_cacheKey = '';
+    /* Azzera stato 70% incluso il lotto originale salvato */
+    _simCH1._above70Active = false;
+    _simCH1._lotPersHalved = 0;
+    _simCH1._lotPersTrue   = 0;
+    /* Pulisci i campi manuali lotti così il prossimo auto-calc riparte da zero */
+    var _ch1LF = document.getElementById('ch1Lots');     if(_ch1LF){ _ch1LF.value=''; _ch1LF.style.outline=''; _ch1LF.style.background=''; }
+    var _ch1PF = document.getElementById('ch1LotsPers'); if(_ch1PF){ _ch1PF.value=''; _ch1PF.style.outline=''; _ch1PF.style.background=''; }
     /* Sincronizza inline sim */
     _iSim.data = _simCH1.data;
     _iSim.session = 'challenge_1step';
-    /* Azzera stato 70% */
-    _simCH1._above70Active = false;
-    _simCH1._lotPersHalved = 0;
-    /* FIX: rimuovi TUTTI i dati simulatore dal localStorage (incluso isim) */
+    /* Rimuovi TUTTI i dati simulatore dal localStorage */
     try{localStorage.removeItem('ph_ch1_data');}catch(e){}
     try{localStorage.removeItem('ph_isim_data');}catch(e){}
     try{localStorage.removeItem('ph_isim_session');}catch(e){}
     /* Rimuovi card fine ciclo e banner */
     var oldC=document.getElementById('_simCH1_cycleCard'); if(oldC)oldC.remove();
     document.querySelectorAll('._simCH1_banner70').forEach(function(b){b.remove();});
-    /* Ricostruisci tabella modale (se aperta) e ricalcola */
+    /* Ricostruisci tabella modale (se aperta) */
     if(document.getElementById('simModal') &&
        document.getElementById('simModal').style.display !== 'none') {
       _simCH1_buildTable();
     }
-    /* FIX: non chiamare _simCH1_calc() qui perché richiama _saveSimData()
-       che riscriverebbe subito i dati appena cancellati dal localStorage.
-       Aggiorna solo i KPI a zero e ricostruisci l'inline sim. */
+    /* Azzera KPI */
     var kpiIds=['simKpiBalance','simKpiDdline','simKpiPropCum','simKpiPersCum','simKpiPayout','simKpiNetto'];
     kpiIds.forEach(function(id){var e=document.getElementById(id);if(e){e.textContent='—';e.style.color='var(--t3)';}});
     /* Aggiorna inline sim e preview */
@@ -14394,7 +14408,8 @@ var _simCH1 = {
   rows:31, data:[],
   /* Stato 70% persistente — usato anche da _ch1RebuildPreview */
   _above70Active: false,
-  _lotPersHalved: 0
+  _lotPersHalved: 0,
+  _lotPersTrue: 0   /* lotto personale REALE pre-70%, mai sovrascritto dalla logica 70% */
 };
 var _simCH1_cacheKey = '';
 
@@ -14411,88 +14426,141 @@ function _simCH1_setCell(r, col, txt, clr, bg) {
    AUTO-CALC CHALLENGE 1 STEP
    ════════════════════════════════════════════════════════════════════ */
 function _autoCalcChallenge1() {
-  var size     = parseFloat(document.getElementById('mSize')?.value)        || 100000;
-  var cost     = parseFloat(document.getElementById('mCost')?.value)        || 1500;
-  var maxDD    = parseFloat(document.getElementById('mDD')?.value)          || 6;
-  var ddd      = parseFloat(document.getElementById('mDDD')?.value)         || 3;
-  var tgtPct   = parseFloat(document.getElementById('mTgt')?.value)         || 8;
-  var days     = parseFloat(document.getElementById('mDays')?.value)        || 10;
-  var cons     = parseFloat(document.getElementById('mConsistency')?.value) || 0;
-  var isTrail  = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
-  var asset    = (document.getElementById('mAsset')?.value || 'GOLD:10').split(':')[0];
-  var pipVal   = typeof _chPipVal === 'function' ? _chPipVal(asset) : 10;
-  var covPct   = parseFloat(document.getElementById('ch1Cov')?.value) || 85;
 
-  var tgtUsd     = size * (tgtPct / 100);
-  var maxDDusd   = size * (maxDD  / 100);
-  var dailyDDusd = size * (ddd    / 100);
-  var hasCons    = cons > 0 && cons < 100;
+  /* ── Leggi parametri ── */
+  var size    = parseFloat(document.getElementById('mSize')?.value)        || 100000;
+  var cost    = parseFloat(document.getElementById('mCost')?.value)        || 1500;
+  var maxDD   = parseFloat(document.getElementById('mDD')?.value)          || 6;
+  var ddd     = parseFloat(document.getElementById('mDDD')?.value)         || 3;
+  var tgtPct  = parseFloat(document.getElementById('mTgt')?.value)         || 8;
+  var days    = parseFloat(document.getElementById('mDays')?.value)        || 10;
+  var cons    = parseFloat(document.getElementById('mConsistency')?.value) || 0;
+  var isTrail = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
+  var asset   = (document.getElementById('mAsset')?.value || 'GOLD:10').split(':')[0];
+  var pipVal  = typeof _chPipVal === 'function' ? _chPipVal(asset) : 10;
+  var covPct  = parseFloat(document.getElementById('ch1Cov')?.value) || 85;
+  var sl      = 100; // CH1 sempre RR 1:1 a 100 pip
 
-  /* ── Lotto PROP: rispetta daily DD e target × penalità trailing/cons ── */
-  var tgtGiorno  = tgtUsd / Math.max(1, days);
-  var lotByDaily = (dailyDDusd * 0.90) / (100 * pipVal);
-  var lotByTgt   = tgtGiorno / (100 * pipVal);
-  var penalty = 1.0;
-  if (isTrail && hasCons) {
-    penalty = cons <= 25 ? 0.30 : cons <= 35 ? 0.40 : cons <= 50 ? 0.55 : cons <= 70 ? 0.75 : 0.90;
-  } else if (isTrail) { penalty = 0.75;
-  } else if (hasCons && cons <= 30) { penalty = 0.70; }
+  /* ── Valori derivati ── */
+  var tgtUsd     = size * (tgtPct / 100);   // obiettivo in $
+  var maxDDusd   = size * (maxDD  / 100);   // buffer DD totale
+  var dailyDDusd = size * (ddd    / 100);   // limite DD giornaliero
+  var hasCons    = cons > 0;
+  var tickVal    = sl * pipVal;             // $ per 1 lot su 1 trade (RR1:1)
 
-  var lot = Math.min(lotByDaily, lotByTgt) * penalty;
-  lot = Math.round(lot * 100) / 100;
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     VINCOLO 1 — GIORNI MINIMI
+     Ogni giorno devi guadagnare (tgtUsd / days) per chiudere in tempo.
+     lot_giorni = guadagno_giornaliero / tickVal
+     → più giorni → lot più basso; meno giorni → lot più alto
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var lot_giorni = (tgtUsd / Math.max(1, days)) / tickVal;
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     VINCOLO 2 — DD GIORNALIERO
+     Un singolo trade (loss) non deve bruciare > 80% del DD giornaliero.
+     lot_daily = dailyDDusd * 0.80 / tickVal
+     → aumenta DD giornaliero → lot può salire; scende → lot scende
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var lot_daily = (dailyDDusd * 0.80) / tickVal;
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     VINCOLO 3 — DD TRAILING (solo se attivo)
+     Con trailing il buffer si erode ad ogni TP colpito: il DD effettivo
+     disponibile per le perdite future si dimezza nel tempo.
+     Usiamo il 40% del maxDD come stima del buffer residuo reale.
+     lot_trail = maxDDusd * 0.40 / tickVal
+     → senza trailing: vincolo assente (Infinity → non restringe)
+     → con trailing: lot più bassi per non bruciare il buffer residuo
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var lot_trail = isTrail ? (maxDDusd * 0.40) / tickVal : Infinity;
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     VINCOLO 4 — CONSISTENZA (solo se attiva)
+     Nessun singolo trade TP può superare cons% del target totale.
+     lot_cons = (tgtUsd * cons / 100) / tickVal
+     → più alta la %: meno restrittivo; più bassa: più restrittivo
+     → senza consistenza: vincolo assente
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* ── Risultato: minimo tra vincoli di DD e giorni ── */
+  var lot_base = Math.min(lot_daily, lot_giorni, lot_trail);
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     VINCOLO CONSISTENZA — moltiplicatore proporzionale
+     La regola "cons%" significa: nessun giorno > cons% del profitto totale.
+     Per rispettarla SEMPRE servono almeno ceil(100/cons) trade vincenti,
+     quindi i lotti devono essere più bassi per distribuire il profitto.
+     Formula: lot_finale = lot_base × sqrt(cons/100)
+     → cons=100%: × 1.00 (nessuna riduzione — regola assente)
+     → cons= 50%: × 0.71 (riduzione moderata)
+     → cons= 30%: × 0.55 (riduzione visibile)
+     → cons= 10%: × 0.32 (riduzione importante)
+     → cons=  3%: × 0.17 (riduzione severa)
+     Garantisce: qualunque valore attivo riduce sempre i lotti rispetto
+     a nessuna consistenza, con progressione liscia e proporzionale.
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  var cons_mult = hasCons ? Math.sqrt(cons / 100) : 1.0;
+  var lot = lot_base * cons_mult;
+  lot = Math.floor(lot * 100) / 100; // arrotondo per difetto (più sicuro)
   if (lot < 0.01) lot = 0.01;
 
-  var tradeAmt = lot * 100 * pipVal;  /* $ per trade (RR 1:1) */
+  /* ── Parametri derivati dal lot finale ── */
+  var tradeAmt = lot * tickVal;                               // $ per trade
+  var nLossMax = Math.floor(maxDDusd / tradeAmt) || 1;       // max stop loss prima del game over
+  var winsNeed = Math.ceil(tgtUsd / tradeAmt);               // win necessari per il target
 
-  /* ── Calcola nLossMax e winsNeeded ── */
-  var nLossMax  = tradeAmt > 0 ? Math.floor(maxDDusd / tradeAmt) : 10;
-  if (nLossMax < 1) nLossMax = 1;
-  var winsNeed  = tradeAmt > 0 ? Math.ceil(tgtUsd / tradeAmt) : 10;
-
-  var lotPers = (cost * (covPct / 100)) / (nLossMax * bestPips * pipVal);
+  /* ── Lotto personale ──
+     Deve recuperare covPct% del costo challenge se la prop brucia tutti i nLossMax stop.
+     lotPers × nLossMax × tickVal = cost × covPct/100
+     → se il lotto prop scende, nLossMax sale → lotPers scende proporzionalmente
+  ── */
+  var lotPers = (cost * (covPct / 100)) / (nLossMax * tickVal);
   lotPers = Math.round(lotPers * 100) / 100;
   if (lotPers < 0.01) lotPers = 0.01;
 
-  /* ── Applica ── */
-  var slE = document.getElementById('mSlPips'); if (slE) slE.value = bestPips;
-  var tpE = document.getElementById('mTpPips'); if (tpE) tpE.value = bestPips;
-  var ltE = document.getElementById('mLots');   if (ltE) ltE.value = lot;
-  var ch1L  = document.getElementById('ch1Lots');     if (ch1L)  ch1L.value  = lot;
-  var ch1LP = document.getElementById('ch1LotsPers'); if (ch1LP) ch1LP.value = lotPers;
+  /* ── Applica ai campi ── */
+  var slE  = document.getElementById('mSlPips');    if (slE)  slE.value  = sl;
+  var tpE  = document.getElementById('mTpPips');    if (tpE)  tpE.value  = sl;
+  var ltE  = document.getElementById('mLots');      if (ltE)  ltE.value  = lot;
+  var ch1L = document.getElementById('ch1Lots');    if (ch1L) ch1L.value = lot;
+  var ch1P = document.getElementById('ch1LotsPers');if (ch1P) ch1P.value = lotPers;
+  _simCH1._lotPersTrue = lotPers;
 
-  /* ── Calcola scenari per toast ── */
-  var persPerTrade  = lotPers * bestPips * pipVal;
-  var recoverFail   = (lotPers * nLossMax * bestPips * pipVal).toFixed(0);
-  var extraCostPass = (lotPers * winsNeed  * bestPips * pipVal).toFixed(0);
-  var costoTotPass  = (cost + parseFloat(extraCostPass)).toFixed(0);
-  var nettoFail     = (-cost + parseFloat(recoverFail)).toFixed(0);
-  var recCovPct     = Math.round(parseFloat(recoverFail) / cost * 100);
+  /* ── Aggiorna preview ── */
+  if (typeof calcPreview === 'function') calcPreview();
+
+  /* ── Toast riepilogo ── */
+  var recFail = lotPers * nLossMax * tickVal;
+  var netFail = (-cost + recFail);
+  var active  = [];
+  if (isTrail) active.push('Trailing');
+  if (hasCons) active.push('Cons. ' + cons + '%');
+  var label   = active.length ? '[' + active.join(' + ') + ']' : '[Base]';
+
+  var binding = (lot_base === lot_giorni) ? 'Giorni (' + days + ')' :
+                (lot_base === lot_daily)  ? 'DD daily (' + ddd + '%)' :
+                'Trailing';
+  if (hasCons) binding += ' × Cons.' + cons + '% (×' + cons_mult.toFixed(2) + ')';
 
   var msg =
-    '🎯 Challenge 1 Step — RR 1:1 | '+bestPips+' pip\n' +
-    'Prop: ' + lot + ' lot  ±$' + tradeAmt.toFixed(0) + '/trade\n' +
-    'Personale: ' + lotPers + ' lot  ±$' + persPerTrade.toFixed(0) + '/trade\n' +
-    '✅ Se prop PASSA: costo tot $' + costoTotPass + ' (+$' + extraCostPass + ' sul pers)\n' +
-    '🔄 Se prop FALLISCE: recuperi $' + recoverFail + ' (' + recCovPct + '% del costo)\n' +
-    '   Netto se fallisce: ' + (parseFloat(nettoFail)>=0?'+':'')+nettoFail + '$';
+    '🎯 Challenge 1 Step ' + label + '\n' +
+    'Vincolo binding: ' + binding + '\n' +
+    'Giorni: ' + days + ' | Asset: ' + asset + ' | SL/TP: ' + sl + ' pip\n' +
+    'Prop:  ' + lot     + ' lot  ±$' + tradeAmt.toFixed(0)  + '/trade\n' +
+    'Pers:  ' + lotPers + ' lot  | stop max: ' + nLossMax + ' | win necessari: ' + winsNeed + '\n' +
+    '✅ Prop passa → conto continua, pers perde $' + (lotPers * winsNeed * tickVal).toFixed(0) + '\n' +
+    '❌ Prop brucia → pers recupera $' + recFail.toFixed(0) + ' (netto ' + (netFail >= 0 ? '+' : '') + netFail.toFixed(0) + '$)';
 
   var old = document.getElementById('_phCalcToast'); if (old) old.remove();
-  var toast = document.createElement('div');
-  toast.id = '_phCalcToast';
-  toast.style.cssText =
-    'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);' +
-    'background:linear-gradient(135deg,#1d4ed8,#0EA5E9);color:#fff;font-weight:600;' +
-    'font-family:"DM Sans",sans-serif;font-size:11px;padding:14px 26px;border-radius:40px;' +
-    'z-index:99999;box-shadow:0 6px 28px rgba(29,78,216,.5);max-width:92vw;text-align:center;' +
-    'line-height:1.7;transition:opacity .4s;pointer-events:none;white-space:pre-line';
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  setTimeout(function () {
-    toast.style.opacity = '0';
-    setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 500);
-  }, 7000);
-
-  if (typeof calcPreview === 'function') calcPreview();
+  var t = document.createElement('div');
+  t.id = '_phCalcToast';
+  t.style.cssText = 'position:fixed;bottom:80px;right:24px;z-index:99999;' +
+    'background:#0c1030;border:1px solid #2a2f55;border-radius:12px;padding:14px 18px;' +
+    'font-family:var(--fd);font-size:11px;color:var(--t2);line-height:1.9;' +
+    'max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.6);white-space:pre-line';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ var el=document.getElementById('_phCalcToast'); if(el) el.remove(); }, 7000);
 }
 /* ════════════════════════════════════════════════════════════════════
    OPEN SIMULATOR — Challenge 1 Step
@@ -14533,12 +14601,24 @@ function _openSimChallenge1() {
   var _ch1LPM = parseFloat(document.getElementById('ch1LotsPers')?.value) || 0;
   var nLossMax = s.propLoss > 0 ? Math.floor(s.maxDDusd / s.propLoss) : 10;
   if (nLossMax < 1) nLossMax = 1;
-  if (_ch1LPM >= 0.01) {
+
+  /* Se _lotPersTrue è già impostato (la logica 70% ha modificato il campo),
+     usa quello come valore base reale — ignora il campo che è stato sovrascritto */
+  var _trueBase = s._lotPersTrue > 0 ? s._lotPersTrue : 0;
+
+  if (_ch1LPM >= 0.01 && !s._above70Active && _trueBase === 0) {
+    /* Manuale puro: l'utente ha inserito un valore e non siamo in fase 70% */
     s.lotPers = Math.round(_ch1LPM * 100) / 100;
+    s._lotPersTrue = s.lotPers;
+  } else if (_trueBase > 0) {
+    /* Siamo stati sopra il 70%: usa sempre il valore originale pre-70% */
+    s.lotPers = _trueBase;
   } else {
+    /* Auto-calcolo */
     var lP = (s.cost * (s.covPct / 100)) / (nLossMax * s.slPips * s.pipVal);
     s.lotPers = Math.round(lP * 100) / 100;
     if (s.lotPers < 0.01) s.lotPers = 0.01;
+    s._lotPersTrue = s.lotPers;
   }
 
   /* RR 1:1: pers guadagna/perde lo stesso pip del prop */
@@ -14908,41 +14988,33 @@ function _simCH1_calc() {
         if (now70 && !above70) {
           /* ───── SUPERATO IL 70% ───── */
           above70    = true;
-          curLotPers = halveLot(lotPersOrig);
+          curLotPers = halveLot(lotPersOrig);   /* halve sempre dal VERO originale */
           /* Aggiorna valori per prossime righe */
           persWin  = curLotPers * s.slPips * s.pipVal;
           persLoss = curLotPers * s.slPips * s.pipVal;
 
-          /* Salva stato persistente → _ch1RebuildPreview lo leggerà */
+          /* Salva stato persistente */
           _simCH1._above70Active = true;
           _simCH1._lotPersHalved = curLotPers;
+          /* NON scriviamo ch1LotsPers — evita che il valore dimezzato
+             diventi il nuovo "originale" alla prossima esecuzione del calc */
 
-          /* Pannello VERDE nel simulatore */
           insert70Banner(rr, true);
-
-          /* Aggiorna campo calcolatore ch1LotsPers */
-          var elLP = document.getElementById('ch1LotsPers');
-          if (elLP) { elLP.value = curLotPers; elLP.style.outline='2px solid #34D399'; elLP.style.background='rgba(52,211,153,.10)'; }
-          /* Ricalcola preview calcolatore — ora userà _simCH1._above70Active */
           if (typeof calcPreview === 'function') setTimeout(calcPreview, 80);
 
         } else if (!now70 && above70) {
           /* ───── SCESO SOTTO IL 70% ───── */
           above70    = false;
-          curLotPers = lotPersOrig;
+          curLotPers = lotPersOrig;   /* sempre il VERO originale, mai il dimezzato */
           persWin    = curLotPers * s.slPips * s.pipVal;
           persLoss   = curLotPers * s.slPips * s.pipVal;
 
           /* Ripristina stato persistente */
           _simCH1._above70Active = false;
           _simCH1._lotPersHalved = 0;
+          /* _lotPersTrue rimane intatto — è il valore base */
 
-          /* Pannello ROSSO nel simulatore */
           insert70Banner(rr, false);
-
-          /* Ripristina campo calcolatore ch1LotsPers */
-          var elLP2 = document.getElementById('ch1LotsPers');
-          if (elLP2) { elLP2.value = ''; elLP2.style.outline=''; elLP2.style.background=''; }
           if (typeof calcPreview === 'function') setTimeout(calcPreview, 80);
         }
       }
@@ -15318,17 +15390,16 @@ function _ch1RebuildPreview() {
   } else {
     /* Automatico: calcola da trail + cons + giorni */
     var tgtGiorno  = tgtUsd / Math.max(1, days);
-    var lotByDaily = (dailyDDusd * 0.90) / (sl * pipVal);
+    var lotByDaily = (dailyDDusd * 0.85) / (sl * pipVal);
     var lotByTgt   = tgtGiorno / (sl * pipVal);
-    var penalty    = 1.0;
-    if (isTrail && hasCons) {
-      penalty = cons<=25?0.30:cons<=35?0.40:cons<=50?0.55:cons<=70?0.75:0.90;
-    } else if (isTrail) {
-      penalty = 0.75;
-    } else if (hasCons && cons <= 30) {
-      penalty = 0.70;
+    var trailPenalty = isTrail ? 0.60 : 1.0;
+    var consPenalty  = 1.0;
+    if (hasCons) {
+      var lotByCons = (tgtUsd * (cons / 100)) / (sl * pipVal);
+      var rawMin2 = Math.min(lotByDaily, lotByTgt);
+      if (rawMin2 > 0 && lotByCons < rawMin2) consPenalty = lotByCons / rawMin2;
     }
-    lot = Math.round(Math.min(lotByDaily, lotByTgt) * penalty * 100) / 100;
+    lot = Math.round(Math.min(lotByDaily, lotByTgt) * trailPenalty * consPenalty * 100) / 100;
     if (lot < 0.01) lot = 0.01;
     /* Sincronizza i campi form */
     var mLotsEl = document.getElementById('mLots');
