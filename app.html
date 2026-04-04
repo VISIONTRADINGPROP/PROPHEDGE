@@ -8838,20 +8838,58 @@ function renderLive(){
 
     // Card download bridge
     +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:6px">① Scarica il Bridge PropHedge</div>'
+    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:6px">① Installa il Bridge PropHedge</div>'
     +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);line-height:1.8;margin-bottom:14px">'
-    +'Piccolo programma che gira sul tuo PC Windows in background.<br>'
-    +'Non è un EA. Non è visibile a MT4/MT5.<br>'
-    +'Le credenziali non escono mai dal tuo computer.</div>'
-    +'<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:12px;margin-bottom:12px">'
-    +'<div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:6px">⏳ Bridge installer in arrivo</div>'
-    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8">'
-    +'Per usarlo subito installa Python 3.11+ e lancia:<br>'
-    +'<code style="background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--teal)">pip install flask MetaTrader5 pyinstaller</code><br>'
-    +'Poi esegui il file bridge.py che trovi nella guida tecnica.</div>'
+    +'Segui i 3 passi — si fa una volta sola.<br>Dopo il bridge gira in background e il software si connette a MT4/MT5.</div>'
+
+    // STEP 1 — Python
+    +'<div id="bStep1" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+    +'<div style="width:26px;height:26px;border-radius:50%;background:var(--violet2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">1</div>'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t)">Installa Python <span style="font-size:10px;color:var(--t3);font-weight:400">(solo se non ce l\'hai)</span></div>'
     +'</div>'
-    +'<button onclick="liveDownloadGuide()" style="display:inline-flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;color:var(--t2);padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.04em">'
-    +'📄 Mostra guida tecnica bridge</button>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8;margin-bottom:10px">'
+    +'Vai su <b style="color:var(--teal)">python.org/downloads</b> → scarica Python 3.x<br>'
+    +'⚠️ <b style="color:var(--amber)">IMPORTANTE:</b> durante l\'installazione spunta <b>"Add Python to PATH"</b>'
+    +'</div>'
+    +'<a href="https://www.python.org/ftp/python/3.12.8/python-3.12.8-amd64.exe" target="_blank" '
+    +'style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#3776ab,#ffd43b);color:#fff;border-radius:8px;padding:8px 16px;font-size:11px;font-weight:700;text-decoration:none">'
+    +'⬇ Scarica Python 3.12 (Windows)</a>'
+    +'</div>'
+
+    // STEP 2 — Librerie
+    +'<div id="bStep2" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+    +'<div style="width:26px;height:26px;border-radius:50%;background:var(--teal2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">2</div>'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t)">Installa le librerie</div>'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8;margin-bottom:10px">'
+    +'Apri il <b>Prompt dei comandi</b> (cerca "cmd" nel menu Start) e copia-incolla questo comando:'
+    +'</div>'
+    +'<div style="background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+    +'<code id="pipCmd" style="font-family:var(--fd);font-size:11px;color:var(--teal)">pip install flask flask-cors MetaTrader5</code>'
+    +'<button onclick="navigator.clipboard.writeText(\'pip install flask flask-cors MetaTrader5\');this.textContent=\'✓ Copiato!\';setTimeout(()=>this.textContent=\'📋 Copia\',2000)" '
+    +'style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--t2);padding:4px 10px;font-size:10px;cursor:pointer;flex-shrink:0;margin-left:10px">📋 Copia</button>'
+    +'</div>'
+    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd)">Aspetta che finisca — scarica automaticamente tutto quello che serve.</div>'
+    +'</div>'
+
+    // STEP 3 — Bridge
+    +'<div id="bStep3" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
+    +'<div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--violet2),var(--teal2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">3</div>'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t)">Scarica e avvia il Bridge</div>'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8;margin-bottom:10px">'
+    +'Scarica il file bridge.py, poi trascinalo nel Prompt dei comandi e premi Invio.<br>'
+    +'Comparirà: <span style="color:var(--green)">PropHedge Bridge avviato su 127.0.0.1:7777</span><br>'
+    +'<b>Lascia quella finestra aperta</b> mentre usi il software.'
+    +'</div>'
+    +'<button onclick="liveDownloadGuide()" '
+    +'style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--violet2),var(--teal2));color:#fff;border-radius:8px;padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;border:none;letter-spacing:.04em">'
+    +'⬇ Scarica bridge.py</button>'
+    +'<div style="margin-top:8px;font-size:10px;color:var(--t3);font-family:var(--fd)">⏳ Il file .exe precompilato (doppio clic e via) sarà disponibile a breve.</div>'
+    +'</div>'
     +'</div>'
 
     // Card connessione
@@ -8859,8 +8897,8 @@ function renderLive(){
     +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:14px">② Connetti il tuo conto</div>'
     +'<div style="margin-bottom:8px"><label style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Piattaforma</label>'
     +'<div style="display:flex;gap:8px;margin-top:4px">'
-    +'<button onclick="document.getElementById(\'livePlat\').value=\'mt4\'" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--teal);font-size:11px;font-weight:700;cursor:pointer">MT4</button>'
-    +'<button onclick="document.getElementById(\'livePlat\').value=\'mt5\'" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--violet);font-size:11px;font-weight:700;cursor:pointer">MT5</button>'
+    +'<button id="btnMT4" onclick="liveSelectPlat(\'mt4\')" style="flex:1;padding:9px;border-radius:7px;border:2px solid var(--teal);background:rgba(56,189,248,.15);color:var(--teal);font-size:12px;font-weight:700;cursor:pointer">MT4</button>'
+    +'<button id="btnMT5" onclick="liveSelectPlat(\'mt5\')" style="flex:1;padding:9px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--t3);font-size:12px;font-weight:700;cursor:pointer">MT5</button>'
     +'</div><input type="hidden" id="livePlat" value="mt4"></div>'
     +'<div style="margin-bottom:8px"><label style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Server</label>'
     +'<input id="liveServer" type="text" placeholder="es. TopFX-Live 13" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
@@ -8913,6 +8951,20 @@ function renderLive(){
 }
 
 /* ── Bridge JS functions ── */
+async function liveSelectPlat(p){
+  document.getElementById('livePlat').value = p;
+  var b4 = document.getElementById('btnMT4');
+  var b5 = document.getElementById('btnMT5');
+  if(!b4||!b5) return;
+  if(p==='mt4'){
+    b4.style.cssText='flex:1;padding:9px;border-radius:7px;border:2px solid var(--teal);background:rgba(56,189,248,.15);color:var(--teal);font-size:12px;font-weight:700;cursor:pointer';
+    b5.style.cssText='flex:1;padding:9px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--t3);font-size:12px;font-weight:700;cursor:pointer';
+  } else {
+    b5.style.cssText='flex:1;padding:9px;border-radius:7px;border:2px solid var(--violet);background:rgba(167,139,250,.15);color:var(--violet);font-size:12px;font-weight:700;cursor:pointer';
+    b4.style.cssText='flex:1;padding:9px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--t3);font-size:12px;font-weight:700;cursor:pointer';
+  }
+}
+
 async function liveConnect(){
   var server = document.getElementById('liveServer')?.value.trim();
   var login  = parseInt(document.getElementById('liveLogin')?.value);
