@@ -5478,50 +5478,89 @@ var sA_net  = sA_gain - cost - (spreadCostHedge * maxLossTrades);
 
 }
 
+/* ════════════════════════════════════════════════════════════════
+   CALCOLO LOTTI PRUDENTE — chi va piano va lontano
+   Regola base: lot = maxDD / (giorni+1) / (sl×pipVal)
+   Il DD si spalma su (giorni+1) così anche se perdi ogni giorno
+   non esplodi prima del tempo.
+   Riduzione per regole cardini:
+   - Nessuna regola:          ×1.00  (max tolleranza)
+   - Solo trailing:           ×0.75
+   - Cons >50%:               ×0.75
+   - Cons 30-50%:             ×0.60
+   - Cons ≤30%:               ×0.50
+   - Trailing + cons >50%:    ×0.55
+   - Trailing + cons 30-50%:  ×0.45
+   - Trailing + cons ≤30%:    ×0.35
+════════════════════════════════════════════════════════════════ */
+function _getDailyPct(isTrail, cons){
+  var hasCons = cons > 0;
+  if(!isTrail && !hasCons)          return 1.00;
+  if( isTrail && !hasCons)          return 0.75;
+  if(!isTrail && cons > 50)         return 0.75;
+  if(!isTrail && cons > 30)         return 0.60;
+  if(!isTrail && cons > 0)          return 0.50;
+  if( isTrail && cons > 50)         return 0.55;
+  if( isTrail && cons > 30)         return 0.45;
+  return 0.35;
+}
+function _calcLotPrudente(size, tgtPct, maxDD, days, isTrail, cons, sl, pipVal){
+  var mult      = _getDailyPct(isTrail, cons);
+  var maxDDusd  = size * (maxDD / 100);
+  var giorni_eff= days + 1;                         /* +1 giorno buffer sempre */
+  var maxPerDay = (maxDDusd / giorni_eff) * mult;   /* max $ perdita/giorno */
+  var lot       = maxPerDay / (sl * pipVal);
+  lot = Math.floor(lot * 100) / 100;
+  if(lot < 0.01) lot = 0.01;
+  return lot;
+}
+
 function autoCalcPips(){
-  var size = parseFloat(document.getElementById('mSize')?.value) || 100000;
-  var cost = parseFloat(document.getElementById('mCost')?.value) || 500;
-  var tgtPct = parseFloat(document.getElementById('mTgt')?.value) || 8;
-  var cons = parseFloat(document.getElementById('mConsistency')?.value) || 0;
-  var days = parseFloat(document.getElementById('mDays')?.value) || 10;
-  var assetEl = document.getElementById('mAsset');
-  var asset = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
+  var size   = parseFloat(document.getElementById('mSize')?.value)        || 100000;
+  var tgtPct = parseFloat(document.getElementById('mTgt')?.value)         || 8;
+  var maxDD  = parseFloat(document.getElementById('mDD')?.value)          || 6;
+  var ddd    = parseFloat(document.getElementById('mDDD')?.value)         || 3;
+  var cons   = parseFloat(document.getElementById('mConsistency')?.value) || 0;
+  var days   = parseFloat(document.getElementById('mDays')?.value)        || 10;
+  var isTrail= (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
+  var assetEl= document.getElementById('mAsset');
+  var asset  = assetEl ? assetEl.value.split(':')[0] : 'EUR/USD';
   var pipVal = (typeof _chPipVal === 'function') ? _chPipVal(asset) : 10;
   var stratMode = typeof _stratMode !== 'undefined' ? _stratMode : 'personal';
 
-  if(stratMode==='prop2'||stratMode==='futures_prop'||stratMode==='futures_futures'){
-    var size2 = parseFloat(document.getElementById('mSize2')?.value) || 0;
-    var maxDD = parseFloat(document.getElementById('mDD')?.value) || 6;
-    var dd2 = parseFloat(document.getElementById('mDD2')?.value) || 6;
-    var ddT1 = size*(maxDD/100), ddT2 = size2*(dd2/100);
-    var ggM = Math.max(parseFloat(document.getElementById('mDays')?.value)||10, parseFloat(document.getElementById('mDays2')?.value)||10);
-    var l1 = Math.floor((ddT1/ggM/(pipVal*100))*100)/100;
-    if(l1<0.01) l1=0.01;
-    document.getElementById('mSlPips').value = 100;
-    document.getElementById('mTpPips').value = 100;
-    document.getElementById('mLots').value = l1;
+  if(stratMode === 'challenge_1step'){
+    if(typeof _autoCalcChallenge1 === 'function') _autoCalcChallenge1();
+    return;
+  }
+
+  /* futures_personal → stessa logica di personal ma label diverso */
+  if(stratMode === 'futures_personal'){
+    var sl = 100;
+    var lot = _calcLotPrudente(size, tgtPct, maxDD, days, isTrail, cons, sl, pipVal);
+    document.getElementById('mSlPips').value = sl;
+    document.getElementById('mTpPips').value = sl;
+    document.getElementById('mLots').value   = lot;
     calcPreview();
     return;
   }
 
-  // CALCOLO PERFETTO PER CONTO LIVE (Nessun suicidio)
-  var rrMult = (cons > 0) ? 2 : 3;
-  var pipsSL = 100;
-  var pipsTP = pipsSL * rrMult;
+  if(stratMode==='prop2'||stratMode==='futures_prop'||stratMode==='futures_futures'){
+    var l1 = _calcLotPrudente(size, tgtPct, maxDD, days, isTrail, cons, 100, pipVal);
+    if(l1<0.01) l1=0.01;
+    document.getElementById('mSlPips').value = 100;
+    document.getElementById('mTpPips').value = 100;
+    document.getElementById('mLots').value   = l1;
+    calcPreview();
+    return;
+  }
 
-  var targetPropUsd = size * (tgtPct / 100);
+  /* ── Prop + Personale: formula prudente ── */
+  var sl  = 100;
+  var lot = _calcLotPrudente(size, tgtPct, maxDD, days, isTrail, cons, sl, pipVal);
 
-  // Dividiamo il target per i GIORNI MINIMI. Piccoli passi costanti!
-  var tpIdealeUsd = targetPropUsd / days;
-
-  var lottiProp = tpIdealeUsd / (pipsTP * pipVal);
-  lottiProp = Math.floor(lottiProp * 100) / 100;
-  if (lottiProp < 0.01) lottiProp = 0.01;
-
-  document.getElementById('mSlPips').value = pipsSL;
-  document.getElementById('mTpPips').value = pipsTP;
-  document.getElementById('mLots').value = lottiProp;
-
+  document.getElementById('mSlPips').value = sl;
+  document.getElementById('mTpPips').value = sl;
+  document.getElementById('mLots').value   = lot;
   calcPreview();
 }
 
@@ -5544,7 +5583,14 @@ function autoCalcPips(){
       btn.style.color = 'var(--teal)';
       if(lockRow) lockRow.style.display = 'none';
     }
-    calcPreview();
+    /* In CH1: ricalcola lotti automaticamente */
+    if(typeof stratMode !== 'undefined' && stratMode === 'challenge_1step'
+       && typeof _autoCalcChallenge1 === 'function'){
+      _ch1ManualMode = false;
+      _autoCalcChallenge1();
+    } else {
+      calcPreview();
+    }
   }
 
   function calcPreview() {
@@ -6210,6 +6256,7 @@ function calcPreviewFull() {
   if (typeof stratMode !== 'undefined' && stratMode === 'challenge_1step'
       && typeof _autoCalcChallenge1 === 'function' && !_inAutoCalc) {
     _inAutoCalc = true;
+    _ch1ManualMode = false;  /* cambio parametro → resetta blocco manuale */
     _autoCalcChallenge1();
     _inAutoCalc = false;
   } else {
@@ -6318,8 +6365,14 @@ function _loadSimData() {
 }
 
 /* ── Sync manuale lotti Challenge 1 Step → calcolatore + simulatore ── */
+var _ch1ManualMode = false;
+var _ch1AutoCalcWriting = false; /* flag: autoCalc sta scrivendo, non è input utente */
+
 function _ch1ManualLotChange() {
-  /* 1. Aggiorna il preview del calcolatore */
+  /* Ignora se è l'autoCalc che sta scrivendo */
+  if (_ch1AutoCalcWriting) return;
+  _ch1ManualMode = true;
+
   if (typeof calcPreview === 'function') calcPreview();
 
   /* 2. Se il simulatore è aperto e ha parametri, aggiorna in tempo reale */
@@ -8815,444 +8868,533 @@ function renderEADownload(){ return '<div></div>'; } // deprecata
 /* ═══════════════════════════════════════════════════════
    LIVE TRADING — pannello connessione bridge MT4/MT5
    ═══════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   DUAL BRIDGE — Prop + Personale
+   ═══════════════════════════════════════════════ */
 var _bridge = {
-  connected: false, server:'', login:'', platform:'mt4',
-  account: null, positions: [], pollTimer: null
+  prop: { connected:false, server:'', login:0, platform:'mt5', account:null, positions:[], port:7777 },
+  pers: { connected:false, server:'', login:0, platform:'mt4', account:null, positions:[], port:7778 }
 };
-var BRIDGE_URL = 'http://127.0.0.1:7777';
+var _bridgePollTimer = null;
+var _bridgeClosedTrades = []; // trade chiusi già processati
+
+function bridgeUrl(side){ return 'http://127.0.0.1:' + _bridge[side].port; }
+var BRIDGE_URL = 'http://127.0.0.1:7777'; // compat
 
 function renderLive(){
-  return '<div style="max-width:1000px;padding-bottom:40px" id="liveRoot">'
+  function connCard(side, label, col, portNum){
+    var b = _bridge[side];
+    var statusHtml = b.connected
+      ? '<div style="width:8px;height:8px;border-radius:50%;background:#34D399;box-shadow:0 0 5px #34D399"></div><span style="color:#34D399;font-size:10px;font-weight:700">Connesso</span>'
+      : '<div style="width:8px;height:8px;border-radius:50%;background:var(--t3)"></div><span style="font-size:10px;color:var(--t3)">Non connesso</span>';
+    function platBtn(plat, lbl){
+      var active = b.platform === plat;
+      return '<button onclick="liveSelectPlat(\''+side+'\',\''+plat+'\')" style="flex:1;padding:8px;border-radius:7px;border:'+(active?'2px solid '+col:'1px solid var(--border2)')+';background:'+(active?'rgba(100,100,255,.1)':'var(--bg3)')+';color:'+(active?col:'var(--t3)')+';font-size:11px;font-weight:700;cursor:pointer">'+lbl+'</button>';
+    }
+    return '<div style="background:var(--bg2);border:2px solid '+col+';border-radius:14px;padding:18px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+      +'<div style="font-size:13px;font-weight:800;color:'+col+'">'+label+'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px">'+statusHtml+'</div></div>'
+      +'<div style="margin-bottom:8px"><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Piattaforma</label>'
+      +'<div style="display:flex;gap:6px;margin-top:4px">'+platBtn('mt4','MT4')+platBtn('mt5','MT5')+platBtn('ctrader','cTrader')+'</div></div>'
+      +'<div style="margin-bottom:8px"><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Server</label>'
+      +'<input id="srv_'+side+'" value="'+b.server+'" placeholder="es. TopFX-Live 13" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+      +'<div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Login</label>'
+      +'<input id="log_'+side+'" type="number" value="'+(b.login||'')+'" placeholder="123456" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
+      +'<div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Password</label>'
+      +'<input id="pwd_'+side+'" type="password" placeholder="••••••" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
+      +'</div>'
+      +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:8px">Bridge porta: '+portNum+' &nbsp;·&nbsp; Assicurati bridge.py sia avviato</div>'
+      +'<button onclick="liveConnectSide(\''+side+'\')" style="width:100%;background:linear-gradient(135deg,'+col+','+col+'aa);border:none;border-radius:8px;color:#fff;padding:9px;font-size:12px;font-weight:700;cursor:pointer">'+(b.connected?'↻ Riconnetti':'🔌 Connetti')+'</button>'
+      +'<div id="err_'+side+'" style="margin-top:6px;font-size:10px;color:var(--red);font-family:var(--fd);display:none"></div>'
+      +'</div>';
+  }
 
-    // HEADER
-    +'<div style="background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(52,211,153,.07));border:1px solid rgba(56,189,248,.2);border-radius:16px;padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;gap:20px">'
-    +'<div style="font-size:40px">🔌</div>'
-    +'<div><div style="font-size:20px;font-weight:800;color:var(--t)">Live Trading — MT4 / MT5</div>'
-    +'<div style="font-size:12px;color:var(--t3);font-family:var(--fd);margin-top:3px">Connetti il tuo conto e opera direttamente da PropHedge · Zero EA · Credenziali solo sul tuo PC</div></div>'
-    +'<div style="margin-left:auto"><div id="liveStatus" style="display:flex;align-items:center;gap:8px;font-size:11px;font-family:var(--fd);color:var(--t3)">'
-    +'<div style="width:8px;height:8px;border-radius:50%;background:var(--t3)"></div>Non connesso</div></div>'
-    +'</div>'
+  /* Leggi lotti dal calcolatore/simulatore */
+  var calcLots = _getLottiCalcolatore();
 
-    // DOWNLOAD BRIDGE + CONNESSIONE
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">'
+  return '<div style="max-width:1060px;padding-bottom:40px" id="liveRoot">'
 
-    // Card download bridge
-    +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:6px">① Installa il Bridge PropHedge</div>'
-    +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);line-height:1.8;margin-bottom:14px">'
-    +'Segui i 3 passi — si fa una volta sola.<br>Dopo il bridge gira in background e il software si connette a MT4/MT5.</div>'
-
-    // STEP 1 — Python
-    +'<div id="bStep1" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px">'
-    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
-    +'<div style="width:26px;height:26px;border-radius:50%;background:var(--violet2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">1</div>'
-    +'<div style="font-size:12px;font-weight:700;color:var(--t)">Installa Python <span style="font-size:10px;color:var(--t3);font-weight:400">(solo se non ce l\'hai)</span></div>'
-    +'</div>'
-    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8;margin-bottom:10px">'
-    +'Vai su <b style="color:var(--teal)">python.org/downloads</b> → scarica Python 3.x<br>'
-    +'⚠️ <b style="color:var(--amber)">IMPORTANTE:</b> durante l\'installazione spunta <b>"Add Python to PATH"</b>'
-    +'</div>'
-    +'<a href="https://www.python.org/ftp/python/3.12.8/python-3.12.8-amd64.exe" target="_blank" '
-    +'style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#3776ab,#ffd43b);color:#fff;border-radius:8px;padding:8px 16px;font-size:11px;font-weight:700;text-decoration:none">'
-    +'⬇ Scarica Python 3.12 (Windows)</a>'
-    +'</div>'
-
-    // STEP 2 — Librerie
-    +'<div id="bStep2" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px">'
-    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
-    +'<div style="width:26px;height:26px;border-radius:50%;background:var(--teal2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">2</div>'
-    +'<div style="font-size:12px;font-weight:700;color:var(--t)">Installa le librerie</div>'
-    +'</div>'
-    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8;margin-bottom:10px">'
-    +'Apri il <b>Prompt dei comandi</b> (cerca "cmd" nel menu Start) e copia-incolla questo comando:'
-    +'</div>'
-    +'<div style="background:var(--bg);border:1px solid var(--border2);border-radius:7px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-    +'<code id="pipCmd" style="font-family:var(--fd);font-size:11px;color:var(--teal)">pip install flask flask-cors MetaTrader5</code>'
-    +'<button onclick="navigator.clipboard.writeText(\'pip install flask flask-cors MetaTrader5\');this.textContent=\'✓ Copiato!\';setTimeout(()=>this.textContent=\'📋 Copia\',2000)" '
-    +'style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--t2);padding:4px 10px;font-size:10px;cursor:pointer;flex-shrink:0;margin-left:10px">📋 Copia</button>'
-    +'</div>'
-    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd)">Aspetta che finisca — scarica automaticamente tutto quello che serve.</div>'
+    /* HEADER */
+    +'<div style="background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(52,211,153,.07));border:1px solid rgba(56,189,248,.2);border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px">'
+    +'<div style="font-size:32px">🔌</div>'
+    +'<div><div style="font-size:18px;font-weight:800;color:var(--t)">Live Trading — Doppia Connessione</div>'
+    +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-top:2px">Prop + Personale · Hedge automatico · Lotti dal calcolatore · Zero EA</div></div>'
     +'</div>'
 
-    // STEP 3 — Bridge
-    +'<div id="bStep3" style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px">'
-    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'
-    +'<div style="width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--violet2),var(--teal2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">3</div>'
-    +'<div style="font-size:12px;font-weight:700;color:var(--t)">Scarica e avvia il Bridge</div>'
-    +'</div>'
-    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8;margin-bottom:10px">'
-    +'Scarica il file bridge.py, poi trascinalo nel Prompt dei comandi e premi Invio.<br>'
-    +'Comparirà: <span style="color:var(--green)">PropHedge Bridge avviato su 127.0.0.1:7777</span><br>'
-    +'<b>Lascia quella finestra aperta</b> mentre usi il software.'
-    +'</div>'
-    +'<button onclick="liveDownloadGuide()" '
-    +'style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--violet2),var(--teal2));color:#fff;border-radius:8px;padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;border:none;letter-spacing:.04em">'
-    +'⬇ Scarica bridge.py</button>'
-    +'<div style="margin-top:8px;font-size:10px;color:var(--t3);font-family:var(--fd)">⏳ Il file .exe precompilato (doppio clic e via) sarà disponibile a breve.</div>'
-    +'</div>'
+    /* DOPPIA CONNESSIONE */
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">'
+    + connCard('prop','🎯 PROP (Valutazione)','#38BDF8', 7777)
+    + connCard('pers','🛡️ PERSONALE (Reale)','#A78BFA', 7778)
     +'</div>'
 
-    // Card connessione
-    +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:14px">② Connetti il tuo conto</div>'
-    +'<div style="margin-bottom:8px"><label style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Piattaforma</label>'
-    +'<div style="display:flex;gap:8px;margin-top:4px">'
-    +'<button id="btnMT4" onclick="liveSelectPlat(\'mt4\')" style="flex:1;padding:9px;border-radius:7px;border:2px solid var(--teal);background:rgba(56,189,248,.15);color:var(--teal);font-size:12px;font-weight:700;cursor:pointer">MT4</button>'
-    +'<button id="btnMT5" onclick="liveSelectPlat(\'mt5\')" style="flex:1;padding:9px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--t3);font-size:12px;font-weight:700;cursor:pointer">MT5</button>'
-    +'</div><input type="hidden" id="livePlat" value="mt4"></div>'
-    +'<div style="margin-bottom:8px"><label style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Server</label>'
-    +'<input id="liveServer" type="text" placeholder="es. TopFX-Live 13" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
-    +'<div><label style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Login</label>'
-    +'<input id="liveLogin" type="number" placeholder="123456" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
-    +'<div><label style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Password</label>'
-    +'<input id="livePass" type="password" placeholder="••••••" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
+    /* PANNELLO HEDGE — visibile solo se entrambi connessi */
+    +((_bridge.prop.connected && _bridge.pers.connected) ? renderHedgePanel(calcLots) : '')
+
+    /* DASHBOARD ACCOUNT — prop */
+    +(_bridge.prop.connected ? '<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:#38BDF8;margin-bottom:6px;font-family:var(--fd)">🎯 PROP — '+(_bridge.prop.account?_bridge.prop.account.server:'')+'</div><div id="accGrid_prop" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div></div>' : '')
+    +(_bridge.pers.connected ? '<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:700;color:#A78BFA;margin-bottom:6px;font-family:var(--fd)">🛡️ PERSONALE — '+(_bridge.pers.account?_bridge.pers.account.server:'')+'</div><div id="accGrid_pers" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div></div>' : '')
+
+    /* POSIZIONI APERTE */
+    +((_bridge.prop.connected||_bridge.pers.connected) ?
+      '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--t)">📋 Posizioni Aperte</div>'
+      +'<button onclick="liveRefreshAll()" style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t2);padding:5px 12px;font-size:11px;cursor:pointer">↻ Aggiorna</button>'
+      +'</div>'
+      +'<div id="livePosAll">Nessuna posizione.</div>'
+      +'</div>'
+    : '')
+
+    /* GUIDA BRIDGE */
+    +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:12px">① Setup Bridge (una volta sola)</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+    +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--teal);margin-bottom:6px">Porta 7777 — Conto PROP</div>'
+    +'<code style="font-size:10px;color:var(--t2);font-family:var(--fd)">python bridge.py --port 7777</code>'
     +'</div>'
-    +'<button onclick="liveConnect()" style="width:100%;background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:9px;color:#fff;padding:10px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.05em">🔌 Connetti</button>'
-    +'<div id="liveConnErr" style="margin-top:6px;font-size:11px;color:var(--red);font-family:var(--fd);display:none"></div>'
+    +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--violet);margin-bottom:6px">Porta 7778 — Conto PERSONALE</div>'
+    +'<code style="font-size:10px;color:var(--t2);font-family:var(--fd)">python bridge.py --port 7778</code>'
     +'</div></div>'
-
-    // ACCOUNT INFO (nascosto finché non connesso)
-    +'<div id="liveAccountBar" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:16px">'
-    +'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px" id="liveAccountGrid"></div>'
-    +'</div>'
-
-    // NUOVO ORDINE
-    +'<div id="liveOrderPanel" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:14px">📤 Nuovo Ordine</div>'
-    +'<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end">'
-    +'<div><label style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Simbolo</label>'
-    +'<input id="ordSymbol" value="XAUUSD" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;font-weight:700;margin-top:4px;outline:none"></div>'
-    +'<div><label style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Volume (lot)</label>'
-    +'<input id="ordVol" type="number" value="0.01" step="0.01" min="0.01" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
-    +'<div><label style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Stop Loss</label>'
-    +'<input id="ordSL" type="number" value="0" step="0.01" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
-    +'<div><label style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Take Profit</label>'
-    +'<input id="ordTP" type="number" value="0" step="0.01" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
-    +'<div><label style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Direzione</label>'
-    +'<select id="ordSide" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;margin-top:4px;outline:none">'
-    +'<option value="buy">BUY</option><option value="sell">SELL</option></select></div>'
-    +'<div style="display:flex;gap:6px">'
-    +'<button onclick="liveSendOrder()" style="background:var(--green);border:none;border-radius:8px;color:#fff;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;margin-top:14px">▶ Invia</button>'
+    +'<div style="margin-top:10px;display:flex;gap:10px">'
+    +'<button onclick="liveDownloadGuide()" style="background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:8px;color:#fff;padding:9px 18px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica bridge.py</button>'
+    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);line-height:1.7">Avvia DUE finestre cmd separate, una per porta.<br>Entrambe devono essere aperte mentre usi il software.</div>'
     +'</div></div>'
-    +'<div id="ordResult" style="margin-top:8px;font-size:11px;font-family:var(--fd);display:none"></div>'
-    +'</div>'
-
-    // POSIZIONI APERTE
-    +'<div id="livePosPanel" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--t)">📋 Posizioni Aperte</div>'
-    +'<button onclick="liveRefresh()" style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t2);padding:5px 12px;font-size:11px;font-family:var(--fd);cursor:pointer">↻ Aggiorna</button>'
-    +'</div>'
-    +'<div id="livePosTable">Nessuna posizione aperta.</div>'
-    +'</div>'
 
     +'</div>';
 }
 
-/* ── Bridge JS functions ── */
-async function liveSelectPlat(p){
-  document.getElementById('livePlat').value = p;
-  var b4 = document.getElementById('btnMT4');
-  var b5 = document.getElementById('btnMT5');
-  if(!b4||!b5) return;
-  if(p==='mt4'){
-    b4.style.cssText='flex:1;padding:9px;border-radius:7px;border:2px solid var(--teal);background:rgba(56,189,248,.15);color:var(--teal);font-size:12px;font-weight:700;cursor:pointer';
-    b5.style.cssText='flex:1;padding:9px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--t3);font-size:12px;font-weight:700;cursor:pointer';
-  } else {
-    b5.style.cssText='flex:1;padding:9px;border-radius:7px;border:2px solid var(--violet);background:rgba(167,139,250,.15);color:var(--violet);font-size:12px;font-weight:700;cursor:pointer';
-    b4.style.cssText='flex:1;padding:9px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--t3);font-size:12px;font-weight:700;cursor:pointer';
+function renderHedgePanel(calcLots){
+  var s70 = typeof _simCH1 !== 'undefined' ? _simCH1 : null;
+  var lotProp = calcLots.prop;
+  var lotPers = (s70 && s70._above70Active && s70._lotPersHalved > 0)
+    ? s70._lotPersHalved : calcLots.pers;
+  var sl = calcLots.sl || 100;
+  var tp = calcLots.tp || 100;
+  var sym = (typeof document !== 'undefined' && document.getElementById('mAsset'))
+    ? (document.getElementById('mAsset').value||'GOLD:10').split(':')[0] : 'XAUUSD';
+  if(sym==='GOLD') sym='XAUUSD';
+
+  var loss70prop = (s70 && s70._above70Loss) ? true : false;
+  if(loss70prop) lotProp = Math.floor(lotProp * 50) / 100;
+
+  return '<div style="background:linear-gradient(135deg,rgba(56,189,248,.07),rgba(167,139,250,.07));border:2px solid rgba(167,139,250,.4);border-radius:14px;padding:20px;margin-bottom:16px">'
+    +'<div style="font-size:14px;font-weight:800;color:var(--t);margin-bottom:14px">⚡ APRI HEDGE</div>'
+
+    /* Lotti calcolati */
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:12px">'
+    +'<div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Simbolo</label>'
+    +'<input id="h_sym" value="'+sym+'" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;font-weight:700;margin-top:4px;outline:none"></div>'
+    +'<div><label style="font-size:9px;color:#38BDF8;text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Lot PROP '+(loss70prop?'⚠️-50%':'')+'</label>'
+    +'<input id="h_lotProp" type="number" value="'+lotProp+'" step="0.01" min="0.01" style="width:100%;box-sizing:border-box;background:rgba(56,189,248,.07);border:2px solid rgba(56,189,248,.3);border-radius:7px;color:#38BDF8;padding:8px 10px;font-size:13px;font-weight:800;margin-top:4px;outline:none"></div>'
+    +'<div><label style="font-size:9px;color:#A78BFA;text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Lot PERS '+(s70&&s70._above70Active?'⚠️-50%':'')+'</label>'
+    +'<input id="h_lotPers" type="number" value="'+lotPers+'" step="0.01" min="0.01" style="width:100%;box-sizing:border-box;background:rgba(167,139,250,.07);border:2px solid rgba(167,139,250,.3);border-radius:7px;color:#A78BFA;padding:8px 10px;font-size:13px;font-weight:800;margin-top:4px;outline:none"></div>'
+    +'<div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">SL pip</label>'
+    +'<input id="h_sl" type="number" value="'+sl+'" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
+    +'<div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">TP pip</label>'
+    +'<input id="h_tp" type="number" value="'+tp+'" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
+    +'</div>'
+
+    /* Bottoni direzione */
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+    +'<button onclick="liveOpenHedge(\'buy\')" style="padding:14px;border-radius:10px;border:none;background:linear-gradient(135deg,#059669,#34D399);color:#fff;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.05em">▲ BUY PROP / SELL PERS</button>'
+    +'<button onclick="liveOpenHedge(\'sell\')" style="padding:14px;border-radius:10px;border:none;background:linear-gradient(135deg,#dc2626,#F87171);color:#fff;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.05em">▼ SELL PROP / BUY PERS</button>'
+    +'</div>'
+
+    +'<div id="hedgeResult" style="font-size:11px;font-family:var(--fd);display:none;padding:8px 12px;border-radius:7px;margin-top:4px"></div>'
+    +'</div>';
+}
+
+function _getLottiCalcolatore(){
+  /* Prende i lotti dal calcolatore attivo */
+  var prop = parseFloat(document.getElementById('ch1Lots')?.value || document.getElementById('mLots')?.value) || 0.01;
+  var pers = parseFloat(document.getElementById('ch1LotsPers')?.value) || 0.01;
+  var sl   = parseFloat(document.getElementById('mSlPips')?.value) || 100;
+  var tp   = parseFloat(document.getElementById('mTpPips')?.value) || 100;
+  /* Se simulatore ha lottaggio dimezzato 70% profit → usa quello per pers */
+  if(typeof _simCH1 !== 'undefined' && _simCH1._above70Active && _simCH1._lotPersHalved > 0){
+    pers = _simCH1._lotPersHalved;
+  }
+  return { prop: Math.round(prop*100)/100, pers: Math.round(pers*100)/100, sl: sl, tp: tp };
+}
+
+function liveSelectPlat(side, p){
+  _bridge[side].platform = p;
+  /* Rirenderizza solo la card connessione */
+  if(typeof currentTab !== 'undefined' && currentTab === 'live'){
+    var el = document.getElementById('liveRoot');
+    if(el) el.outerHTML = renderLive();
+    /* Ri-attach dopo re-render */
+    _bridgeRestoreGrids();
   }
 }
 
-async function liveConnect(){
-  var server = document.getElementById('liveServer')?.value.trim();
-  var login  = parseInt(document.getElementById('liveLogin')?.value);
-  var pass   = document.getElementById('livePass')?.value;
-  var plat   = document.getElementById('livePlat')?.value || 'mt4';
-  var errEl  = document.getElementById('liveConnErr');
+function _bridgeRestoreGrids(){
+  if(_bridge.prop.connected && _bridge.prop.account) liveRenderAccount('prop', _bridge.prop.account);
+  if(_bridge.pers.connected && _bridge.pers.account) liveRenderAccount('pers', _bridge.pers.account);
+  var allPos = (_bridge.prop.positions||[]).concat(_bridge.pers.positions||[]);
+  liveRenderAllPositions(allPos);
+}
 
-  if(!server||!login||!pass){
-    if(errEl){errEl.textContent='⚠️ Compila tutti i campi.';errEl.style.display='block';}
-    return;
-  }
-  if(errEl) errEl.style.display='none';
-  liveSetStatus('connecting');
-
+async function liveConnectSide(side){
+  var b   = _bridge[side];
+  var srv = document.getElementById('srv_'+side)?.value.trim();
+  var log = parseInt(document.getElementById('log_'+side)?.value);
+  var pwd = document.getElementById('pwd_'+side)?.value;
+  var err = document.getElementById('err_'+side);
+  if(!srv||!log||!pwd){ if(err){err.textContent='⚠️ Compila tutti i campi.';err.style.display='block';} return; }
+  if(err) err.style.display='none';
+  b.server = srv; b.login = log;
   try{
-    var r = await fetch(BRIDGE_URL+'/connect',{
+    var r = await fetch('http://127.0.0.1:'+b.port+'/connect',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({login, password:pass, server, platform:plat})
+      body: JSON.stringify({login:log, password:pwd, server:srv, platform:b.platform})
     });
     var d = await r.json();
     if(d.ok){
-      _bridge.connected=true; _bridge.server=server; _bridge.login=login; _bridge.platform=plat;
-      liveSetStatus('connected');
-      document.getElementById('liveAccountBar').style.display='block';
-      document.getElementById('liveOrderPanel').style.display='block';
-      document.getElementById('livePosPanel').style.display='block';
-      liveRefresh();
-      if(_bridge.pollTimer) clearInterval(_bridge.pollTimer);
-      _bridge.pollTimer = setInterval(liveRefresh, 3000);
+      b.connected = true;
+      /* Refresh e re-render */
+      await liveRefreshSide(side);
+      /* Se entrambi connessi avvia polling */
+      if(_bridge.prop.connected && _bridge.pers.connected){
+        if(_bridgePollTimer) clearInterval(_bridgePollTimer);
+        _bridgePollTimer = setInterval(liveRefreshAll, 3000);
+      }
+      /* Re-render pagina */
+      if(typeof currentTab !== 'undefined' && currentTab === 'live'){
+        var el = document.getElementById('liveRoot');
+        if(el) el.outerHTML = renderLive();
+        _bridgeRestoreGrids();
+      }
     } else {
-      liveSetStatus('error');
-      if(errEl){errEl.textContent='❌ Connessione fallita: '+JSON.stringify(d);errEl.style.display='block';}
+      b.connected = false;
+      if(err){err.textContent='❌ '+JSON.stringify(d.error||d);err.style.display='block';}
     }
   } catch(e){
-    liveSetStatus('offline');
-    if(errEl){errEl.textContent='❌ Bridge non trovato. Assicurati che PropHedgeBridge.exe sia in esecuzione.';errEl.style.display='block';}
+    b.connected = false;
+    if(err){err.textContent='❌ Bridge non trovato su porta '+b.port+'. Avvialo con: python bridge.py --port '+b.port;err.style.display='block';}
   }
 }
 
-function liveSetStatus(s){
-  var el = document.getElementById('liveStatus');
-  if(!el) return;
-  var map = {
-    connected: ['#34D399','🟢 Connesso'],
-    connecting:['#FBBF24','⏳ Connessione...'],
-    error:     ['#F87171','🔴 Errore'],
-    offline:   ['#F87171','🔴 Bridge offline']
-  };
-  var v = map[s]||['#7880a8','⚫ Non connesso'];
-  el.innerHTML='<div style="width:8px;height:8px;border-radius:50%;background:'+v[0]+';box-shadow:0 0 6px '+v[0]+'"></div>'
-    +'<span style="color:'+v[0]+';font-weight:600">'+v[1]+'</span>';
-}
-
-async function liveRefresh(){
-  if(!_bridge.connected) return;
+async function liveRefreshSide(side){
+  var b = _bridge[side];
+  if(!b.connected) return;
   try{
-    var [accR, posR] = await Promise.all([
-      fetch(BRIDGE_URL+'/account').then(r=>r.json()),
-      fetch(BRIDGE_URL+'/positions').then(r=>r.json())
+    var url = 'http://127.0.0.1:'+b.port;
+    var [acc, pos] = await Promise.all([
+      fetch(url+'/account').then(r=>r.json()),
+      fetch(url+'/positions').then(r=>r.json())
     ]);
-    liveRenderAccount(accR);
-    liveRenderPositions(posR);
-  } catch(e){ liveSetStatus('offline'); if(_bridge.pollTimer){clearInterval(_bridge.pollTimer);_bridge.pollTimer=null;} }
+    b.account   = acc;
+    b.positions = pos || [];
+    liveRenderAccount(side, acc);
+  } catch(e){ b.connected=false; }
 }
 
-function liveRenderAccount(a){
-  var g = document.getElementById('liveAccountGrid');
+async function liveRefreshAll(){
+  await liveRefreshSide('prop');
+  await liveRefreshSide('pers');
+  var allPos = (_bridge.prop.positions||[]).map(function(p){return Object.assign({},p,{_side:'prop'});})
+    .concat((_bridge.pers.positions||[]).map(function(p){return Object.assign({},p,{_side:'pers'});}));
+  liveRenderAllPositions(allPos);
+  /* Controlla trade chiusi → aggiorna simulatore */
+  _bridgeCheckClosed();
+}
+
+function liveRenderAccount(side, a){
+  var g = document.getElementById('accGrid_'+side);
   if(!g||!a) return;
+  var col = side==='prop' ? '#38BDF8' : '#A78BFA';
   function kpi(lbl,val,clr){
-    return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">'
-      +'<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">'+lbl+'</div>'
-      +'<div style="font-size:16px;font-weight:800;font-family:var(--fd);color:'+(clr||'var(--t)')+'">'+val+'</div></div>';
+    return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">'
+      +'<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">'+lbl+'</div>'
+      +'<div style="font-size:14px;font-weight:800;font-family:var(--fd);color:'+(clr||'var(--t)')+'">'+val+'</div></div>';
   }
-  g.innerHTML=
-    kpi('Balance','$'+(a.balance||0).toFixed(2),'var(--t)')+
-    kpi('Equity','$'+(a.equity||0).toFixed(2),(a.equity>=a.balance?'var(--green)':'var(--red)'))+
-    kpi('Profitto','$'+(a.profit||0).toFixed(2),(a.profit>=0?'var(--green)':'var(--red)'))+
-    kpi('Margine libero','$'+(a.margin_free||0).toFixed(2),'var(--amber)')+
-    kpi('Server',a.server||'—','var(--teal)');
+  g.innerHTML =
+    kpi('Balance','$'+(a.balance||0).toFixed(0),'var(--t)')+
+    kpi('Equity','$'+(a.equity||0).toFixed(0),(a.equity>=(a.balance||0)?'var(--green)':'var(--red)'))+
+    kpi('Profitto','$'+(a.profit||0).toFixed(0),(a.profit>=0?'var(--green)':'var(--red)'))+
+    kpi('Margine lib.','$'+(a.margin_free||0).toFixed(0),'var(--amber)')+
+    kpi('Leva','1:'+(a.leverage||'—'),col);
 }
 
-function liveRenderPositions(positions){
-  var el = document.getElementById('livePosTable');
+function liveRenderAllPositions(positions){
+  var el = document.getElementById('livePosAll');
   if(!el) return;
-  if(!positions||!positions.length){ el.innerHTML='<div style="text-align:center;color:var(--t3);font-size:12px;padding:20px;font-family:var(--fd)">Nessuna posizione aperta.</div>'; return; }
+  if(!positions||!positions.length){
+    el.innerHTML='<div style="text-align:center;color:var(--t3);font-size:12px;padding:16px;font-family:var(--fd)">Nessuna posizione aperta.</div>';
+    return;
+  }
   var rows = positions.map(function(p){
-    var clr = p.profit>=0?'var(--green)':'var(--red)';
+    var clr  = p.profit>=0?'var(--green)':'var(--red)';
     var type = p.type===0?'<span style="color:var(--green);font-weight:700">BUY</span>':'<span style="color:var(--red);font-weight:700">SELL</span>';
+    var sideCol = p._side==='prop'?'#38BDF8':'#A78BFA';
+    var sideLabel = p._side==='prop'?'PROP':'PERS';
     return '<tr style="border-bottom:1px solid var(--border)">'
-      +'<td style="padding:8px 10px;font-family:var(--fd);font-size:11px;font-weight:700;color:var(--teal)">'+p.symbol+'</td>'
-      +'<td style="padding:8px 10px;font-size:11px">'+type+'</td>'
-      +'<td style="padding:8px 10px;font-family:var(--fd);font-size:11px">'+p.volume+'</td>'
-      +'<td style="padding:8px 10px;font-family:var(--fd);font-size:11px;color:var(--t2)">'+p.price_open+'</td>'
-      +'<td style="padding:8px 10px;font-family:var(--fd);font-size:11px;color:var(--amber)">'+p.sl+'</td>'
-      +'<td style="padding:8px 10px;font-family:var(--fd);font-size:11px;color:var(--teal)">'+p.tp+'</td>'
-      +'<td style="padding:8px 10px;font-family:var(--fd);font-size:12px;font-weight:700;color:'+clr+'">'+(p.profit>=0?'+':'')+p.profit.toFixed(2)+'$</td>'
-      +'<td style="padding:8px 10px">'
-      +'<button onclick="liveModifyModal('+p.ticket+','+p.sl+','+p.tp+')" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--t2);padding:4px 10px;font-size:10px;cursor:pointer;margin-right:4px">✏️ SL/TP</button>'
-      +'<button onclick="liveClosePos('+p.ticket+')" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:6px;color:var(--red);padding:4px 10px;font-size:10px;cursor:pointer">✖ Chiudi</button>'
+      +'<td style="padding:7px 8px;font-size:10px"><span style="background:'+(p._side==='prop'?'rgba(56,189,248,.15)':'rgba(167,139,250,.15)')+';color:'+sideCol+';border-radius:4px;padding:2px 6px;font-weight:700;font-size:9px">'+sideLabel+'</span></td>'
+      +'<td style="padding:7px 8px;font-family:var(--fd);font-size:11px;font-weight:700;color:var(--teal)">'+p.symbol+'</td>'
+      +'<td style="padding:7px 8px;font-size:11px">'+type+'</td>'
+      +'<td style="padding:7px 8px;font-family:var(--fd);font-size:11px">'+p.volume+'</td>'
+      +'<td style="padding:7px 8px;font-family:var(--fd);font-size:10px;color:var(--t2)">'+p.price_open+'</td>'
+      +'<td style="padding:7px 8px;font-family:var(--fd);font-size:10px;color:var(--amber)">'+(p.sl||'—')+'</td>'
+      +'<td style="padding:7px 8px;font-family:var(--fd);font-size:10px;color:var(--teal)">'+(p.tp||'—')+'</td>'
+      +'<td style="padding:7px 8px;font-family:var(--fd);font-size:12px;font-weight:700;color:'+clr+'">'+(p.profit>=0?'+':'')+p.profit.toFixed(2)+'$</td>'
+      +'<td style="padding:7px 8px">'
+      +'<button onclick="liveModifyModal(\''+p._side+'\','+p.ticket+','+p.sl+','+p.tp+')" style="background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--t2);padding:3px 8px;font-size:10px;cursor:pointer;margin-right:3px">✏️</button>'
+      +'<button onclick="liveClosePos(\''+p._side+'\','+p.ticket+')" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:5px;color:var(--red);padding:3px 8px;font-size:10px;cursor:pointer">✖</button>'
       +'</td></tr>';
   }).join('');
   el.innerHTML='<table style="width:100%;border-collapse:collapse">'
     +'<thead><tr style="background:var(--bg3)">'
-    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">Simbolo</th>'
-    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">Tipo</th>'
-    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">Volume</th>'
-    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">Apertura</th>'
-    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">SL</th>'
-    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">TP</th>'
-    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">P&L</th>'
-    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">Azioni</th>'
+    +['Conto','Simbolo','Tipo','Vol','Apertura','SL','TP','P&L',''].map(function(h){
+      return '<th style="padding:6px 8px;font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">'+h+'</th>';
+    }).join('')
     +'</tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
-async function liveSendOrder(){
-  if(!_bridge.connected) return;
-  var symbol = document.getElementById('ordSymbol')?.value;
-  var vol    = parseFloat(document.getElementById('ordVol')?.value)||0.01;
-  var sl     = parseFloat(document.getElementById('ordSL')?.value)||0;
-  var tp     = parseFloat(document.getElementById('ordTP')?.value)||0;
-  var side   = document.getElementById('ordSide')?.value||'buy';
-  var res    = document.getElementById('ordResult');
+async function liveOpenHedge(propDir){
+  var sym      = document.getElementById('h_sym')?.value || 'XAUUSD';
+  var lotProp  = parseFloat(document.getElementById('h_lotProp')?.value) || 0.01;
+  var lotPers  = parseFloat(document.getElementById('h_lotPers')?.value) || 0.01;
+  var slPips   = parseFloat(document.getElementById('h_sl')?.value) || 100;
+  var tpPips   = parseFloat(document.getElementById('h_tp')?.value) || 100;
+  var persDir  = propDir==='buy' ? 'sell' : 'buy';
+  var res      = document.getElementById('hedgeResult');
+
+  /* Calcola prezzi SL/TP in punti (approssimazione) */
+  var pipVal   = sym.includes('XAU')||sym.includes('GOLD') ? 0.1 : 0.0001;
+
   try{
-    var r = await fetch(BRIDGE_URL+'/order',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({symbol,volume:vol,sl,tp,side})
-    });
-    var d = await r.json();
+    var [rProp, rPers] = await Promise.all([
+      fetch('http://127.0.0.1:7777/order',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({symbol:sym, volume:lotProp, side:propDir, sl:0, tp:0, comment:'PH_PROP'})
+      }).then(r=>r.json()),
+      fetch('http://127.0.0.1:7778/order',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({symbol:sym, volume:lotPers, side:persDir, sl:0, tp:0, comment:'PH_PERS'})
+      }).then(r=>r.json())
+    ]);
+
+    var okProp = rProp.retcode===10009||rProp.retcode===0;
+    var okPers = rPers.retcode===10009||rPers.retcode===0;
+
     if(res){
-      var ok = d.retcode===10009||d.retcode===0;
       res.style.display='block';
-      res.style.color = ok?'var(--green)':'var(--red)';
-      res.textContent = ok ? '✅ Ordine eseguito — ticket #'+d.order : '❌ Errore: '+d.comment+' ('+d.retcode+')';
+      if(okProp && okPers){
+        res.style.background='rgba(52,211,153,.1)';res.style.color='var(--green)';
+        res.textContent='✅ Hedge aperto — PROP '+propDir.toUpperCase()+' '+lotProp+'lot #'+rProp.order+' · PERS '+persDir.toUpperCase()+' '+lotPers+'lot #'+rPers.order;
+        /* Registra nel simulatore come trade in corso */
+        _bridgeRegisterTrade(rProp.order, rPers.order, sym, propDir, lotProp, lotPers);
+      } else {
+        res.style.background='rgba(248,113,113,.1)';res.style.color='var(--red)';
+        res.textContent='❌ PROP: '+(okProp?'OK':'ERR '+rProp.comment)+' · PERS: '+(okPers?'OK':'ERR '+rPers.comment);
+      }
     }
-    liveRefresh();
-  } catch(e){ if(res){res.style.display='block';res.style.color='var(--red)';res.textContent='❌ Bridge non raggiungibile.';} }
+    liveRefreshAll();
+  } catch(e){
+    if(res){res.style.display='block';res.style.background='rgba(248,113,113,.1)';res.style.color='var(--red)';res.textContent='❌ Bridge non raggiungibile. Controlla che entrambe le istanze siano avviate.';}
+  }
 }
 
-function liveModifyModal(ticket,sl,tp){
+/* ── Registro trade aperti per matching con trade chiusi ── */
+var _openHedgeTrades = []; /* [{propTicket, persTicket, sym, dir, day} */
+
+function _bridgeRegisterTrade(propTicket, persTicket, sym, dir, lotProp, lotPers){
+  /* Giorno corrente nel simulatore */
+  var day = _simCH1 && _simCH1.data ? _simCH1.data.findIndex(function(d){return d.w===''&&d.l==='';}) : -1;
+  if(day < 0) day = 0;
+  _openHedgeTrades.push({propTicket:propTicket, persTicket:persTicket, sym:sym, dir:dir, lotProp:lotProp, lotPers:lotPers, day:day});
+}
+
+function _bridgeCheckClosed(){
+  if(!_openHedgeTrades.length) return;
+  var propPos  = (_bridge.prop.positions||[]).map(function(p){return p.ticket;});
+  var remaining = [];
+  _openHedgeTrades.forEach(function(t){
+    var stillOpen = propPos.indexOf(t.propTicket) >= 0;
+    if(!stillOpen && _bridgeClosedTrades.indexOf(t.propTicket) < 0){
+      /* Trade chiuso → segna W o L nel simulatore */
+      _bridgeClosedTrades.push(t.propTicket);
+      _bridgeMarkSimulator(t);
+    } else if(stillOpen){
+      remaining.push(t);
+    }
+  });
+  _openHedgeTrades = remaining;
+}
+
+function _bridgeMarkSimulator(trade){
+  /* Cerca il trade nelle posizioni chiuse per sapere se W o L */
+  fetch('http://127.0.0.1:7777/history?ticket='+trade.propTicket)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var profit = d.profit || 0;
+      var isWin  = profit >= 0;
+      var day    = trade.day;
+      /* Aggiorna simulatore */
+      if(typeof _simCH1 !== 'undefined' && _simCH1.data && _simCH1.data[day]){
+        if(isWin){
+          _simCH1.data[day].w = (parseInt(_simCH1.data[day].w)||0) + 1;
+        } else {
+          _simCH1.data[day].l = (parseInt(_simCH1.data[day].l)||0) + 1;
+        }
+        _saveSimData();
+        /* Ricalcola simulatore */
+        if(typeof _openSimChallenge1 === 'function') _openSimChallenge1();
+        /* Toast notifica */
+        var msg = isWin ? '✅ Trade PROP chiuso in PROFITTO — segnato W nel simulatore' : '❌ Trade PROP chiuso in PERDITA — segnato L nel simulatore';
+        _showBridgeToast(msg, isWin?'var(--green)':'var(--red)');
+      }
+    }).catch(function(){
+      /* Endpoint /history non disponibile — mostra notifica manuale */
+      _showBridgeToast('Trade chiuso — aggiorna manualmente il simulatore', 'var(--amber)');
+    });
+}
+
+function _showBridgeToast(msg, col){
+  var old = document.getElementById('_bridgeToast'); if(old) old.remove();
+  var t = document.createElement('div');
+  t.id = '_bridgeToast';
+  t.style.cssText='position:fixed;bottom:80px;right:24px;z-index:99999;background:#0c1030;border:2px solid '+col+';border-radius:10px;padding:12px 18px;font-size:12px;font-weight:700;color:'+col+';font-family:var(--fd);max-width:340px;box-shadow:0 8px 24px rgba(0,0,0,.6)';
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(function(){var e=document.getElementById('_bridgeToast');if(e)e.remove();},5000);
+}
+
+function liveModifyModal(side, ticket, sl, tp){
   var nsl = prompt('Nuovo Stop Loss (0 = nessuno):',sl);
   var ntp = prompt('Nuovo Take Profit (0 = nessuno):',tp);
   if(nsl===null||ntp===null) return;
-  fetch(BRIDGE_URL+'/modify',{
+  var port = _bridge[side].port;
+  fetch('http://127.0.0.1:'+port+'/modify',{
     method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ticket, sl:parseFloat(nsl)||0, tp:parseFloat(ntp)||0})
-  }).then(r=>r.json()).then(function(d){
-    var ok=d.retcode===10009||d.retcode===0;
-    alert(ok?'✅ SL/TP aggiornati!':'❌ Errore: '+d.comment);
-    liveRefresh();
+    body: JSON.stringify({ticket:ticket, sl:parseFloat(nsl)||0, tp:parseFloat(ntp)||0})
+  }).then(function(r){return r.json();}).then(function(d){
+    alert((d.retcode===10009||d.retcode===0)?'✅ SL/TP aggiornati.':'❌ '+d.comment);
+    liveRefreshAll();
   }).catch(function(){alert('❌ Bridge non raggiungibile.');});
 }
 
-async function liveClosePos(ticket){
-  if(!confirm('Chiudere la posizione #'+ticket+'?')) return;
+async function liveClosePos(side, ticket){
+  if(!confirm('Chiudere posizione #'+ticket+'?')) return;
+  var port = _bridge[side].port;
   try{
-    var r = await fetch(BRIDGE_URL+'/close',{
+    var r = await fetch('http://127.0.0.1:'+port+'/close',{
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ticket})
+      body: JSON.stringify({ticket:ticket})
     });
     var d = await r.json();
-    var ok = d.retcode===10009||d.retcode===0;
-    alert(ok?'✅ Posizione chiusa.':'❌ Errore: '+d.comment);
-    liveRefresh();
+    alert((d.retcode===10009||d.retcode===0)?'✅ Posizione chiusa.':'❌ '+d.comment);
+    liveRefreshAll();
   } catch(e){ alert('❌ Bridge non raggiungibile.'); }
 }
 
 function liveDownloadGuide(){
-  var code = `# PropHedge Bridge v1.0
-# Requisiti: pip install flask MetaTrader5
-# Avvio:    python bridge.py
-# Poi apri il software e vai su Live Trading → Connetti
+  var code = `# PropHedge Bridge v1.1
+# Supporta --port per doppia istanza (prop + personale)
+# Uso:
+#   python bridge.py --port 7777   (conto PROP)
+#   python bridge.py --port 7778   (conto PERSONALE)
+# Requisiti: pip install flask flask-cors MetaTrader5
 
+import sys, argparse
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import MetaTrader5 as mt5
 
+parser = argparse.ArgumentParser()
+parser.add_argument('--port', type=int, default=7777)
+args = parser.parse_args()
+
 app = Flask(__name__)
-CORS(app)  # permette chiamate dal browser
+CORS(app)
+
+def to_dict(obj):
+    if obj is None: return {}
+    d = obj._asdict() if hasattr(obj,'_asdict') else dict(obj)
+    return {k:(float(v) if hasattr(v,'real') else v) for k,v in d.items()}
 
 @app.route('/connect', methods=['POST'])
 def connect():
     data = request.json
     mt5.initialize()
     ok = mt5.login(int(data['login']), data['password'], data['server'])
-    if not ok:
-        err = mt5.last_error()
-        return jsonify({'ok': False, 'error': str(err)})
-    return jsonify({'ok': True})
+    return jsonify({'ok': bool(ok), 'error': str(mt5.last_error()) if not ok else None})
 
-@app.route('/account', methods=['GET'])
+@app.route('/account')
 def account():
-    info = mt5.account_info()
-    if not info:
-        return jsonify({})
-    d = info._asdict()
-    return jsonify({k: (v if not hasattr(v,'real') else float(v)) for k,v in d.items()})
+    return jsonify(to_dict(mt5.account_info()))
 
-@app.route('/positions', methods=['GET'])
+@app.route('/positions')
 def positions():
-    pos = mt5.positions_get()
-    if not pos:
-        return jsonify([])
-    result = []
-    for p in pos:
-        d = p._asdict()
-        result.append({k: (float(v) if hasattr(v,'real') else v) for k,v in d.items()})
-    return jsonify(result)
+    pos = mt5.positions_get() or []
+    return jsonify([to_dict(p) for p in pos])
+
+@app.route('/history')
+def history():
+    ticket = int(request.args.get('ticket',0))
+    deals = mt5.history_deals_get(position=ticket) or []
+    if not deals: return jsonify({'profit':0,'ticket':ticket})
+    profit = sum(d.profit for d in deals)
+    return jsonify({'profit':profit,'ticket':ticket,'deals':len(deals)})
 
 @app.route('/order', methods=['POST'])
 def order():
-    data = request.json
-    sym  = data['symbol']
-    vol  = float(data['volume'])
-    sl   = float(data.get('sl', 0))
-    tp   = float(data.get('tp', 0))
-    side = data.get('side', 'buy')
-    info = mt5.symbol_info_tick(sym)
-    price = info.ask if side=='buy' else info.bid
+    d = request.json
+    sym = d['symbol']
+    tick = mt5.symbol_info_tick(sym)
+    side = d.get('side','buy')
+    price = tick.ask if side=='buy' else tick.bid
     req = {
-        "action":    mt5.TRADE_ACTION_DEAL,
-        "symbol":    sym,
-        "volume":    vol,
-        "type":      mt5.ORDER_TYPE_BUY if side=='buy' else mt5.ORDER_TYPE_SELL,
-        "price":     price,
-        "sl":        sl,
-        "tp":        tp,
-        "deviation": 10,
-        "magic":     234000,
-        "comment":   "PropHedge",
-        "type_time": mt5.ORDER_TIME_GTC,
-        "type_filling": mt5.ORDER_FILLING_IOC,
+        'action': mt5.TRADE_ACTION_DEAL,
+        'symbol': sym, 'volume': float(d['volume']),
+        'type': mt5.ORDER_TYPE_BUY if side=='buy' else mt5.ORDER_TYPE_SELL,
+        'price': price, 'sl': float(d.get('sl',0)), 'tp': float(d.get('tp',0)),
+        'deviation': 10, 'magic': 234000,
+        'comment': d.get('comment','PropHedge'),
+        'type_time': mt5.ORDER_TIME_GTC,
+        'type_filling': mt5.ORDER_FILLING_IOC,
     }
-    result = mt5.order_send(req)
-    d = result._asdict()
-    return jsonify({k: (float(v) if hasattr(v,'real') else v) for k,v in d.items()})
+    return jsonify(to_dict(mt5.order_send(req)))
 
 @app.route('/modify', methods=['POST'])
 def modify():
-    data = request.json
-    req = {
-        "action":   mt5.TRADE_ACTION_SLTP,
-        "position": int(data['ticket']),
-        "sl":       float(data['sl']),
-        "tp":       float(data['tp']),
-    }
-    result = mt5.order_send(req)
-    d = result._asdict()
-    return jsonify({k: (float(v) if hasattr(v,'real') else v) for k,v in d.items()})
+    d = request.json
+    req = {'action':mt5.TRADE_ACTION_SLTP,'position':int(d['ticket']),'sl':float(d['sl']),'tp':float(d['tp'])}
+    return jsonify(to_dict(mt5.order_send(req)))
 
 @app.route('/close', methods=['POST'])
 def close():
-    data = request.json
-    ticket = int(data['ticket'])
+    ticket = int(request.json['ticket'])
     pos = mt5.positions_get(ticket=ticket)
-    if not pos:
-        return jsonify({'retcode': -1, 'comment': 'Position not found'})
+    if not pos: return jsonify({'retcode':-1,'comment':'Not found'})
     p = pos[0]
-    price = mt5.symbol_info_tick(p.symbol)
-    price = price.bid if p.type==0 else price.ask
+    tick = mt5.symbol_info_tick(p.symbol)
+    price = tick.bid if p.type==0 else tick.ask
     req = {
-        "action":    mt5.TRADE_ACTION_DEAL,
-        "symbol":    p.symbol,
-        "volume":    p.volume,
-        "type":      mt5.ORDER_TYPE_SELL if p.type==0 else mt5.ORDER_TYPE_BUY,
-        "position":  ticket,
-        "price":     price,
-        "deviation": 10,
-        "magic":     234000,
-        "comment":   "PropHedge close",
-        "type_time": mt5.ORDER_TIME_GTC,
-        "type_filling": mt5.ORDER_FILLING_IOC,
+        'action': mt5.TRADE_ACTION_DEAL,
+        'symbol': p.symbol, 'volume': p.volume,
+        'type': mt5.ORDER_TYPE_SELL if p.type==0 else mt5.ORDER_TYPE_BUY,
+        'position': ticket, 'price': price,
+        'deviation': 10, 'magic': 234000,
+        'comment': 'PropHedge close',
+        'type_time': mt5.ORDER_TIME_GTC,
+        'type_filling': mt5.ORDER_FILLING_IOC,
     }
-    result = mt5.order_send(req)
-    d = result._asdict()
-    return jsonify({k: (float(v) if hasattr(v,'real') else v) for k,v in d.items()})
+    return jsonify(to_dict(mt5.order_send(req)))
 
 if __name__ == '__main__':
-    print("PropHedge Bridge avviato su http://127.0.0.1:7777")
+    print(f"PropHedge Bridge avviato su http://127.0.0.1:{args.port}")
     print("Lascia questa finestra aperta mentre usi il software.")
-    app.run(host='127.0.0.1', port=7777, debug=False)
+    app.run(host='127.0.0.1', port=args.port, debug=False)
 `;
-
-  var blob = new Blob([code], {type:'text/plain'});
-  var url  = URL.createObjectURL(blob);
-  var a    = document.createElement('a');
-  a.href   = url;
-  a.download = 'bridge.py';
-  a.click();
+  var blob=new Blob([code],{type:'text/plain'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download='bridge.py';a.click();
   URL.revokeObjectURL(url);
 }
 
@@ -14113,110 +14255,6 @@ function _calcPersonalLots() {
   };
 }
 
-function autoCalcPips() {
-
-  /* ── Challenge 1 Step: calcolo dedicato ── */
-  if (typeof stratMode !== 'undefined' && stratMode === 'challenge_1step') {
-    _autoCalcChallenge1();
-    return;
-  }
-
-  /* ── Modalità NON-personal: invariata ── */
-  if (typeof stratMode === 'undefined' || stratMode !== 'personal') {
-    var sz  = parseFloat(document.getElementById('mSize')?.value)  || 100000;
-    var tg  = parseFloat(document.getElementById('mTgt')?.value)   || 8;
-    var dy  = parseFloat(document.getElementById('mDays')?.value)  || 10;
-    var as  = (document.getElementById('mAsset')?.value || 'GOLD:10').split(':')[0];
-    var pv  = typeof _chPipVal === 'function' ? _chPipVal(as) : 10;
-    var lot = Math.floor(((sz*(tg/100))/dy/(200*pv))*100)/100;
-    if (lot < 0.01) lot = 0.01;
-    var slE = document.getElementById('mSlPips'); if (slE) slE.value = 100;
-    var tpE = document.getElementById('mTpPips'); if (tpE) tpE.value = 200;
-    var ltE = document.getElementById('mLots');   if (ltE) ltE.value = lot;
-    if (typeof calcPreview === 'function') calcPreview();
-    return;
-  }
-
-  /* ══════════════════════════════════════════════════════════════════
-     PERSONAL MODE — Bicchiere di Cristallo (RR 1:1)
-
-     REGOLA FONDAMENTALE:
-     Con Prop BUY + Personale SELL sullo stesso asset:
-     → SL = TP sempre (RR 1:1): i livelli si corrispondono sempre
-     → Se il trade prop va in SL, il personale chiude TP nello stesso punto
-
-     IL PROBLEMA DELLA SIZE TROPPO ALTA:
-     Esempio: trailing + cons 25%, target $6000
-     → consLimit per trade = $1500
-     → Con 0.75 lot × 100 pip × $10 = $750... ma usiamo 200 pip → $1500
-     → Ogni WIN alza il DDline di: $1500 × (1 - 6%) = $1410
-     → Dopo 3 WIN: DDline ≈ $98.230 (era $94.000)
-     → Servono solo 4 STOP consecutivi per bruciare la prop
-     → Suicidio con trailing + bassa consistenza!
-
-     SOLUZIONE: ridurre la size proporzionalmente alla pericolosità
-     del combinato trailing DD + consistenza bassa.
-     Più è bassa la consistenza % E più il trailing è attivo,
-     più la size deve essere ridotta (ma non azzerata).
-     Più la consistenza è alta (o assente) E più il DD è statico,
-     più possiamo alzare la size.
-  ══════════════════════════════════════════════════════════════════ */
-
-  /* Usa la funzione condivisa — stessa logica del simulatore */
-  var _c = _calcPersonalLots();
-  var bestLots = _c.lots;
-  var lotPers  = _c.lotPers;
-  var bestPips = _c.pip;
-  var pipVal   = _c.pipVal;
-
-  /* Applica al form */
-  var slE = document.getElementById('mSlPips'); if (slE) slE.value = bestPips;
-  var tpE = document.getElementById('mTpPips'); if (tpE) tpE.value = bestPips;
-  var ltE = document.getElementById('mLots');   if (ltE) ltE.value = bestLots;
-  var ltHE = document.getElementById('mLotsHedge'); if (ltHE) ltHE.value = lotPers;
-
-  /* ── Toast esplicativo (usa solo variabili in scope) ── */
-  var winLoss      = (bestLots * bestPips * pipVal).toFixed(0);
-  var persGain     = (lotPers  * bestPips * pipVal).toFixed(0);
-  var _tgtPctToast = parseFloat(document.getElementById('mTgt')?.value) || 8;
-  var _sizeToast   = parseFloat(document.getElementById('mSize')?.value) || 100000;
-  var _tgtUsdToast = _sizeToast * (_tgtPctToast / 100);
-  var daysToTarget = parseFloat(winLoss) > 0
-    ? Math.ceil(_tgtUsdToast / parseFloat(winLoss))
-    : '?';
-  var _isTrailToast = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
-  var _consToast    = parseFloat(document.getElementById('mConsistency')?.value) || 0;
-  var trailNote = _isTrailToast ? ' | ⚠ Trail attivo' : ' | 📌 DD statico';
-  var consNote  = _consToast > 0 ? ' | Cons. ' + _consToast + '%' : ' | Nessuna consistenza';
-
-  var msg =
-    '⚡ Calcolo completato\n' +
-    'RR 1:1 → ' + bestPips + ' pip | Prop: ' + bestLots +
-    ' lot ±$' + winLoss +
-    ' | Pers: ' + lotPers + ' lot (cop. ±$' + persGain + ')\n' +
-    'Trade per target: ~' + daysToTarget + trailNote + consNote;
-
-  var old = document.getElementById('_phCalcToast'); if (old) old.remove();
-  var toast = document.createElement('div');
-  toast.id = '_phCalcToast';
-  toast.style.cssText =
-    'position:fixed;bottom:120px;left:50%;transform:translateX(-50%);' +
-    'background:linear-gradient(135deg,#0EA5E9,#7C3AED);color:#fff;font-weight:600;' +
-    'font-family:"DM Sans",sans-serif;font-size:11px;padding:14px 26px;border-radius:40px;' +
-    'z-index:99999;box-shadow:0 6px 28px rgba(56,189,248,.5);max-width:92vw;text-align:center;' +
-    'line-height:1.7;transition:opacity .4s;pointer-events:none;white-space:pre-line';
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-  setTimeout(function () {
-    toast.style.opacity = '0';
-    setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 500);
-  }, 6500);
-
-  /* Salva i valori calcolati → il simulatore li usa IDENTICI */
-  window._phCalcPersonal = { lots:bestLots, lotPers:lotPers, pip:bestPips, pipVal:pipVal };
-
-  if (typeof calcPreview === 'function') calcPreview();
-}
 
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -14510,11 +14548,15 @@ function _simPS_calc() {
   var hedgeWinOrig = s.hedgeWin;
   var hedgeLossOrig= s.hedgeLoss;
   var above70      = false;
+  var above70loss  = false;
   var thresh70     = s.propTarget * 0.70;
 
   /* Lotti/profitti correnti (cambiano al 70%) */
   var curHedgeWin  = s.hedgeWin;
   var curHedgeLoss = s.hedgeLoss;
+  var curPropWin   = s.propWin;
+  var curPropLoss  = s.propLoss;
+  var lotPropOrig  = s.lots;
 
   function halveLot(l){
     var r=Math.round(l*100);
@@ -14594,7 +14636,7 @@ function _simPS_calc() {
         return;
       }
 
-      var rowPropPnl=_w*s.propWin-_l*s.propLoss;
+      var rowPropPnl=_w*curPropWin-_l*curPropLoss;
       var rowPersPnl=_l*__hw-_w*__hl;  /* usa hedge win/loss correnti */
 
       propPnlCum+=rowPropPnl;
@@ -14610,7 +14652,7 @@ function _simPS_calc() {
         }
       }
 
-      /* ── CONTROLLO 70% — dopo aver aggiornato propPnlCum ── */
+      /* ── CONTROLLO 70% PROFIT — dopo aver aggiornato propPnlCum ── */
       if(!gameOver&&!targetHit){
         var now70=propPnlCum>=thresh70;
         if(now70&&!above70){
@@ -14619,7 +14661,6 @@ function _simPS_calc() {
           curHedgeWin =newLP*s.slPips*s.pipVal;
           curHedgeLoss=newLP*s.tpPips*s.pipVal;
           insertPS70Banner(rr,true);
-          /* Aggiorna campo calcolatore */
           var elLH=document.getElementById('mLotsHedge');
           if(elLH){elLH.value=newLP;elLH.style.outline='2px solid #34D399';elLH.style.background='rgba(52,211,153,.10)';}
           if(typeof calcPreview==='function')setTimeout(calcPreview,80);
@@ -14632,6 +14673,44 @@ function _simPS_calc() {
           if(elLH2){elLH2.value=lotPersOrig;elLH2.style.outline='2px solid #F87171';elLH2.style.background='rgba(248,113,113,.08)';
             setTimeout(function(){elLH2.style.outline='';elLH2.style.background='';},3000);}
           if(typeof calcPreview==='function')setTimeout(calcPreview,80);
+        }
+
+        /* ── CONTROLLO 70% LOSS — formula: perdite >= 70% del DD budget totale ──
+           DD budget = size - ddLine (con trailing la ddLine sale → budget cresce)
+           Soglia = size - (ddBudget × 0.70)
+           Quando bal <= soglia → lotti PROP dimezzati
+        ── */
+        var ddBudgetPS = s.size - ddLine;
+        var thresh70lossPS = s.size - (ddBudgetPS * 0.70);
+        var nowLoss70 = bal <= thresh70lossPS;
+        if(nowLoss70 && !above70loss){
+          above70loss = true;
+          var newPropLot = halveLot(lotPropOrig);
+          curPropWin  = newPropLot * s.slPips * s.pipVal;
+          curPropLoss = newPropLot * s.slPips * s.pipVal;
+          /* Banner arancione */
+          var refRow70l = document.getElementById('simPS_row_'+rr);
+          if(refRow70l){
+            var tr70l = document.createElement('tr');
+            tr70l.className = '_simPS_banner70';
+            tr70l.id = '_simPS_b70loss_'+rr;
+            tr70l.innerHTML = '<td colspan="9" style="padding:0"><div style="background:rgba(251,191,36,.12);border-top:2px solid #FBBF24;border-bottom:2px solid #FBBF24;padding:8px 18px;font-size:11px;font-weight:800;font-family:var(--fd);color:#FBBF24;text-align:center">'
+              +'⚠️ 70% DD CONSUMATO — Lotti PROP dimezzati a '+newPropLot+' lot</div></td>';
+            refRow70l.after(tr70l);
+          }
+        } else if(!nowLoss70 && above70loss){
+          above70loss = false;
+          curPropWin  = s.propWin;
+          curPropLoss = s.propLoss;
+          var refRow70lr = document.getElementById('simPS_row_'+rr);
+          if(refRow70lr){
+            var tr70lr = document.createElement('tr');
+            tr70lr.className = '_simPS_banner70';
+            tr70lr.id = '_simPS_b70lossR_'+rr;
+            tr70lr.innerHTML = '<td colspan="9" style="padding:0"><div style="background:rgba(56,189,248,.10);border-top:2px solid #38BDF8;border-bottom:2px solid #38BDF8;padding:8px 18px;font-size:11px;font-weight:800;font-family:var(--fd);color:#38BDF8;text-align:center">'
+              +'✅ DD RECUPERATO — Lotti prop ripristinati a '+lotPropOrig+' lot</div></td>';
+            refRow70lr.after(tr70lr);
+          }
         }
       }
 
@@ -14828,6 +14907,7 @@ function simReset(){
     _simCH1._above70Active = false;
     _simCH1._lotPersHalved = 0;
     _simCH1._lotPersTrue   = 0;
+    _ch1ManualMode         = false; /* reset modalità manuale → auto-calc riprende */
     /* Pulisci i campi manuali lotti così il prossimo auto-calc riparte da zero */
     var _ch1LF = document.getElementById('ch1Lots');     if(_ch1LF){ _ch1LF.value=''; _ch1LF.style.outline=''; _ch1LF.style.background=''; }
     var _ch1PF = document.getElementById('ch1LotsPers'); if(_ch1PF){ _ch1PF.value=''; _ch1PF.style.outline=''; _ch1PF.style.background=''; }
@@ -14935,9 +15015,15 @@ function _simCH1_setCell(r, col, txt, clr, bg) {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   AUTO-CALC CHALLENGE 1 STEP
+   AUTO-CALC CHALLENGE 1 STEP — formula prudente "chi va piano"
    ════════════════════════════════════════════════════════════════════ */
 function _autoCalcChallenge1() {
+
+  /* ── Se lotti inseriti manualmente NON sovrascrivere ── */
+  if(_ch1ManualMode) {
+    if (typeof calcPreview === 'function') calcPreview();
+    return;
+  }
 
   /* ── Leggi parametri ── */
   var size    = parseFloat(document.getElementById('mSize')?.value)        || 100000;
@@ -14951,117 +15037,66 @@ function _autoCalcChallenge1() {
   var asset   = (document.getElementById('mAsset')?.value || 'GOLD:10').split(':')[0];
   var pipVal  = typeof _chPipVal === 'function' ? _chPipVal(asset) : 10;
   var covPct  = parseFloat(document.getElementById('ch1Cov')?.value) || 85;
-  var sl      = 100; // CH1 sempre RR 1:1 a 100 pip
+  var sl      = 100;
 
-  /* ── Valori derivati ── */
-  var tgtUsd     = size * (tgtPct / 100);   // obiettivo in $
-  var maxDDusd   = size * (maxDD  / 100);   // buffer DD totale
-  var dailyDDusd = size * (ddd    / 100);   // limite DD giornaliero
-  var hasCons    = cons > 0;
-  var tickVal    = sl * pipVal;             // $ per 1 lot su 1 trade (RR1:1)
+  /* ── Formula prudente — stessa logica di tutte le sessioni ── */
+  var lot     = _calcLotPrudente(size, tgtPct, maxDD, days, isTrail, cons, sl, pipVal);
+  var tickVal = sl * pipVal;
+  var tgtUsd  = size * (tgtPct / 100);
+  var maxDDusd= size * (maxDD  / 100);
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     VINCOLO 1 — GIORNI MINIMI
-     Ogni giorno devi guadagnare (tgtUsd / days) per chiudere in tempo.
-     lot_giorni = guadagno_giornaliero / tickVal
-     → più giorni → lot più basso; meno giorni → lot più alto
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  var lot_giorni = (tgtUsd / Math.max(1, days)) / tickVal;
-
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     VINCOLO 2 — DD GIORNALIERO
-     Un singolo trade (loss) non deve bruciare > 80% del DD giornaliero.
-     lot_daily = dailyDDusd * 0.80 / tickVal
-     → aumenta DD giornaliero → lot può salire; scende → lot scende
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  var lot_daily = (dailyDDusd * 0.80) / tickVal;
-
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     VINCOLO 3 — DD TRAILING (solo se attivo)
-     Con trailing il buffer si erode ad ogni TP colpito: il DD effettivo
-     disponibile per le perdite future si dimezza nel tempo.
-     Usiamo il 40% del maxDD come stima del buffer residuo reale.
-     lot_trail = maxDDusd * 0.40 / tickVal
-     → senza trailing: vincolo assente (Infinity → non restringe)
-     → con trailing: lot più bassi per non bruciare il buffer residuo
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  var lot_trail = isTrail ? (maxDDusd * 0.40) / tickVal : Infinity;
-
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     VINCOLO 4 — CONSISTENZA (solo se attiva)
-     Nessun singolo trade TP può superare cons% del target totale.
-     lot_cons = (tgtUsd * cons / 100) / tickVal
-     → più alta la %: meno restrittivo; più bassa: più restrittivo
-     → senza consistenza: vincolo assente
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  /* ── Risultato: minimo tra vincoli di DD e giorni ── */
-  var lot_base = Math.min(lot_daily, lot_giorni, lot_trail);
-
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     VINCOLO CONSISTENZA — moltiplicatore proporzionale
-     La regola "cons%" significa: nessun giorno > cons% del profitto totale.
-     Per rispettarla SEMPRE servono almeno ceil(100/cons) trade vincenti,
-     quindi i lotti devono essere più bassi per distribuire il profitto.
-     Formula: lot_finale = lot_base × sqrt(cons/100)
-     → cons=100%: × 1.00 (nessuna riduzione — regola assente)
-     → cons= 50%: × 0.71 (riduzione moderata)
-     → cons= 30%: × 0.55 (riduzione visibile)
-     → cons= 10%: × 0.32 (riduzione importante)
-     → cons=  3%: × 0.17 (riduzione severa)
-     Garantisce: qualunque valore attivo riduce sempre i lotti rispetto
-     a nessuna consistenza, con progressione liscia e proporzionale.
-  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  var cons_mult = hasCons ? Math.sqrt(cons / 100) : 1.0;
-  var lot = lot_base * cons_mult;
-  lot = Math.floor(lot * 100) / 100; // arrotondo per difetto (più sicuro)
-  if (lot < 0.01) lot = 0.01;
-
-  /* ── Parametri derivati dal lot finale ── */
-  var tradeAmt = lot * tickVal;                               // $ per trade
-  var nLossMax = Math.floor(maxDDusd / tradeAmt) || 1;       // max stop loss prima del game over
-  var winsNeed = Math.ceil(tgtUsd / tradeAmt);               // win necessari per il target
+  var tradeAmt = lot * tickVal;
+  var nLossMax = Math.floor(maxDDusd / tradeAmt) || 1;
+  var winsNeed = Math.ceil(tgtUsd / tradeAmt);
 
   /* ── Lotto personale ──
-     Deve recuperare covPct% del costo challenge se la prop brucia tutti i nLossMax stop.
-     lotPers × nLossMax × tickVal = cost × covPct/100
-     → se il lotto prop scende, nLossMax sale → lotPers scende proporzionalmente
+     Deve recuperare covPct% del costo challenge se la prop brucia.
+     Quante volte può perdere la prop? = nLossMax stop.
+     Ma nLossMax non deve scendere sotto 3 per sicurezza.
+     Formula: lotPers = (cost × covPct/100) / (max(nLossMax,3) × tickVal)
   ── */
-  var lotPers = (cost * (covPct / 100)) / (nLossMax * tickVal);
+  var nLossMaxSafe = Math.max(nLossMax, 3);
+  var lotPers = (cost * (covPct / 100)) / (nLossMaxSafe * tickVal);
   lotPers = Math.round(lotPers * 100) / 100;
   if (lotPers < 0.01) lotPers = 0.01;
 
-  /* ── Applica ai campi ── */
+  /* ── Applica ai campi — usa flag per non triggerare _ch1ManualMode ── */
+  _ch1AutoCalcWriting = true;
   var slE  = document.getElementById('mSlPips');    if (slE)  slE.value  = sl;
   var tpE  = document.getElementById('mTpPips');    if (tpE)  tpE.value  = sl;
   var ltE  = document.getElementById('mLots');      if (ltE)  ltE.value  = lot;
   var ch1L = document.getElementById('ch1Lots');    if (ch1L) ch1L.value = lot;
   var ch1P = document.getElementById('ch1LotsPers');if (ch1P) ch1P.value = lotPers;
   _simCH1._lotPersTrue = lotPers;
+  _ch1AutoCalcWriting = false;
 
   /* ── Aggiorna preview ── */
   if (typeof calcPreview === 'function') calcPreview();
 
   /* ── Toast riepilogo ── */
+  var daily_pct = _getDailyPct(isTrail, cons);
+  var giorni_eff= days + 2;
+  var rules = [];
+  if (isTrail) rules.push('Trailing');
+  if (cons > 0) rules.push('Cons.' + cons + '%');
+  if (!rules.length) rules.push('Base');
+  var binding = daily_pct === 0.80 ? 'Base (0.8%/g)' :
+                daily_pct === 0.60 ? '1 regola (0.6%/g)' :
+                daily_pct === 0.50 ? 'Cons.media (0.5%/g)' :
+                daily_pct === 0.40 ? 'Cons.bassa (0.4%/g)' :
+                daily_pct === 0.45 ? 'Trail+Cons.alta (0.45%/g)' :
+                daily_pct === 0.35 ? 'Trail+Cons.media (0.35%/g)' :
+                                     'Trail+Cons.bassa (0.3%/g)';
+
   var recFail = lotPers * nLossMax * tickVal;
-  var netFail = (-cost + recFail);
-  var active  = [];
-  if (isTrail) active.push('Trailing');
-  if (hasCons) active.push('Cons. ' + cons + '%');
-  var label   = active.length ? '[' + active.join(' + ') + ']' : '[Base]';
-
-  var binding = (lot_base === lot_giorni) ? 'Giorni (' + days + ')' :
-                (lot_base === lot_daily)  ? 'DD daily (' + ddd + '%)' :
-                'Trailing';
-  if (hasCons) binding += ' × Cons.' + cons + '% (×' + cons_mult.toFixed(2) + ')';
-
+  var netFail = -cost + recFail;
   var msg =
-    '🎯 Challenge 1 Step ' + label + '\n' +
-    'Vincolo binding: ' + binding + '\n' +
-    'Giorni: ' + days + ' | Asset: ' + asset + ' | SL/TP: ' + sl + ' pip\n' +
-    'Prop:  ' + lot     + ' lot  ±$' + tradeAmt.toFixed(0)  + '/trade\n' +
-    'Pers:  ' + lotPers + ' lot  | stop max: ' + nLossMax + ' | win necessari: ' + winsNeed + '\n' +
-    '✅ Prop passa → conto continua, pers perde $' + (lotPers * winsNeed * tickVal).toFixed(0) + '\n' +
-    '❌ Prop brucia → pers recupera $' + recFail.toFixed(0) + ' (netto ' + (netFail >= 0 ? '+' : '') + netFail.toFixed(0) + '$)';
+    '🎯 CH1 [' + rules.join('+') + '] — ' + binding + '\n' +
+    'Giorni effettivi: ' + giorni_eff + ' | Asset: ' + asset + '\n' +
+    'Prop: ' + lot + ' lot  ±$' + tradeAmt.toFixed(0) + '/trade\n' +
+    'Pers: ' + lotPers + ' lot  | Max stop: ' + nLossMax + ' | Win necessari: ' + winsNeed + '\n' +
+    '❌ Prop brucia → pers recupera $' + recFail.toFixed(0) +
+    ' (netto ' + (netFail >= 0 ? '+' : '') + netFail.toFixed(0) + '$)';
 
   var old = document.getElementById('_phCalcToast'); if (old) old.remove();
   var t = document.createElement('div');
@@ -15074,6 +15109,7 @@ function _autoCalcChallenge1() {
   document.body.appendChild(t);
   setTimeout(function(){ var el=document.getElementById('_phCalcToast'); if(el) el.remove(); }, 7000);
 }
+
 /* ════════════════════════════════════════════════════════════════════
    OPEN SIMULATOR — Challenge 1 Step
    ════════════════════════════════════════════════════════════════════ */
@@ -15166,7 +15202,9 @@ function _simCH1_setupModal() {
   var sub = document.getElementById('simSubtitle');
   if (sub) sub.textContent =
     '🎯 ' + s.asset +
-    ' | Prop (VIRTUALE): ' + s.lots + ' lot  TP/SL ±$' + s.propWin.toFixed(0) +
+    ' | Prop (VIRTUALE): ' + s.lots + ' lot' +
+    '  TP ' + s.tpPips + 'pip +$' + s.propWin.toFixed(0) +
+    '  SL ' + s.slPips + 'pip -$' + s.propLoss.toFixed(0) +
     ' | Pers (REALE): ' + s.lotPers + ' lot  ±$' + s.persWin.toFixed(0) +
     ' | ' + ddLbl + ' ' + s.maxDD + '%' +
     (hasCons ? ' | Cons.' + s.consistency + '%' : '') +
@@ -15332,11 +15370,24 @@ function _simCH1_calc() {
   var persWin  = curLotPers * s.slPips * s.pipVal;
   var persLoss = curLotPers * s.slPips * s.pipVal;
 
-  /* ── Flag stato 70% ── */
-  var above70 = false;
+  /* ── Flag stato 70% PROFIT (personale dimezza) ── */
+  var above70profit = false;
+  var thresh70profit = s.propTarget * 0.70;
 
-  /* ── Soglia 70% ── */
-  var thresh70 = s.propTarget * 0.70;
+  /* ── Flag stato 70% LOSS (prop dimezza) ── */
+  var above70loss = false;
+  /* Soglia DD: se trailing il DD si riduce con ogni TP → usiamo ddLine corrente
+     Se statico usiamo il DD massimo fisso */
+  function getDDThresh70(currentBal, currentDDLine){
+    /* DD budget totale = quanto può perdere in tutto dalla size iniziale alla DD line.
+       Con trailing: la DD line sale → il budget cresce.
+       Soglia 70% = quando le perdite cumulate superano il 70% del budget totale.
+       propPnlCum <= -(ddBudget * 0.70)
+       Equivalente: bal <= size - (ddBudget * 0.70)
+       dove ddBudget = size - ddLine (corrente, tiene conto del trailing)         */
+    var ddBudget = s.size - currentDDLine;
+    return s.size - (ddBudget * 0.70);
+  }
 
   /* ── Helper: dimezza lotto secondo le regole ── */
   function halveLot(l) {
@@ -15347,52 +15398,33 @@ function _simCH1_calc() {
   }
 
   /* ── Helper: inserisce banner 70% come riga della tabella DOPO la riga rr ── */
-  function insert70Banner(rr, isGreen) {
+  function insert70Banner(rr, type) {
+    /* type: 'profit_on' | 'profit_off' | 'loss_on' | 'loss_off' */
     var refRow = document.getElementById('simCH1_row_' + rr);
     if (!refRow) return;
-    var existing = document.getElementById('_simCH1_b70_' + rr);
+    var id = '_simCH1_b70_' + type + '_' + rr;
+    var existing = document.getElementById(id);
     if (existing) existing.remove();
 
-    var bg  = isGreen ? 'rgba(52,211,153,.14)'  : 'rgba(248,113,113,.14)';
-    var bdr = isGreen ? '#34D399'               : '#F87171';
-    var clr = isGreen ? '#34D399'               : '#F87171';
-
-    var newPers = isGreen ? halveLot(lotPersOrig) : lotPersOrig;
-    var newPersWinLoss = (newPers * s.slPips * s.pipVal).toFixed(0);
-    var origPersWinLoss = (lotPersOrig * s.slPips * s.pipVal).toFixed(0);
-
-    var msg = isGreen
-      ? '🟢&nbsp;&nbsp;70% DEL TARGET RAGGIUNTO — RICALCOLO LOTTI&nbsp;&nbsp;|&nbsp;&nbsp;'
-        + 'Prop mantiene <b style="color:var(--teal)">' + lotsOrig + ' lot</b>'
-        + '&nbsp;&nbsp;→&nbsp;&nbsp;'
-        + 'Personale dimezzato: <b style="color:var(--violet)">' + newPers + ' lot</b>'
-        + ' <span style="font-size:10px;color:var(--t3)">(±$' + newPersWinLoss + '/trade)</span>'
-      : '🔴&nbsp;&nbsp;SCESO SOTTO 70% — LOTTI RIPRISTINATI&nbsp;&nbsp;|&nbsp;&nbsp;'
-        + 'Prop <b style="color:var(--teal)">' + lotsOrig + ' lot</b>'
-        + '&nbsp;&nbsp;|&nbsp;&nbsp;'
-        + 'Personale torna a <b style="color:var(--violet)">' + lotPersOrig + ' lot</b>'
-        + ' <span style="font-size:10px;color:var(--t3)">(±$' + origPersWinLoss + '/trade)</span>';
-
+    var cfg = {
+      profit_on:  { bg:'rgba(52,211,153,.14)', bdr:'rgba(52,211,153,.4)', clr:'#34D399',
+                    txt:'🟢 70% TARGET RAGGIUNTO — Lotti PERSONALI dimezzati' },
+      profit_off: { bg:'rgba(248,113,113,.10)', bdr:'rgba(248,113,113,.35)', clr:'#F87171',
+                    txt:'🔴 SCESO SOTTO 70% — Lotti personali RIPRISTINATI' },
+      loss_on:    { bg:'rgba(251,191,36,.12)', bdr:'rgba(251,191,36,.4)', clr:'#FBBF24',
+                    txt:'⚠️ 70% DD CONSUMATO — Lotti PROP dimezzati' },
+      loss_off:   { bg:'rgba(56,189,248,.10)', bdr:'rgba(56,189,248,.3)', clr:'#38BDF8',
+                    txt:'✅ DD RECUPERATO — Lotti prop RIPRISTINATI' }
+    };
+    var c = cfg[type];
     var tr = document.createElement('tr');
+    tr.id = id;
     tr.className = '_simCH1_banner70';
-    tr.id = '_simCH1_b70_' + rr;
-    tr.innerHTML =
-      '<td colspan="10" style="padding:0">'
-      + '<div style="'
-        + 'background:' + bg + ';'
-        + 'border-top:2.5px solid ' + bdr + ';'
-        + 'border-bottom:2.5px solid ' + bdr + ';'
-        + 'padding:10px 18px;'
-        + 'display:flex;align-items:center;justify-content:center;gap:10px'
-      + '">'
-        + '<div style="'
-          + 'font-size:12px;font-weight:800;font-family:var(--fd);'
-          + 'color:' + clr + ';text-align:center;letter-spacing:.03em'
-        + '">' + msg + '</div>'
-      + '</div>'
-      + '</td>';
-
-    refRow.after(tr);
+    tr.innerHTML = '<td colspan="10" style="background:'+c.bg+';border-top:1px solid '+c.bdr+
+      ';border-bottom:1px solid '+c.bdr+';padding:6px 14px;font-family:var(--fd);font-size:10px;'+
+      'font-weight:700;color:'+c.clr+';letter-spacing:.06em">'+c.txt+'</td>';
+    if (refRow.nextSibling) refRow.parentNode.insertBefore(tr, refRow.nextSibling);
+    else refRow.parentNode.appendChild(tr);
   }
 
   /* ── Helper segno ── */
@@ -15490,45 +15522,54 @@ function _simCH1_calc() {
          Il payout è virtuale finché sei in valutazione → non incluso. */
       var netNow = -s.cost + persPnlCum;
 
-      /* ── CONTROLLO 70% — eseguito CON propPnlCum già aggiornato ──
-         Avviene dopo il calcolo della riga corrente, quindi il banner
-         appare SOTTO questa riga e i nuovi lotti sono usati dalla
-         riga SUCCESSIVA (curLots/curLotPers vengono aggiornati qui,
-         la prossima iterazione li passerà all'IIFE).
-      ── */
+      /* ════════════════════════════════════════════════════════
+         CONTROLLO 70% — dopo aver aggiornato propPnlCum e bal
+         ════════════════════════════════════════════════════════ */
       if (!gameOver && !targetHit) {
-        var now70 = propPnlCum >= thresh70;
 
-        if (now70 && !above70) {
-          /* ───── SUPERATO IL 70% ───── */
-          above70    = true;
-          curLotPers = halveLot(lotPersOrig);   /* halve sempre dal VERO originale */
-          /* Aggiorna valori per prossime righe */
-          persWin  = curLotPers * s.slPips * s.pipVal;
-          persLoss = curLotPers * s.slPips * s.pipVal;
-
-          /* Salva stato persistente */
+        /* ── REGOLA 70% PROFIT: prop >= 70% target → personale dimezza ── */
+        var nowProfit70 = propPnlCum >= thresh70profit;
+        if (nowProfit70 && !above70profit) {
+          above70profit = true;
+          curLotPers    = halveLot(lotPersOrig);
+          persWin       = curLotPers * s.slPips * s.pipVal;
+          persLoss      = curLotPers * s.slPips * s.pipVal;
           _simCH1._above70Active = true;
           _simCH1._lotPersHalved = curLotPers;
-          /* NON scriviamo ch1LotsPers — evita che il valore dimezzato
-             diventi il nuovo "originale" alla prossima esecuzione del calc */
-
-          insert70Banner(rr, true);
+          insert70Banner(rr, 'profit_on');
           if (typeof calcPreview === 'function') setTimeout(calcPreview, 80);
 
-        } else if (!now70 && above70) {
-          /* ───── SCESO SOTTO IL 70% ───── */
-          above70    = false;
-          curLotPers = lotPersOrig;   /* sempre il VERO originale, mai il dimezzato */
-          persWin    = curLotPers * s.slPips * s.pipVal;
-          persLoss   = curLotPers * s.slPips * s.pipVal;
-
-          /* Ripristina stato persistente */
+        } else if (!nowProfit70 && above70profit) {
+          above70profit = false;
+          curLotPers    = lotPersOrig;
+          persWin       = curLotPers * s.slPips * s.pipVal;
+          persLoss      = curLotPers * s.slPips * s.pipVal;
           _simCH1._above70Active = false;
           _simCH1._lotPersHalved = 0;
-          /* _lotPersTrue rimane intatto — è il valore base */
+          insert70Banner(rr, 'profit_off');
+          if (typeof calcPreview === 'function') setTimeout(calcPreview, 80);
+        }
 
-          insert70Banner(rr, false);
+        /* ── REGOLA 70% LOSS: prop consuma >= 70% DD residuo → prop dimezza ──
+           Con trailing: ddLine sale con ogni TP → DD residuo si riduce.
+           Con DD statico: ddLine fissa → soglia fissa.
+        ── */
+        var ddThresh70loss = getDDThresh70(bal, ddLine);
+        var nowLoss70 = bal <= ddThresh70loss;
+        if (nowLoss70 && !above70loss) {
+          above70loss = true;
+          curLots     = halveLot(lotsOrig);
+          propWin     = curLots * s.slPips * s.pipVal;
+          propLoss    = curLots * s.slPips * s.pipVal;
+          insert70Banner(rr, 'loss_on');
+          if (typeof calcPreview === 'function') setTimeout(calcPreview, 80);
+
+        } else if (!nowLoss70 && above70loss) {
+          above70loss = false;
+          curLots     = lotsOrig;
+          propWin     = curLots * s.slPips * s.pipVal;
+          propLoss    = curLots * s.slPips * s.pipVal;
+          insert70Banner(rr, 'loss_off');
           if (typeof calcPreview === 'function') setTimeout(calcPreview, 80);
         }
       }
@@ -15602,8 +15643,8 @@ function _simCH1_calc() {
     netFin>=0?'var(--green)':'var(--amber)');
 
   /* Salva stato persistente 70% */
-  _simCH1._above70Active = above70;
-  if (!above70) _simCH1._lotPersHalved = 0;
+  _simCH1._above70Active = above70profit;
+  if (!above70profit) _simCH1._lotPersHalved = 0;
 
   /* Salva dati trade in localStorage */
   _saveSimData();
@@ -15718,327 +15759,149 @@ function _simCH1_showEndCard(type, row, propPnl, persPnl, ddLine, bal, payout, n
 }
 
 
-/* Sovrascrive _renderChallenge1 dell'HTML per mostrare i lotti prominenti */
+/* ════════════════════════════════════════════════════════════════════
+   CHALLENGE 1 STEP — render uguale a Prop+Personale
+   ════════════════════════════════════════════════════════════════════ */
 _renderChallenge1 = function(box, size, cost, maxDD, ddd, days, pay, cons, sl, tp, asset) {
-  var pv      = _chPipVal(asset);
-  var tgtPct  = parseFloat(document.getElementById('mTgt')?.value)  || 8;
-  var covPct  = parseFloat(document.getElementById('ch1Cov')?.value) || 85;
-  var isTrail = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
+  var pv     = _chPipVal(asset);
+  var tgtPct = parseFloat(document.getElementById('mTgt')?.value)  || 8;
+  var covPct = parseFloat(document.getElementById('ch1Cov')?.value) || 85;
+  var isTrail= (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
 
-  var tgtUsd     = size * (tgtPct / 100);
-  var maxDDusd   = size * (maxDD  / 100);
-  var dailyDDusd = size * (ddd    / 100);
-  var hasCons    = cons > 0 && cons < 100;
+  /* Lotti dal calcolatore */
+  var lot     = parseFloat(document.getElementById('ch1Lots')?.value)    || 0;
+  var lotPers = parseFloat(document.getElementById('ch1LotsPers')?.value)|| 0;
+  if(lot < 0.01)     lot     = 0.01;
+  if(lotPers < 0.01) lotPers = 0.01;
 
-  /* Lotto prop: preferisce manuale ch1Lots se inserito */
-  var ch1LotsM = parseFloat(document.getElementById('ch1Lots')?.value) || 0;
-  var lot;
-  if (ch1LotsM >= 0.01) {
-    lot = Math.round(ch1LotsM * 100) / 100;
-  } else {
-    var tgtGiorno = tgtUsd / Math.max(1, days);
-    var lotByD    = (dailyDDusd * 0.90) / (sl * pv);
-    var lotByT    = tgtGiorno / (tp * pv);
-    var penalty   = 1.0;
-    if (isTrail && hasCons) {
-      penalty = cons<=25?0.30:cons<=35?0.40:cons<=50?0.55:cons<=70?0.75:0.90;
-    } else if (isTrail) { penalty=0.75; } else if (hasCons&&cons<=30) { penalty=0.70; }
-    lot = Math.round(Math.min(lotByD, lotByT) * penalty * 100) / 100;
-    if (lot < 0.01) lot = 0.01;
-  }
-
-  var tradeAmt = lot * sl * pv;
-  var nLossMax = tradeAmt>0 ? Math.floor(maxDDusd/tradeAmt) : 10;
-  if (nLossMax<1) nLossMax=1;
-  var winsNeed = tradeAmt>0 ? Math.ceil(tgtUsd/tradeAmt) : 10;
-
-  /* Lotto personale: preferisce manuale ch1LotsPers se inserito */
-  var ch1LotsPersM = parseFloat(document.getElementById('ch1LotsPers')?.value) || 0;
-  var lotPers;
-  if (ch1LotsPersM >= 0.01) {
-    lotPers = Math.round(ch1LotsPersM * 100) / 100;
-  } else {
-    lotPers = (cost * (covPct/100)) / (nLossMax * sl * pv);
-    lotPers = Math.round(lotPers * 100) / 100;
-    if (lotPers < 0.01) lotPers = 0.01;
-  }
-
-  var persPerTrade  = lotPers * sl * pv;
-  var propPerTrade  = lot * sl * pv;
-  var recoverFail   = lotPers * nLossMax * sl * pv;
-  var extraCostPass = lotPers * winsNeed  * sl * pv;
-  var costoTotPass  = cost + extraCostPass;
-  var nettoFail     = -cost + recoverFail;
-  var recCovPct     = Math.round(recoverFail / cost * 100);
-
-  var ddLabel  = isTrail ? '📈 Trailing' : '📌 Statico';
-  var sgn      = function(n){return n>=0?'+':'-';};
-  var col      = function(n){return n>=0?'var(--green)':'var(--red)';};
+  var tickVal     = sl * pv;
+  var tgtUsd      = size * (tgtPct / 100);
+  var maxDDusd    = size * (maxDD  / 100);
+  var propPerTrade= lot     * tickVal;
+  var persPerTrade= lotPers * tickVal;
+  var nLossMax    = Math.floor(maxDDusd / propPerTrade) || 1;
+  var winsNeed    = Math.ceil(tgtUsd / propPerTrade);
+  var recoverFail = lotPers * nLossMax * tickVal;
+  var extraCostPass= lotPers * winsNeed * tickVal;
+  var nettoFail   = -cost + recoverFail;       /* REALE: solo costo + pers */
+  var costoLive   = cost + extraCostPass;      /* costo totale per andare live */
+  var recCovPct   = Math.round(recoverFail / cost * 100);
+  var ddLabel     = isTrail ? '📈 Trailing' : '📌 Statico';
+  var col         = function(n){return n>=0?'var(--green)':'var(--red)';};
 
   box.innerHTML =
     '<div class="prev" style="padding:0">'
 
-    /* ── Header ── */
-    +'<div style="padding:14px 16px 0;margin-bottom:16px">'
+    /* Header */
+    +'<div style="padding:14px 16px 6px">'
     +'<div style="font-size:16px;font-weight:800;font-family:var(--fh);color:var(--t)">🎯 Challenge 1 Step</div>'
     +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:2px">'
-    +asset+' $'+pv+'/pip · Target '+tgtPct+'% · DD '+maxDD+'% '+ddLabel
-    +(hasCons?' · Cons.'+cons+'%':'')+' · Copertura '+covPct+'%</div>'
-    +'</div>'
+    +asset+' · '+sl+' pip · Target '+tgtPct+'% · DD '+maxDD+'% '+ddLabel
+    +(cons>0?' · Cons.'+cons+'%':'')+' · Copertura '+covPct+'%</div></div>'
 
-    /* ── Lotti in grande (come Prop+Personale) ── */
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;padding:0 14px">'
+    /* Due box lotti */
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 14px">'
 
-    /* Prop */
     +'<div style="background:rgba(56,189,248,.08);border:2px solid var(--teal);border-radius:12px;padding:16px">'
     +'<div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:var(--fd)">🎯 PROP (VALUTAZIONE)</div>'
-    +'<div style="font-size:36px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+lot+' <span style="font-size:16px">Lot</span></div>'
-    +'<div style="font-size:12px;color:var(--t2)">WIN/LOSS: <b style="color:var(--green)">±$'+propPerTrade.toFixed(0)+'</b> per trade</div>'
-    +'<div style="font-size:10px;color:var(--t3);margin-top:6px;font-family:var(--fd)">Conto virtuale · '+sl+' pip SL/TP</div>'
+    +'<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:var(--teal);margin-bottom:4px">'+lot+' <span style="font-size:16px;opacity:.7">Lot</span></div>'
+    +'<div style="font-size:12px;color:var(--t2);line-height:1.9">'
+    +'TP (<b>'+sl+'</b> pip): <b style="color:var(--green)">+$'+propPerTrade.toFixed(0)+'</b><br>'
+    +'SL (<b>'+sl+'</b> pip): <b style="color:var(--red)">-$'+propPerTrade.toFixed(0)+'</b>'
+    +'</div>'
+    +'<div style="font-size:9px;color:var(--t3);margin-top:6px;font-family:var(--fd)">Virtuale — soldi demo</div>'
     +'</div>'
 
-    /* Personale */
     +'<div style="background:rgba(167,139,250,.08);border:2px solid var(--violet);border-radius:12px;padding:16px">'
     +'<div style="font-size:10px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;font-family:var(--fd)">🛡️ PERSONALE (REALE)</div>'
-    +'<div style="font-size:36px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+lotPers+' <span style="font-size:16px">Lot</span></div>'
-    +'<div style="font-size:12px;color:var(--t2)">WIN/LOSS: <b style="color:var(--amber)">±$'+persPerTrade.toFixed(0)+'</b> per trade</div>'
-    +'<div style="font-size:10px;color:var(--t3);margin-top:6px;font-family:var(--fd)">Conto reale · copre '+covPct+'% costo</div>'
+    +'<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:var(--violet);margin-bottom:4px">'+lotPers+' <span style="font-size:16px;opacity:.7">Lot</span></div>'
+    +'<div style="font-size:12px;color:var(--t2);line-height:1.9">'
+    +'TP (se Prop perde): <b style="color:var(--green)">+$'+persPerTrade.toFixed(0)+'</b><br>'
+    +'SL (se Prop vince): <b style="color:var(--red)">-$'+persPerTrade.toFixed(0)+'</b>'
+    +'</div>'
+    +'<div style="font-size:9px;color:var(--t3);margin-top:6px;font-family:var(--fd)">Reale · copre '+covPct+'% costo</div>'
     +'</div>'
     +'</div>'
 
-    /* ── KPI rapidi ── */
-    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;padding:0 14px">'
-    +'<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center">'
-    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">WIN necessari</div>'
-    +'<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:var(--green)">'+winsNeed+'</div>'
-    +'</div>'
-    +'<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center">'
-    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">Max STOP</div>'
-    +'<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:var(--red)">'+nLossMax+'</div>'
-    +'</div>'
-    +'<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center">'
-    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">Target $</div>'
-    +'<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+tgtUsd.toFixed(0)+'</div>'
-    +'</div>'
-    +'<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center">'
-    +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">Copertura</div>'
-    +'<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:'+(recCovPct>=80?'var(--green)':recCovPct>=50?'var(--amber)':'var(--red)')+'">'+recCovPct+'%</div>'
-    +'</div>'
+    /* KPI */
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 14px 12px">'
+    +[['WIN necessari', winsNeed,'var(--green)'],
+      ['Max STOP',      nLossMax,'var(--red)'],
+      ['Target $',      '$'+tgtUsd.toFixed(0),'var(--amber)'],
+      ['Copertura',     recCovPct+'%',recCovPct>=80?'var(--green)':recCovPct>=50?'var(--amber)':'var(--red)']
+    ].map(function(k){
+      return '<div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center">'
+        +'<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">'+k[0]+'</div>'
+        +'<div style="font-size:16px;font-weight:800;font-family:var(--fd);color:'+k[2]+'">'+k[1]+'</div></div>';
+    }).join('')
     +'</div>'
 
-    /* ── Bilancio 2 scenari ── */
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 14px 14px">'
+    /* Scenari */
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 14px 14px">'
 
-    /* Prop fallisce */
-    +'<div style="background:rgba(248,113,113,.07);border:1.5px solid rgba(248,113,113,.35);border-radius:12px;padding:14px">'
-    +'<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">❌ PROP FALLITA</div>'
+    /* Prop fallita */
+    +'<div style="background:rgba(248,113,113,.07);border:1.5px solid rgba(248,113,113,.3);border-radius:11px;padding:14px">'
+    +'<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">❌ PROP FALLITA</div>'
     +'<div style="font-size:11px;color:var(--t2);line-height:2;font-family:var(--fd)">'
-    +'Personale guadagna: <b style="color:var(--green)">+$'+recoverFail.toFixed(0)+'</b><br>'
-    +'Costo challenge: <b style="color:var(--red)">-$'+cost+'</b><br>'
-    +'<hr style="border-color:rgba(248,113,113,.2);margin:4px 0">'
-    +'Netto: <b style="font-size:18px;color:'+col(nettoFail)+'">$'+nettoFail.toFixed(0)+'</b>'
+    +'Pers. recupera: <b style="color:var(--green)">+$'+recoverFail.toFixed(0)+'</b><br>'
+    +'Costo challenge: <b style="color:var(--red)">-$'+cost+'</b>'
     +'</div>'
-    +'</div>'
+    +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(248,113,113,.2);display:flex;justify-content:space-between;align-items:center">'
+    +'<span style="font-size:9px;color:var(--t3)">NETTO REALE</span>'
+    +'<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+col(nettoFail)+'">'+(nettoFail>=0?'+':'')+nettoFail.toFixed(0)+'$</span>'
+    +'</div></div>'
 
-    /* Prop passa */
-    +'<div style="background:rgba(96,165,250,.07);border:1.5px solid rgba(96,165,250,.35);border-radius:12px;padding:14px">'
-    +'<div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px">✅ PROP PASSATA</div>'
+    /* Prop passata */
+    +'<div style="background:rgba(96,165,250,.07);border:1.5px solid rgba(96,165,250,.3);border-radius:11px;padding:14px">'
+    +'<div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">✅ PROP PASSATA</div>'
     +'<div style="font-size:11px;color:var(--t2);line-height:2;font-family:var(--fd)">'
-    +'Personale perde: <b style="color:var(--red)">-$'+extraCostPass.toFixed(0)+'</b><br>'
     +'Costo challenge: <b style="color:var(--red)">-$'+cost+'</b><br>'
-    +'<hr style="border-color:rgba(96,165,250,.2);margin:4px 0">'
-    +'Costo tot live: <b style="font-size:18px;color:var(--amber)">$'+costoTotPass.toFixed(0)+'</b>'
+    +'Pers. perde: <b style="color:var(--red)">-$'+extraCostPass.toFixed(0)+'</b>'
     +'</div>'
-    +'</div>'
+    +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(96,165,250,.2);display:flex;justify-content:space-between;align-items:center">'
+    +'<span style="font-size:9px;color:var(--t3)">COSTO LIVE</span>'
+    +'<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+costoLive.toFixed(0)+'</span>'
+    +'</div></div>'
 
     +'</div></div>';
+
+  setTimeout(_renderInlineSim, 30);
 };
 
-
-/* CH1 HOOK: dopo calcPreview originale, mostra lotti in grande */
+/* CH1 HOOK */
 (function() {
   if (typeof calcPreview !== 'function') return;
   var _origCP = calcPreview;
   calcPreview = function() {
     _origCP();
     if (typeof stratMode !== 'undefined' && stratMode === 'challenge_1step') {
-      try { _ch1RebuildPreview(); } catch(e) {}
+      var box = document.getElementById('mPreview');
+      if(box) {
+        function gv(id,def){var e=document.getElementById(id);return e?(parseFloat(e.value)||def):def;}
+        _renderChallenge1(
+          box,
+          gv('mSize',100000), gv('mCost',1500), gv('mDD',6), gv('mDDD',3),
+          gv('mDays',10), gv('mPay',80), gv('mConsistency',0),
+          gv('mSlPips',100), gv('mTpPips',100),
+          ((document.getElementById('mAsset')&&document.getElementById('mAsset').value)||'GOLD:10').split(':')[0]
+        );
+      }
     }
-    /* Aggiorna sempre il simulatore inline */
     setTimeout(_renderInlineSim, 40);
   };
 })();
 
-function _ch1RebuildPreview() {
-  var box = document.getElementById('mPreview');
-  if (!box) return;
-
-  /* ── Leggi tutti i parametri dal form ── */
-  function gv(id, def){ var e=document.getElementById(id); return e ? (parseFloat(e.value)||def) : def; }
-  var size    = gv('mSize',100000);
-  var cost    = gv('mCost',1500);
-  var maxDD   = gv('mDD',6);
-  var ddd     = gv('mDDD',3);
-  var tgtPct  = gv('mTgt',8);
-  var days    = gv('mDays',10);
-  var cons    = gv('mConsistency',0);
-  var covPct  = gv('ch1Cov',85);
-  var isTrail = (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false;
-  var asset   = ((document.getElementById('mAsset')&&document.getElementById('mAsset').value)||'GOLD:10').split(':')[0];
-  var pipVal  = typeof _chPipVal === 'function' ? _chPipVal(asset) : 10;
-  var sl      = gv('mSlPips',100);
-
-  var tgtUsd     = size * (tgtPct / 100);
-  var maxDDusd   = size * (maxDD  / 100);
-  var dailyDDusd = size * (ddd    / 100);
-  var hasCons    = cons > 0 && cons < 100;
-
-  /* ── Calcolo lot PROP con penalità trail + cons + giorni ─────────────
-     UGUALE a _autoCalcChallenge1() — sempre ricalcolato dai parametri
-  ──────────────────────────────────────────────────────────────────── */
-  var ch1LotsManual = gv('ch1Lots', 0);
-  var lot;
-
-  if (ch1LotsManual >= 0.01) {
-    /* Manuale: l'utente ha digitato esplicitamente il lotto prop */
-    lot = Math.round(ch1LotsManual * 100) / 100;
-  } else {
-    /* Automatico: calcola da trail + cons + giorni */
-    var tgtGiorno  = tgtUsd / Math.max(1, days);
-    var lotByDaily = (dailyDDusd * 0.85) / (sl * pipVal);
-    var lotByTgt   = tgtGiorno / (sl * pipVal);
-    var trailPenalty = isTrail ? 0.60 : 1.0;
-    var consPenalty  = 1.0;
-    if (hasCons) {
-      var lotByCons = (tgtUsd * (cons / 100)) / (sl * pipVal);
-      var rawMin2 = Math.min(lotByDaily, lotByTgt);
-      if (rawMin2 > 0 && lotByCons < rawMin2) consPenalty = lotByCons / rawMin2;
-    }
-    lot = Math.round(Math.min(lotByDaily, lotByTgt) * trailPenalty * consPenalty * 100) / 100;
-    if (lot < 0.01) lot = 0.01;
-    /* Sincronizza i campi form */
-    var mLotsEl = document.getElementById('mLots');
-    if (mLotsEl) mLotsEl.value = lot;
-    var ch1LE = document.getElementById('ch1Lots');
-    if (ch1LE && !ch1LE.value) ch1LE.value = lot;
-  }
-
-  var tradeAmt  = lot * sl * pipVal;
-  var nLossMax  = tradeAmt > 0 ? Math.floor(maxDDusd / tradeAmt) : 10;
-  if (nLossMax < 1) nLossMax = 1;
-  var winsNeed  = tradeAmt > 0 ? Math.ceil(tgtUsd / tradeAmt) : 10;
-
-  /* ── Calcolo lot PERSONALE ───────────────────────────────────────────
-     Usa il manuale se inserito; altrimenti formula covPct.
-     Se il simulatore ha raggiunto il 70% → mostra lotto dimezzato.
-  ──────────────────────────────────────────────────────────────────── */
-  var ch1LPManual = gv('ch1LotsPers', 0);
-  var lotPers;
-
-  if (ch1LPManual >= 0.01) {
-    lotPers = Math.round(ch1LPManual * 100) / 100;
-  } else {
-    lotPers = (cost * (covPct / 100)) / (nLossMax * sl * pipVal);
-    lotPers = Math.round(lotPers * 100) / 100;
-    if (lotPers < 0.01) lotPers = 0.01;
-    /* Sincronizza campo form */
-    var ch1LPE = document.getElementById('ch1LotsPers');
-    if (ch1LPE && !ch1LPE.value) ch1LPE.value = lotPers;
-  }
-
-  /* ── Se il simulatore è sopra il 70% → mostra lotto dimezzato ── */
-  var lotPersDisplay = lotPers;
-  var above70Active  = (_simCH1 && _simCH1._above70Active);
-  if (above70Active && _simCH1._lotPersHalved > 0) {
-    lotPersDisplay = _simCH1._lotPersHalved;
-  }
-
-  var ppt      = lotPersDisplay * sl * pipVal;
-  var rf       = lotPersDisplay * nLossMax * sl * pipVal;
-  var ep       = lotPersDisplay * winsNeed  * sl * pipVal;
-  var ctPass   = cost + ep;
-  var nFail    = -cost + rf;
-  var rcPct    = Math.round(rf / cost * 100);
-  var ddLbl    = isTrail ? 'TRAILING' : 'STATICO';
-  var colNF    = nFail >= 0 ? 'var(--green)' : 'var(--red)';
-  var g = '<b style="color:var(--green)">'; var r = '<b style="color:var(--red)">'; var eb = '</b>';
-
-  var html = '<div class="prev" style="padding:0">';
-  html += '<div style="padding:14px 16px 10px">'
-        + '<div style="font-size:15px;font-weight:800;font-family:var(--fh);color:var(--t)">🎯 Challenge 1 Step</div>'
-        + '<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:2px">'
-        + asset+' · '+sl+' pip · Target '+tgtPct+'% · DD '+maxDD+'% '+ddLbl
-        + (hasCons?' · Cons.'+cons+'%':'') + ' · '+days+' gg min · Rec.'+covPct+'%</div></div>';
-
-  /* ── Banner 70% se attivo ── */
-  if (above70Active && _simCH1._lotPersHalved > 0) {
-    html += '<div style="margin:0 14px 12px;background:rgba(52,211,153,.12);border:2px solid #34D399;border-radius:10px;padding:9px 14px;font-size:11px;font-weight:800;font-family:var(--fd);color:#34D399;text-align:center">'
-          + '🟢 70% TARGET RAGGIUNTO — Personale dimezzato a <b>'+_simCH1._lotPersHalved+' lot</b>'
-          + '</div>';
-  }
-
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;padding:0 14px">';
-  html += '<div style="background:rgba(56,189,248,.08);border:2px solid var(--teal);border-radius:12px;padding:16px">'
-        + '<div style="font-size:10px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--fd)">🎯 PROP (VALUTAZIONE)</div>'
-        + '<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:var(--teal);line-height:1;margin-bottom:8px">'+lot+' <span style="font-size:16px;opacity:.7">Lot</span></div>'
-        + '<div style="font-size:12px;color:var(--t2);line-height:1.9">TP/SL ('+sl+' pip): '+g+'±$'+tradeAmt.toFixed(0)+eb+'</div></div>';
-
-  html += '<div style="background:rgba(167,139,250,.08);border:2px solid var(--violet);border-radius:12px;padding:16px'
-        + (above70Active ? ';outline:2px solid #34D399' : '') + '">'
-        + '<div style="font-size:10px;font-weight:700;color:var(--violet);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;font-family:var(--fd)">🛡️ PERSONALE (REALE)</div>'
-        + '<div style="font-size:38px;font-weight:800;font-family:var(--fd);color:'+(above70Active?'#34D399':'var(--violet)')+';line-height:1;margin-bottom:8px">'+lotPersDisplay+' <span style="font-size:16px;opacity:.7">Lot</span></div>'
-        + '<div style="font-size:12px;color:var(--t2);line-height:1.9">TP (se Prop perde): '+g+'+$'+ppt.toFixed(0)+eb+'<br>SL (se Prop vince): '+r+'-$'+ppt.toFixed(0)+eb+'</div></div>';
-  html += '</div>';
-
-  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;padding:0 14px">';
-  var kpis=[['WIN',winsNeed,'var(--green)'],['Max STOP',nLossMax,'var(--red)'],
-            ['Target','$'+tgtUsd.toFixed(0),'var(--amber)'],
-            ['Recupero',rcPct+'%',rcPct>=80?'var(--green)':rcPct>=50?'var(--amber)':'var(--red)']];
-  for (var ki=0; ki<kpis.length; ki++) {
-    var k=kpis[ki];
-    html += '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">'
-          + '<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;margin-bottom:3px">'+k[0]+'</div>'
-          + '<div style="font-size:18px;font-weight:800;font-family:var(--fd);color:'+k[2]+'">'+k[1]+'</div></div>';
-  }
-  html += '</div>';
-
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px">';
-  html += '<div style="background:rgba(248,113,113,.07);border:1.5px solid rgba(248,113,113,.3);border-radius:11px;padding:13px">'
-        + '<div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">❌ PROP FALLITA</div>'
-        + '<div style="font-size:11px;color:var(--t2);line-height:2.2;font-family:var(--fd)">Costo: '+r+'-$'+cost+eb+'<br>Pers. recupera: '+g+'+$'+rf.toFixed(0)+eb+'</div>'
-        + '<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(248,113,113,.2);display:flex;justify-content:space-between;align-items:center">'
-        + '<span style="font-size:9px;color:var(--t3)">NETTO</span>'
-        + '<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:'+colNF+'">'+(nFail>=0?'+':'')+nFail.toFixed(0)+'$</span></div></div>';
-
-  html += '<div style="background:rgba(96,165,250,.07);border:1.5px solid rgba(96,165,250,.3);border-radius:11px;padding:13px">'
-        + '<div style="font-size:10px;font-weight:700;color:#60a5fa;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">✅ PROP PASSATA</div>'
-        + '<div style="font-size:11px;color:var(--t2);line-height:2.2;font-family:var(--fd)">Costo: '+r+'-$'+cost+eb+'<br>Pers. perde: '+r+'-$'+ep.toFixed(0)+eb+'</div>'
-        + '<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(96,165,250,.2);display:flex;justify-content:space-between;align-items:center">'
-        + '<span style="font-size:9px;color:var(--t3)">COSTO LIVE</span>'
-        + '<span style="font-size:20px;font-weight:800;font-family:var(--fd);color:var(--amber)">$'+ctPass.toFixed(0)+'</span></div></div>';
-  html += '</div></div>';
-
-  box.innerHTML = html;
+/* ── _iSim: stato simulatore inline (giorno per giorno) ── */
+if(typeof _iSim === 'undefined'){
+  var _iSim = {
+    size:0, cost:0, maxDD:0, ddd:0, tgtPct:0, pay:0, minDays:0,
+    isTrail:false, trailLock:0, consistency:0,
+    slPips:100, tpPips:100, lots:0, lotPers:0, pipVal:10, asset:'GOLD',
+    propWin:0, propLoss:0, persWin:0, persLoss:0,
+    propTarget:0, maxDDusd:0,
+    rows:31, data:[], session:'personal'
+  };
 }
-
-// ── Fine modulo Challenge 1 Step ──
-
-
-/* ═══════════════════════════════════════════════════════════════════
-   SIMULATORE INLINE — appare direttamente nel pannello calcolatore
-   Si aggiorna ad ogni calcPreview() ma i dati trade sono persistenti.
-   ═══════════════════════════════════════════════════════════════════ */
-var _iSim = {
-  session : '',   /* 'personal' | 'challenge_1step' | 'other' */
-  data    : [],   /* [{w:'',l:''}] — PERSISTE tra i ricalcoli */
-  rows    : 40,
-  /* parametri snapshot dell'ultimo calcPreview */
-  size:0,cost:0,maxDD:0,tgtPct:0,pay:0,minDays:0,
-  lots:0,lotPers:0,slPips:0,tpPips:0,pipVal:10,asset:'GOLD',
-  isTrail:false,trailLock:0,consistency:0,
-  propWin:0,propLoss:0,persWin:0,persLoss:0,
-  propTarget:0,maxDDusd:0
-};
 
 function _renderInlineSim() {
   var box = document.getElementById('mInlineSim');
@@ -16225,8 +16088,9 @@ function _iSimCalc(){
   var hwm=s.size,bal=s.size,ddLine=s.size*(1-s.maxDD/100);
   var propPnlCum=0,persPnlCum=0,bestDay=0;
   var gameOver=false,targetHit=false,cycleEnd=-1;
-  var above70=false,thresh70=s.propTarget*0.70;
-  var lotPersOrig=s.lotPers,persWinCur=s.persWin,persLossCur=s.persLoss;
+  var above70=false,above70loss=false,thresh70=s.propTarget*0.70;
+  var lotPersOrig=s.lotPers,lotsOrigIS=s.lots,persWinCur=s.persWin,persLossCur=s.persLoss;
+  var propWinCur=s.propWin,propLossCur=s.propLoss;
   var isCH1=s.session==='challenge_1step';
   var cons=s.consistency;
 
@@ -16255,7 +16119,7 @@ function _iSimCalc(){
     var w=parseInt(d.w)||0,l=parseInt(d.l)||0;
     var has=(d.w!==''&&d.w!==null)||(d.l!==''&&d.l!==null);
     var row=document.getElementById('iSimRow_'+r);
-    var _pw=s.propWin,_pl=s.propLoss,_persW=persWinCur,_persL=persLossCur;
+    var _pw=propWinCur,_pl=propLossCur,_persW=persWinCur,_persL=persLossCur;
 
     (function(rr,ww,ll,hasRow,pw,pl,persW,persL){
       var sc=function(col,txt,clr,bg){_iSim_sc(rr,col,txt,clr,bg);};
@@ -16284,11 +16148,16 @@ function _iSimCalc(){
       bal=s.size+propPnlCum;
       if(rowPropPnl>bestDay)bestDay=rowPropPnl;
       if(s.isTrail&&bal>hwm){hwm=bal;var lt=s.size+s.propTarget*(s.trailLock/100);ddLine=(s.trailLock>0&&hwm>=lt)?s.size*(1-s.maxDD/100):hwm*(1-s.maxDD/100);}
-      /* 70% check */
+      /* 70% profit → personale dimezza */
       if(!gameOver&&!targetHit){
         var now70=propPnlCum>=thresh70;
         if(now70&&!above70){above70=true;var nLP=halveLot(lotPersOrig);persWinCur=nLP*s.slPips*s.pipVal;persLossCur=nLP*s.slPips*s.pipVal;insert70(rr,true);}
         else if(!now70&&above70){above70=false;persWinCur=s.persWin;persLossCur=s.persLoss;insert70(rr,false);}
+        /* 70% loss → prop dimezza */
+        var ddBudget=s.size-ddLine;var ddThL=s.size-(ddBudget*0.70);
+        var nowL70=bal<=ddThL;
+        if(nowL70&&!above70loss){above70loss=true;var nPL=halveLot(lotsOrigIS);propWinCur=nPL*s.slPips*s.pipVal;propLossCur=nPL*s.slPips*s.pipVal;}
+        else if(!nowL70&&above70loss){above70loss=false;propWinCur=s.propWin;propLossCur=s.propLoss;}
       }
       /* cons */
       var cTxt='—',cClr='var(--t3)',cBg='';
