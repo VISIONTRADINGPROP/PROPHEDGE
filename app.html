@@ -8840,13 +8840,18 @@ function renderLive(){
     +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">'
     +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:6px">① Scarica il Bridge PropHedge</div>'
     +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);line-height:1.8;margin-bottom:14px">'
-    +'Piccolo programma .exe da avviare una volta sul tuo PC Windows.<br>'
-    +'Non è un EA. Gira in background, non è visibile a MT4/MT5.<br>'
-    +'Parla solo in locale — nessun dato esce dal tuo computer.</div>'
-    +'<a href="https://github.com/prophedge/bridge/releases/latest/download/PropHedgeBridge.exe" '
-    +'style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--violet2),var(--teal2));color:#fff;border-radius:10px;padding:10px 20px;font-size:12px;font-weight:700;text-decoration:none;letter-spacing:.06em">'
-    +'⬇ Scarica Bridge v1.0</a>'
-    +'<div style="margin-top:10px;font-size:10px;color:var(--t3);font-family:var(--fd)">Richiede Windows 10+ · MT4/MT5 installato · 2MB</div>'
+    +'Piccolo programma che gira sul tuo PC Windows in background.<br>'
+    +'Non è un EA. Non è visibile a MT4/MT5.<br>'
+    +'Le credenziali non escono mai dal tuo computer.</div>'
+    +'<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:12px;margin-bottom:12px">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--amber);margin-bottom:6px">⏳ Bridge installer in arrivo</div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8">'
+    +'Per usarlo subito installa Python 3.11+ e lancia:<br>'
+    +'<code style="background:var(--bg);padding:2px 6px;border-radius:4px;color:var(--teal)">pip install flask MetaTrader5 pyinstaller</code><br>'
+    +'Poi esegui il file bridge.py che trovi nella guida tecnica.</div>'
+    +'</div>'
+    +'<button onclick="liveDownloadGuide()" style="display:inline-flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;color:var(--t2);padding:10px 20px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.04em">'
+    +'📄 Mostra guida tecnica bridge</button>'
     +'</div>'
 
     // Card connessione
@@ -9072,6 +9077,131 @@ async function liveClosePos(ticket){
     alert(ok?'✅ Posizione chiusa.':'❌ Errore: '+d.comment);
     liveRefresh();
   } catch(e){ alert('❌ Bridge non raggiungibile.'); }
+}
+
+function liveDownloadGuide(){
+  var code = `# PropHedge Bridge v1.0
+# Requisiti: pip install flask MetaTrader5
+# Avvio:    python bridge.py
+# Poi apri il software e vai su Live Trading → Connetti
+
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import MetaTrader5 as mt5
+
+app = Flask(__name__)
+CORS(app)  # permette chiamate dal browser
+
+@app.route('/connect', methods=['POST'])
+def connect():
+    data = request.json
+    mt5.initialize()
+    ok = mt5.login(int(data['login']), data['password'], data['server'])
+    if not ok:
+        err = mt5.last_error()
+        return jsonify({'ok': False, 'error': str(err)})
+    return jsonify({'ok': True})
+
+@app.route('/account', methods=['GET'])
+def account():
+    info = mt5.account_info()
+    if not info:
+        return jsonify({})
+    d = info._asdict()
+    return jsonify({k: (v if not hasattr(v,'real') else float(v)) for k,v in d.items()})
+
+@app.route('/positions', methods=['GET'])
+def positions():
+    pos = mt5.positions_get()
+    if not pos:
+        return jsonify([])
+    result = []
+    for p in pos:
+        d = p._asdict()
+        result.append({k: (float(v) if hasattr(v,'real') else v) for k,v in d.items()})
+    return jsonify(result)
+
+@app.route('/order', methods=['POST'])
+def order():
+    data = request.json
+    sym  = data['symbol']
+    vol  = float(data['volume'])
+    sl   = float(data.get('sl', 0))
+    tp   = float(data.get('tp', 0))
+    side = data.get('side', 'buy')
+    info = mt5.symbol_info_tick(sym)
+    price = info.ask if side=='buy' else info.bid
+    req = {
+        "action":    mt5.TRADE_ACTION_DEAL,
+        "symbol":    sym,
+        "volume":    vol,
+        "type":      mt5.ORDER_TYPE_BUY if side=='buy' else mt5.ORDER_TYPE_SELL,
+        "price":     price,
+        "sl":        sl,
+        "tp":        tp,
+        "deviation": 10,
+        "magic":     234000,
+        "comment":   "PropHedge",
+        "type_time": mt5.ORDER_TIME_GTC,
+        "type_filling": mt5.ORDER_FILLING_IOC,
+    }
+    result = mt5.order_send(req)
+    d = result._asdict()
+    return jsonify({k: (float(v) if hasattr(v,'real') else v) for k,v in d.items()})
+
+@app.route('/modify', methods=['POST'])
+def modify():
+    data = request.json
+    req = {
+        "action":   mt5.TRADE_ACTION_SLTP,
+        "position": int(data['ticket']),
+        "sl":       float(data['sl']),
+        "tp":       float(data['tp']),
+    }
+    result = mt5.order_send(req)
+    d = result._asdict()
+    return jsonify({k: (float(v) if hasattr(v,'real') else v) for k,v in d.items()})
+
+@app.route('/close', methods=['POST'])
+def close():
+    data = request.json
+    ticket = int(data['ticket'])
+    pos = mt5.positions_get(ticket=ticket)
+    if not pos:
+        return jsonify({'retcode': -1, 'comment': 'Position not found'})
+    p = pos[0]
+    price = mt5.symbol_info_tick(p.symbol)
+    price = price.bid if p.type==0 else price.ask
+    req = {
+        "action":    mt5.TRADE_ACTION_DEAL,
+        "symbol":    p.symbol,
+        "volume":    p.volume,
+        "type":      mt5.ORDER_TYPE_SELL if p.type==0 else mt5.ORDER_TYPE_BUY,
+        "position":  ticket,
+        "price":     price,
+        "deviation": 10,
+        "magic":     234000,
+        "comment":   "PropHedge close",
+        "type_time": mt5.ORDER_TIME_GTC,
+        "type_filling": mt5.ORDER_FILLING_IOC,
+    }
+    result = mt5.order_send(req)
+    d = result._asdict()
+    return jsonify({k: (float(v) if hasattr(v,'real') else v) for k,v in d.items()})
+
+if __name__ == '__main__':
+    print("PropHedge Bridge avviato su http://127.0.0.1:7777")
+    print("Lascia questa finestra aperta mentre usi il software.")
+    app.run(host='127.0.0.1', port=7777, debug=False)
+`;
+
+  var blob = new Blob([code], {type:'text/plain'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href   = url;
+  a.download = 'bridge.py';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 
