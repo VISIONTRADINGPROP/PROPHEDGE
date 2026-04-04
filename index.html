@@ -3722,7 +3722,7 @@ function doRegisterFree(){
 
 
 
-  <div class="tab" onclick="goTab('eadownload',this)" id="tabEA">⬇ EA Download</div>
+  <div class="tab" onclick="goTab('live',this)" id="tabLive">🔌 Live Trading</div>
 
 
 
@@ -3734,7 +3734,7 @@ function doRegisterFree(){
 
 
 
-  <div class="tab" onclick="goTab('guide',this)" id="tabGuide">Guida</div>
+  <div class="tab" onclick="goTab('guide',this)" id="tabGuide">📖 Guida</div>
 
 
 
@@ -8702,54 +8702,377 @@ function renderBrokerList(){
 
 
 function renderGuide(){
+  function step(n,title,body){
+    return '<div style="display:flex;gap:16px;margin-bottom:24px">'
+      +'<div style="flex-shrink:0;width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--violet2),var(--teal2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff">'+n+'</div>'
+      +'<div><div style="font-weight:700;font-size:14px;color:var(--t);margin-bottom:4px">'+title+'</div>'
+      +'<div style="font-size:12px;color:var(--t2);line-height:1.8;font-family:var(--fd)">'+body+'</div></div></div>';
+  }
+  function card(icon,title,body,col){
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;border-left:3px solid '+col+'">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+      +'<span style="font-size:22px">'+icon+'</span>'
+      +'<span style="font-weight:700;font-size:13px;color:var(--t)">'+title+'</span></div>'
+      +'<div style="font-size:12px;color:var(--t2);line-height:1.9;font-family:var(--fd)">'+body+'</div></div>';
+  }
 
-  return'<div style="max-width:700px">'
+  return '<div style="max-width:820px;padding-bottom:40px">'
 
-    // VIDEO MT4
+    // HEADER
+    +'<div style="background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(56,189,248,.08));border:1px solid rgba(124,58,237,.25);border-radius:16px;padding:28px;margin-bottom:28px;text-align:center">'
+    +'<div style="font-size:36px;margin-bottom:10px">📖</div>'
+    +'<div style="font-size:22px;font-weight:800;color:var(--t);margin-bottom:6px">Guida Completa PropHedge</div>'
+    +'<div style="font-size:13px;color:var(--t3);font-family:var(--fd)">Tutto quello che devi sapere per usare il software al massimo</div>'
+    +'</div>'
 
-    +'<div class="panel ai"><div class="ph"><h3>Guida Connessione Piattaforma MT4</h3></div><div class="pb">'
-
-    +'<div style="margin-bottom:12px; font-size:12px; color:var(--t2);">Guarda questo video per imparare a scaricare e applicare l\'EA su MT4 per comunicare con PropHedge:</div>'
-
-    +'<video controls style="width:100%; border-radius:8px; border:1px solid var(--border);">'
-
-    +'<source src="http://googleusercontent.com/generated_video_content/10756346619635463973" type="video/mp4">'
-
-    +'Il tuo browser non supporta il video tag.</video></div></div>'
-
-    
-
-    // VIDEO MT5
-
-    +'<div class="panel ai"><div class="ph"><h3>Guida Piattaforma MT5</h3></div><div class="pb">'
-
-    +'<div style="margin-bottom:12px; font-size:12px; color:var(--t2);">Applica gli stessi passaggi di MT4, ma utilizzando il file .mq5.</div>'
-
+    // SEZIONE 1: CONCETTO BASE
+    +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:20px">'
+    +'<div style="font-size:15px;font-weight:800;color:var(--t);margin-bottom:16px">💡 Il Concetto in 30 Secondi</div>'
+    +'<div style="background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2);border-radius:8px;padding:14px;font-size:12px;color:var(--t2);line-height:2;font-family:var(--fd);margin-bottom:14px">'
+    +'Hai una challenge da 100k, costo $1.500, DD massimo 6% = $6.000 di buffer.<br>'
+    +'Apri un trade BUY Gold sulla <b style="color:var(--teal)">PROP</b> e contemporaneamente un SELL Gold sul tuo <b style="color:var(--violet)">CONTO PERSONALE</b>.<br>'
+    +'Se la prop perde → il personale guadagna e copre il costo della challenge.<br>'
+    +'Se la prop vince → hai superato la challenge, il personale perde un po\' ma il conto prop è tuo.</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +card('❌','Prop fallisce',
+      'Il personale ha aperto posizioni inverse → guadagna su ogni stop della prop.<br>Netto: costo challenge recuperato parzialmente o totalmente.',
+      'var(--red)')
+    +card('✅','Prop passa',
+      'Hai un conto funded. Il personale ha perso un po\' sulla copertura ma il costo è ammortizzato sul prossimo ciclo.',
+      'var(--green)')
     +'</div></div>'
 
-    
-
-    // VIDEO CTRADER
-
-    +'<div class="panel ai"><div class="ph"><h3>Guida Piattaforma cTrader</h3></div><div class="pb">'
-
-    +'<div style="margin-bottom:12px; font-size:12px; color:var(--t2);">Scopri come ottenere il token API direttamente dal sito Spotware.</div>'
-
+    // SEZIONE 2: SESSIONI
+    +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:20px">'
+    +'<div style="font-size:15px;font-weight:800;color:var(--t);margin-bottom:16px">⚙️ Le Sessioni del Calcolatore</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +card('🎯','Challenge 1 Step',
+      '<b>Prop = virtuale</b> (paghi solo il fee).<br>Personale = tuo conto reale che fa da copertura.<br>Il calcolo lotti tiene conto di: giorni minimi, DD trailing, regola consistenza.',
+      'var(--teal)')
+    +card('📊','Prop + Personale (Live)',
+      '<b>Entrambi i conti sono reali.</b><br>La prop è già funded. Il personale protegge il drawdown.<br>Se la prop vince → la riutilizzi al prossimo ciclo a costo zero.',
+      'var(--violet)')
     +'</div></div>'
 
+    // SEZIONE 3: CALCOLATORE
+    +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:20px">'
+    +'<div style="font-size:15px;font-weight:800;color:var(--t);margin-bottom:16px">🔢 Come Usare il Calcolatore</div>'
+    +step(1,'Seleziona la sessione',
+      'Scegli "Challenge 1 Step" se sei in fase di valutazione, "Prop + Personale" se hai già un conto funded.')
+    +step(2,'Inserisci i parametri della tua prop firm',
+      'Dimensione conto, costo challenge, DD massimo, DD giornaliero, profit target, giorni minimi, payout %.')
+    +step(3,'Abilita le regole attive',
+      'Se la tua prop ha il DD Trailing → attivalo. Se ha la regola di consistenza → inserisci la percentuale.<br><b>Ogni regola abbassa i lotti</b> perché riduce il margine di manovra.')
+    +step(4,'Clicca "Calcola Automatico"',
+      'Il software calcola i lotti ottimali per prop e personale rispettando tutti i vincoli. Puoi modificarli manualmente se vuoi.')
+    +step(5,'Leggi gli scenari',
+      '"Prop Fallita" mostra quanto recupera il personale. "Prop Passata" mostra il costo reale per andare live.')
+    +'</div>'
 
+    // SEZIONE 4: SIMULATORE
+    +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:20px">'
+    +'<div style="font-size:15px;font-weight:800;color:var(--t);margin-bottom:16px">📅 Come Usare il Simulatore Giorno per Giorno</div>'
+    +step(1,'Apri il Simulatore',
+      'Clicca su "Simulatore" nella sessione attiva. Si apre una tabella con una riga per giorno.')
+    +step(2,'Inserisci win e loss ogni giorno',
+      'Per ogni giornata di trading inserisci quante operazioni hai vinto (W) e quante hai perso (L).')
+    +step(3,'Monitora balance e DD line',
+      'Il simulatore calcola in tempo reale il balance prop, la DD line (zona pericolo), P&L personale e netto.')
+    +step(4,'Regola 70%',
+      'Quando raggiungi il 70% del target, il simulatore segnala di dimezzare i lotti del personale per proteggere il profitto accumulato.')
+    +step(5,'Reset',
+      'Usa il pulsante Reset per ripartire a zero con un nuovo ciclo. I dati sono salvati automaticamente fino al reset.')
+    +'</div>'
 
-    // TUA VECCHIA GUIDA CHE AVEVI
+    // SEZIONE 5: LIVE TRADING
+    +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:20px">'
+    +'<div style="font-size:15px;font-weight:800;color:var(--t);margin-bottom:16px">🔌 Come Connettere MT4/MT5 (Live Trading)</div>'
+    +step(1,'Scarica il Bridge PropHedge',
+      'Vai su "🔌 Live Trading" → clicca "Scarica Bridge". È un piccolo programma .exe che gira in background sul tuo PC. Non è un EA, la prop firm non lo vede.')
+    +step(2,'Avvia il Bridge',
+      'Doppio clic sul file scaricato. Si apre una finestra nera (terminale) — lasciala aperta in background mentre usi il software.')
+    +step(3,'Connetti il tuo conto',
+      'Nel tab "🔌 Live Trading" inserisci: Server (es. TopFX-Live 13), Login (numero conto), Password. Clicca Connetti.')
+    +step(4,'Operi dal software',
+      'Una volta connesso vedi balance, equity, posizioni aperte in tempo reale. Puoi aprire ordini, modificare SL/TP, chiudere posizioni direttamente da PropHedge senza aprire MT4/MT5.')
+    +step(5,'Sicurezza',
+      'Le tue credenziali rimangono sul tuo computer. Il bridge non si connette a server esterni — parla solo con il terminale MT4/MT5 locale sulla porta 7777.')
+    +'</div>'
 
-    +'<div class="panel ai"><div class="ph"><h3>La logica in 30 secondi</h3></div><div class="pb">'
+    // SEZIONE 6: CHAT AI
+    +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:22px;margin-bottom:20px">'
+    +'<div style="font-size:15px;font-weight:800;color:var(--t);margin-bottom:16px">🤖 Assistente AI e Supporto Umano</div>'
+    +'<div style="font-size:12px;color:var(--t2);line-height:2;font-family:var(--fd)">'
+    +'Il pulsante <b style="color:var(--teal)">💬</b> in basso a destra apre la chat AI — risponde in italiano a qualsiasi domanda su lotti, drawdown, strategie, prop firm.<br><br>'
+    +'Se hai bisogno di parlare con una persona: scrivi <b style="color:var(--violet)">supporto umano</b> nella chat → inserisci nome e email → ti connettiamo con un operatore via Telegram in pochi secondi.'
+    +'</div></div>'
 
-    +'<div class="note note-teal" style="margin-bottom:12px"><strong>Prop 100k, costo $1000, DD 6% = $6000 max perdita.</strong> Apri BUY sulla prop e SELL sul personale.</div>'
-
-    +'</div></div></div>';
-
+    +'</div>';
 }
 
+function renderEADownload(){ return '<div></div>'; } // deprecata
 
+/* ═══════════════════════════════════════════════════════
+   LIVE TRADING — pannello connessione bridge MT4/MT5
+   ═══════════════════════════════════════════════════════ */
+var _bridge = {
+  connected: false, server:'', login:'', platform:'mt4',
+  account: null, positions: [], pollTimer: null
+};
+var BRIDGE_URL = 'http://127.0.0.1:7777';
+
+function renderLive(){
+  return '<div style="max-width:1000px;padding-bottom:40px" id="liveRoot">'
+
+    // HEADER
+    +'<div style="background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(52,211,153,.07));border:1px solid rgba(56,189,248,.2);border-radius:16px;padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;gap:20px">'
+    +'<div style="font-size:40px">🔌</div>'
+    +'<div><div style="font-size:20px;font-weight:800;color:var(--t)">Live Trading — MT4 / MT5</div>'
+    +'<div style="font-size:12px;color:var(--t3);font-family:var(--fd);margin-top:3px">Connetti il tuo conto e opera direttamente da PropHedge · Zero EA · Credenziali solo sul tuo PC</div></div>'
+    +'<div style="margin-left:auto"><div id="liveStatus" style="display:flex;align-items:center;gap:8px;font-size:11px;font-family:var(--fd);color:var(--t3)">'
+    +'<div style="width:8px;height:8px;border-radius:50%;background:var(--t3)"></div>Non connesso</div></div>'
+    +'</div>'
+
+    // DOWNLOAD BRIDGE + CONNESSIONE
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">'
+
+    // Card download bridge
+    +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:6px">① Scarica il Bridge PropHedge</div>'
+    +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);line-height:1.8;margin-bottom:14px">'
+    +'Piccolo programma .exe da avviare una volta sul tuo PC Windows.<br>'
+    +'Non è un EA. Gira in background, non è visibile a MT4/MT5.<br>'
+    +'Parla solo in locale — nessun dato esce dal tuo computer.</div>'
+    +'<a href="https://github.com/prophedge/bridge/releases/latest/download/PropHedgeBridge.exe" '
+    +'style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--violet2),var(--teal2));color:#fff;border-radius:10px;padding:10px 20px;font-size:12px;font-weight:700;text-decoration:none;letter-spacing:.06em">'
+    +'⬇ Scarica Bridge v1.0</a>'
+    +'<div style="margin-top:10px;font-size:10px;color:var(--t3);font-family:var(--fd)">Richiede Windows 10+ · MT4/MT5 installato · 2MB</div>'
+    +'</div>'
+
+    // Card connessione
+    +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:14px">② Connetti il tuo conto</div>'
+    +'<div style="margin-bottom:8px"><label style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Piattaforma</label>'
+    +'<div style="display:flex;gap:8px;margin-top:4px">'
+    +'<button onclick="document.getElementById(\'livePlat\').value=\'mt4\'" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--teal);font-size:11px;font-weight:700;cursor:pointer">MT4</button>'
+    +'<button onclick="document.getElementById(\'livePlat\').value=\'mt5\'" style="flex:1;padding:7px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--violet);font-size:11px;font-weight:700;cursor:pointer">MT5</button>'
+    +'</div><input type="hidden" id="livePlat" value="mt4"></div>'
+    +'<div style="margin-bottom:8px"><label style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Server</label>'
+    +'<input id="liveServer" type="text" placeholder="es. TopFX-Live 13" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    +'<div><label style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Login</label>'
+    +'<input id="liveLogin" type="number" placeholder="123456" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
+    +'<div><label style="font-size:10px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Password</label>'
+    +'<input id="livePass" type="password" placeholder="••••••" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
+    +'</div>'
+    +'<button onclick="liveConnect()" style="width:100%;background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:9px;color:#fff;padding:10px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:.05em">🔌 Connetti</button>'
+    +'<div id="liveConnErr" style="margin-top:6px;font-size:11px;color:var(--red);font-family:var(--fd);display:none"></div>'
+    +'</div></div>'
+
+    // ACCOUNT INFO (nascosto finché non connesso)
+    +'<div id="liveAccountBar" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:16px">'
+    +'<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px" id="liveAccountGrid"></div>'
+    +'</div>'
+
+    // NUOVO ORDINE
+    +'<div id="liveOrderPanel" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:14px">📤 Nuovo Ordine</div>'
+    +'<div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end">'
+    +'<div><label style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Simbolo</label>'
+    +'<input id="ordSymbol" value="XAUUSD" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;font-weight:700;margin-top:4px;outline:none"></div>'
+    +'<div><label style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Volume (lot)</label>'
+    +'<input id="ordVol" type="number" value="0.01" step="0.01" min="0.01" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
+    +'<div><label style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Stop Loss</label>'
+    +'<input id="ordSL" type="number" value="0" step="0.01" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
+    +'<div><label style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Take Profit</label>'
+    +'<input id="ordTP" type="number" value="0" step="0.01" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
+    +'<div><label style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em">Direzione</label>'
+    +'<select id="ordSide" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;margin-top:4px;outline:none">'
+    +'<option value="buy">BUY</option><option value="sell">SELL</option></select></div>'
+    +'<div style="display:flex;gap:6px">'
+    +'<button onclick="liveSendOrder()" style="background:var(--green);border:none;border-radius:8px;color:#fff;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;margin-top:14px">▶ Invia</button>'
+    +'</div></div>'
+    +'<div id="ordResult" style="margin-top:8px;font-size:11px;font-family:var(--fd);display:none"></div>'
+    +'</div>'
+
+    // POSIZIONI APERTE
+    +'<div id="livePosPanel" style="display:none;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--t)">📋 Posizioni Aperte</div>'
+    +'<button onclick="liveRefresh()" style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t2);padding:5px 12px;font-size:11px;font-family:var(--fd);cursor:pointer">↻ Aggiorna</button>'
+    +'</div>'
+    +'<div id="livePosTable">Nessuna posizione aperta.</div>'
+    +'</div>'
+
+    +'</div>';
+}
+
+/* ── Bridge JS functions ── */
+async function liveConnect(){
+  var server = document.getElementById('liveServer')?.value.trim();
+  var login  = parseInt(document.getElementById('liveLogin')?.value);
+  var pass   = document.getElementById('livePass')?.value;
+  var plat   = document.getElementById('livePlat')?.value || 'mt4';
+  var errEl  = document.getElementById('liveConnErr');
+
+  if(!server||!login||!pass){
+    if(errEl){errEl.textContent='⚠️ Compila tutti i campi.';errEl.style.display='block';}
+    return;
+  }
+  if(errEl) errEl.style.display='none';
+  liveSetStatus('connecting');
+
+  try{
+    var r = await fetch(BRIDGE_URL+'/connect',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({login, password:pass, server, platform:plat})
+    });
+    var d = await r.json();
+    if(d.ok){
+      _bridge.connected=true; _bridge.server=server; _bridge.login=login; _bridge.platform=plat;
+      liveSetStatus('connected');
+      document.getElementById('liveAccountBar').style.display='block';
+      document.getElementById('liveOrderPanel').style.display='block';
+      document.getElementById('livePosPanel').style.display='block';
+      liveRefresh();
+      if(_bridge.pollTimer) clearInterval(_bridge.pollTimer);
+      _bridge.pollTimer = setInterval(liveRefresh, 3000);
+    } else {
+      liveSetStatus('error');
+      if(errEl){errEl.textContent='❌ Connessione fallita: '+JSON.stringify(d);errEl.style.display='block';}
+    }
+  } catch(e){
+    liveSetStatus('offline');
+    if(errEl){errEl.textContent='❌ Bridge non trovato. Assicurati che PropHedgeBridge.exe sia in esecuzione.';errEl.style.display='block';}
+  }
+}
+
+function liveSetStatus(s){
+  var el = document.getElementById('liveStatus');
+  if(!el) return;
+  var map = {
+    connected: ['#34D399','🟢 Connesso'],
+    connecting:['#FBBF24','⏳ Connessione...'],
+    error:     ['#F87171','🔴 Errore'],
+    offline:   ['#F87171','🔴 Bridge offline']
+  };
+  var v = map[s]||['#7880a8','⚫ Non connesso'];
+  el.innerHTML='<div style="width:8px;height:8px;border-radius:50%;background:'+v[0]+';box-shadow:0 0 6px '+v[0]+'"></div>'
+    +'<span style="color:'+v[0]+';font-weight:600">'+v[1]+'</span>';
+}
+
+async function liveRefresh(){
+  if(!_bridge.connected) return;
+  try{
+    var [accR, posR] = await Promise.all([
+      fetch(BRIDGE_URL+'/account').then(r=>r.json()),
+      fetch(BRIDGE_URL+'/positions').then(r=>r.json())
+    ]);
+    liveRenderAccount(accR);
+    liveRenderPositions(posR);
+  } catch(e){ liveSetStatus('offline'); if(_bridge.pollTimer){clearInterval(_bridge.pollTimer);_bridge.pollTimer=null;} }
+}
+
+function liveRenderAccount(a){
+  var g = document.getElementById('liveAccountGrid');
+  if(!g||!a) return;
+  function kpi(lbl,val,clr){
+    return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">'
+      +'<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">'+lbl+'</div>'
+      +'<div style="font-size:16px;font-weight:800;font-family:var(--fd);color:'+(clr||'var(--t)')+'">'+val+'</div></div>';
+  }
+  g.innerHTML=
+    kpi('Balance','$'+(a.balance||0).toFixed(2),'var(--t)')+
+    kpi('Equity','$'+(a.equity||0).toFixed(2),(a.equity>=a.balance?'var(--green)':'var(--red)'))+
+    kpi('Profitto','$'+(a.profit||0).toFixed(2),(a.profit>=0?'var(--green)':'var(--red)'))+
+    kpi('Margine libero','$'+(a.margin_free||0).toFixed(2),'var(--amber)')+
+    kpi('Server',a.server||'—','var(--teal)');
+}
+
+function liveRenderPositions(positions){
+  var el = document.getElementById('livePosTable');
+  if(!el) return;
+  if(!positions||!positions.length){ el.innerHTML='<div style="text-align:center;color:var(--t3);font-size:12px;padding:20px;font-family:var(--fd)">Nessuna posizione aperta.</div>'; return; }
+  var rows = positions.map(function(p){
+    var clr = p.profit>=0?'var(--green)':'var(--red)';
+    var type = p.type===0?'<span style="color:var(--green);font-weight:700">BUY</span>':'<span style="color:var(--red);font-weight:700">SELL</span>';
+    return '<tr style="border-bottom:1px solid var(--border)">'
+      +'<td style="padding:8px 10px;font-family:var(--fd);font-size:11px;font-weight:700;color:var(--teal)">'+p.symbol+'</td>'
+      +'<td style="padding:8px 10px;font-size:11px">'+type+'</td>'
+      +'<td style="padding:8px 10px;font-family:var(--fd);font-size:11px">'+p.volume+'</td>'
+      +'<td style="padding:8px 10px;font-family:var(--fd);font-size:11px;color:var(--t2)">'+p.price_open+'</td>'
+      +'<td style="padding:8px 10px;font-family:var(--fd);font-size:11px;color:var(--amber)">'+p.sl+'</td>'
+      +'<td style="padding:8px 10px;font-family:var(--fd);font-size:11px;color:var(--teal)">'+p.tp+'</td>'
+      +'<td style="padding:8px 10px;font-family:var(--fd);font-size:12px;font-weight:700;color:'+clr+'">'+(p.profit>=0?'+':'')+p.profit.toFixed(2)+'$</td>'
+      +'<td style="padding:8px 10px">'
+      +'<button onclick="liveModifyModal('+p.ticket+','+p.sl+','+p.tp+')" style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--t2);padding:4px 10px;font-size:10px;cursor:pointer;margin-right:4px">✏️ SL/TP</button>'
+      +'<button onclick="liveClosePos('+p.ticket+')" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:6px;color:var(--red);padding:4px 10px;font-size:10px;cursor:pointer">✖ Chiudi</button>'
+      +'</td></tr>';
+  }).join('');
+  el.innerHTML='<table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr style="background:var(--bg3)">'
+    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">Simbolo</th>'
+    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">Tipo</th>'
+    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">Volume</th>'
+    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">Apertura</th>'
+    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">SL</th>'
+    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">TP</th>'
+    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">P&L</th>'
+    +'<th style="padding:7px 10px;font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;text-align:left;border-bottom:1px solid var(--border)">Azioni</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+async function liveSendOrder(){
+  if(!_bridge.connected) return;
+  var symbol = document.getElementById('ordSymbol')?.value;
+  var vol    = parseFloat(document.getElementById('ordVol')?.value)||0.01;
+  var sl     = parseFloat(document.getElementById('ordSL')?.value)||0;
+  var tp     = parseFloat(document.getElementById('ordTP')?.value)||0;
+  var side   = document.getElementById('ordSide')?.value||'buy';
+  var res    = document.getElementById('ordResult');
+  try{
+    var r = await fetch(BRIDGE_URL+'/order',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({symbol,volume:vol,sl,tp,side})
+    });
+    var d = await r.json();
+    if(res){
+      var ok = d.retcode===10009||d.retcode===0;
+      res.style.display='block';
+      res.style.color = ok?'var(--green)':'var(--red)';
+      res.textContent = ok ? '✅ Ordine eseguito — ticket #'+d.order : '❌ Errore: '+d.comment+' ('+d.retcode+')';
+    }
+    liveRefresh();
+  } catch(e){ if(res){res.style.display='block';res.style.color='var(--red)';res.textContent='❌ Bridge non raggiungibile.';} }
+}
+
+function liveModifyModal(ticket,sl,tp){
+  var nsl = prompt('Nuovo Stop Loss (0 = nessuno):',sl);
+  var ntp = prompt('Nuovo Take Profit (0 = nessuno):',tp);
+  if(nsl===null||ntp===null) return;
+  fetch(BRIDGE_URL+'/modify',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ticket, sl:parseFloat(nsl)||0, tp:parseFloat(ntp)||0})
+  }).then(r=>r.json()).then(function(d){
+    var ok=d.retcode===10009||d.retcode===0;
+    alert(ok?'✅ SL/TP aggiornati!':'❌ Errore: '+d.comment);
+    liveRefresh();
+  }).catch(function(){alert('❌ Bridge non raggiungibile.');});
+}
+
+async function liveClosePos(ticket){
+  if(!confirm('Chiudere la posizione #'+ticket+'?')) return;
+  try{
+    var r = await fetch(BRIDGE_URL+'/close',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ticket})
+    });
+    var d = await r.json();
+    var ok = d.retcode===10009||d.retcode===0;
+    alert(ok?'✅ Posizione chiusa.':'❌ Errore: '+d.comment);
+    liveRefresh();
+  } catch(e){ alert('❌ Bridge non raggiungibile.'); }
+}
 
 
 
@@ -13102,7 +13425,7 @@ function render(){
 
 
 
-  else if(currentTab==='eadownload')ct.innerHTML=renderEADownload();
+  else if(currentTab==='live')ct.innerHTML=renderLive();
 
 
 
