@@ -8906,7 +8906,7 @@ function renderLive(){
       +'<input id="pwd_'+side+'" type="password" placeholder="••••••" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
       +'</div>'
       +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:8px">Bridge porta: '+portNum+' &nbsp;·&nbsp; Assicurati bridge.py sia avviato</div>'
-      +'<button onclick="liveConnectSide(\''+side+'\')" style="width:100%;background:linear-gradient(135deg,'+col+','+col+'aa);border:none;border-radius:8px;color:#fff;padding:9px;font-size:12px;font-weight:700;cursor:pointer">'+(b.connected?'↻ Riconnetti':'🔌 Connetti')+'</button>'
+      +'<button id="connBtn_'+side+'" onclick="liveConnectSide(\''+side+'\')" style="width:100%;background:linear-gradient(135deg,'+col+','+col+'aa);border:none;border-radius:8px;color:#fff;padding:9px;font-size:12px;font-weight:700;cursor:pointer">'+(b.connected?'↻ Riconnetti':'🔌 Connetti')+'</button>'
       +'<div id="err_'+side+'" style="margin-top:6px;font-size:10px;color:var(--red);font-family:var(--fd);display:none"></div>'
       +'</div>';
   }
@@ -8949,23 +8949,43 @@ function renderLive(){
 
     /* GUIDA BRIDGE */
     +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:12px">① Setup Bridge (una volta sola)</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
-    +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">'
-    +'<div style="font-size:11px;font-weight:700;color:var(--teal);margin-bottom:6px">Porta 7777 — Conto PROP</div>'
-    +'<code style="font-size:10px;color:var(--t2);font-family:var(--fd)">python bridge.py --port 7777</code>'
-    +'</div>'
-    +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">'
-    +'<div style="font-size:11px;font-weight:700;color:var(--violet);margin-bottom:6px">Porta 7778 — Conto PERSONALE</div>'
-    +'<code style="font-size:10px;color:var(--t2);font-family:var(--fd)">python bridge.py --port 7778</code>'
+    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:6px">① Setup Bridge (una volta sola)</div>'
+
+    /* Step A: scarica */
+    +'<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">'
+    +'<div style="width:22px;height:22px;border-radius:50%;background:#7F77DD;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px">1</div>'
+    +'<div><div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Scarica bridge.py</div>'
+    +'<button onclick="liveDownloadGuide()" style="background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:8px;color:#fff;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica bridge.py</button>'
+    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:5px">Salvalo sul Desktop</div>'
     +'</div></div>'
-    +'<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">'
-    +'<button onclick="liveDownloadGuide()" style="background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:8px;color:#fff;padding:9px 18px;font-size:11px;font-weight:700;cursor:pointer">⬇ bridge.py</button>'
-    +'<button onclick="liveDownloadBat()" style="background:linear-gradient(135deg,#059669,#34D399);border:none;border-radius:8px;color:#fff;padding:9px 18px;font-size:11px;font-weight:700;cursor:pointer">⬇ avvia_bridge.bat</button>'
-    +'<button onclick="liveTutorialOpen()" style="background:linear-gradient(135deg,var(--amber),#f59e0b);border:none;border-radius:8px;color:#fff;padding:9px 18px;font-size:11px;font-weight:700;cursor:pointer">▶ Guida video + audio</button>'
+
+    /* Step B: cmd */
+    +'<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">'
+    +'<div style="width:22px;height:22px;border-radius:50%;background:#7F77DD;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px">2</div>'
+    +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Installa librerie <span style="font-size:10px;color:var(--t3);font-weight:400">(una volta sola)</span></div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:6px">Apri il Prompt dei comandi (menu Start → scrivi cmd) e incolla:</div>'
+    +'<div style="background:#07091a;border:1px solid #2a2f55;border-radius:7px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
+    +'<code style="font-family:var(--fd);font-size:11px;color:#38BDF8;flex:1">py -m pip install flask flask-cors MetaTrader5</code>'
+    +'<button onclick="navigator.clipboard.writeText(\'py -m pip install flask flask-cors MetaTrader5\');this.textContent=\'✓\';setTimeout(()=>this.textContent=\'📋\',2000)" style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);border-radius:5px;color:#38BDF8;padding:4px 8px;font-size:10px;cursor:pointer;flex-shrink:0">📋</button>'
+    +'</div></div></div>'
+
+    /* Step C: avvia */
+    +'<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">'
+    +'<div style="width:22px;height:22px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px">3</div>'
+    +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Avvia il bridge</div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:6px">Nel Prompt dei comandi scrivi <code style="color:var(--amber)">cd Desktop</code> poi incolla:</div>'
+    +'<div style="background:#07091a;border:1px solid #34D399;border-radius:7px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
+    +'<code style="font-family:var(--fd);font-size:11px;color:#34D399;flex:1">py bridge.py</code>'
+    +'<button onclick="navigator.clipboard.writeText(\'py bridge.py\');this.textContent=\'✓\';setTimeout(()=>this.textContent=\'📋\',2000)" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:5px;color:#34D399;padding:4px 8px;font-size:10px;cursor:pointer;flex-shrink:0">📋</button>'
     +'</div>'
-    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:8px;line-height:1.7">'
-    +'Scarica entrambi i file → mettili nella stessa cartella → doppio clic su <b>avvia_bridge.bat</b> → connetti.'
+    +'<div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.25);border-radius:7px;padding:8px 12px;margin-top:6px;font-size:10px;color:var(--green);font-family:var(--fd)">'
+    +'✅ UN SOLO COMANDO — gestisce automaticamente entrambi i conti (porta 7777 + porta 7778)<br>'
+    +'⚠️ Lascia questa finestra aperta mentre usi il software'
+    +'</div>'
+    +'</div></div>'
+
+    +'<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">'
+    +'<button onclick="liveTutorialOpen()" style="background:linear-gradient(135deg,var(--amber),#f59e0b);border:none;border-radius:8px;color:#fff;padding:9px 18px;font-size:11px;font-weight:700;cursor:pointer">▶ Guida passo per passo con audio</button>'
     +'</div></div>'
 
     /* Tutorial modale con audio */
@@ -9077,6 +9097,9 @@ async function liveConnectSide(side){
   var err = document.getElementById('err_'+side);
   if(!srv||!log||!pwd){ if(err){err.textContent='⚠️ Compila tutti i campi.';err.style.display='block';} return; }
   if(err) err.style.display='none';
+  /* Feedback visivo */
+  var connBtn = document.getElementById('connBtn_'+side);
+  if(connBtn){ connBtn.textContent='⏳ ...'; connBtn.disabled=true; }
   b.server = srv; b.login = log;
   try{
     var r = await fetch('http://127.0.0.1:'+b.port+'/connect',{
@@ -9086,19 +9109,22 @@ async function liveConnectSide(side){
     var d = await r.json();
     if(d.ok){
       b.connected = true;
-      /* Refresh e re-render */
       await liveRefreshSide(side);
-      /* Se entrambi connessi avvia polling */
       if(_bridge.prop.connected && _bridge.pers.connected){
         if(_bridgePollTimer) clearInterval(_bridgePollTimer);
         _bridgePollTimer = setInterval(liveRefreshAll, 3000);
       }
-      /* Re-render pagina */
-      if(typeof currentTab !== 'undefined' && currentTab === 'live'){
-        var el = document.getElementById('liveRoot');
-        if(el) el.outerHTML = renderLive();
-        _bridgeRestoreGrids();
-      }
+      /* Re-render dopo un tick — evita di distruggere il DOM durante il click handler */
+      setTimeout(function(){
+        if(typeof currentTab !== 'undefined' && currentTab === 'live'){
+          var el = document.getElementById('liveRoot');
+          if(el){
+            var newHtml = renderLive();
+            el.outerHTML = newHtml;
+          }
+          setTimeout(_bridgeRestoreGrids, 50);
+        }
+      }, 0);
     } else {
       b.connected = false;
       if(err){err.textContent='❌ '+JSON.stringify(d.error||d);err.style.display='block';}
@@ -9324,11 +9350,14 @@ async function liveClosePos(side, ticket){
 }
 
 function liveDownloadBat(){
-  var code = '@echo off\r\ntitle PropHedge Bridge Launcher\r\ncolor 0A\r\necho.\r\necho  ==========================================\r\necho   PropHedge Bridge - Avvio automatico\r\necho  ==========================================\r\necho.\r\necho  Avvio Bridge PROP (porta 7777)...\r\nstart "PropHedge - PROP 7777" cmd /k "py bridge.py --port 7777"\r\ntimeout /t 2 /nobreak >nul\r\necho  Avvio Bridge PERSONALE (porta 7778)...\r\nstart "PropHedge - PERSONALE 7778" cmd /k "py bridge.py --port 7778"\r\ntimeout /t 2 /nobreak >nul\r\necho.\r\necho  Entrambi i bridge sono avviati!\r\necho  Torna sul software e connetti i conti.\r\necho.\r\necho  NON chiudere questa finestra finche usi il software.\r\npause\r\n';
+  /* PowerShell script — non bloccato dalle zone sicurezza Internet come i .bat
+     L'utente fa tasto destro → "Esegui con PowerShell" */
+  var code = '# PropHedge Bridge Launcher\r\n# Tasto destro su questo file → Esegui con PowerShell\r\n\r\nWrite-Host "=========================================="\r\nWrite-Host " PropHedge Bridge - Avvio automatico"\r\nWrite-Host "=========================================="\r\nWrite-Host ""\r\n\r\n$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path\r\n$bridge = Join-Path $scriptDir "bridge.py"\r\n\r\nif (-not (Test-Path $bridge)) {\r\n    Write-Host "ERRORE: bridge.py non trovato nella stessa cartella!" -ForegroundColor Red\r\n    Write-Host "Assicurati che bridge.py e questo file siano nella stessa cartella."\r\n    Read-Host "Premi Invio per uscire"\r\n    exit\r\n}\r\n\r\nWrite-Host "Avvio Bridge PROP (porta 7777)..." -ForegroundColor Cyan\r\nStart-Process powershell -ArgumentList "-NoExit", "-Command", "cd \'$scriptDir\'; py bridge.py --port 7777" -WindowStyle Normal\r\n\r\nStart-Sleep -Seconds 2\r\n\r\nWrite-Host "Avvio Bridge PERSONALE (porta 7778)..." -ForegroundColor Magenta\r\nStart-Process powershell -ArgumentList "-NoExit", "-Command", "cd \'$scriptDir\'; py bridge.py --port 7778" -WindowStyle Normal\r\n\r\nStart-Sleep -Seconds 1\r\nWrite-Host ""\r\nWrite-Host "Entrambi i bridge sono avviati!" -ForegroundColor Green\r\nWrite-Host "Torna su PropHedge e connetti i conti."\r\nWrite-Host ""\r\nRead-Host "Premi Invio per chiudere questa finestra"\r\n';
+
   var blob = new Blob([code], {type:'text/plain'});
   var url  = URL.createObjectURL(blob);
   var a    = document.createElement('a');
-  a.href   = url; a.download = 'avvia_bridge.bat'; a.click();
+  a.href   = url; a.download = 'avvia_bridge.ps1'; a.click();
   URL.revokeObjectURL(url);
 }
 
@@ -9348,7 +9377,7 @@ var _tutSteps=[
    html:'<div style="font-size:12px;color:var(--t2);line-height:2;font-family:var(--fd)">Apri il Prompt dei comandi: <b>Windows + R</b>, scrivi <b>cmd</b>, Invio.<br>Poi tasto destro nella finestra nera e incolla:<br><br><div style="background:#07091a;border:1px solid #2a2f55;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin:8px 0"><code style="font-size:11px;color:#38BDF8">py -m pip install flask flask-cors MetaTrader5</code><button onclick="navigator.clipboard.writeText(\'py -m pip install flask flask-cors MetaTrader5\');this.textContent=\'✓ Copiato\';setTimeout(()=>this.textContent=\'📋 Copia\',2000)" style="background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--t2);padding:3px 8px;font-size:10px;cursor:pointer">📋 Copia</button></div>Aspetta 1-2 minuti. Vedrai <b style="color:var(--green)">Successfully installed</b>.<br><div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:10px;margin-top:8px;color:var(--green);font-size:11px">✅ Si fa una volta sola</div></div>',
    audio:'Apri il Prompt dei comandi premendo Windows più R, scrivi cmd e premi Invio. Nella finestra nera clicca con il tasto destro del mouse e incolla il comando: py meno m pip install flask flask-cors MetaTrader5. Premi Invio e aspetta uno o due minuti. Vedrai "Successfully installed" quando ha finito. Questo si fa una volta sola.'},
   {title:'▶ Passo 4 — avvia i bridge',
-   html:'<div style="font-size:12px;color:var(--t2);line-height:2;font-family:var(--fd)">Fai <b style="color:var(--t)">doppio clic su avvia_bridge.bat</b>.<br>Si apriranno 2 finestre nere automaticamente:<br><br><div style="background:#07091a;border:1px solid #38BDF8;border-radius:8px;padding:10px;margin-bottom:8px"><div style="font-size:10px;color:#38BDF8;margin-bottom:4px">PROP — porta 7777</div><div style="font-size:11px;color:#34D399;font-family:var(--fd)">✓ PropHedge Bridge avviato su 127.0.0.1:7777</div></div><div style="background:#07091a;border:1px solid #A78BFA;border-radius:8px;padding:10px;margin-bottom:10px"><div style="font-size:10px;color:#A78BFA;margin-bottom:4px">PERSONALE — porta 7778</div><div style="font-size:11px;color:#34D399;font-family:var(--fd)">✓ PropHedge Bridge avviato su 127.0.0.1:7778</div></div><div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:10px;color:var(--red);font-size:11px">⚠️ Non chiudere queste finestre — minimizzale soltanto</div></div>',
+   html:'<div style="font-size:12px;color:var(--t2);line-height:2;font-family:var(--fd)">Fai <b style="color:var(--t)">doppio clic su avvia_bridge.bat</b>.<br>Si apriranno 2 finestre nere automaticamente:<br><br><div style="background:#07091a;border:1px solid #38BDF8;border-radius:8px;padding:10px;margin-bottom:8px"><div style="font-size:10px;color:#38BDF8;margin-bottom:4px">PROP — porta 7777</div><div style="font-size:11px;color:#34D399;font-family:var(--fd)">✓ PropHedge Bridge avviato su 127.0.0.1:7777</div></div><div style="background:#07091a;border:1px solid #A78BFA;border-radius:8px;padding:10px;margin-bottom:10px"><div style="font-size:10px;color:#A78BFA;margin-bottom:4px">PERSONALE — porta 7778</div><div style="font-size:11px;color:#34D399;font-family:var(--fd)">✓ PropHedge Bridge avviato su 127.0.0.1:7778</div></div><div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:10px;color:var(--red);font-size:11px">⚠️ Non chiudere queste finestre — minimizzale soltanto</div><div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:10px;color:var(--amber);font-size:11px;margin-top:8px">⚠️ Windows blocca il file? Tasto destro → Proprietà → spunta <b>Sblocca</b> → OK</div></div>',
    audio:'Vai nella cartella dove hai salvato i file e fai doppio clic su avvia underscore bridge punto bat. Si apriranno automaticamente due finestre nere. La prima mostra il bridge avviato sulla porta 7777 per il conto prop, la seconda sulla porta 7778 per il conto personale. Non chiudere mai queste finestre mentre usi il software, minimizzale soltanto.'},
   {title:'🤖 Passo 5 — attiva AutoTrading in MT4/MT5',
    html:'<div style="font-size:12px;color:var(--t2);line-height:2;font-family:var(--fd)">Apri MT4/MT5 e accedi. Poi attiva il trading automatico:<br><br><div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;gap:10px;align-items:flex-start"><div style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</div><div>Pulsante <b>Algo Trading</b> in alto → deve essere <b style="color:var(--green)">verde</b></div></div><div style="display:flex;gap:10px;align-items:flex-start"><div style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</div><div><b>Strumenti → Opzioni → Expert Advisors</b><br>→ <b>"Disabilita trading API Python"</b> deve essere <b style="color:var(--red)">deselezionato</b></div></div><div style="display:flex;gap:10px;align-items:flex-start"><div style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">3</div><div>Ripeti per <b>entrambe</b> le istanze MT4/MT5</div></div></div></div>',
@@ -9416,103 +9445,119 @@ function liveTutGo(dir){
 if(window.speechSynthesis) window.speechSynthesis.getVoices();
 
 function liveDownloadGuide(){
-  var code = `# PropHedge Bridge v1.1
-# Supporta --port per doppia istanza (prop + personale)
-# Uso:
-#   python bridge.py --port 7777   (conto PROP)
-#   python bridge.py --port 7778   (conto PERSONALE)
-# Requisiti: pip install flask flask-cors MetaTrader5
+  var code = `# PropHedge Bridge v2.1
+# UN SOLO AVVIO — gestisce porta 7777 (PROP) e 7778 (PERSONALE)
+# Avvio: py bridge.py
+# Requisiti: py -m pip install flask flask-cors MetaTrader5
 
-import sys, argparse
+import threading
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import MetaTrader5 as mt5
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--port', type=int, default=7777)
-args = parser.parse_args()
+def create_app():
+    app = Flask(__name__)
+    # CORS aperto su tutte le origini - necessario per il browser
+    CORS(app, resources={r"/*": {"origins": "*"}})
 
-app = Flask(__name__)
-CORS(app)
+    @app.after_request
+    def add_cors(response):
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+        response.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
+        return response
 
-def to_dict(obj):
-    if obj is None: return {}
-    d = obj._asdict() if hasattr(obj,'_asdict') else dict(obj)
-    return {k:(float(v) if hasattr(v,'real') else v) for k,v in d.items()}
+    @app.route('/<path:path>', methods=['OPTIONS'])
+    def options(path):
+        return '', 204
 
-@app.route('/connect', methods=['POST'])
-def connect():
-    data = request.json
-    mt5.initialize()
-    ok = mt5.login(int(data['login']), data['password'], data['server'])
-    return jsonify({'ok': bool(ok), 'error': str(mt5.last_error()) if not ok else None})
+    @app.route('/connect', methods=['POST'])
+    def connect():
+        d = request.json
+        mt5.initialize()
+        ok = mt5.login(int(d['login']), d['password'], d['server'])
+        return jsonify({'ok': bool(ok), 'error': str(mt5.last_error()) if not ok else None})
 
-@app.route('/account')
-def account():
-    return jsonify(to_dict(mt5.account_info()))
+    @app.route('/account')
+    def account():
+        info = mt5.account_info()
+        if not info: return jsonify({})
+        d = info._asdict()
+        return jsonify({k:(float(v) if hasattr(v,'real') else v) for k,v in d.items()})
 
-@app.route('/positions')
-def positions():
-    pos = mt5.positions_get() or []
-    return jsonify([to_dict(p) for p in pos])
+    @app.route('/positions')
+    def positions():
+        pos = mt5.positions_get() or []
+        return jsonify([{k:(float(v) if hasattr(v,'real') else v) for k,v in p._asdict().items()} for p in pos])
 
-@app.route('/history')
-def history():
-    ticket = int(request.args.get('ticket',0))
-    deals = mt5.history_deals_get(position=ticket) or []
-    if not deals: return jsonify({'profit':0,'ticket':ticket})
-    profit = sum(d.profit for d in deals)
-    return jsonify({'profit':profit,'ticket':ticket,'deals':len(deals)})
+    @app.route('/history')
+    def history():
+        ticket = int(request.args.get('ticket',0))
+        deals = mt5.history_deals_get(position=ticket) or []
+        return jsonify({'profit': sum(d.profit for d in deals), 'ticket': ticket})
 
-@app.route('/order', methods=['POST'])
-def order():
-    d = request.json
-    sym = d['symbol']
-    tick = mt5.symbol_info_tick(sym)
-    side = d.get('side','buy')
-    price = tick.ask if side=='buy' else tick.bid
-    req = {
-        'action': mt5.TRADE_ACTION_DEAL,
-        'symbol': sym, 'volume': float(d['volume']),
-        'type': mt5.ORDER_TYPE_BUY if side=='buy' else mt5.ORDER_TYPE_SELL,
-        'price': price, 'sl': float(d.get('sl',0)), 'tp': float(d.get('tp',0)),
-        'deviation': 10, 'magic': 234000,
-        'comment': d.get('comment','PropHedge'),
-        'type_time': mt5.ORDER_TIME_GTC,
-        'type_filling': mt5.ORDER_FILLING_IOC,
-    }
-    return jsonify(to_dict(mt5.order_send(req)))
+    @app.route('/order', methods=['POST'])
+    def order():
+        d = request.json
+        sym = d['symbol']
+        tick = mt5.symbol_info_tick(sym)
+        side = d.get('side','buy')
+        price = tick.ask if side=='buy' else tick.bid
+        req = {
+            'action': mt5.TRADE_ACTION_DEAL, 'symbol': sym,
+            'volume': float(d['volume']),
+            'type': mt5.ORDER_TYPE_BUY if side=='buy' else mt5.ORDER_TYPE_SELL,
+            'price': price, 'sl': float(d.get('sl',0)), 'tp': float(d.get('tp',0)),
+            'deviation': 10, 'magic': 234000,
+            'comment': d.get('comment','PropHedge'),
+            'type_time': mt5.ORDER_TIME_GTC,
+            'type_filling': mt5.ORDER_FILLING_IOC,
+        }
+        r = mt5.order_send(req)
+        rd = r._asdict()
+        return jsonify({k:(float(v) if hasattr(v,'real') else v) for k,v in rd.items()})
 
-@app.route('/modify', methods=['POST'])
-def modify():
-    d = request.json
-    req = {'action':mt5.TRADE_ACTION_SLTP,'position':int(d['ticket']),'sl':float(d['sl']),'tp':float(d['tp'])}
-    return jsonify(to_dict(mt5.order_send(req)))
+    @app.route('/modify', methods=['POST'])
+    def modify():
+        d = request.json
+        req = {'action':mt5.TRADE_ACTION_SLTP,'position':int(d['ticket']),'sl':float(d['sl']),'tp':float(d['tp'])}
+        r = mt5.order_send(req)
+        rd = r._asdict()
+        return jsonify({k:(float(v) if hasattr(v,'real') else v) for k,v in rd.items()})
 
-@app.route('/close', methods=['POST'])
-def close():
-    ticket = int(request.json['ticket'])
-    pos = mt5.positions_get(ticket=ticket)
-    if not pos: return jsonify({'retcode':-1,'comment':'Not found'})
-    p = pos[0]
-    tick = mt5.symbol_info_tick(p.symbol)
-    price = tick.bid if p.type==0 else tick.ask
-    req = {
-        'action': mt5.TRADE_ACTION_DEAL,
-        'symbol': p.symbol, 'volume': p.volume,
-        'type': mt5.ORDER_TYPE_SELL if p.type==0 else mt5.ORDER_TYPE_BUY,
-        'position': ticket, 'price': price,
-        'deviation': 10, 'magic': 234000,
-        'comment': 'PropHedge close',
-        'type_time': mt5.ORDER_TIME_GTC,
-        'type_filling': mt5.ORDER_FILLING_IOC,
-    }
-    return jsonify(to_dict(mt5.order_send(req)))
+    @app.route('/close', methods=['POST'])
+    def close():
+        ticket = int(request.json['ticket'])
+        pos = mt5.positions_get(ticket=ticket)
+        if not pos: return jsonify({'retcode':-1,'comment':'Not found'})
+        p = pos[0]
+        tick = mt5.symbol_info_tick(p.symbol)
+        price = tick.bid if p.type==0 else tick.ask
+        req = {
+            'action': mt5.TRADE_ACTION_DEAL, 'symbol': p.symbol, 'volume': p.volume,
+            'type': mt5.ORDER_TYPE_SELL if p.type==0 else mt5.ORDER_TYPE_BUY,
+            'position': ticket, 'price': price, 'deviation': 10, 'magic': 234000,
+            'comment': 'PropHedge close',
+            'type_time': mt5.ORDER_TIME_GTC, 'type_filling': mt5.ORDER_FILLING_IOC,
+        }
+        r = mt5.order_send(req)
+        rd = r._asdict()
+        return jsonify({k:(float(v) if hasattr(v,'real') else v) for k,v in rd.items()})
+
+    return app
+
+def run(port):
+    app = create_app()
+    app.run(host='127.0.0.1', port=port, debug=False, use_reloader=False)
 
 if __name__ == '__main__':
-    print(f"PropHedge Bridge avviato su http://127.0.0.1:{args.port}")
-    print("Lascia questa finestra aperta mentre usi il software.")
-    app.run(host='127.0.0.1', port=args.port, debug=False)
+    print("PropHedge Bridge v2.1 avviato")
+    print("Porta 7777 (PROP)      → attiva")
+    print("Porta 7778 (PERSONALE) → attiva")
+    print("Lascia questa finestra aperta.")
+    t = threading.Thread(target=run, args=(7777,), daemon=True)
+    t.start()
+    run(7778)
 `;
   var blob=new Blob([code],{type:'text/plain'});
   var url=URL.createObjectURL(blob);
