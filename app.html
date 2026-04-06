@@ -5351,17 +5351,19 @@ var propLots_byTotalDD = ddForLoss / (sl * pipValBase * minTrades);
   // Quanti lotti mi servono per coprire il costo challenge col TP?
 
   // hedgeLots = cost / (tp * pipValBase), poi diviso per contractMultHedge
-
-var hedgeTarget = cost * 1.30;
-
-var hedgeLots = (hedgeTarget / (sl * pipValBase)) / days;
-
-  // Applico moltiplicatore contratto Hedge
+// Usa il valore salvato dal calcolatore se disponibile
+var hedgeLots;
+if(p.lotPers && parseFloat(p.lotPers) >= 0.01){
+  hedgeLots = parseFloat(p.lotPers);
+} else if(p.lotsHedge && parseFloat(p.lotsHedge) >= 0.01){
+  hedgeLots = parseFloat(p.lotsHedge);
+} else {
+  var hedgeTarget = cost * 1.30;
+  hedgeLots = (hedgeTarget / (sl * pipValBase)) / days;
   hedgeLots = hedgeLots / contractMultHedge;
-
   hedgeLots = Math.ceil(hedgeLots * 100) / 100;
-
   if(hedgeLots < 0.01) hedgeLots = 0.01;
+}
 
   var hedgeTP_dollar = hedgeLots * contractMultHedge * tp * pipValBase;
 
@@ -5736,6 +5738,10 @@ var c = calcChallenge(p);
         hedgeLotsLive = Math.round(hedgeLotsLive * 100) / 100;
       }
       if(hedgeLotsLive < 0.01) hedgeLotsLive = 0.01;
+
+      /* Scrivi il valore calcolato nel campo — così doAdd() lo salva nella sfida */
+      var _lhField = document.getElementById('mLotsHedge');
+      if(_lhField && !(_manualHedge > 0)) _lhField.value = hedgeLotsLive;
 
       var hedgeTpUsd = hedgeLotsLive * sl  * c.pipVal;   // pers guadagna quando prop perde (colpisce SL)
       var hedgeSlUsd = hedgeLotsLive * tp  * c.pipVal;   // pers perde quando prop vince (colpisce TP)
@@ -6444,8 +6450,13 @@ function doAdd() {
     spread: parseFloat(document.getElementById('mSpread')?.value) || 0,
 
     lots: parseFloat(document.getElementById('mLots')?.value) || 0,
-
-    asset: assetVal.split(':')[0], consistency: parseFloat(document.getElementById('mConsistency')?.value) || 30,
+    lotPers: parseFloat(document.getElementById('ch1LotsPers')?.value) || parseFloat(document.getElementById('mLotsHedge')?.value) || 0,
+    lotsHedge: parseFloat(document.getElementById('mLotsHedge')?.value) || 0,
+    isTrail: (typeof _ddTrailing !== 'undefined') ? _ddTrailing : false,
+    trailLock: parseFloat(document.getElementById('mTrailLock')?.value) || 0,
+    covPct: parseFloat(document.getElementById('ch1Cov')?.value) || 85,
+    minDays: parseFloat(document.getElementById('mDays')?.value) || 10,
+    asset: assetVal.split(':')[0], consistency: parseFloat(document.getElementById('mConsistency')?.value) || 0,
 
     pipVProp:  rawPipVProp,
     pipVHedge: rawPipVHedge,
@@ -6458,15 +6469,83 @@ function doAdd() {
 
   };
 
+  var addBtn = document.getElementById('btnAddSfida');
+  var editId = addBtn ? parseInt(addBtn.getAttribute('data-edit-id')) : null;
+
+  if(editId){
+    /* ── MODIFICA sfida esistente ── */
+    var idx = props.findIndex(function(x){return x.id===editId;});
+    if(idx>=0){
+      Object.assign(props[idx], p);
+      props[idx].id = editId; /* preserva ID */
+      /* Aggiorna nome nel journal */
+      if(typeof jrnl !== 'undefined'){
+        var js = jrnl.sessions.find(function(s){return s.linkedPropId===editId;});
+        if(js) js.name = p.name || js.name;
+        if(typeof jrnlSave === 'function') jrnlSave();
+      }
+    }
+    if(addBtn){ addBtn.textContent = '+ AGGIUNGI SFIDA'; addBtn.removeAttribute('data-edit-id'); }
+    closeModal(); activeId = editId; render();
+    return;
+  }
+
   props.push(p); jrnlNewSession(p.name, p.id); jrnlSave(); closeModal(); activeId = p.id; goTab('dash', document.getElementById('tabDash'));
 
 }
 
 
 
-function delProp(id) { props = props.filter(p => p.id !== id); if (activeId === id) activeId = props.length ? props[0].id : null; render(); }
+function delProp(id) {
+  props = props.filter(p => p.id !== id);
+  if (activeId === id) activeId = props.length ? props[0].id : null;
+  /* Elimina anche dal journal */
+  if(typeof jrnl !== 'undefined' && jrnl.sessions){
+    jrnl.sessions = jrnl.sessions.filter(function(s){ return s.linkedPropId !== id; });
+    if(jrnl.activeIdx >= jrnl.sessions.length) jrnl.activeIdx = Math.max(0, jrnl.sessions.length-1);
+    if(typeof jrnlSave === 'function') jrnlSave();
+  }
+  /* Elimina credenziali live trading salvate */
+  try{ localStorage.removeItem('ph_live_creds_'+id); } catch(e){}
+  render();
+}
 
 function selProp(id) { activeId = id; goTab('calc', document.getElementById('tabCalc')); }
+
+function openProp(id){
+  var p = props.find(function(x){return x.id===id;});
+  if(!p) return;
+  activeId = id;
+  /* Pre-compila il modale con i parametri della sfida */
+  var m = document.getElementById('modalOv');
+  if(!m) return;
+  m.style.display = 'flex';
+  /* Imposta la modalità */
+  if(typeof setMode === 'function') setMode(p.stratMode||'personal');
+  /* Compila i campi */
+  var fields = {
+    mName: p.name||'', mSize: p.size||'100000', mCost: p.cost||'1500',
+    mDD: p.maxDD||'6', mDDD: p.ddd||'3', mTgt: p.tgtPct||'8',
+    mPay: p.pay||'80', mDays: p.days||'10', mConsistency: p.consistency||'0',
+    mSlPips: p.slPips||'100', mTpPips: p.tpPips||'100',
+    mLots: p.lots||'', mLotsHedge: p.lotsHedge||p.lotPers||'',
+    mTrailLock: p.trailLock||'0', mSize2: p.size2||'', mDD2: p.dd2||'6',
+    mDays2: p.days2||'10', mPay2: p.pay2||'80',
+    ch1Lots: p.lots||'', ch1LotsPers: p.lotPers||'', ch1Cov: p.covPct||'85'
+  };
+  Object.keys(fields).forEach(function(fid){
+    var el = document.getElementById(fid);
+    if(el) el.value = fields[fid];
+  });
+  /* Trailing */
+  if(typeof _ddTrailing !== 'undefined' && typeof _toggleDDType === 'function'){
+    if(p.isTrail !== _ddTrailing) _toggleDDType();
+  }
+  /* Cambia il pulsante AGGIUNGI in SALVA MODIFICHE */
+  var addBtn = document.getElementById('btnAddSfida');
+  if(addBtn){ addBtn.textContent = '💾 Salva modifiche'; addBtn.setAttribute('data-edit-id', id); }
+  setTimeout(calcPreview, 100);
+}
 
 function updP(id, key, val) { const p = props.find(x => x.id === id); if (p) { p[key] = parseFloat(val) || 0; render(); } }
 
@@ -7981,75 +8060,46 @@ function renderDash(){
     }
 
 
+    /* ── Stato connessione bridge per questa sfida ── */
+    var bridgeConn = typeof _bridge !== "undefined" && _bridge.prop.connected && _bridge.pers.connected
+      && String(_bridge.prop.propId) === String(p.id);
+    var livePos = bridgeConn
+      ? (_bridge.prop.positions||[]).map(function(pos){return Object.assign({},pos,{_side:"prop"});}).concat(
+          (_bridge.pers.positions||[]).map(function(pos){return Object.assign({},pos,{_side:"pers"});}))
+      : [];
 
-    var btnProp=propLabel
+    var connBadge = bridgeConn
+      ? '<div style="display:flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:6px;font-size:10px;font-family:var(--fd);color:#34D399"><span style="width:6px;height:6px;border-radius:50%;background:#34D399;box-shadow:0 0 5px #34D399;flex-shrink:0"></span>LIVE CONNESSO</div>'
+      : '<div style="display:flex;align-items:center;gap:5px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:10px;font-family:var(--fd);color:var(--t3)"><span style="width:6px;height:6px;border-radius:50%;background:var(--t3);flex-shrink:0"></span>Non connesso</div>';
 
+    var posRows = "";
+    livePos.slice(0,4).forEach(function(pos){
+      var pnlCol = pos.profit >= 0 ? "#34D399" : "#F87171";
+      var sideCol = pos._side === "pers" ? "#A78BFA" : "#38BDF8";
+      var dir = pos.type === 0 ? "BUY" : "SELL";
+      posRows += '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px;background:var(--bg3);border-radius:5px;margin-top:4px;font-family:var(--fd);font-size:10px">'
+        + '<span style="color:'+sideCol+';font-weight:700">' + (pos._side==="pers"?"🛡":"🎯") + "</span>"
+        + '<span style="color:var(--t2)">' + pos.symbol + " " + dir + "</span>"
+        + '<span style="color:var(--t3)">' + pos.volume + " lot</span>"
+        + '<span id="dpnl_'+pos.ticket+'" style="font-weight:700;color:'+pnlCol+'">' + (pos.profit>=0?"+":"") + pos.profit.toFixed(2) + "$</span>"
+        + "</div>";
+    });
 
-
-      ?'<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.3);border-radius:8px;font-size:11px;font-family:var(--fd);color:var(--teal)"><span style="width:7px;height:7px;border-radius:50%;background:var(--teal);flex-shrink:0"></span>● '+propLabel+'</div>'
-
-
-
-      :'<button onclick="event.stopPropagation();openConnFromDash('+p.id+',\'prop\')" class="btn-p" style="flex:1;padding:6px 0;font-size:11px;justify-content:center">🔗 Connetti Prop</button>';
-
-
-
-    var btnBroker=brokerLabel
-
-
-
-      ?'<div style="display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.3);border-radius:8px;font-size:11px;font-family:var(--fd);color:var(--violet)"><span style="width:7px;height:7px;border-radius:50%;background:var(--violet);flex-shrink:0"></span>● '+brokerLabel+'</div>'
-
-
-
-      :'<button onclick="event.stopPropagation();openConnFromDash('+p.id+',\'broker\')" class="btn-p" style="flex:1;padding:6px 0;font-size:11px;justify-content:center;background:linear-gradient(135deg,var(--violet2),var(--teal2))">🔗 Connetti Broker</button>';
-
-
-
-    cards+='<div class="pc ai" onclick="openDashDetail('+p.id+')">'
-
-
-
+    cards+='<div class="pc ai" onclick="openJournalForProp('+p.id+')">'
       +'<div class="pc-glow"></div>'
-
-
-
       +'<button class="pc-del" onclick="event.stopPropagation();delPropSync('+p.id+')">✕</button>'
-
-
-
       +'<div class="pc-top"><div class="pc-logo">'+logo+'</div>'
-
-
-
       +'<div><div class="pc-nm">'+p.name+'</div><div class="pc-mt">'+uF(p.size)+' DD '+p.maxDD+'% '+p.days+'gg '+(p.asset||'EUR/USD')+'</div></div></div>'
-
-
-
       +'<div class="pc-st">'
-
-
-
       +'<div class="pst"><div class="pst-l">Lotti prop</div><div class="pst-v v-teal">'+c.propLots+'</div></div>'
-
-
-
-      +'<div class="pst"><div class="pst-l">Conto pers.</div><div class="pst-v v-amber">'+uF(c.recAcc)+'</div></div>'
-
-
-
+      +'<div class="pst"><div class="pst-l">Lotti pers.</div><div class="pst-v v-violet">'+c.hedgeLots+'</div></div>'
       +'<div class="pst"><div class="pst-l">Netto (B)</div><div class="pst-v '+nc+'">'+sgn(c.sB_net)+uF(c.sB_net)+'</div></div>'
-
-
-
       +'</div>'+pnlBadge
-
-
-
-      +'<div style="display:flex;gap:6px;margin-top:10px">'+btnProp+btnBroker+'</div>'
-
-
-
+      +'<div style="margin-top:10px;display:flex;flex-direction:column;gap:4px">'+connBadge+posRows+'</div>'
+      +'<div style="display:flex;gap:6px;margin-top:8px">'
+      +'<button class="btn-g" style="flex:1;font-size:10px;padding:5px 0;text-align:center" onclick="event.stopPropagation();openJournalForProp('+p.id+')">📒 Journal</button>'
+      +'<button class="btn-g" style="flex:1;font-size:10px;padding:5px 0;text-align:center;color:var(--teal)" onclick="event.stopPropagation();openProp('+p.id+')">✏️ Modifica</button>'
+      +'</div>'
       +'</div>';
 
 
@@ -8230,7 +8280,10 @@ function renderDashDetailPage(){
 
 
 
-    +'<div style="margin-top:8px"><button class="btn-g" style="font-size:10px" onclick="openJournalForProp('+p.id+')">📒 Journal di questa sfida →</button></div>'
+    +'<div style="margin-top:8px;display:flex;gap:6px">'
+    +'<button class="btn-g" style="font-size:10px" onclick="openJournalForProp('+p.id+')">📒 Journal →</button>'
+    +'<button class="btn-g" style="font-size:10px;color:var(--teal)" onclick="openProp('+p.id+')">✏️ Modifica</button>'
+    +'</div>'
 
 
 
@@ -8882,141 +8935,320 @@ function bridgeUrl(side){ return 'http://127.0.0.1:' + _bridge[side].port; }
 var BRIDGE_URL = 'http://127.0.0.1:7777'; // compat
 
 function renderLive(){
-  function connCard(side, label, col, portNum){
-    var b = _bridge[side];
-    var statusHtml = b.connected
-      ? '<div style="width:8px;height:8px;border-radius:50%;background:#34D399;box-shadow:0 0 5px #34D399"></div><span style="color:#34D399;font-size:10px;font-weight:700">Connesso</span>'
-      : '<div style="width:8px;height:8px;border-radius:50%;background:var(--t3)"></div><span style="font-size:10px;color:var(--t3)">Non connesso</span>';
-    function platBtn(plat, lbl){
-      var active = b.platform === plat;
-      return '<button onclick="liveSelectPlat(\''+side+'\',\''+plat+'\')" style="flex:1;padding:8px;border-radius:7px;border:'+(active?'2px solid '+col:'1px solid var(--border2)')+';background:'+(active?'rgba(100,100,255,.1)':'var(--bg3)')+';color:'+(active?col:'var(--t3)')+';font-size:11px;font-weight:700;cursor:pointer">'+lbl+'</button>';
-    }
-    return '<div style="background:var(--bg2);border:2px solid '+col+';border-radius:14px;padding:18px">'
+  /* Carica credenziali salvate */
+  function loadCreds(propId){
+    try{ var s=localStorage.getItem('ph_live_creds_'+propId); return s?JSON.parse(s):null; }catch(e){return null;}
+  }
+
+  var sfide = (typeof props !== 'undefined') ? props : [];
+  var selId = _liveSfidaId || (sfide.length ? sfide[0].id : null);
+  var sfida = sfide.find(function(p){return p.id===selId;}) || null;
+  var creds = sfida ? (loadCreds(sfida.id)||{}) : {};
+
+  var bProp = _bridge.prop;
+  var bPers = _bridge.pers;
+
+  /* Stato connessione */
+  var statusHtml = (bProp.connected && bPers.connected)
+    ? '<div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;background:#34D399;box-shadow:0 0 6px #34D399"></div><span style="color:#34D399;font-size:11px;font-weight:700">Entrambi connessi — '+(sfida?sfida.name:'')+'</span></div>'
+    : '<div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;background:var(--t3)"></div><span style="font-size:11px;color:var(--t3)">Non connesso</span></div>';
+
+  var html = '<div style="max-width:960px;padding-bottom:40px" id="liveRoot">';
+
+  /* HEADER */
+  html += '<div style="background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(52,211,153,.06));border:1px solid rgba(56,189,248,.2);border-radius:16px;padding:18px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px">'
+    +'<div style="font-size:28px">🔌</div>'
+    +'<div><div style="font-size:17px;font-weight:800;color:var(--t)">Live Trading — Connessione Conti</div>'
+    +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-top:2px">Collega prop e personale · Fai trading dal Journal</div></div>'
+    +'<div style="margin-left:auto">'+statusHtml+'</div>'
+    +'</div>';
+
+  /* SELEZIONA SFIDA */
+  if(sfide.length === 0){
+    html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;margin-bottom:20px">'
+      +'<div style="font-size:13px;color:var(--t3);font-family:var(--fd)">Nessuna sfida creata. Vai su <b>Nuova Sfida</b> per crearne una.</div>'
+      +'</div>';
+  } else {
+    html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:10px">Quale sfida vuoi collegare?</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">';
+    sfide.forEach(function(p){
+      var active = p.id === selId;
+      var hasCreds = !!loadCreds(p.id);
+      html += '<button onclick="liveSelectSfida('+p.id+')" style="padding:8px 16px;border-radius:8px;border:'+(active?'2px solid var(--teal)':'1px solid var(--border2)')+';background:'+(active?'rgba(56,189,248,.12)':'var(--bg3)')+';color:'+(active?'var(--teal)':'var(--t2)')+';font-size:12px;font-weight:'+(active?'700':'400')+';cursor:pointer">'
+        +p.name+(hasCreds?'<span style="margin-left:5px;font-size:9px;color:#34D399">●</span>':'')+'</button>';
+    });
+    html += '</div></div>';
+  }
+
+  /* FORM CONNESSIONE */
+  if(sfida){
+    var propSrv = creds.propServer||''; var propLog = creds.propLogin||''; var propPwd = '';
+    var persSrv = creds.persServer||''; var persLog = creds.persLogin||''; var persPwd = '';
+    var propPlat = creds.propPlat||'mt5'; var persPlat = creds.persPlat||'mt4';
+
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">';
+
+    /* Card PROP */
+    html += '<div style="background:var(--bg2);border:2px solid '+(bProp.connected?'#34D399':'rgba(56,189,248,.4)')+';border-radius:12px;padding:16px">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
-      +'<div style="font-size:13px;font-weight:800;color:'+col+'">'+label+'</div>'
-      +'<div style="display:flex;align-items:center;gap:6px">'+statusHtml+'</div></div>'
-      +'<div style="margin-bottom:8px"><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Piattaforma</label>'
-      +'<div style="display:flex;gap:6px;margin-top:4px">'+platBtn('mt4','MT4')+platBtn('mt5','MT5')+platBtn('ctrader','cTrader')+'</div></div>'
-      +'<div style="margin-bottom:8px"><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Server</label>'
-      +'<input id="srv_'+side+'" value="'+b.server+'" placeholder="es. TopFX-Live 13" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
-      +'<div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Login</label>'
-      +'<input id="log_'+side+'" type="number" value="'+(b.login||'')+'" placeholder="123456" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
-      +'<div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Password</label>'
-      +'<input id="pwd_'+side+'" type="password" placeholder="••••••" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
+      +'<div style="font-size:12px;font-weight:800;color:#38BDF8">🎯 PROP — '+sfida.name+'</div>'
+      +(bProp.connected?'<span style="font-size:10px;color:#34D399;font-weight:700">● Connesso</span>':'<span style="font-size:10px;color:var(--t3)">Non connesso</span>')
       +'</div>'
-      +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:8px">Bridge porta: '+portNum+' &nbsp;·&nbsp; Assicurati bridge.py sia avviato</div>'
-      +'<button id="connBtn_'+side+'" onclick="liveConnectSide(\''+side+'\')" style="width:100%;background:linear-gradient(135deg,'+col+','+col+'aa);border:none;border-radius:8px;color:#fff;padding:9px;font-size:12px;font-weight:700;cursor:pointer">'+(b.connected?'↻ Riconnetti':'🔌 Connetti')+'</button>'
-      +'<div id="err_'+side+'" style="margin-top:6px;font-size:10px;color:var(--red);font-family:var(--fd);display:none"></div>'
+      +'<div style="margin-bottom:7px"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Piattaforma</div>'
+      +'<div style="display:flex;gap:5px">'
+      +['mt4','mt5','ctrader'].map(function(pl){var isSel=(propPlat===pl);return '<button onclick="liveSetPlat(this)" data-side="prop" data-plat="'+pl+'" data-pid="'+sfida.id+'" style="flex:1;padding:6px;border-radius:6px;border:'+(isSel?'2px solid #38BDF8':'1px solid var(--border2)')+';background:'+(isSel?'rgba(56,189,248,.12)':'var(--bg3)')+';color:'+(isSel?'#38BDF8':'var(--t3)')+';font-size:10px;font-weight:700;cursor:pointer">'+pl.toUpperCase()+'</button>';}).join('')
+      +'</div></div>'
+      +'<div style="margin-bottom:7px"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Server</div>'
+      +'<input id="lp_propSrv" value="'+propSrv+'" placeholder="es. FundedNext-Server3" onchange="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px">'
+      +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Login</div>'
+      +'<input id="lp_propLog" type="number" value="'+propLog+'" placeholder="123456" onchange="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Password</div>'
+      +'<input id="lp_propPwd" type="password" placeholder="••••••" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'</div>'
+      +'<div id="lp_propErr" style="font-size:10px;color:var(--red);font-family:var(--fd);display:none;margin-bottom:6px"></div>'
+      +'</div>';
+
+    /* Card PERSONALE */
+    html += '<div style="background:var(--bg2);border:2px solid '+(bPers.connected?'#34D399':'rgba(167,139,250,.4)')+';border-radius:12px;padding:16px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+      +'<div style="font-size:12px;font-weight:800;color:#A78BFA">🛡️ PERSONALE</div>'
+      +(bPers.connected?'<span style="font-size:10px;color:#34D399;font-weight:700">● Connesso</span>':'<span style="font-size:10px;color:var(--t3)">Non connesso</span>')
+      +'</div>'
+      +'<div style="margin-bottom:7px"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Piattaforma</div>'
+      +'<div style="display:flex;gap:5px">'
+      +['mt4','mt5','ctrader'].map(function(pl){var isSel=(persPlat===pl);return '<button onclick="liveSetPlat(this)" data-side="pers" data-plat="'+pl+'" data-pid="'+sfida.id+'" style="flex:1;padding:6px;border-radius:6px;border:'+(isSel?'2px solid #A78BFA':'1px solid var(--border2)')+';background:'+(isSel?'rgba(167,139,250,.12)':'var(--bg3)')+';color:'+(isSel?'#A78BFA':'var(--t3)')+';font-size:10px;font-weight:700;cursor:pointer">'+pl.toUpperCase()+'</button>';}).join('')
+      +'</div></div>'
+      +'<div style="margin-bottom:7px"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Server</div>'
+      +'<input id="lp_persSrv" value="'+persSrv+'" placeholder="es. TopFX-Live 13" onchange="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px">'
+      +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Login</div>'
+      +'<input id="lp_persLog" type="number" value="'+persLog+'" placeholder="123456" onchange="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Password</div>'
+      +'<input id="lp_persPwd" type="password" placeholder="••••••" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'</div>'
+      +'<div id="lp_persErr" style="font-size:10px;color:var(--red);font-family:var(--fd);display:none;margin-bottom:6px"></div>'
+      +'</div>';
+
+    html += '</div>'; /* fine grid */
+
+    /* PULSANTE UNICO CONNETTI */
+    html += '<div style="margin-bottom:20px">'
+      +'<button id="lpConnBtn" onclick="liveConnectBoth('+sfida.id+')" style="width:100%;background:linear-gradient(135deg,#38BDF8,#A78BFA);border:none;border-radius:12px;color:#fff;padding:14px;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.05em">🔌 CONNETTI ENTRAMBI I CONTI</button>'
+      +'<div id="lp_globalErr" style="margin-top:8px;font-size:11px;font-family:var(--fd);display:none"></div>'
       +'</div>';
   }
 
-  /* Leggi lotti dal calcolatore/simulatore */
-  var calcLots = _getLottiCalcolatore();
+  /* GUIDA SETUP BRIDGE */
+  /* GUIDA SETUP BRIDGE */
+  html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">'
 
-  return '<div style="max-width:1060px;padding-bottom:40px" id="liveRoot">'
-
-    /* HEADER */
-    +'<div style="background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(52,211,153,.07));border:1px solid rgba(56,189,248,.2);border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px">'
-    +'<div style="font-size:32px">🔌</div>'
-    +'<div><div style="font-size:18px;font-weight:800;color:var(--t)">Live Trading — Doppia Connessione</div>'
-    +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-top:2px">Prop + Personale · Hedge automatico · Lotti dal calcolatore · Zero EA</div></div>'
+    /* AVVISO: solo una volta */
+    +'<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:10px;padding:12px 16px;margin-bottom:16px">'
+    +'<div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:4px">✅ Il Bridge si configura UNA VOLTA SOLA — poi funziona per tutte le sfide</div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8">Non serve reinstallarlo mai. Ogni giorno basta solo aprire il cmd e scrivere <b>py bridge.py</b>.</div>'
     +'</div>'
+    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:14px">⚙️ Configurazione iniziale (una sola volta)</div>'
 
-    /* DOPPIA CONNESSIONE */
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">'
-    + connCard('prop','🎯 PROP (Valutazione)','#38BDF8', 7777)
-    + connCard('pers','🛡️ PERSONALE (Reale)','#A78BFA', 7778)
-    +'</div>'
+    /* STEP 1: Python */
+    +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">'
+    +'<div style="width:28px;height:28px;border-radius:50%;background:#7F77DD;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">1</div>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Installa Python <span style="font-size:10px;color:var(--amber);font-weight:400">⚠️ il motore del Bridge — senza di esso non funziona nulla</span></div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:8px;line-height:1.7">Clicca il pulsante → si apre il sito ufficiale → scarica → installa.</div>'
+    +'<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">'
+    +'<button onclick="window.open(\'https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe\',\'_blank\')" style="background:linear-gradient(135deg,#3b82f6,#6366f1);border:none;border-radius:8px;color:#fff;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">⬇ Scarica Python 3.12</button>'
+    +'<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--red);font-family:var(--fd);line-height:1.7">'
+    +'⚠️ Durante l\'installazione <b>DEVI spuntare</b>:<br><b style="font-size:12px">☑ Add Python to PATH</b><br><span style="font-size:10px">Se dimentichi questa spunta il Bridge non parte</span>'
+    +'</div></div></div></div>'
 
-    /* PANNELLO HEDGE — visibile solo se entrambi connessi */
-    +((_bridge.prop.connected && _bridge.pers.connected) ? renderHedgePanel(calcLots) : '')
-
-    /* DASHBOARD ACCOUNT — prop */
-    +(_bridge.prop.connected ? '<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:#38BDF8;margin-bottom:6px;font-family:var(--fd)">🎯 PROP — '+(_bridge.prop.account?_bridge.prop.account.server:'')+'</div><div id="accGrid_prop" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div></div>' : '')
-    +(_bridge.pers.connected ? '<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:700;color:#A78BFA;margin-bottom:6px;font-family:var(--fd)">🛡️ PERSONALE — '+(_bridge.pers.account?_bridge.pers.account.server:'')+'</div><div id="accGrid_pers" style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div></div>' : '')
-
-    /* POSIZIONI APERTE */
-    +((_bridge.prop.connected||_bridge.pers.connected) ?
-      '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
-      +'<div style="font-size:13px;font-weight:700;color:var(--t)">📋 Posizioni Aperte</div>'
-      +'<button onclick="liveRefreshAll()" style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t2);padding:5px 12px;font-size:11px;cursor:pointer">↻ Aggiorna</button>'
-      +'</div>'
-      +'<div id="livePosAll">Nessuna posizione.</div>'
-      +'</div>'
-    : '')
-
-    /* GUIDA BRIDGE */
-    +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:6px">① Setup Bridge (una volta sola)</div>'
-
-    /* Step A: scarica */
-    +'<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">'
-    +'<div style="width:22px;height:22px;border-radius:50%;background:#7F77DD;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px">1</div>'
-    +'<div><div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Scarica bridge.py</div>'
-    +'<button onclick="liveDownloadGuide()" style="background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:8px;color:#fff;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica bridge.py</button>'
+    /* STEP 2: Bridge */
+    +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">'
+    +'<div style="width:28px;height:28px;border-radius:50%;background:#7F77DD;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">2</div>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Scarica il Bridge</div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:8px">Il file che collega PropHedge ai tuoi conti MetaTrader.</div>'
+    +'<button onclick="liveDownloadGuide()" style="background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:8px;color:#fff;padding:8px 18px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica bridge.py</button>'
     +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:5px">Salvalo sul Desktop</div>'
     +'</div></div>'
 
-    /* Step B: cmd */
-    +'<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">'
-    +'<div style="width:22px;height:22px;border-radius:50%;background:#7F77DD;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px">2</div>'
-    +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Installa librerie <span style="font-size:10px;color:var(--t3);font-weight:400">(una volta sola)</span></div>'
-    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:6px">Apri il Prompt dei comandi (menu Start → scrivi cmd) e incolla:</div>'
-    +'<div style="background:#07091a;border:1px solid #2a2f55;border-radius:7px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
+    /* STEP 3: Componenti */
+    +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">'
+    +'<div style="width:28px;height:28px;border-radius:50%;background:#7F77DD;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">3</div>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Installa i componenti aggiuntivi <span style="font-size:10px;color:var(--t3);font-weight:400">(una volta sola, circa 1 minuto)</span></div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:6px">Apri il Prompt dei comandi: menu Start → cerca <b>cmd</b> → Invio. Poi copia e incolla:</div>'
+    +'<div style="background:#07091a;border:1px solid #2a2f55;border-radius:7px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
     +'<code style="font-family:var(--fd);font-size:11px;color:#38BDF8;flex:1">py -m pip install flask flask-cors MetaTrader5</code>'
-    +'<button onclick="navigator.clipboard.writeText(\'py -m pip install flask flask-cors MetaTrader5\');this.textContent=\'✓\';setTimeout(()=>this.textContent=\'📋\',2000)" style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);border-radius:5px;color:#38BDF8;padding:4px 8px;font-size:10px;cursor:pointer;flex-shrink:0">📋</button>'
+    +'<button onclick="navigator.clipboard.writeText(\'py -m pip install flask flask-cors MetaTrader5\');this.textContent=\'✓\';setTimeout(()=>this.textContent=\'📋\',2000)" style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);border-radius:5px;color:#38BDF8;padding:5px 10px;font-size:10px;cursor:pointer;flex-shrink:0">📋 Copia</button>'
+    +'</div>'
+    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:5px">Premi Invio e aspetta che finisce. Vedrai "Successfully installed" alla fine.</div>'
+    +'</div></div>'
+
+    /* STEP 4: Avvia bridge — ogni giorno */
+    +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">'
+    +'<div style="width:28px;height:28px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">4</div>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Avvia il Bridge <span style="font-size:10px;color:var(--green);font-weight:400">← ogni volta che usi PropHedge</span></div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:6px">Apri cmd → scrivi <code style="color:var(--amber)">cd Desktop</code> → Invio → poi copia e incolla:</div>'
+    +'<div style="background:#07091a;border:1px solid #34D399;border-radius:7px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
+    +'<code style="font-family:var(--fd);font-size:13px;color:#34D399;flex:1;font-weight:800">py bridge.py</code>'
+    +'<button onclick="navigator.clipboard.writeText(\'py bridge.py\');this.textContent=\'✓\';setTimeout(()=>this.textContent=\'📋\',2000)" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:5px;color:#34D399;padding:5px 10px;font-size:10px;cursor:pointer;flex-shrink:0">📋 Copia</button>'
+    +'</div>'
+    +'<div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:7px;padding:8px 12px;margin-top:8px;font-size:11px;color:var(--green);font-family:var(--fd);line-height:1.8">'
+    +'✅ Si apre una finestra nera — è normale, lasciala aperta.<br>✅ Gestisce PROP (7777) + PERSONALE (7778) in automatico.<br>⚠️ <b>Non chiudere</b> quella finestra mentre usi il software.'
     +'</div></div></div>'
 
-    /* Step C: avvia */
-    +'<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px">'
-    +'<div style="width:22px;height:22px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px">3</div>'
-    +'<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Avvia il bridge</div>'
-    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:6px">Nel Prompt dei comandi scrivi <code style="color:var(--amber)">cd Desktop</code> poi incolla:</div>'
-    +'<div style="background:#07091a;border:1px solid #34D399;border-radius:7px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
-    +'<code style="font-family:var(--fd);font-size:11px;color:#34D399;flex:1">py bridge.py</code>'
-    +'<button onclick="navigator.clipboard.writeText(\'py bridge.py\');this.textContent=\'✓\';setTimeout(()=>this.textContent=\'📋\',2000)" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:5px;color:#34D399;padding:4px 8px;font-size:10px;cursor:pointer;flex-shrink:0">📋</button>'
-    +'</div>'
-    +'<div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.25);border-radius:7px;padding:8px 12px;margin-top:6px;font-size:10px;color:var(--green);font-family:var(--fd)">'
-    +'✅ UN SOLO COMANDO — gestisce automaticamente entrambi i conti (porta 7777 + porta 7778)<br>'
-    +'⚠️ Lascia questa finestra aperta mentre usi il software'
-    +'</div>'
-    +'</div></div>'
+    /* STEP 5: AutoTrading */
+    +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">'
+    +'<div style="width:28px;height:28px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">5</div>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:6px">Attiva AutoTrading in MT4/MT5</div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.9">'
+    +'① Apri MT4/MT5 e accedi al conto<br>'
+    +'② Pulsante <b>Algo Trading</b> in alto → deve essere <b style="color:var(--green)">VERDE</b><br>'
+    +'③ <b>Strumenti → Opzioni → Expert Advisors</b> → togli la spunta a <b>"Disabilita trading tramite API Python"</b><br>'
+    +'④ Ripeti per <b>entrambi</b> i conti MetaTrader (prop e personale)'
+    +'</div></div></div>'
 
-    +'<div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">'
+    +'<div style="padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
     +'<button onclick="liveTutorialOpen()" style="background:linear-gradient(135deg,var(--amber),#f59e0b);border:none;border-radius:8px;color:#fff;padding:9px 18px;font-size:11px;font-weight:700;cursor:pointer">▶ Guida passo per passo con audio</button>'
+    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd)">La guida ti accompagna vocalmente in ogni passaggio</div>'
     +'</div></div>'
-
-    /* Tutorial modale con audio */
     +'<div id="liveTutModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:20px">'
-    +'<div style="background:#0c1030;border:1px solid #2a2f55;border-radius:16px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;padding:0">'
-
-    /* Header tutorial */
+    +'<div style="background:#0c1030;border:1px solid #2a2f55;border-radius:16px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto">'
     +'<div style="padding:16px 20px;border-bottom:1px solid #1e2241;display:flex;align-items:center;justify-content:space-between">'
-    +'<div style="font-size:15px;font-weight:800;color:var(--t)">📖 Guida Passo per Passo</div>'
-    +'<div style="display:flex;gap:8px;align-items:center">'
+    +'<div style="font-size:14px;font-weight:800;color:var(--t)">📖 Guida Passo per Passo</div>'
+    +'<div style="display:flex;gap:8px">'
     +'<button onclick="liveTutAudio()" id="tutAudioBtn" style="background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:7px;color:var(--amber);padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer">🔊 Audio ON</button>'
     +'<button onclick="liveTutorialClose()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:7px;color:var(--red);padding:5px 12px;font-size:11px;cursor:pointer">✕ Chiudi</button>'
     +'</div></div>'
-
-    /* Barra progresso */
     +'<div id="tutProg" style="display:flex;gap:3px;padding:12px 20px 0"></div>'
-
-    /* Contenuto step */
     +'<div id="tutContent" style="padding:20px;min-height:260px"></div>'
-
-    /* Nav */
     +'<div style="padding:12px 20px;border-top:1px solid #1e2241;display:flex;justify-content:space-between;align-items:center">'
     +'<button id="tutBtnPrev" onclick="liveTutGo(-1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t2);padding:8px 18px;font-size:12px;cursor:pointer">← Indietro</button>'
     +'<span id="tutLbl" style="font-size:12px;color:var(--t3);font-family:var(--fd)"></span>'
     +'<button id="tutBtnNext" onclick="liveTutGo(1)" style="background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:8px;color:#fff;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer">Avanti →</button>'
-    +'</div>'
-    +'</div></div>'
-
+    +'</div></div></div>'
     +'</div>';
+
+  return html;
 }
 
+var _liveSfidaId = null;
+
+function liveSelectSfida(id){
+  _liveSfidaId = id;
+  if(typeof currentTab !== 'undefined' && currentTab === 'live'){
+    var el = document.getElementById('liveRoot');
+    if(el) el.outerHTML = renderLive();
+    setTimeout(_bridgeRestoreGrids, 50);
+  }
+}
+
+function liveSetPlat(btn){
+  var side  = btn.getAttribute('data-side');
+  var plat  = btn.getAttribute('data-plat');
+  var propId= parseInt(btn.getAttribute('data-pid'));
+  var creds = {};
+  try{ var s=localStorage.getItem('ph_live_creds_'+propId); creds=s?JSON.parse(s):{};} catch(e){}
+  if(side==='prop') creds.propPlat=plat; else creds.persPlat=plat;
+  _bridge[side].platform = plat;
+  try{ localStorage.setItem('ph_live_creds_'+propId, JSON.stringify(creds)); } catch(e){}
+  if(typeof currentTab !== 'undefined' && currentTab === 'live'){
+    var el = document.getElementById('liveRoot'); if(el) el.outerHTML = renderLive();
+  }
+}
+
+function liveSaveCreds(propId){
+  var creds = {};
+  try{ var s=localStorage.getItem('ph_live_creds_'+propId); creds=s?JSON.parse(s):{};} catch(e){}
+  var propSrv = document.getElementById('lp_propSrv')?.value||'';
+  var propLog = document.getElementById('lp_propLog')?.value||'';
+  var persSrv = document.getElementById('lp_persSrv')?.value||'';
+  var persLog = document.getElementById('lp_persLog')?.value||'';
+  if(propSrv) creds.propServer=propSrv;
+  if(propLog) creds.propLogin=propLog;
+  if(persSrv) creds.persServer=persSrv;
+  if(persLog) creds.persLogin=persLog;
+  try{ localStorage.setItem('ph_live_creds_'+propId, JSON.stringify(creds)); } catch(e){}
+}
+
+async function liveConnectBoth(propId){
+  var btn = document.getElementById('lpConnBtn');
+  var gErr = document.getElementById('lp_globalErr');
+  if(btn){ btn.textContent='⏳ Connessione in corso...'; btn.disabled=true; }
+  if(gErr) gErr.style.display='none';
+
+  var propSrv = document.getElementById('lp_propSrv')?.value.trim();
+  var propLog = parseInt(document.getElementById('lp_propLog')?.value)||0;
+  var propPwd = document.getElementById('lp_propPwd')?.value||'';
+  var persSrv = document.getElementById('lp_persSrv')?.value.trim();
+  var persLog = parseInt(document.getElementById('lp_persLog')?.value)||0;
+  var persPwd = document.getElementById('lp_persPwd')?.value||'';
+
+  /* Valida */
+  var propErr = document.getElementById('lp_propErr');
+  var persErr = document.getElementById('lp_persErr');
+  if(propErr) propErr.style.display='none';
+  if(persErr) persErr.style.display='none';
+
+  var ok = true;
+  if(!propSrv||!propLog||!propPwd){ if(propErr){propErr.textContent='⚠️ Compila server, login e password PROP.';propErr.style.display='block';} ok=false; }
+  if(!persSrv||!persLog||!persPwd){ if(persErr){persErr.textContent='⚠️ Compila server, login e password PERSONALE.';persErr.style.display='block';} ok=false; }
+  if(!ok){ if(btn){btn.textContent='🔌 CONNETTI ENTRAMBI I CONTI';btn.disabled=false;} return; }
+
+  /* Salva credenziali (senza password) */
+  try{
+    var saved = {};
+    try{ saved=JSON.parse(localStorage.getItem('ph_live_creds_'+propId)||'{}');}catch(e){}
+    saved.propServer=propSrv; saved.propLogin=propLog; saved.propPlat=_bridge.prop.platform;
+    saved.persServer=persSrv; saved.persLogin=persLog; saved.persPlat=_bridge.pers.platform;
+    localStorage.setItem('ph_live_creds_'+propId, JSON.stringify(saved));
+  }catch(e){}
+
+  /* Connetti i due conti in parallelo */
+  _bridge.prop.server=propSrv; _bridge.prop.login=propLog;
+  _bridge.pers.server=persSrv; _bridge.pers.login=persLog;
+
+  try{
+    var [rProp, rPers] = await Promise.all([
+      fetch('http://127.0.0.1:7777/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login:propLog,password:propPwd,server:propSrv,platform:_bridge.prop.platform})}).then(r=>r.json()),
+      fetch('http://127.0.0.1:7778/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login:persLog,password:persPwd,server:persSrv,platform:_bridge.pers.platform})}).then(r=>r.json())
+    ]);
+
+    _bridge.prop.connected = !!rProp.ok;
+    _bridge.pers.connected = !!rPers.ok;
+
+    if(!rProp.ok && propErr){ propErr.textContent='❌ PROP: dati errati o bridge non avviato. '+JSON.stringify(rProp.error||''); propErr.style.display='block'; }
+    if(!rPers.ok && persErr){ persErr.textContent='❌ PERSONALE: dati errati o bridge non avviato. '+JSON.stringify(rPers.error||''); persErr.style.display='block'; }
+
+    if(_bridge.prop.connected && _bridge.pers.connected){
+      /* Salva id sfida connessa nel bridge */
+      _bridge.prop.propId = propId; _bridge.pers.propId = propId;
+      if(_bridgePollTimer) clearInterval(_bridgePollTimer);
+      _bridgePollTimer = setInterval(liveRefreshAll, 3000);
+      await liveRefreshAll();
+    }
+
+  } catch(e){
+    if(gErr){ gErr.style.display='block'; gErr.style.color='var(--red)'; gErr.textContent='❌ Bridge non raggiungibile. Assicurati di aver avviato bridge.py dal cmd.'; }
+  }
+
+  /* Re-render */
+  setTimeout(function(){
+    if(typeof currentTab !== 'undefined' && currentTab === 'live'){
+      var el = document.getElementById('liveRoot'); if(el) el.outerHTML = renderLive();
+      setTimeout(_bridgeRestoreGrids, 50);
+    }
+  }, 0);
+}
+
+/* Carica credenziali al cambio tab */
+function _liveTryAutoConnect(){
+  if(!_liveSfidaId && typeof props !== 'undefined' && props.length) _liveSfidaId = props[0].id;
+}
 function renderHedgePanel(calcLots){
   var s70 = typeof _simCH1 !== 'undefined' ? _simCH1 : null;
   var lotProp = calcLots.prop;
@@ -9156,8 +9388,28 @@ async function liveRefreshAll(){
   var allPos = (_bridge.prop.positions||[]).map(function(p){return Object.assign({},p,{_side:'prop'});})
     .concat((_bridge.pers.positions||[]).map(function(p){return Object.assign({},p,{_side:'pers'});}));
   liveRenderAllPositions(allPos);
-  /* Controlla trade chiusi → aggiorna simulatore */
   _bridgeCheckClosed();
+  /* Aggiorna P&L in tempo reale nella Dashboard senza ricaricare */
+  _dashUpdateLivePnl();
+}
+
+function _dashUpdateLivePnl(){
+  /* Aggiorna solo i valori P&L delle posizioni aperte nella dashboard */
+  var allPos = (_bridge.prop.positions||[]).map(function(p){return Object.assign({},p,{_side:'prop'});})
+    .concat((_bridge.pers.positions||[]).map(function(p){return Object.assign({},p,{_side:'pers'});}));
+  allPos.forEach(function(pos){
+    var el = document.getElementById('dpnl_'+pos.ticket);
+    if(el){
+      var col = pos.profit >= 0 ? '#34D399' : '#F87171';
+      el.textContent = (pos.profit >= 0 ? '+' : '') + pos.profit.toFixed(2) + '$';
+      el.style.color = col;
+    }
+  });
+  /* Se siamo nella dashboard ricarica le card solo se ci sono nuove posizioni */
+  if(typeof currentTab !== 'undefined' && currentTab === 'dash'){
+    var hasNew = allPos.some(function(pos){ return !document.getElementById('dpnl_'+pos.ticket); });
+    if(hasNew && typeof render === 'function') render();
+  }
 }
 
 function liveRenderAccount(side, a){
@@ -9949,32 +10201,23 @@ function renderStats(){
 
 
 
-  allCycles.forEach(function(c){
-
+  allCycles.forEach(function(c, ci){
     var nc=c.net>=0?'v-green':'v-red';
-
     var pc=c.propPnl>=0?'v-green':'v-red';
-
     var bc=c.brokerPnl>=0?'v-green':'v-red';
 
     html+='<tr class="'+(c.net>0?'cyc-pos':'')+'">'
-
       +'<td style="font-weight:600">'+c.name+'</td>'
-
       +'<td style="text-align:center">'+(c.concluded?'<span class="badge b-teal">✓ Chiuso</span>':'<span style="color:var(--amber);font-size:10px;font-family:var(--fd)">● In corso</span>')+'</td>'
-
       +'<td style="text-align:right;font-family:var(--fd)">'+c.propCount+'</td>'
-
       +'<td style="text-align:right;font-family:var(--fd)">'+c.brokerCount+'</td>'
-
       +'<td style="text-align:right;font-family:var(--fd)" class="'+pc+'">'+(c.propPnl>=0?'+':'')+c.propPnl.toFixed(2)+'$</td>'
-
       +'<td style="text-align:right;font-family:var(--fd)" class="'+bc+'">'+(c.brokerPnl>=0?'+':'')+c.brokerPnl.toFixed(2)+'$</td>'
-
       +'<td style="text-align:right;font-family:var(--fd);font-size:15px;font-weight:700" class="'+nc+'">'+(c.net>=0?'+':'')+c.net.toFixed(2)+'$</td>'
-
+      +'<td style="text-align:center;padding:4px 8px">'
+      +'<button onclick="statsDeleteSession('+ci+')" title="Elimina sfida" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:5px;color:var(--red);padding:3px 8px;font-size:10px;cursor:pointer">✕</button>'
+      +'</td>'
       +'</tr>';
-
   });
 
 
@@ -10369,16 +10612,17 @@ function renderJournal(){
 
   ct.innerHTML='<div class="jw">'+jrnlRenderSidebar()+'<div class="jmain" id="jmain">'+jrnlRenderMain()+'</div></div>';
 
-
-
+  /* Ricalcola simulatori di tutte le sfide visibili */
   setTimeout(function(){
-
-
-
+    var sess = jrnlGetActive();
+    if(sess && sess.linkedPropId){
+      var prop = typeof props !== 'undefined' ? props.find(function(p){return p.id===sess.linkedPropId;}) : null;
+      if(prop){
+        var simData = jrnlSimLoad(prop.id) || {rows:{}};
+        jrnlRecalcSim(prop, simData, jrnl.activeIdx);
+      }
+    }
     document.querySelectorAll('[data-jconn-idx]').forEach(function(el){el.addEventListener('click',function(){jrnlOpenConn(parseInt(el.dataset.jconnIdx),el.dataset.jconnSide);});});
-
-
-
   },50);
 
 
@@ -10444,113 +10688,111 @@ function jrnlRenderSidebar(){
 
 
 function jrnlRenderMain(){
-
-
-
   var sess=jrnlGetActive();if(!sess)return'<div style="padding:30px;color:var(--t3)">Seleziona una sfida</div>';
-
-
-
   var i=jrnl.activeIdx;
-
-
-
   var pt=(sess.propTrades||[]).slice().sort(function(a,b){return new Date(b.open_time||b.opened_at||0)-new Date(a.open_time||a.opened_at||0);});
-
-
-
   var bt=(sess.brokerTrades||[]).slice().sort(function(a,b){return new Date(b.open_time||b.opened_at||0)-new Date(a.open_time||a.opened_at||0);});
-
-
-
   var ptPnl=pt.reduce(function(s,t){return s+parseFloat(t.profit||t.pnl_realized||0);},0);
-
-
-
   var btPnl=bt.reduce(function(s,t){return s+parseFloat(t.profit||t.pnl_realized||0);},0);
+  var ptOpen=pt.filter(function(t){return t.status==='open';});
+  var btOpen=bt.filter(function(t){return t.status==='open';});
 
+  /* Trova la prop collegata */
+  var prop = null;
+  if(sess.linkedPropId && typeof props !== 'undefined')
+    prop = props.find(function(p){return p.id===sess.linkedPropId;});
 
-
-  var ptOpen=pt.filter(function(t){return t.status==='open';});var btOpen=bt.filter(function(t){return t.status==='open';});
-
-
+  /* Stato connessione bridge per questa sfida */
+  var bridgeConn = typeof _bridge !== 'undefined'
+    && _bridge.prop.connected && _bridge.pers.connected
+    && _bridge.prop.propId === sess.linkedPropId;
 
   var html='';
 
+  /* ── PANNELLO TRADING ─────────────────────────────── */
+  if(prop && !sess.concluded){
+    var lotProp = prop.lots || 0;
+    var lotPers = prop.lotPers || prop.lotsHedge || 0;
+    var sl      = prop.slPips || 100;
+    var tp      = prop.tpPips || 100;
+    var asset   = prop.asset || 'GOLD';
+    var sym     = (asset==='GOLD'||asset==='XAU')?'XAUUSD':asset;
 
+    /* Applica regole 70% dal simulatore in tempo reale */
+    if(typeof _simCH1 !== 'undefined'){
+      if(_simCH1._above70Active && _simCH1._lotPersHalved > 0)
+        lotPers = _simCH1._lotPersHalved;  /* 70% profit: pers dimezza */
+      if(_simCH1._above70Loss && lotProp > 0.01)
+        lotProp = Math.floor(lotProp * 50) / 100;  /* 70% loss: prop dimezza */
+    }
 
-  if(sess.concluded)html+='<div style="padding:7px 16px;font-size:11px;display:flex;align-items:center;gap:8px;background:rgba(248,113,113,.07);color:var(--red);border-bottom:1px solid rgba(248,113,113,.15);flex-shrink:0">🏁 Sfida conclusa — <a href="#" onclick="jrnlReset('+i+');return false" style="color:var(--teal);text-decoration:none">↺ Reimposta</a></div>';
+    html += '<div style="background:linear-gradient(135deg,rgba(56,189,248,.06),rgba(167,139,250,.06));border-bottom:2px solid rgba(167,139,250,.25);padding:14px 16px">'
 
+      /* Nome sfida + stato connessione con unico pulsante */
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">'
+      +'<div style="font-size:14px;font-weight:800;color:var(--t)">'+sess.name+'</div>'
+      +(bridgeConn
+        ?'<span style="font-size:10px;color:#34D399;font-weight:700;font-family:var(--fd);background:rgba(52,211,153,.1);padding:3px 8px;border-radius:5px">🔴 LIVE connesso</span>'
+        :'<button onclick="liveSelectSfida('+sess.linkedPropId+');goTab(\'live\',document.getElementById(\'tabLive\'))" style="background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);border-radius:7px;color:#38BDF8;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer">🔌 Connetti in Live Trading</button>')
+      +'<button onclick="openProp('+(prop?prop.id:0)+')" style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:7px;color:var(--green);padding:5px 12px;font-size:11px;cursor:pointer">✏️ Modifica parametri</button>'
+      +'</div>'
 
+      /* Parametri calcolati */
+      +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">'
+      +[
+        ['Lotti PROP',  lotProp+' lot', '#38BDF8'],
+        ['Lotti PERS',  lotPers+' lot', '#A78BFA'],
+        ['SL / TP',     sl+' / '+tp+' pip', 'var(--amber)'],
+        ['Asset',       sym, 'var(--teal)']
+      ].map(function(k){
+        return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center">'
+          +'<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">'+k[0]+'</div>'
+          +'<div style="font-size:14px;font-weight:800;font-family:var(--fd);color:'+k[2]+'">'+k[1]+'</div></div>';
+      }).join('')
+      +'</div>'
+
+      /* Simbolo editabile */
+      +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">'
+      +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);white-space:nowrap">Simbolo broker:</div>'
+      +'<input id="jSym_'+i+'" value="'+sym+'" placeholder="XAUUSD" style="width:120px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--t);padding:5px 8px;font-size:11px;font-weight:700;outline:none">'
+      +'</div>'
+
+      /* Pulsanti APRI HEDGE */
+      +(bridgeConn
+        ?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+          +'<button onclick="jrnlOpenHedge('+i+',\'buy\')" style="padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#059669,#34D399);color:#fff;font-size:13px;font-weight:800;cursor:pointer">▲ BUY PROP · SELL PERS</button>'
+          +'<button onclick="jrnlOpenHedge('+i+',\'sell\')" style="padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#dc2626,#F87171);color:#fff;font-size:13px;font-weight:800;cursor:pointer">▼ SELL PROP · BUY PERS</button>'
+          +'</div>'
+        :'<button onclick="goTab(\'live\',document.getElementById(\'tabLive\'))" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.08);color:var(--amber);font-size:12px;font-weight:700;cursor:pointer">🔌 Connetti i conti in Live Trading per fare trading</button>')
+      +'<div id="jHedgeResult_'+i+'" style="margin-top:8px;font-size:11px;font-family:var(--fd);display:none;padding:8px;border-radius:6px"></div>'
+      +'</div>'
+
+    /* Simulatore giorno per giorno della sfida */
+    +jrnlRenderSimulator(sess, prop, i);
+  }
+
+  if(sess.concluded) html+='<div style="padding:7px 16px;font-size:11px;display:flex;align-items:center;gap:8px;background:rgba(248,113,113,.07);color:var(--red);border-bottom:1px solid rgba(248,113,113,.15);flex-shrink:0">🏁 Sfida conclusa — <a href="#" onclick="jrnlReset('+i+');return false" style="color:var(--teal);text-decoration:none">↺ Reimposta</a></div>';
 
   html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg3);border-bottom:1px solid var(--border);flex-wrap:wrap;flex-shrink:0">';
-
-
-
   if(sess.propConn.connected&&!sess.concluded)html+='<button class="btn-g" style="padding:4px 8px;font-size:10px" data-jsync-idx="'+i+'" data-jsync-side="prop">🔄 Prop</button>';
-
-
-
   if(sess.brokerConn.connected&&!sess.concluded)html+='<button class="btn-g" style="padding:4px 8px;font-size:10px" data-jsync-idx="'+i+'" data-jsync-side="broker">🔄 Broker</button>';
-
-
-
   if(!sess.concluded)html+='<button class="btn-g" style="padding:4px 8px;font-size:10px;color:var(--amber)" data-jconclude="'+i+'">🏁 Conclusa</button>';
-
-
-
   html+='</div>';
-
-
 
   html+='<div class="jpnl-chart"><div class="jpnl-half"><div class="jpnl-label">🎯 Prop — P/L</div><div class="jpnl-val '+(ptPnl>=0?'v-green':'v-red')+'">'+(ptPnl>=0?'+':'')+ptPnl.toFixed(2)+'$</div></div>';
-
-
-
   html+='<div class="jpnl-half"><div class="jpnl-label">💹 Broker — P/L</div><div class="jpnl-val '+(btPnl>=0?'v-green':'v-red')+'">'+(btPnl>=0?'+':'')+btPnl.toFixed(2)+'$</div></div></div>';
 
-
-
   html+='<div class="jcols-outer"><div class="jcols-hdr">';
-
-
-
-  html+='<div class="jcol-hdr"><span class="jcol-title prop">🎯 Prop</span><div class="jstats"><div class="jstat">Aperti: <b style="color:var(--teal)">'+ptOpen.length+'</b></div></div>'+(sess.propConn.connected?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">● '+sess.propConn.label+'</span>':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="prop">🔗 Connetti</button>')+'</div>';
-
-
-
-  html+='<div class="jcol-hdr"><span class="jcol-title broker">💹 Broker</span><div class="jstats"><div class="jstat">Aperti: <b style="color:var(--teal)">'+btOpen.length+'</b></div></div>'+(sess.brokerConn.connected?'<span style="font-size:10px;color:var(--teal);font-family:var(--fd);margin-left:auto">● '+sess.brokerConn.label+'</span>':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" data-jconn-idx="'+i+'" data-jconn-side="broker">🔗 Connetti</button>')+'</div>';
-
-
-
+  html+='<div class="jcol-hdr"><span class="jcol-title prop">🎯 Prop</span><div class="jstats"><div class="jstat">Aperti: <b style="color:var(--teal)">'+ptOpen.length+'</b></div></div>'+(bridgeConn?'<span style="font-size:10px;color:#34D399;font-family:var(--fd);margin-left:auto">● Live</span>':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" onclick="goTab(\'live\',document.getElementById(\'tabLive\'))">🔌 Connetti</button>')+'</div>';
+  html+='<div class="jcol-hdr"><span class="jcol-title broker">💹 Broker</span><div class="jstats"><div class="jstat">Aperti: <b style="color:var(--teal)">'+btOpen.length+'</b></div></div>'+(bridgeConn?'<span style="font-size:10px;color:#34D399;font-family:var(--fd);margin-left:auto">● Live</span>':'<button class="btn-g" style="padding:2px 8px;font-size:10px;margin-left:auto" onclick="goTab(\'live\',document.getElementById(\'tabLive\'))">🔌 Connetti</button>')+'</div>';
   html+='</div>';
 
-
-
   html+='<div class="jscroll"><div class="jrow-hdr"><div class="jcell-hdr"><span>Simbolo</span><span>Dir.</span><span>Lotti</span><span>P/L</span><span>Stato</span></div><div class="jcell-hdr"><span>Simbolo</span><span>Dir.</span><span>Lotti</span><span>P/L</span><span>Stato</span></div></div>';
-
-
-
   var maxLen=Math.max(pt.length,bt.length);
-
-
-
   if(!maxLen){
-
-
-
     html+='<div class="jrow"><div class="jcell">'+jrnlEmptyCol('prop',sess,i)+'</div><div class="jcell">'+jrnlEmptyCol('broker',sess,i)+'</div></div>';
-
-
-
   }else{
-
-
-
     for(var r=0;r<maxLen;r++){html+='<div class="jrow"><div class="jcell">'+jrnlCell(pt[r]||null)+'</div><div class="jcell">'+jrnlCell(bt[r]||null)+'</div></div>';}
-
-
-
   }
 
 
@@ -10703,7 +10945,335 @@ function jrnlCreateNew(){
 
 
 
-function jrnlDelete(i){if(!confirm('Eliminare la sfida "'+jrnl.sessions[i].name+'"?'))return;jrnl.sessions.splice(i,1);if(jrnl.activeIdx>=jrnl.sessions.length)jrnl.activeIdx=Math.max(0,jrnl.sessions.length-1);jrnlSave();renderJournal();}
+async function jrnlOpenHedge(sessIdx, propDir){
+  var sess = jrnl.sessions[sessIdx];
+  if(!sess) return;
+
+  var prop = null;
+  if(sess.linkedPropId && typeof props !== 'undefined')
+    prop = props.find(function(p){return p.id===sess.linkedPropId;});
+  if(!prop){ alert('Parametri sfida non trovati.'); return; }
+
+  var sym     = document.getElementById('jSym_'+sessIdx)?.value || prop.asset || 'XAUUSD';
+  if(sym==='GOLD') sym='XAUUSD';
+  var lotProp = prop.lots || 0.01;
+  var lotPers = prop.lotPers || prop.lotsHedge || 0.01;
+  var sl      = prop.slPips || 100;
+  var tp      = prop.tpPips || 100;
+  var persDir = propDir==='buy' ? 'sell' : 'buy';
+
+  /* Applica regole 70% dal simulatore */
+  if(typeof _simCH1 !== 'undefined'){
+    if(_simCH1._above70Active && _simCH1._lotPersHalved > 0)
+      lotPers = _simCH1._lotPersHalved;
+    if(_simCH1._above70Loss && lotProp > 0.01)
+      lotProp = Math.floor(lotProp * 50) / 100;
+  }
+
+  var res = document.getElementById('jHedgeResult_'+sessIdx);
+  if(res){ res.style.display='block'; res.style.background='rgba(251,191,36,.08)'; res.style.color='var(--amber)'; res.textContent='⏳ Apertura in corso...'; }
+
+  try{
+    var [rProp, rPers] = await Promise.all([
+      fetch('http://127.0.0.1:7777/order',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({symbol:sym,volume:lotProp,side:propDir,sl:0,tp:0,comment:'PH_PROP_'+sess.name})}).then(r=>r.json()),
+      fetch('http://127.0.0.1:7778/order',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({symbol:sym,volume:lotPers,side:persDir,sl:0,tp:0,comment:'PH_PERS_'+sess.name})}).then(r=>r.json())
+    ]);
+
+    var okProp = rProp.retcode===10009||rProp.retcode===0;
+    var okPers = rPers.retcode===10009||rPers.retcode===0;
+
+    if(okProp && okPers){
+      if(res){ res.style.background='rgba(52,211,153,.1)'; res.style.color='var(--green)';
+        res.textContent='✅ PROP '+propDir.toUpperCase()+' '+lotProp+'lot #'+rProp.order+' · PERS '+persDir.toUpperCase()+' '+lotPers+'lot #'+rPers.order; }
+      /* Registra trade aperto per tracking chiusura */
+      if(!_openHedgeTrades) _openHedgeTrades=[];
+      _openHedgeTrades.push({
+        propTicket:rProp.order, persTicket:rPers.order,
+        sym:sym, dir:propDir, lotProp:lotProp, lotPers:lotPers,
+        sessIdx:sessIdx, linkedPropId:sess.linkedPropId,
+        day: _getSimCurrentDay(sess.linkedPropId)
+      });
+    } else {
+      if(res){ res.style.background='rgba(248,113,113,.1)'; res.style.color='var(--red)';
+        res.textContent='❌ PROP: '+(okProp?'OK':JSON.stringify(rProp.comment||rProp.retcode))+' · PERS: '+(okPers?'OK':JSON.stringify(rPers.comment||rPers.retcode)); }
+    }
+  } catch(e){
+    if(res){ res.style.background='rgba(248,113,113,.1)'; res.style.color='var(--red)';
+      res.textContent='❌ Bridge non raggiungibile. Assicurati che bridge.py sia avviato.'; }
+  }
+}
+
+function _getSimCurrentDay(linkedPropId){
+  /* Trova il primo giorno vuoto nel simulatore della sfida */
+  if(typeof _simCH1 !== 'undefined' && _simCH1.data){
+    var idx = _simCH1.data.findIndex(function(d){return d.w===''&&d.l==='';});
+    return idx>=0 ? idx : 0;
+  }
+  return 0;
+}
+
+function _bridgeCheckClosed(){
+  if(!_openHedgeTrades || !_openHedgeTrades.length) return;
+  var propPos = (_bridge.prop.positions||[]).map(function(p){return p.ticket;});
+  var remaining = [];
+  _openHedgeTrades.forEach(function(t){
+    var stillOpen = propPos.indexOf(t.propTicket)>=0;
+    if(!stillOpen && (_bridgeClosedTrades||[]).indexOf(t.propTicket)<0){
+      if(!_bridgeClosedTrades) _bridgeClosedTrades=[];
+      _bridgeClosedTrades.push(t.propTicket);
+      _jrnlMarkTradeResult(t);
+    } else if(stillOpen){
+      remaining.push(t);
+    }
+  });
+  _openHedgeTrades = remaining;
+}
+
+function _jrnlMarkTradeResult(trade){
+  fetch('http://127.0.0.1:7777/history?ticket='+trade.propTicket)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var isWin = (d.profit||0) >= 0;
+      var day   = trade.day;
+      /* Aggiorna simulatore CH1 */
+      if(typeof _simCH1 !== 'undefined' && _simCH1.data && _simCH1.data[day]!==undefined){
+        if(isWin) _simCH1.data[day].w = (parseInt(_simCH1.data[day].w)||0)+1;
+        else       _simCH1.data[day].l = (parseInt(_simCH1.data[day].l)||0)+1;
+        if(typeof _saveSimData==='function') _saveSimData();
+        if(typeof _openSimChallenge1==='function') _openSimChallenge1();
+        else if(typeof _simCH1_calc==='function') _simCH1_calc();
+      }
+      var msg = isWin
+        ? '✅ Trade chiuso in profitto — W segnato nel simulatore (giorno '+(day+1)+')'
+        : '❌ Trade chiuso in perdita — L segnato nel simulatore (giorno '+(day+1)+')';
+      _showBridgeToast(msg, isWin?'var(--green)':'var(--red)');
+      /* Aggiorna journal */
+      renderJournal();
+    })
+    .catch(function(){
+      _showBridgeToast('Trade chiuso — aggiorna manualmente il simulatore','var(--amber)');
+    });
+}
+
+/* ══════════════════════════════════════════════════
+   SIMULATORE PER OGNI SFIDA NEL JOURNAL
+   Dati separati per sfida → localStorage ph_sim_{propId}
+   ══════════════════════════════════════════════════ */
+
+function jrnlSimKey(propId){ return 'ph_sim_'+propId; }
+
+function jrnlSimLoad(propId){
+  try{
+    var s = localStorage.getItem(jrnlSimKey(propId));
+    return s ? JSON.parse(s) : null;
+  }catch(e){ return null; }
+}
+
+function jrnlSimSave(propId, data){
+  try{ localStorage.setItem(jrnlSimKey(propId), JSON.stringify(data)); }catch(e){}
+}
+
+function jrnlSimInput(propId, day, field, val){
+  var data = jrnlSimLoad(propId) || {};
+  if(!data.rows) data.rows = {};
+  if(!data.rows[day]) data.rows[day] = {w:'',l:''};
+  data.rows[day][field] = val;
+  jrnlSimSave(propId, data);
+  /* Ricalcola il simulatore di questa sfida */
+  var p = props.find(function(x){return x.id===propId;});
+  if(p) jrnlRecalcSim(p, data, jrnl.activeIdx);
+}
+
+function jrnlRecalcSim(prop, simData, sessIdx){
+  /* Ricalcola e ridisegna solo le celle del simulatore di questa sfida */
+  var rows   = simData.rows || {};
+  var size   = prop.size   || 100000;
+  var maxDD  = prop.maxDD  || 6;
+  var tgtPct = prop.tgtPct || 8;
+  var sl     = prop.slPips || 100;
+  var asset  = prop.asset  || 'GOLD';
+  var pipVal = (typeof _chPipVal === 'function') ? _chPipVal(asset) : 10;
+  var isTrail= prop.isTrail || false;
+  var trailLock = prop.trailLock || 0;
+  var lotProp = prop.lots    || 0.01;
+  var lotPers = prop.lotPers || prop.lotsHedge || 0.01;
+  var days    = prop.days    || 10;
+
+  var propWin  = lotProp * sl * pipVal;
+  var propLoss = lotProp * sl * pipVal;
+  var persWin  = lotPers * sl * pipVal;
+  var persLoss = lotPers * sl * pipVal;
+
+  var bal        = size;
+  var hwm        = size;
+  var ddLine     = size * (1 - maxDD/100);
+  var propPnlCum = 0;
+  var persPnlCum = 0;
+  var tgtUsd     = size * (tgtPct/100);
+  var thresh70   = tgtUsd * 0.70;
+  var above70    = false;
+
+  for(var day=0; day<days+10; day++){
+    var r   = rows[day] || {w:'',l:''};
+    var w   = parseInt(r.w)||0;
+    var l   = parseInt(r.l)||0;
+    var has = (r.w!==''&&r.w!==null)||(r.l!==''&&r.l!==null);
+
+    var balEl    = document.getElementById('jsim_bal_'+sessIdx+'_'+day);
+    var pnlEl    = document.getElementById('jsim_pnl_'+sessIdx+'_'+day);
+    var persEl   = document.getElementById('jsim_pers_'+sessIdx+'_'+day);
+    var netEl    = document.getElementById('jsim_net_'+sessIdx+'_'+day);
+
+    if(!has){
+      if(balEl) balEl.textContent = '$'+bal.toFixed(0);
+      continue;
+    }
+
+    var rowPropPnl = w*propWin - l*propLoss;
+    var rowPersPnl = l*persWin - w*persLoss;
+    propPnlCum += rowPropPnl;
+    persPnlCum += rowPersPnl;
+    bal = size + propPnlCum;
+
+    if(isTrail && bal > hwm){
+      hwm = bal;
+      var lt = size + tgtUsd*(trailLock/100);
+      ddLine = (trailLock>0 && hwm>=lt) ? size*(1-maxDD/100) : hwm*(1-maxDD/100);
+    }
+
+    /* 70% profit */
+    if(propPnlCum >= thresh70 && !above70){
+      above70 = true;
+      lotPers = typeof halveLot === 'function' ? halveLot(prop.lotPers||prop.lotsHedge||0.01) : Math.floor((prop.lotPers||0.01)*50)/100;
+      persWin = lotPers * sl * pipVal;
+      persLoss= lotPers * sl * pipVal;
+    } else if(propPnlCum < thresh70 && above70){
+      above70 = false;
+      lotPers = prop.lotPers || prop.lotsHedge || 0.01;
+      persWin = lotPers * sl * pipVal;
+      persLoss= lotPers * sl * pipVal;
+    }
+
+    var netNow = -prop.cost + persPnlCum;
+    if(balEl)  balEl.textContent  = '$'+bal.toFixed(0);
+    if(pnlEl){ pnlEl.textContent = (rowPropPnl>=0?'+':'')+rowPropPnl.toFixed(0)+'$'; pnlEl.style.color = rowPropPnl>=0?'var(--green)':'var(--red)'; }
+    if(persEl){ persEl.textContent = (rowPersPnl>=0?'+':'')+rowPersPnl.toFixed(0)+'$'; persEl.style.color = rowPersPnl>=0?'var(--green)':'var(--red)'; }
+    if(netEl){  netEl.textContent  = (netNow>=0?'+':'')+netNow.toFixed(0)+'$';  netEl.style.color  = netNow>=0?'var(--green)':'var(--red)'; }
+
+    if(bal <= ddLine + 0.01) break;
+    if(propPnlCum >= tgtUsd) break;
+  }
+}
+
+function jrnlRenderSimulator(sess, prop, sessIdx){
+  if(!prop || !prop.size) return '';
+  var propId = prop.id;
+  var simData = jrnlSimLoad(propId) || {rows:{}};
+  var days    = (prop.days || 10) + 10;
+  var size    = prop.size || 100000;
+  var tgtPct  = prop.tgtPct || 8;
+  var sl      = prop.slPips || 100;
+  var asset   = prop.asset || 'GOLD';
+  var pipVal  = (typeof _chPipVal === 'function') ? _chPipVal(asset) : 10;
+  var lotProp = prop.lots || 0.01;
+  var lotPers = prop.lotPers || prop.lotsHedge || 0.01;
+  var tgtUsd  = size * (tgtPct/100);
+
+  var html = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin:14px 0;overflow:hidden">'
+    +'<div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t)">📊 Simulatore Giorno per Giorno — '+sess.name+'</div>'
+    +'<button onclick="jrnlSimReset('+propId+','+sessIdx+')" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:6px;color:var(--red);padding:3px 10px;font-size:10px;cursor:pointer">Reset</button>'
+    +'</div>'
+    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);padding:6px 16px;background:var(--bg3);border-bottom:1px solid var(--border)">'
+    +'PROP '+lotProp+' lot ±$'+(lotProp*sl*pipVal).toFixed(0)+'/trade · PERS '+lotPers+' lot ±$'+(lotPers*sl*pipVal).toFixed(0)+'/trade · Target $'+tgtUsd.toFixed(0)
+    +'</div>'
+    +'<div style="overflow-x:auto">'
+    +'<table style="width:100%;border-collapse:collapse;font-size:11px">'
+    +'<thead><tr style="background:var(--bg3)">'
+    +'<th style="padding:6px 8px;color:var(--t3);font-family:var(--fd);font-weight:700;text-align:center;border-right:1px solid var(--border)">#</th>'
+    +'<th style="padding:6px 8px;color:var(--green);font-family:var(--fd);font-weight:700;text-align:center">WIN</th>'
+    +'<th style="padding:6px 8px;color:var(--red);font-family:var(--fd);font-weight:700;text-align:center">STOP</th>'
+    +'<th style="padding:6px 8px;color:var(--teal);font-family:var(--fd);font-weight:700;text-align:center">BALANCE</th>'
+    +'<th style="padding:6px 8px;color:var(--t2);font-family:var(--fd);font-weight:700;text-align:center">P&L PROP</th>'
+    +'<th style="padding:6px 8px;color:var(--violet);font-family:var(--fd);font-weight:700;text-align:center">PERS.</th>'
+    +'<th style="padding:6px 8px;color:var(--amber);font-family:var(--fd);font-weight:700;text-align:center">NETTO</th>'
+    +'</tr></thead><tbody>';
+
+  for(var day=0; day<days; day++){
+    var r = (simData.rows && simData.rows[day]) || {w:'',l:''};
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,.04)">'
+      +'<td style="padding:4px 8px;text-align:center;color:var(--t3);border-right:1px solid var(--border)">'+(day+1)+'</td>'
+      +'<td style="padding:4px 6px;text-align:center">'
+      +'<input type="number" min="0" max="20" value="'+(r.w||'')+'" placeholder="0" '
+      +'oninput="jrnlSimInput('+propId+','+day+',\'w\',this.value)" '
+      +'style="width:44px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);color:var(--green);border-radius:5px;padding:3px;font-size:11px;font-weight:700;text-align:center;outline:none;font-family:var(--fd)">'
+      +'</td>'
+      +'<td style="padding:4px 6px;text-align:center">'
+      +'<input type="number" min="0" max="20" value="'+(r.l||'')+'" placeholder="0" '
+      +'oninput="jrnlSimInput('+propId+','+day+',\'l\',this.value)" '
+      +'style="width:44px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);color:var(--red);border-radius:5px;padding:3px;font-size:11px;font-weight:700;text-align:center;outline:none;font-family:var(--fd)">'
+      +'</td>'
+      +'<td style="padding:4px 8px;text-align:center;font-family:var(--fd);color:var(--teal)" id="jsim_bal_'+sessIdx+'_'+day+'">$'+size.toFixed(0)+'</td>'
+      +'<td style="padding:4px 8px;text-align:center;font-family:var(--fd);color:var(--t2)" id="jsim_pnl_'+sessIdx+'_'+day+'">—</td>'
+      +'<td style="padding:4px 8px;text-align:center;font-family:var(--fd);color:var(--violet)" id="jsim_pers_'+sessIdx+'_'+day+'">—</td>'
+      +'<td style="padding:4px 8px;text-align:center;font-family:var(--fd);color:var(--amber)" id="jsim_net_'+sessIdx+'_'+day+'">—</td>'
+      +'</tr>';
+  }
+
+  html += '</tbody></table></div></div>';
+  return html;
+}
+
+function jrnlSimReset(propId, sessIdx){
+  if(!confirm('Resettare il simulatore di questa sfida?')) return;
+  jrnlSimSave(propId, {rows:{}});
+  renderJournal();
+}
+
+function statsDeleteSession(cycleIdx){
+  /* cycleIdx corrisponde all'indice in jrnl.sessions */
+  var sess = jrnl.sessions[cycleIdx];
+  if(!sess) return;
+  if(!confirm('Eliminare la sfida "'+sess.name+'" e tutti i suoi dati?')) return;
+  var linkedId = sess.linkedPropId;
+  jrnl.sessions.splice(cycleIdx, 1);
+  if(jrnl.activeIdx >= jrnl.sessions.length) jrnl.activeIdx = Math.max(0, jrnl.sessions.length-1);
+  jrnlSave();
+  /* Elimina anche da props */
+  if(linkedId && typeof props !== 'undefined'){
+    props = props.filter(function(p){ return p.id !== linkedId; });
+    if(typeof activeId !== 'undefined' && activeId === linkedId)
+      activeId = props.length ? props[0].id : null;
+    try{ localStorage.removeItem('ph_live_creds_'+linkedId); } catch(e){}
+    try{ localStorage.removeItem('ph_sim_'+linkedId); } catch(e){}
+    if(typeof render === 'function') render();
+  }
+  /* Ricarica stats */
+  var main = document.getElementById('main');
+  if(main) main.innerHTML = renderStats();
+}
+
+function jrnlDelete(i){
+  if(!confirm('Eliminare la sfida "'+jrnl.sessions[i].name+'"?')) return;
+  var sess = jrnl.sessions[i];
+  var linkedId = sess.linkedPropId;
+  /* Elimina dal journal */
+  jrnl.sessions.splice(i,1);
+  if(jrnl.activeIdx>=jrnl.sessions.length) jrnl.activeIdx=Math.max(0,jrnl.sessions.length-1);
+  jrnlSave();
+  /* Elimina anche da props se collegata */
+  if(linkedId && typeof props !== 'undefined'){
+    props = props.filter(function(p){ return p.id !== linkedId; });
+    if(typeof activeId !== 'undefined' && activeId === linkedId)
+      activeId = props.length ? props[0].id : null;
+    try{ localStorage.removeItem('ph_live_creds_'+linkedId); } catch(e){}
+    if(typeof saveProps === 'function') saveProps();
+    else if(typeof render === 'function') render();
+  }
+  renderJournal();
+}
 
 
 
@@ -15705,6 +16275,8 @@ function _simCH1_calc() {
           _simCH1._lotPersHalved = curLotPers;
           insert70Banner(rr, 'profit_on');
           if (typeof calcPreview === 'function') setTimeout(calcPreview, 80);
+          /* Aggiorna Journal in real-time */
+          if (typeof renderJournal === 'function') setTimeout(renderJournal, 100);
 
         } else if (!nowProfit70 && above70profit) {
           above70profit = false;
@@ -15715,12 +16287,10 @@ function _simCH1_calc() {
           _simCH1._lotPersHalved = 0;
           insert70Banner(rr, 'profit_off');
           if (typeof calcPreview === 'function') setTimeout(calcPreview, 80);
+          if (typeof renderJournal === 'function') setTimeout(renderJournal, 100);
         }
 
-        /* ── REGOLA 70% LOSS: prop consuma >= 70% DD residuo → prop dimezza ──
-           Con trailing: ddLine sale con ogni TP → DD residuo si riduce.
-           Con DD statico: ddLine fissa → soglia fissa.
-        ── */
+        /* ── REGOLA 70% LOSS: prop consuma >= 70% DD residuo → prop dimezza ── */
         var ddThresh70loss = getDDThresh70(bal, ddLine);
         var nowLoss70 = bal <= ddThresh70loss;
         if (nowLoss70 && !above70loss) {
@@ -15728,14 +16298,17 @@ function _simCH1_calc() {
           curLots     = halveLot(lotsOrig);
           propWin     = curLots * s.slPips * s.pipVal;
           propLoss    = curLots * s.slPips * s.pipVal;
+          _simCH1._above70Loss = true;
           insert70Banner(rr, 'loss_on');
           if (typeof calcPreview === 'function') setTimeout(calcPreview, 80);
+          if (typeof renderJournal === 'function') setTimeout(renderJournal, 100);
 
         } else if (!nowLoss70 && above70loss) {
           above70loss = false;
           curLots     = lotsOrig;
           propWin     = curLots * s.slPips * s.pipVal;
           propLoss    = curLots * s.slPips * s.pipVal;
+          _simCH1._above70Loss = false;
           insert70Banner(rr, 'loss_off');
           if (typeof calcPreview === 'function') setTimeout(calcPreview, 80);
         }
