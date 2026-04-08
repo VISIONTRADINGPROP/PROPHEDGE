@@ -9683,104 +9683,81 @@ function liveTutGo(dir){
 if(window.speechSynthesis) window.speechSynthesis.getVoices();
 
 function liveDownloadGuide(){
-  var code = `# PropHedge Bridge v2.1
-# UN SOLO AVVIO — gestisce porta 7777 (PROP) e 7778 (PERSONALE)
+  var code = `# PropHedge Bridge v3.0
+# NESSUNA CONFIGURAZIONE — si collega automaticamente a MT4/MT5 aperto
 # Avvio: py bridge.py
-# Requisiti: py -m pip install flask flask-cors MetaTrader5
+# Requisiti (una volta sola): py -m pip install flask flask-cors MetaTrader5
 
 import threading
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import MetaTrader5 as mt5
 
-def find_terminal_path(platform='mt5'):
-    """Trova MT5/MT4 automaticamente senza richiedere input dall'utente"""
+def connect_mt5(login, password, server):
+    """
+    Connette a MT4/MT5 già aperto sul PC.
+    Prova prima senza percorso (MT5 già aperto),
+    poi cerca automaticamente in tutti i percorsi comuni.
+    """
     import os, glob
 
-    exe = 'terminal64.exe' if platform == 'mt5' else 'terminal.exe'
+    # Tentativo 1: MT5 è già aperto, connettiti direttamente
+    if mt5.initialize():
+        ok = mt5.login(login, password, server)
+        if ok:
+            return True, None
+        mt5.shutdown()
 
-    # Cerca in tutte le cartelle di installazione tipiche
-    search_roots = [
+    # Tentativo 2: cerca il terminale in tutto il PC
+    exe = 'terminal64.exe'
+    search = [
         r"C:\Program Files",
         r"C:\Program Files (x86)",
-        os.path.expanduser("~\\AppData\\Roaming\\MetaQuotes\\Terminal"),
-        os.path.expanduser("~\\AppData\\Local\\Programs"),
-        r"C:\Users\Public\Desktop",
         r"D:\Program Files",
-        r"E:\Program Files",
+        os.path.join(os.environ.get("APPDATA",""), "MetaQuotes", "Terminal"),
+        os.path.join(os.environ.get("LOCALAPPDATA",""), "Programs"),
     ]
-
-    for root in search_roots:
+    for root in search:
         if not root or not os.path.isdir(root): continue
-        # 1 livello
-        for f in glob.glob(os.path.join(root, exe)):
-            return f
-        # 2 livelli (broker subdirectory)
-        for f in glob.glob(os.path.join(root, "*", exe)):
-            return f
-        # 3 livelli
-        for f in glob.glob(os.path.join(root, "*", "*", exe)):
-            return f
+        for path in glob.glob(os.path.join(root, "**", exe), recursive=True):
+            try:
+                if mt5.initialize(path=path):
+                    ok = mt5.login(login, password, server)
+                    if ok:
+                        print(f"  Connesso tramite: {path}")
+                        return True, None
+                    mt5.shutdown()
+            except:
+                continue
 
-    return None
-
-def find_mt5_path():
-    return find_terminal_path('mt5')
-
-def init_mt5(platform='mt5'):
-    """Inizializza MT5 o MT4 trovandolo automaticamente"""
-    path = find_terminal_path(platform)
-    if path:
-        print(f"  [{platform.upper()}] Trovato: {path}")
-        if mt5.initialize(path=path):
-            return True
-        print(f"  [{platform.upper()}] Init con path fallito, ritento...")
-    # Tentativo diretto (funziona se MT5 è già aperto e nel PATH)
-    if mt5.initialize():
-        return True
-    print(f"  [{platform.upper()}] Impossibile inizializzare. Assicurati che sia installato e aperto.")
-    return False
+    err = mt5.last_error()
+    return False, {"code": err[0], "msg": str(err[1])}
 
 def create_app():
     app = Flask(__name__)
     CORS(app, resources={r"/*": {"origins": "*"}})
 
     @app.after_request
-    def add_cors(response):
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
-        response.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
-        return response
+    def add_cors(r):
+        r.headers["Access-Control-Allow-Origin"] = "*"
+        r.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        r.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
+        return r
 
-    @app.route("/<path:path>", methods=["OPTIONS"])
-    def options(path):
-        return "", 204
+    @app.route("/<path:p>", methods=["OPTIONS"])
+    def opt(p): return "", 204
 
     @app.route("/connect", methods=["POST"])
     def connect():
         d = request.json
-        platform = d.get("platform", "mt5").lower()
-        if platform == "ctrader": platform = "mt5"  # fallback
-        init_ok = init_mt5(platform)
-        if not init_ok:
-            err = mt5.last_error()
-            plat_name = "MetaTrader 5" if platform == "mt5" else "MetaTrader 4"
-            return jsonify({"ok": False, "error": {"code": err[0],
-                "msg": f"{plat_name} non trovato o non aperto. Assicurati di averlo aperto prima di connetterti. Errore MT5: {err[1]}"}})
-        ok = mt5.login(int(d["login"]), d["password"], d["server"])
-        err = mt5.last_error() if not ok else None
-        return jsonify({
-            "ok": bool(ok),
-            "error": {"code": err[0], "msg": err[1]} if err and not ok else None,
-            "account": mt5.account_info()._asdict().get("login") if ok else None
-        })
+        ok, err = connect_mt5(int(d["login"]), d["password"], d["server"])
+        return jsonify({"ok": ok, "error": err})
 
     @app.route("/account")
     def account():
         info = mt5.account_info()
         if not info: return jsonify({})
-        d = info._asdict()
-        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in d.items()})
+        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in info._asdict().items()})
 
     @app.route("/positions")
     def positions():
@@ -9789,7 +9766,7 @@ def create_app():
 
     @app.route("/history")
     def history():
-        ticket = int(request.args.get("ticket",0))
+        ticket = int(request.args.get("ticket", 0))
         deals = mt5.history_deals_get(position=ticket) or []
         return jsonify({"profit": sum(d.profit for d in deals), "ticket": ticket})
 
@@ -9798,69 +9775,60 @@ def create_app():
         d = request.json
         sym = d["symbol"]
         tick = mt5.symbol_info_tick(sym)
-        side = d.get("side","buy")
-        price = tick.ask if side=="buy" else tick.bid
+        side = d.get("side", "buy")
+        price = tick.ask if side == "buy" else tick.bid
         req = {
             "action": mt5.TRADE_ACTION_DEAL, "symbol": sym,
             "volume": float(d["volume"]),
-            "type": mt5.ORDER_TYPE_BUY if side=="buy" else mt5.ORDER_TYPE_SELL,
-            "price": price, "sl": float(d.get("sl",0)), "tp": float(d.get("tp",0)),
+            "type": mt5.ORDER_TYPE_BUY if side == "buy" else mt5.ORDER_TYPE_SELL,
+            "price": price, "sl": float(d.get("sl", 0)), "tp": float(d.get("tp", 0)),
             "deviation": 10, "magic": 234000,
-            "comment": d.get("comment","PropHedge"),
+            "comment": d.get("comment", "PropHedge"),
             "type_time": mt5.ORDER_TIME_GTC,
             "type_filling": mt5.ORDER_FILLING_IOC,
         }
         r = mt5.order_send(req)
-        rd = r._asdict()
-        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in rd.items()})
+        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
 
     @app.route("/modify", methods=["POST"])
     def modify():
         d = request.json
-        req = {"action":mt5.TRADE_ACTION_SLTP,"position":int(d["ticket"]),"sl":float(d["sl"]),"tp":float(d["tp"])}
+        req = {"action": mt5.TRADE_ACTION_SLTP, "position": int(d["ticket"]),
+               "sl": float(d["sl"]), "tp": float(d["tp"])}
         r = mt5.order_send(req)
-        rd = r._asdict()
-        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in rd.items()})
+        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
 
     @app.route("/close", methods=["POST"])
     def close():
         ticket = int(request.json["ticket"])
         pos = mt5.positions_get(ticket=ticket)
-        if not pos: return jsonify({"retcode":-1,"comment":"Not found"})
+        if not pos: return jsonify({"retcode": -1, "comment": "Not found"})
         p = pos[0]
         tick = mt5.symbol_info_tick(p.symbol)
-        price = tick.bid if p.type==0 else tick.ask
+        price = tick.bid if p.type == 0 else tick.ask
         req = {
             "action": mt5.TRADE_ACTION_DEAL, "symbol": p.symbol, "volume": p.volume,
-            "type": mt5.ORDER_TYPE_SELL if p.type==0 else mt5.ORDER_TYPE_BUY,
+            "type": mt5.ORDER_TYPE_SELL if p.type == 0 else mt5.ORDER_TYPE_BUY,
             "position": ticket, "price": price, "deviation": 10, "magic": 234000,
             "comment": "PropHedge close",
             "type_time": mt5.ORDER_TIME_GTC, "type_filling": mt5.ORDER_FILLING_IOC,
         }
         r = mt5.order_send(req)
-        rd = r._asdict()
-        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in rd.items()})
+        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
 
     return app
 
 def run(port):
-    app = create_app()
-    app.run(host="127.0.0.1", port=port, debug=False, use_reloader=False)
+    create_app().run(host="127.0.0.1", port=port, debug=False, use_reloader=False)
 
 if __name__ == "__main__":
-    print("PropHedge Bridge v2.3 avviato")
-    print("Porta 7777 (PROP)      → attiva")
-    print("Porta 7778 (PERSONALE) → attiva")
-    print("")
-    print("Ricerca piattaforme installate...")
-    p5 = find_terminal_path("mt5")
-    p4 = find_terminal_path("mt4")
-    if p5: print(f"  ✓ MetaTrader 5 trovato: {p5}")
-    else:   print("  ✗ MetaTrader 5 non trovato automaticamente")
-    if p4: print(f"  ✓ MetaTrader 4 trovato: {p4}")
-    else:   print("  ✗ MetaTrader 4 non trovato automaticamente")
-    print("")
-    print("Lascia questa finestra aperta mentre usi PropHedge.")
+    print("=" * 50)
+    print("  PropHedge Bridge v3.0")
+    print("  Porta 7777 (PROP)      attiva")
+    print("  Porta 7778 (PERSONALE) attiva")
+    print("=" * 50)
+    print("  Lascia questa finestra aperta.")
+    print("  Torna su PropHedge e clicca Connetti.")
     t = threading.Thread(target=run, args=(7777,), daemon=True)
     t.start()
     run(7778)
@@ -9870,11 +9838,6 @@ if __name__ == "__main__":
   var a=document.createElement('a');a.href=url;a.download='bridge.py';a.click();
   URL.revokeObjectURL(url);
 }
-
-
-
-
-
 function renderEADownload(){
 
 
