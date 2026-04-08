@@ -9682,36 +9682,82 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import MetaTrader5 as mt5
 
-def find_mt5_path():
-    """Cerca automaticamente il percorso di MT5 nei luoghi comuni"""
+def find_terminal_path(platform='mt5'):
+    """Cerca automaticamente MT5 o MT4 in tutti i percorsi comuni"""
     import os, glob
-    common = [
+    exe = 'terminal64.exe' if platform == 'mt5' else 'terminal.exe'
+
+    # Percorsi standard MT5
+    mt5_paths = [
         r"C:\Program Files\MetaTrader 5\terminal64.exe",
         r"C:\Program Files (x86)\MetaTrader 5\terminal64.exe",
+        r"C:\Program Files\MetaTrader 5 FTMO\terminal64.exe",
+        r"C:\Program Files\FTMO MetaTrader 5\terminal64.exe",
+        r"C:\Program Files\FundedNext MT5\terminal64.exe",
+        r"C:\Program Files\TopFX MetaTrader 5\terminal64.exe",
+        r"C:\Program Files\Axi MetaTrader 5\terminal64.exe",
+        r"C:\Program Files\IC Markets MetaTrader 5\terminal64.exe",
+        r"C:\Program Files\Pepperstone MetaTrader 5\terminal64.exe",
+        r"C:\Program Files\XTB MetaTrader 5\terminal64.exe",
+        r"C:\Program Files\Exness MetaTrader 5\terminal64.exe",
+        r"C:\Program Files\FP Markets MetaTrader 5\terminal64.exe",
+        r"C:\Program Files\Darwinex MetaTrader 5\terminal64.exe",
+        r"C:\Program Files\Funded Trading Plus MetaTrader 5\terminal64.exe",
+        r"C:\Program Files\OANDA MetaTrader 5\terminal64.exe",
     ]
-    # Cerca anche in AppData per broker personalizzati
-    appdata = os.environ.get("APPDATA","")
+
+    # Percorsi standard MT4
+    mt4_paths = [
+        r"C:\Program Files\MetaTrader 4\terminal.exe",
+        r"C:\Program Files (x86)\MetaTrader 4\terminal.exe",
+        r"C:\Program Files\Axi Trader\terminal.exe",
+        r"C:\Program Files\Axi-US06\terminal.exe",
+        r"C:\Program Files (x86)\Axi Trader\terminal.exe",
+        r"C:\Program Files\IC Markets MetaTrader 4\terminal.exe",
+        r"C:\Program Files\Pepperstone MetaTrader 4\terminal.exe",
+        r"C:\Program Files\XTB xStation 4\terminal.exe",
+        r"C:\Program Files\Exness MetaTrader 4\terminal.exe",
+        r"C:\Program Files (x86)\FTMO MetaTrader 4\terminal.exe",
+    ]
+
+    paths = mt5_paths if platform == 'mt5' else mt4_paths
+
+    # Controlla percorsi diretti
+    for path in paths:
+        if os.path.exists(path):
+            return path
+
+    # Cerca in Program Files con glob (cattura qualsiasi broker)
+    pf_roots = [r"C:\Program Files", r"C:\Program Files (x86)"]
+    for root in pf_roots:
+        for found in glob.glob(os.path.join(root, "*", exe)):
+            return found
+
+    # Cerca in AppData\Roaming\MetaQuotes (installazioni secondarie)
+    appdata = os.environ.get("APPDATA", "")
     if appdata:
         for pattern in [
-            os.path.join(appdata,"MetaQuotes","Terminal","*","terminal64.exe"),
-            os.path.join(appdata,"..","Local","Programs","MetaTrader 5","terminal64.exe"),
+            os.path.join(appdata, "MetaQuotes", "Terminal", "*", exe),
         ]:
             found = glob.glob(pattern)
-            if found: common.extend(found)
-    for path in common:
-        if os.path.exists(path): return path
-    return None  # lascia che MT5 lo trovi da solo
+            if found: return found[0]
 
-def init_mt5():
-    """Inizializza MT5 cercando il percorso automaticamente"""
-    path = find_mt5_path()
+    return None
+
+def find_mt5_path():
+    return find_terminal_path('mt5')
+
+def init_mt5(platform='mt5'):
+    """Inizializza MT5 o MT4 cercando automaticamente il percorso"""
+    path = find_terminal_path(platform)
     if path:
+        print(f"  Trovato {platform.upper()} in: {path}")
         ok = mt5.initialize(path=path)
     else:
-        ok = mt5.initialize()  # cerca da solo nel PATH
-    if not ok:
-        # Secondo tentativo senza path
+        print(f"  {platform.upper()} non trovato nei percorsi standard — tentativo automatico...")
         ok = mt5.initialize()
+    if not ok:
+        ok = mt5.initialize()  # ultimo tentativo senza path
     return ok
 
 def create_app():
@@ -9732,11 +9778,14 @@ def create_app():
     @app.route("/connect", methods=["POST"])
     def connect():
         d = request.json
-        # Inizializza MT5 cercando automaticamente il percorso
-        init_ok = init_mt5()
+        platform = d.get("platform", "mt5").lower()
+        if platform == "ctrader": platform = "mt5"  # fallback
+        init_ok = init_mt5(platform)
         if not init_ok:
             err = mt5.last_error()
-            return jsonify({"ok": False, "error": {"code": err[0], "msg": "MT5 non trovato o non aperto. Aprilo prima di connetterti. Dettaglio: " + str(err[1])}})
+            plat_name = "MetaTrader 5" if platform == "mt5" else "MetaTrader 4"
+            return jsonify({"ok": False, "error": {"code": err[0],
+                "msg": f"{plat_name} non trovato o non aperto. Assicurati di averlo aperto prima di connetterti. Errore MT5: {err[1]}"}})
         ok = mt5.login(int(d["login"]), d["password"], d["server"])
         err = mt5.last_error() if not ok else None
         return jsonify({
@@ -9818,14 +9867,19 @@ def run(port):
     app.run(host="127.0.0.1", port=port, debug=False, use_reloader=False)
 
 if __name__ == "__main__":
-    print("PropHedge Bridge v2.2 avviato")
+    print("PropHedge Bridge v2.3 avviato")
     print("Porta 7777 (PROP)      → attiva")
     print("Porta 7778 (PERSONALE) → attiva")
-    print("Ricerca MT5 automatica...")
-    path = find_mt5_path()
-    if path: print("MT5 trovato in: " + path)
-    else: print("MT5 non trovato automaticamente — assicurati che sia aperto")
-    print("Lascia questa finestra aperta.")
+    print("")
+    print("Ricerca piattaforme installate...")
+    p5 = find_terminal_path("mt5")
+    p4 = find_terminal_path("mt4")
+    if p5: print(f"  ✓ MetaTrader 5 trovato: {p5}")
+    else:   print("  ✗ MetaTrader 5 non trovato automaticamente")
+    if p4: print(f"  ✓ MetaTrader 4 trovato: {p4}")
+    else:   print("  ✗ MetaTrader 4 non trovato automaticamente")
+    print("")
+    print("Lascia questa finestra aperta mentre usi PropHedge.")
     t = threading.Thread(target=run, args=(7777,), daemon=True)
     t.start()
     run(7778)
