@@ -3668,7 +3668,7 @@ function doRegisterFree(){
 
 
 
-  <div class="fx-pill">
+  <div class="fx-pill" style="display:none">
 
 
 
@@ -3754,7 +3754,7 @@ function doRegisterFree(){
 
 
 
-    <span id="tabAccountFlag" style="line-height:1;flex-shrink:0;font-size:18px">🇮🇹</span>
+    <span id="tabAccountFlag" style="line-height:1;flex-shrink:0;font-size:18px;letter-spacing:0">🇮🇹</span>
 
 
 
@@ -4802,6 +4802,19 @@ var BOT_ALL=[
 
 
 var FX=1.08,props=[],activeId=null,currentTab='dash';
+
+/* ── Persistenza sfide ── */
+function saveProps(){
+  try{ localStorage.setItem('ph_props_v1', JSON.stringify({props:props, activeId:activeId})); }catch(e){}
+}
+function loadProps(){
+  try{
+    var s = localStorage.getItem('ph_props_v1');
+    if(s){ var d=JSON.parse(s); if(Array.isArray(d.props)){ props=d.props; activeId=d.activeId||null; } }
+  }catch(e){}
+}
+/* Carica subito */
+loadProps();
 
 
 
@@ -6494,11 +6507,11 @@ function doAdd() {
       }
     }
     if(addBtn){ addBtn.textContent = '+ AGGIUNGI SFIDA'; addBtn.removeAttribute('data-edit-id'); }
-    closeModal(); activeId = editId; render();
+    closeModal(); activeId = editId; saveProps(); render();
     return;
   }
 
-  props.push(p); jrnlNewSession(p.name, p.id); jrnlSave(); closeModal(); activeId = p.id; goTab('dash', document.getElementById('tabDash'));
+  props.push(p); jrnlNewSession(p.name, p.id); jrnlSave(); saveProps(); closeModal(); activeId = p.id; goTab('dash', document.getElementById('tabDash'));
 
 }
 
@@ -6507,16 +6520,14 @@ function doAdd() {
 function delProp(id) {
   props = props.filter(p => p.id !== id);
   if (activeId === id) activeId = props.length ? props[0].id : null;
-  /* Elimina anche dal journal */
   if(typeof jrnl !== 'undefined' && jrnl.sessions){
     jrnl.sessions = jrnl.sessions.filter(function(s){ return s.linkedPropId !== id; });
     if(jrnl.activeIdx >= jrnl.sessions.length) jrnl.activeIdx = Math.max(0, jrnl.sessions.length-1);
     if(typeof jrnlSave === 'function') jrnlSave();
   }
-  /* Elimina credenziali e dati simulatore */
   try{ localStorage.removeItem('ph_live_creds_'+id); } catch(e){}
   try{ localStorage.removeItem('ph_sim_'+id); } catch(e){}
-  render();
+  saveProps(); render();
 }
 
 function selProp(id) { activeId = id; goTab('calc', document.getElementById('tabCalc')); }
@@ -9683,61 +9694,33 @@ from flask_cors import CORS
 import MetaTrader5 as mt5
 
 def find_terminal_path(platform='mt5'):
-    """
-    Trova MT5/MT4 ovunque sia installato sul PC.
-    Strategia: prima percorsi veloci, poi ricerca completa sul disco.
-    """
-    import os, glob, subprocess
+    """Trova MT5/MT4 automaticamente senza richiedere input dall'utente"""
+    import os, glob
 
     exe = 'terminal64.exe' if platform == 'mt5' else 'terminal.exe'
 
-    # 1. Percorsi rapidi (millisecondi)
-    quick = [
+    # Cerca in tutte le cartelle di installazione tipiche
+    search_roots = [
         r"C:\Program Files",
         r"C:\Program Files (x86)",
-        os.environ.get("LOCALAPPDATA",""),
-        os.environ.get("APPDATA",""),
-        os.path.expanduser("~\\Desktop"),
-        os.path.expanduser("~\\Downloads"),
-        r"C:\Trading",
+        os.path.expanduser("~\\AppData\\Roaming\\MetaQuotes\\Terminal"),
+        os.path.expanduser("~\\AppData\\Local\\Programs"),
+        r"C:\Users\Public\Desktop",
         r"D:\Program Files",
-        r"D:\Trading",
         r"E:\Program Files",
     ]
-    for root in quick:
+
+    for root in search_roots:
         if not root or not os.path.isdir(root): continue
-        # Cerca in sottocartelle immediate (1 livello)
-        for found in glob.glob(os.path.join(root, "*", exe)):
-            return found
-        # Cerca in sottocartelle di 2 livelli
-        for found in glob.glob(os.path.join(root, "*", "*", exe)):
-            return found
-
-    # 2. Usa il comando Windows "where" (veloce)
-    try:
-        result = subprocess.run(
-            ["where", "/R", "C:\\", exe],
-            capture_output=True, text=True, timeout=15
-        )
-        lines = [l.strip() for l in result.stdout.splitlines() if l.strip()]
-        if lines: return lines[0]
-    except Exception: pass
-
-    # 3. Cerca in tutto C:\ con os.walk (lento ma infallibile, max 20s)
-    try:
-        import signal
-        def _timeout(signum, frame): raise TimeoutError()
-        for root_dir in [r"C:\Program Files", r"C:\Program Files (x86)",
-                          os.path.expanduser("~"), r"C:\Users"]:
-            if not os.path.isdir(root_dir): continue
-            for dirpath, dirnames, filenames in os.walk(root_dir):
-                # Salta cartelle di sistema
-                dirnames[:] = [d for d in dirnames if d not in
-                    ['Windows','System32','SysWOW64','WinSxS','assembly',
-                     'Microsoft.NET','node_modules','.git']]
-                if exe in filenames:
-                    return os.path.join(dirpath, exe)
-    except Exception: pass
+        # 1 livello
+        for f in glob.glob(os.path.join(root, exe)):
+            return f
+        # 2 livelli (broker subdirectory)
+        for f in glob.glob(os.path.join(root, "*", exe)):
+            return f
+        # 3 livelli
+        for f in glob.glob(os.path.join(root, "*", "*", exe)):
+            return f
 
     return None
 
@@ -9745,16 +9728,18 @@ def find_mt5_path():
     return find_terminal_path('mt5')
 
 def init_mt5(platform='mt5'):
-    """Inizializza MT5 o MT4 trovandolo automaticamente ovunque sul PC"""
+    """Inizializza MT5 o MT4 trovandolo automaticamente"""
     path = find_terminal_path(platform)
     if path:
-        print(f"  ✓ {platform.upper()} trovato: {path}")
-        ok = mt5.initialize(path=path)
-        if ok: return True
-        print(f"  Ritento senza path esplicito...")
-    # Tentativo senza path (MT5 si avvia da solo se nel PATH)
-    ok = mt5.initialize()
-    return ok
+        print(f"  [{platform.upper()}] Trovato: {path}")
+        if mt5.initialize(path=path):
+            return True
+        print(f"  [{platform.upper()}] Init con path fallito, ritento...")
+    # Tentativo diretto (funziona se MT5 è già aperto e nel PATH)
+    if mt5.initialize():
+        return True
+    print(f"  [{platform.upper()}] Impossibile inizializzare. Assicurati che sia installato e aperto.")
+    return False
 
 def create_app():
     app = Flask(__name__)
@@ -13657,13 +13642,13 @@ function applyTabLang(){
 
   if(tc){ tc.textContent = L.tab_calc; }
 
-  // Flag lingua nella tab account
-
-  var flagMap = {it:'🇮🇹',en:'🇬🇧',de:'🇩🇪',fr:'🇫🇷',es:'🇪🇸'};
-
+  // Flag lingua nella tab account — usa immagine per compatibilità
+  var flagDomMap = {it:'it',en:'gb',de:'de',fr:'fr',es:'es'};
   var tf = document.getElementById('tabAccountFlag');
-
-  if(tf) tf.textContent = flagMap[_currentLang]||'';
+  if(tf){
+    var fc = flagDomMap[_currentLang] || 'it';
+    tf.innerHTML = '<img src="https://flagcdn.com/w20/'+fc+'.png" width="18" height="13" style="border-radius:2px;vertical-align:middle" onerror="this.style.display=\'none\';this.parentNode.textContent={it:\'🇮🇹\',en:\'🇬🇧\',de:\'🇩🇪\',fr:\'🇫🇷\',es:\'🇪🇸\'}[\''+fc+'\']||\'🌐\'">';
+  }
 
 }
 
