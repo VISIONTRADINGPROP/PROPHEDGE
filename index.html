@@ -9683,64 +9683,61 @@ from flask_cors import CORS
 import MetaTrader5 as mt5
 
 def find_terminal_path(platform='mt5'):
-    """Cerca automaticamente MT5 o MT4 in tutti i percorsi comuni"""
-    import os, glob
+    """
+    Trova MT5/MT4 ovunque sia installato sul PC.
+    Strategia: prima percorsi veloci, poi ricerca completa sul disco.
+    """
+    import os, glob, subprocess
+
     exe = 'terminal64.exe' if platform == 'mt5' else 'terminal.exe'
 
-    # Percorsi standard MT5
-    mt5_paths = [
-        r"C:\Program Files\MetaTrader 5\terminal64.exe",
-        r"C:\Program Files (x86)\MetaTrader 5\terminal64.exe",
-        r"C:\Program Files\MetaTrader 5 FTMO\terminal64.exe",
-        r"C:\Program Files\FTMO MetaTrader 5\terminal64.exe",
-        r"C:\Program Files\FundedNext MT5\terminal64.exe",
-        r"C:\Program Files\TopFX MetaTrader 5\terminal64.exe",
-        r"C:\Program Files\Axi MetaTrader 5\terminal64.exe",
-        r"C:\Program Files\IC Markets MetaTrader 5\terminal64.exe",
-        r"C:\Program Files\Pepperstone MetaTrader 5\terminal64.exe",
-        r"C:\Program Files\XTB MetaTrader 5\terminal64.exe",
-        r"C:\Program Files\Exness MetaTrader 5\terminal64.exe",
-        r"C:\Program Files\FP Markets MetaTrader 5\terminal64.exe",
-        r"C:\Program Files\Darwinex MetaTrader 5\terminal64.exe",
-        r"C:\Program Files\Funded Trading Plus MetaTrader 5\terminal64.exe",
-        r"C:\Program Files\OANDA MetaTrader 5\terminal64.exe",
+    # 1. Percorsi rapidi (millisecondi)
+    quick = [
+        r"C:\Program Files",
+        r"C:\Program Files (x86)",
+        os.environ.get("LOCALAPPDATA",""),
+        os.environ.get("APPDATA",""),
+        os.path.expanduser("~\\Desktop"),
+        os.path.expanduser("~\\Downloads"),
+        r"C:\Trading",
+        r"D:\Program Files",
+        r"D:\Trading",
+        r"E:\Program Files",
     ]
-
-    # Percorsi standard MT4
-    mt4_paths = [
-        r"C:\Program Files\MetaTrader 4\terminal.exe",
-        r"C:\Program Files (x86)\MetaTrader 4\terminal.exe",
-        r"C:\Program Files\Axi Trader\terminal.exe",
-        r"C:\Program Files\Axi-US06\terminal.exe",
-        r"C:\Program Files (x86)\Axi Trader\terminal.exe",
-        r"C:\Program Files\IC Markets MetaTrader 4\terminal.exe",
-        r"C:\Program Files\Pepperstone MetaTrader 4\terminal.exe",
-        r"C:\Program Files\XTB xStation 4\terminal.exe",
-        r"C:\Program Files\Exness MetaTrader 4\terminal.exe",
-        r"C:\Program Files (x86)\FTMO MetaTrader 4\terminal.exe",
-    ]
-
-    paths = mt5_paths if platform == 'mt5' else mt4_paths
-
-    # Controlla percorsi diretti
-    for path in paths:
-        if os.path.exists(path):
-            return path
-
-    # Cerca in Program Files con glob (cattura qualsiasi broker)
-    pf_roots = [r"C:\Program Files", r"C:\Program Files (x86)"]
-    for root in pf_roots:
+    for root in quick:
+        if not root or not os.path.isdir(root): continue
+        # Cerca in sottocartelle immediate (1 livello)
         for found in glob.glob(os.path.join(root, "*", exe)):
             return found
+        # Cerca in sottocartelle di 2 livelli
+        for found in glob.glob(os.path.join(root, "*", "*", exe)):
+            return found
 
-    # Cerca in AppData\Roaming\MetaQuotes (installazioni secondarie)
-    appdata = os.environ.get("APPDATA", "")
-    if appdata:
-        for pattern in [
-            os.path.join(appdata, "MetaQuotes", "Terminal", "*", exe),
-        ]:
-            found = glob.glob(pattern)
-            if found: return found[0]
+    # 2. Usa il comando Windows "where" (veloce)
+    try:
+        result = subprocess.run(
+            ["where", "/R", "C:\\", exe],
+            capture_output=True, text=True, timeout=15
+        )
+        lines = [l.strip() for l in result.stdout.splitlines() if l.strip()]
+        if lines: return lines[0]
+    except Exception: pass
+
+    # 3. Cerca in tutto C:\ con os.walk (lento ma infallibile, max 20s)
+    try:
+        import signal
+        def _timeout(signum, frame): raise TimeoutError()
+        for root_dir in [r"C:\Program Files", r"C:\Program Files (x86)",
+                          os.path.expanduser("~"), r"C:\Users"]:
+            if not os.path.isdir(root_dir): continue
+            for dirpath, dirnames, filenames in os.walk(root_dir):
+                # Salta cartelle di sistema
+                dirnames[:] = [d for d in dirnames if d not in
+                    ['Windows','System32','SysWOW64','WinSxS','assembly',
+                     'Microsoft.NET','node_modules','.git']]
+                if exe in filenames:
+                    return os.path.join(dirpath, exe)
+    except Exception: pass
 
     return None
 
@@ -9748,16 +9745,15 @@ def find_mt5_path():
     return find_terminal_path('mt5')
 
 def init_mt5(platform='mt5'):
-    """Inizializza MT5 o MT4 cercando automaticamente il percorso"""
+    """Inizializza MT5 o MT4 trovandolo automaticamente ovunque sul PC"""
     path = find_terminal_path(platform)
     if path:
-        print(f"  Trovato {platform.upper()} in: {path}")
+        print(f"  ✓ {platform.upper()} trovato: {path}")
         ok = mt5.initialize(path=path)
-    else:
-        print(f"  {platform.upper()} non trovato nei percorsi standard — tentativo automatico...")
-        ok = mt5.initialize()
-    if not ok:
-        ok = mt5.initialize()  # ultimo tentativo senza path
+        if ok: return True
+        print(f"  Ritento senza path esplicito...")
+    # Tentativo senza path (MT5 si avvia da solo se nel PATH)
+    ok = mt5.initialize()
     return ok
 
 def create_app():
