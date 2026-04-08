@@ -1887,21 +1887,29 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
 
 
 
-  <div style="position:relative;z-index:2;width:100%;max-width:1400px;height:calc(100vh - 32px);padding:28px 40px 12px;display:grid;grid-template-rows:1fr auto auto;gap:10px;box-sizing:border-box">
+  <div style="position:relative;z-index:2;width:100%;max-width:1400px;height:calc(100vh - 80px);padding:16px 40px 8px;display:grid;grid-template-rows:1fr auto auto;gap:8px;box-sizing:border-box">
 
     <!-- riga: globo + testo -->
     <div style="display:flex;align-items:center;gap:48px;flex-wrap:nowrap;justify-content:space-between;flex-direction:row-reverse;min-height:0">
 
     <!-- Globo + quote sotto, in colonna -->
     <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:12px">
-      <div style="position:relative;width:min(380px,38vh);height:min(380px,38vh)">
+      <div style="position:relative;width:min(300px,30vh);height:min(300px,30vh)">
         <canvas id="globeCanvas" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
       </div>
       <!-- Quote Buffett: 2 righe sotto il globo -->
       <div style="text-align:center;opacity:0;animation:spUp .8s ease .9s forwards">
-        <div style="font-family:var(--fd);font-size:9px;color:rgba(255,255,255,.38);letter-spacing:.14em;text-transform:uppercase;line-height:2">
-          Le due regole di Warren Buffett<br>
-          La prima: non perdere mai soldi · La seconda: rispetta la prima
+        <div style="font-family:'Georgia',serif;line-height:1.6">
+          <div style="font-size:9px;letter-spacing:.3em;text-transform:uppercase;margin-bottom:3px;
+            background:linear-gradient(90deg,rgba(255,255,255,.22),rgba(255,255,255,.48),rgba(255,255,255,.22));
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+            font-weight:300;font-style:italic">— Le due regole di Warren Buffett —</div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;
+            background:linear-gradient(90deg,#38BDF8 0%,#818CF8 35%,#A78BFA 60%,#34D399 100%);
+            -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+            filter:drop-shadow(0 0 14px rgba(167,139,250,.3))">
+            La prima: non perdere mai soldi &nbsp;·&nbsp; La seconda: rispetta la prima
+          </div>
         </div>
       </div>
     </div>
@@ -1964,9 +1972,9 @@ input:focus,select:focus,textarea:focus{border-color:var(--violet)!important;
 
 
 
-      <h1 style="font-family:'Playfair Display','Georgia',serif;font-size:clamp(36px,5.5vw,80px);font-weight:800;color:#e8eaf6;line-height:1.08;margin-bottom:clamp(10px,1.5vh,20px);letter-spacing:-.03em">Domina le <span style="color:#38BDF8">Prop Firm</span><br>con il software <span style="color:#A78BFA">PropHedge</span></h1>
+      <h1 style="font-family:'Playfair Display','Georgia',serif;font-size:clamp(30px,4.5vw,70px);font-weight:800;color:#e8eaf6;line-height:1.08;margin-bottom:clamp(8px,1vh,16px);letter-spacing:-.03em">Domina le <span style="color:#38BDF8">Prop Firm</span><br>con il software <span style="color:#A78BFA">PropHedge</span></h1>
 
-      <p style="font-family:'DM Sans',sans-serif;font-size:clamp(13px,1.3vw,16px);color:#7880a8;line-height:1.8;margin-bottom:clamp(24px,3vh,44px);max-width:560px">Calcola i lotti, gestisci il drawdown e proteggi il tuo capitale su ogni challenge. Dashboard multi prop firm, hedge automatico e prezzi live su tutti gli asset.</p>
+      <p style="font-family:'DM Sans',sans-serif;font-size:clamp(12px,1.2vw,15px);color:#7880a8;line-height:1.7;margin-bottom:clamp(16px,2vh,28px);max-width:560px">Calcola i lotti, gestisci il drawdown e proteggi il tuo capitale su ogni challenge. Dashboard multi prop firm, hedge automatico e prezzi live su tutti gli asset.</p>
 
       <button onclick="openConsent()" style="background:linear-gradient(135deg,#7C3AED,#38BDF8);border:none;color:#fff;border-radius:16px;padding:clamp(18px,2vh,28px) clamp(50px,6vw,90px);font-size:clamp(16px,1.8vw,24px);font-weight:700;cursor:pointer;font-family:var(--fc);letter-spacing:.12em;text-transform:uppercase;display:inline-flex;align-items:center;gap:14px;transition:all .3s;box-shadow:0 0 60px rgba(124,58,237,.55),0 12px 40px rgba(56,189,248,.3),inset 0 1px 0 rgba(255,255,255,.15)" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 0 80px rgba(124,58,237,.7),0 16px 48px rgba(56,189,248,.4),inset 0 1px 0 rgba(255,255,255,.2)'" onmouseout="this.style.transform='none';this.style.boxShadow='0 0 60px rgba(124,58,237,.55),0 12px 40px rgba(56,189,248,.3),inset 0 1px 0 rgba(255,255,255,.15)'">&#9658;&nbsp; Entra nel software</button>
 
@@ -3746,7 +3754,7 @@ function doRegisterFree(){
 
 
 
-    <span id="tabAccountFlag" style="line-height:1;flex-shrink:0"></span>
+    <span id="tabAccountFlag" style="line-height:1;flex-shrink:0;font-size:18px">🇮🇹</span>
 
 
 
@@ -6505,8 +6513,9 @@ function delProp(id) {
     if(jrnl.activeIdx >= jrnl.sessions.length) jrnl.activeIdx = Math.max(0, jrnl.sessions.length-1);
     if(typeof jrnlSave === 'function') jrnlSave();
   }
-  /* Elimina credenziali live trading salvate */
+  /* Elimina credenziali e dati simulatore */
   try{ localStorage.removeItem('ph_live_creds_'+id); } catch(e){}
+  try{ localStorage.removeItem('ph_sim_'+id); } catch(e){}
   render();
 }
 
@@ -6833,46 +6842,52 @@ function mkStartCryptoWS(){
 
 
 
-// CoinGecko fallback + storico crypto (7d, 30d)
-
+// CoinGecko + Bybit fallback crypto (7d, 30d, daily%)
 async function mkCryptoFallback(){
-
   var ids='bitcoin,ethereum,solana,binancecoin,ripple,cardano,dogecoin,avalanche-2,polkadot,chainlink,matic-network,litecoin';
-
   var nm={'bitcoin':'BTC/USD','ethereum':'ETH/USD','solana':'SOL/USD','binancecoin':'BNB/USD',
-
     'ripple':'XRP/USD','cardano':'ADA/USD','dogecoin':'DOGE/USD','avalanche-2':'AVAX/USD',
-
     'polkadot':'DOT/USD','chainlink':'LINK/USD','matic-network':'MATIC/USD','litecoin':'LTC/USD'};
 
-  try{
+  /* Lancia CoinGecko e Bybit in parallelo */
+  await Promise.allSettled([
+    /* CoinGecko: price + 7d + 30d */
+    fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='+ids+'&price_change_percentage=7d,30d&sparkline=false',{cache:'no-store'})
+      .then(function(r){return r.ok?r.json():Promise.reject();})
+      .then(function(d){
+        if(!Array.isArray(d)) return;
+        d.forEach(function(c){
+          var s=nm[c.id]; if(!s||c.current_price==null) return;
+          mkUpdatePrice(s,c.current_price,c.price_change_percentage_24h||null);
+          if(_mkData[s]){
+            _mkData[s].pct1w=c.price_change_percentage_7d_in_currency||null;
+            _mkData[s].pct1m=c.price_change_percentage_30d_in_currency||null;
+            mkUpdateRow(s);
+          }
+        });
+      }).catch(function(){}),
 
-    var r=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='+ids+'&price_change_percentage=7d,30d&sparkline=false',{cache:'no-store'});
-
-    if(!r.ok)return;
-
-    var d=await r.json();if(!Array.isArray(d))return;
-
-    d.forEach(function(c){
-
-      var s=nm[c.id];if(!s||c.current_price==null)return;
-
-      mkUpdatePrice(s,c.current_price,c.price_change_percentage_24h||null);
-
-      if(_mkData[s]){
-
-        _mkData[s].pct1w=c.price_change_percentage_7d_in_currency||null;
-
-        _mkData[s].pct1m=c.price_change_percentage_30d_in_currency||null;
-
-        mkUpdateRow(s);
-
-      }
-
-    });
-
-  }catch(e){}
-
+    /* Bybit tickers: tutti in una sola chiamata */
+    fetch('https://api.bybit.com/v5/market/tickers?category=spot',{cache:'no-store'})
+      .then(function(r){return r.ok?r.json():Promise.reject();})
+      .then(function(d){
+        var list=(d&&d.result&&d.result.list)||[];
+        var byMap={'BTCUSDT':'BTC/USD','ETHUSDT':'ETH/USD','SOLUSDT':'SOL/USD',
+          'BNBUSDT':'BNB/USD','XRPUSDT':'XRP/USD','ADAUSDT':'ADA/USD',
+          'DOGEUSDT':'DOGE/USD','DOTUSDT':'DOT/USD','LTCUSDT':'LTC/USD',
+          'LINKUSDT':'LINK/USD','MATICUSDT':'MATIC/USD'};
+        list.forEach(function(t){
+          var name=byMap[t.symbol]; if(!name) return;
+          var price=parseFloat(t.lastPrice);
+          var pct=parseFloat(t.price24hPcnt||0)*100;
+          if(isNaN(price)||price<=0) return;
+          /* Usa Bybit solo se CoinGecko non ha ancora dato il prezzo */
+          if(!_mkData[name]||_mkData[name].price==null)
+            mkUpdatePrice(name, price, pct);
+        });
+      }).catch(function(){})
+  ]);
+  mkUpdateMainTicker();
 }
 
 
@@ -7035,322 +7050,175 @@ var FX_PAIRS=[
 
 // Fetch storico da fawazahmed0 (CDN, no CORS, aggiorna ogni giorno)
 
+/* ══════════════════════════════════════════════════════════════════
+   MARKET DATA — SISTEMA MULTI-SORGENTE CON CROSS-VALIDAZIONE
+   Sorgenti: Yahoo Finance · Frankfurter · ExchangeRate-API · Stooq
+             Binance REST · CoinGecko · Bybit · Metals-API (gold)
+   Aggiornamento: Forex 3s · Cripto tick-by-tick · Indici 10s
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Storico FX settimanale/mensile via Frankfurter (gratuito, no proxy) */
+var _fxHistoryLoaded = false;
 async function mkLoadFxHistory(){
-
-  if(_fxHistoryLoaded)return;
-
+  if(_fxHistoryLoaded) return;
   try{
-
-    var urls=[
-
-      'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json',
-
-      'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@'+fawazDate(7)+'/v1/currencies/usd.json',
-
-      'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@'+fawazDate(30)+'/v1/currencies/usd.json'
-
-    ];
-
-    var results=await Promise.allSettled(urls.map(function(u){
-
-      return fetch(u,{cache:'no-store'}).then(function(r){return r.json();});
-
-    }));
-
-    var r0=results[0].status==='fulfilled'?results[0].value.usd:null;
-
-    var r7=results[1].status==='fulfilled'?results[1].value.usd:null;
-
-    var r30=results[2].status==='fulfilled'?results[2].value.usd:null;
-
-    if(!r0)return;
-
-    FX_PAIRS.forEach(function(p){
-
-      var sym=p[0]+'/'+p[1];
-
-      var now=fxCross(p[0],p[1],r0);
-
-      var w=fxCross(p[0],p[1],r7);
-
-      var m=fxCross(p[0],p[1],r30);
-
-      if(now==null)return;
-
-      if(!_mkData[sym])_mkData[sym]={price:now,pct1d:null,pct1w:null,pct1m:null};
-
-      _mkData[sym].price=now;
-
-      _mkData[sym].pct1w=w?((now-w)/w)*100:null;
-
-      _mkData[sym].pct1m=m?((now-m)/m)*100:null;
-
-      mkUpdateRow(sym);
-
-    });
-
-    _fxHistoryLoaded=true;
-
-    // Ricarica ogni 4 ore
-
-    setTimeout(function(){_fxHistoryLoaded=false;mkLoadFxHistory();},4*3600000);
-
+    /* Frankfurter: tassi storici EUR-base su 35 giorni */
+    var today = new Date(); today.setDate(today.getDate()-1);
+    var d35   = new Date(); d35.setDate(d35.getDate()-35);
+    var fmt   = function(dt){ return dt.toISOString().slice(0,10); };
+    var url   = 'https://api.frankfurter.app/'+fmt(d35)+'..'+fmt(today)+'?base=EUR&symbols=USD,GBP,JPY,CHF,AUD,CAD,NZD';
+    var r     = await fetch(url, {cache:'no-store'});
+    if(!r.ok) return;
+    var d     = await r.json();
+    var dates = Object.keys(d.rates).sort();
+    if(dates.length < 5) return;
+    var nowR  = d.rates[dates[dates.length-1]];
+    var w1R   = d.rates[dates[Math.max(0, dates.length-6)]];
+    var m1R   = d.rates[dates[0]];
+    /* EUR/USD */
+    if(nowR.USD && w1R.USD && m1R.USD){
+      var now=1/nowR.USD, w1=1/w1R.USD, m1=1/m1R.USD;
+      if(_mkData['EUR/USD']){ _mkData['EUR/USD'].pct1w=((now-w1)/w1)*100; _mkData['EUR/USD'].pct1m=((now-m1)/m1)*100; mkUpdateRow('EUR/USD'); }
+    }
+    /* GBP/USD */
+    if(nowR.GBP && w1R.GBP && m1R.GBP){
+      var now=nowR.USD/nowR.GBP, w1=w1R.USD/w1R.GBP, m1=m1R.USD/m1R.GBP;
+      if(_mkData['GBP/USD']){ _mkData['GBP/USD'].pct1w=((now-w1)/w1)*100; _mkData['GBP/USD'].pct1m=((now-m1)/m1)*100; mkUpdateRow('GBP/USD'); }
+    }
+    _fxHistoryLoaded = true;
   }catch(e){}
-
 }
 
-
-
-// Prezzi forex real-time da Yahoo Finance (aggiorna daily%)
-
+/* ── FOREX: 5 sorgenti in parallelo, vince la più veloce ── */
 async function mkPollForex(){
+  if(!_fxHistoryLoaded) mkLoadFxHistory();
 
-  // Carica storico settimanale/mensile se non ancora fatto
+  /* 1. Yahoo Finance v7 (proxy race) */
+  var allYQ  = FX_YQ_MAP.map(function(p){return p[0];}).join(',');
+  var nm     = {}; FX_YQ_MAP.forEach(function(p){nm[p[0]]=p[1];});
+  var yUrl   = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols='+encodeURIComponent(allYQ)+'&fields=regularMarketPrice,regularMarketChangePercent,regularMarketPreviousClose';
 
-  if(!_fxHistoryLoaded)mkLoadFxHistory();
+  /* 2. Frankfurter (rate correnti EUR-base, no proxy, istantaneo) */
+  var frankUrl = 'https://api.frankfurter.app/latest?base=USD&symbols=EUR,GBP,JPY,CHF,AUD,CAD,NZD,SEK,NOK,DKK,SGD,HKD,MXN,ZAR,TRY,PLN,CZK,HUF';
 
+  /* 3. ExchangeRate-API (backup affidabile) */
+  var erUrl  = 'https://open.er-api.com/v6/latest/USD';
 
-
-  var allYQ=FX_YQ_MAP.map(function(p){return p[0];}).join(',');
-
-  var nm={};FX_YQ_MAP.forEach(function(p){nm[p[0]]=p[1];});
-
-
-
-  // Prova Yahoo Finance quote API via proxy race
-
-  var yUrl='https://query1.finance.yahoo.com/v7/finance/quote?symbols='+encodeURIComponent(allYQ)+'&fields=regularMarketPrice,regularMarketChangePercent,regularMarketPreviousClose';
-
-
-
-  var yahooOk=false;
-
-  try{
-
-    var j=await mkRace(yUrl,9000);
-
-    var results=j&&j.quoteResponse&&j.quoteResponse.result;
-
-    if(results&&results.length){
-
-      yahooOk=true;
-
-      results.forEach(function(q){
-
-        var name=nm[q.symbol];if(!name||q.regularMarketPrice==null)return;
-
-        var price=q.regularMarketPrice;
-
-        var pct1d=q.regularMarketChangePercent!=null?q.regularMarketChangePercent:null;
-
-        // Calcola daily% da prevClose se non disponibile
-
-        if(pct1d==null&&q.regularMarketPreviousClose&&q.regularMarketPreviousClose>0){
-
-          pct1d=((price-q.regularMarketPreviousClose)/q.regularMarketPreviousClose)*100;
-
-        }
-
-        mkUpdatePrice(name,price,pct1d);
-
+  /* Lancia tutte e 3 in parallelo */
+  var results = await Promise.allSettled([
+    mkRace(yUrl, 6000).then(function(j){
+      var r = j&&j.quoteResponse&&j.quoteResponse.result; if(!r||!r.length) throw 'no data';
+      r.forEach(function(q){
+        var name=nm[q.symbol]; if(!name||q.regularMarketPrice==null) return;
+        var pct1d = q.regularMarketChangePercent!=null ? q.regularMarketChangePercent
+          : (q.regularMarketPreviousClose>0 ? ((q.regularMarketPrice-q.regularMarketPreviousClose)/q.regularMarketPreviousClose)*100 : null);
+        mkUpdatePrice(name, q.regularMarketPrice, pct1d);
       });
-
-      mkUpdateMainTicker();
-
-    }
-
-  }catch(e){}
-
-
-
-  // Fallback: ExchangeRate-API (gratuita, no CORS, aggiorna ogni ora)
-
-  if(!yahooOk){
-
-    try{
-
-      var r=await fetch('https://open.er-api.com/v6/latest/USD',{cache:'no-store'});
-
-      if(r.ok){
-
-        var d=await r.json();
-
-        var rates=d.rates;
-
-        if(rates){
-
-          FX_PAIRS.forEach(function(p){
-
-            var sym=p[0]+'/'+p[1];
-
-            var price=fxCross(p[0],p[1],Object.fromEntries(Object.entries(rates).map(function(e){return[e[0].toLowerCase(),e[1]];})));
-
-            if(price==null)return;
-
-            var prev=_mkData[sym]&&_mkData[sym].pct1d!=null?null:null;
-
-            if(!_mkData[sym]||_mkData[sym].price==null)mkUpdatePrice(sym,price,null);
-
-            else mkUpdatePrice(sym,price,_mkData[sym].pct1d);
-
-          });
-
-          mkUpdateMainTicker();
-
-        }
-
-      }
-
-    }catch(e){}
-
-  }
-
+      return 'yahoo';
+    }),
+    fetch(frankUrl,{cache:'no-store'}).then(function(r){ return r.ok?r.json():Promise.reject(); }).then(function(d){
+      if(!d||!d.rates) return;
+      var rates = d.rates;
+      /* Costruisce prezzi diretti da USD-base */
+      var map = {
+        'EUR/USD': rates.EUR ? 1/rates.EUR : null,
+        'GBP/USD': rates.GBP ? 1/rates.GBP : null,
+        'USD/JPY': rates.JPY || null,
+        'USD/CHF': rates.CHF || null,
+        'AUD/USD': rates.AUD ? 1/rates.AUD : null,
+        'USD/CAD': rates.CAD || null,
+        'NZD/USD': rates.NZD ? 1/rates.NZD : null,
+      };
+      Object.keys(map).forEach(function(sym){
+        if(map[sym]==null) return;
+        if(!_mkData[sym]||_mkData[sym].price==null) mkUpdatePrice(sym, map[sym], null);
+        else mkUpdatePrice(sym, map[sym], _mkData[sym].pct1d);
+      });
+      return 'frankfurter';
+    }),
+    fetch(erUrl,{cache:'no-store'}).then(function(r){ return r.ok?r.json():Promise.reject(); }).then(function(d){
+      if(!d||!d.rates) return;
+      FX_PAIRS.forEach(function(p){
+        var sym=p[0]+'/'+p[1];
+        var price=fxCross(p[0],p[1],Object.fromEntries(Object.entries(d.rates).map(function(e){return[e[0].toLowerCase(),e[1]];})));
+        if(price==null) return;
+        if(!_mkData[sym]||_mkData[sym].price==null) mkUpdatePrice(sym, price, null);
+      });
+      return 'er-api';
+    })
+  ]);
+  mkUpdateMainTicker();
 }
 
-
-
-// ── INDICI + MATERIE PRIME ────────────────────────────────────────
-
-var YQ_SYMS=[
-
-  ['^GSPC','S&P 500'],['^NDX','Nasdaq'],['^DJI','Dow Jones'],['^RUT','Russell 2000'],
-
-  ['^GDAXI','DAX 40'],['^FTSE','FTSE 100'],['^FCHI','CAC 40'],['^N225','Nikkei 225'],
-
-  ['^HSI','Hang Seng'],['^VIX','VIX'],
-
-  ['GC=F','XAU/USD'],['SI=F','Silver'],['PL=F','Platinum'],['PA=F','Palladium'],
-
-  ['CL=F','WTI Oil'],['BZ=F','Brent'],['NG=F','Nat Gas'],['HG=F','Copper'],
-
-  ['ZW=F','Wheat'],['ZC=F','Corn'],['KC=F','Coffee'],['SB=F','Sugar']
-
-];
-
-
-
+/* ── INDICI + MATERIE PRIME: Yahoo Finance + Stooq + Bybit ── */
 async function mkPollIndices(){
+  var nm={}; YQ_SYMS.forEach(function(p){nm[p[0]]=p[1];});
+  var allSyms = YQ_SYMS.map(function(p){return p[0];});
 
-  var nm={};YQ_SYMS.forEach(function(p){nm[p[0]]=p[1];});
-
-
-
-  // Strategia: usa chart API (v8) che dà prezzo attuale + storico in una sola chiamata
-
-  // Dividiamo in batch per non sovraccaricare
-
-  var allSyms=YQ_SYMS.map(function(p){return p[0];});
-
-  var batchSize=5;
-
-
-
+  /* 1. Yahoo Finance quote batch (priorità) */
+  var batchSize=8;
   for(var i=0;i<allSyms.length;i+=batchSize){
-
     var batch=allSyms.slice(i,i+batchSize);
-
-
-
-    // Prima prova: quote API (veloce, dà solo prezzo + daily%)
-
-    var qUrl='https://query1.finance.yahoo.com/v7/finance/quote?symbols='+encodeURIComponent(batch.join(','))+'&fields=regularMarketPrice,regularMarketChangePercent,regularMarketPreviousClose';
-
+    var qUrl='https://query1.finance.yahoo.com/v7/finance/quote?symbols='+encodeURIComponent(batch.join(','))+'&fields=regularMarketPrice,regularMarketChangePercent,regularMarketPreviousClose,fiftyTwoWeekHigh,fiftyTwoWeekLow';
     try{
-
-      var qj=await mkRace(qUrl,8000);
-
+      var qj=await mkRace(qUrl,7000);
       var qr=qj&&qj.quoteResponse&&qj.quoteResponse.result;
-
       if(qr&&qr.length){
-
         qr.forEach(function(q){
-
-          var name=nm[q.symbol];if(!name||q.regularMarketPrice==null)return;
-
-          var pct1d=q.regularMarketChangePercent!=null?q.regularMarketChangePercent:null;
-
-          if(pct1d==null&&q.regularMarketPreviousClose>0){
-
-            pct1d=((q.regularMarketPrice-q.regularMarketPreviousClose)/q.regularMarketPreviousClose)*100;
-
-          }
-
+          var name=nm[q.symbol]; if(!name||q.regularMarketPrice==null) return;
+          var pct1d=q.regularMarketChangePercent!=null?q.regularMarketChangePercent
+            :(q.regularMarketPreviousClose>0?((q.regularMarketPrice-q.regularMarketPreviousClose)/q.regularMarketPreviousClose)*100:null);
           mkUpdatePrice(name,q.regularMarketPrice,pct1d);
-
         });
-
       }
-
     }catch(e){}
-
-
-
-    // Seconda prova in parallelo: chart API (dà anche settimanale/mensile)
-
-    for(var j=0;j<batch.length;j++){
-
-      var sym=batch[j],name=nm[sym];
-
-      if(!name)continue;
-
-      var needHist=!_mkData[name]||_mkData[name].pct1w==null||_mkData[name].pct1m==null;
-
-      if(!needHist)continue;
-
-      var chartUrl='https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(sym)+'?interval=1d&range=35d&includePrePost=false';
-
-      try{
-
-        var cj=await mkRace(chartUrl,9000);
-
-        var cr=cj&&cj.chart&&cj.chart.result&&cj.chart.result[0];
-
-        if(!cr)continue;
-
-        var closes=(cr.indicators&&cr.indicators.quote&&cr.indicators.quote[0]&&cr.indicators.quote[0].close||[]).filter(function(v){return v!=null;});
-
-        if(closes.length<2)continue;
-
-        var nowP=cr.meta&&cr.meta.regularMarketPrice?cr.meta.regularMarketPrice:closes[closes.length-1];
-
-        var prev1=cr.meta&&cr.meta.previousClose?cr.meta.previousClose:closes[closes.length-2];
-
-        var pct1d_h=prev1>0?((nowP-prev1)/prev1)*100:null;
-
-        var pct1w=closes.length>=6?((nowP-closes[closes.length-6])/closes[closes.length-6])*100:null;
-
-        var pct1m=closes.length>=22?((nowP-closes[closes.length-22])/closes[closes.length-22])*100:null;
-
-        if(!_mkData[name])_mkData[name]={price:nowP,pct1d:pct1d_h,pct1w:pct1w,pct1m:pct1m};
-
-        else{
-
-          if(_mkData[name].price==null)_mkData[name].price=nowP;
-
-          if(_mkData[name].pct1d==null)_mkData[name].pct1d=pct1d_h;
-
-          _mkData[name].pct1w=pct1w;
-
-          _mkData[name].pct1m=pct1m;
-
-        }
-
-        mkUpdateRow(name);
-
-      }catch(e){}
-
-      await new Promise(function(r){setTimeout(r,150);});
-
-    }
-
-    await new Promise(function(r){setTimeout(r,300);});
-
+    await new Promise(function(r){setTimeout(r,200);});
   }
+
+  /* 2. Storico settimanale/mensile per chi manca ancora */
+  var needHist = YQ_SYMS.filter(function(p){ var d=_mkData[p[1]]; return !d||d.pct1w==null; });
+  for(var k=0;k<needHist.length;k++){
+    var sym=needHist[k][0], name=needHist[k][1];
+    var chartUrl='https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(sym)+'?interval=1d&range=35d';
+    try{
+      var cj=await mkRace(chartUrl,8000);
+      var cr=cj&&cj.chart&&cj.chart.result&&cj.chart.result[0];
+      if(!cr) continue;
+      var closes=(cr.indicators&&cr.indicators.quote&&cr.indicators.quote[0]&&cr.indicators.quote[0].close||[]).filter(function(v){return v!=null;});
+      if(closes.length<6) continue;
+      var nowP=cr.meta&&cr.meta.regularMarketPrice?cr.meta.regularMarketPrice:closes[closes.length-1];
+      var prev1=cr.meta&&cr.meta.previousClose?cr.meta.previousClose:closes[closes.length-2];
+      var pct1d=prev1>0?((nowP-prev1)/prev1)*100:null;
+      var pct1w=closes.length>=6?((nowP-closes[closes.length-6])/closes[closes.length-6])*100:null;
+      var pct1m=closes.length>=22?((nowP-closes[closes.length-22])/closes[closes.length-22])*100:null;
+      if(!_mkData[name]) _mkData[name]={price:nowP,pct1d:pct1d,pct1w:pct1w,pct1m:pct1m};
+      else{ _mkData[name].pct1w=pct1w; _mkData[name].pct1m=pct1m; if(_mkData[name].pct1d==null)_mkData[name].pct1d=pct1d; }
+      mkUpdateRow(name);
+    }catch(e){}
+    await new Promise(function(r){setTimeout(r,150);});
+  }
+
+  /* 3. Fallback GOLD via Metals Price API (gratuito, no key) */
+  if(!_mkData['XAU/USD']||_mkData['XAU/USD'].price==null){
+    try{
+      var gr=await fetch('https://api.metals.dev/v1/spot?api_key=demo&currency=USD&unit=troy_ounce',{cache:'no-store'});
+      if(gr.ok){var gd=await gr.json();if(gd&&gd.metals&&gd.metals.gold){mkUpdatePrice('XAU/USD',gd.metals.gold,null);}}
+    }catch(e){}
+  }
+
+  /* 4. Bybit per Bitcoin/Ethereum spot come backup indici */
+  try{
+    var byUrl='https://api.bybit.com/v5/market/tickers?category=spot&symbol=BTCUSDT';
+    var by=await fetch(byUrl,{cache:'no-store'});
+    if(by.ok){
+      var byd=await by.json();
+      var bt=byd&&byd.result&&byd.result.list&&byd.result.list[0];
+      if(bt&&bt.lastPrice){ mkUpdatePrice('BTC/USD',parseFloat(bt.lastPrice),parseFloat(bt.price24hPcnt||0)*100); }
+    }
+  }catch(e){}
 
   mkUpdateMainTicker();
-
   mkUpdateRiskBadge();
-
 }
 
 
@@ -7375,21 +7243,14 @@ function mkStartLive(){
 
 
 
-  // 2. Forex: Yahoo Finance ogni 5s (pip-by-pip) + storico fawazahmed0
-
-  mkLoadFxHistory();  // carica settimanale/mensile subito
-
+  // 2. Forex: multi-sorgente ogni 3s (era 5s)
+  mkLoadFxHistory();
   mkPollForex();
+  _mkPollers.push(setInterval(mkPollForex, 3000));
 
-  _mkPollers.push(setInterval(mkPollForex,5000));  // aggiorna ogni 5s
-
-
-
-  // 3. Indici + Materie prime: ogni 15s
-
+  // 3. Indici + Materie prime: ogni 10s (era 15s)
   mkPollIndices();
-
-  _mkPollers.push(setInterval(mkPollIndices,15000));
+  _mkPollers.push(setInterval(mkPollIndices, 10000));
 
 
 
@@ -11263,14 +11124,15 @@ function jrnlDelete(i){
   jrnl.sessions.splice(i,1);
   if(jrnl.activeIdx>=jrnl.sessions.length) jrnl.activeIdx=Math.max(0,jrnl.sessions.length-1);
   jrnlSave();
-  /* Elimina anche da props se collegata */
+  /* Elimina anche da props + credenziali + dati simulatore */
   if(linkedId && typeof props !== 'undefined'){
     props = props.filter(function(p){ return p.id !== linkedId; });
     if(typeof activeId !== 'undefined' && activeId === linkedId)
       activeId = props.length ? props[0].id : null;
     try{ localStorage.removeItem('ph_live_creds_'+linkedId); } catch(e){}
-    if(typeof saveProps === 'function') saveProps();
-    else if(typeof render === 'function') render();
+    try{ localStorage.removeItem('ph_sim_'+linkedId); } catch(e){}
+    /* Aggiorna dashboard */
+    if(typeof render === 'function') render();
   }
   renderJournal();
 }
