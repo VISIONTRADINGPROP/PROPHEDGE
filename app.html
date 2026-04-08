@@ -8907,9 +8907,19 @@ function renderLive(){
       +'</div></div>'
       +'</div>'
       +'<div id="lp_persErr" style="font-size:10px;color:var(--red);font-family:var(--fd);display:none;margin-bottom:6px"></div>'
+      +(persPlat==='mt4'
+        ?'<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35);border-radius:10px;padding:12px;margin-bottom:8px">'
+        +'<div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:6px">⚠️ MT4 richiede l\'EA PropHedge</div>'
+        +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:10px;line-height:1.7">'
+        +'Per collegare un conto MT4 personale devi installare il nostro Expert Advisor.<br>'
+        +'<b>Non serve su conti prop</b> — solo per il conto personale.'
+        +'</div>'
+        +'<div style="display:flex;gap:8px">'
+        +'<button onclick="liveTutorialOpenMT4()" style="flex:1;background:linear-gradient(135deg,#FBBF24,#f59e0b);border:none;border-radius:7px;color:#000;padding:8px;font-size:11px;font-weight:700;cursor:pointer">📖 Guida con audio</button>'
+        +'<button onclick="liveDownloadEA()" style="flex:1;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);border-radius:7px;color:#34D399;padding:8px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica EA</button>'
+        +'</div></div>'
+        :'')
       +'</div>';
-
-    html += '</div>'; /* fine grid */
 
     /* PULSANTE UNICO CONNETTI */
     html += '<div style="margin-bottom:20px">'
@@ -9044,9 +9054,25 @@ function liveSetPlat(btn){
   var propId= parseInt(btn.getAttribute('data-pid'));
   var creds = {};
   try{ var s=localStorage.getItem('ph_live_creds_'+propId); creds=s?JSON.parse(s):{};} catch(e){}
+
+  /* MT4 su PROP → blocca con avviso */
+  if(plat==='mt4' && side==='prop'){
+    alert('⚠️ MT4 non può essere usato per il conto PROP.\n\nMT4 richiede un Expert Advisor che molte prop firm non accettano.\n\nUsa MT5 per il conto prop.');
+    return;
+  }
+
   if(side==='prop') creds.propPlat=plat; else creds.persPlat=plat;
   _bridge[side].platform = plat;
   try{ localStorage.setItem('ph_live_creds_'+propId, JSON.stringify(creds)); } catch(e){}
+
+  /* Mostra avviso EA se MT4 selezionato per conto personale */
+  if(plat==='mt4' && side==='pers'){
+    setTimeout(function(){
+      var warn = document.getElementById('mt4EaWarn');
+      if(warn) warn.style.display='block';
+    }, 100);
+  }
+
   if(typeof currentTab !== 'undefined' && currentTab === 'live'){
     var el = document.getElementById('liveRoot'); if(el) el.outerHTML = renderLive();
   }
@@ -9607,28 +9633,487 @@ function liveDownloadBat(){
 /* ═══ TUTORIAL INTERATTIVO CON AUDIO ═══ */
 var _tutStep=0, _tutAudioOn=true;
 var _tutSteps=[
-  {title:'🔌 Come funziona',
-   html:'<div style="font-size:12px;color:var(--t2);line-height:2;font-family:var(--fd)"><b style="color:var(--t)">PropHedge è nel browser. MT4/MT5 è un programma separato.</b><br>Il Bridge fa da traduttore tra i due — serve un bridge per ogni conto.<br><br><div style="display:flex;flex-direction:column;gap:8px"><div style="background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.25);border-radius:8px;padding:10px;font-size:11px">🎯 <b style="color:#38BDF8">Bridge PROP</b> porta 7777 ↔ MT4/MT5 conto challenge</div><div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);border-radius:8px;padding:10px;font-size:11px">🛡️ <b style="color:#A78BFA">Bridge PERSONALE</b> porta 7778 ↔ MT4/MT5 conto reale</div></div><div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:10px;margin-top:10px;color:var(--amber);font-size:11px">⚠️ Devono essere aperti <b>contemporaneamente</b>: browser + 2 bridge + MT4/MT5</div></div>',
-   audio:'PropHedge è nel browser, MetaTrader è un programma separato sul tuo PC. Il Bridge fa da traduttore tra i due. Servono due Bridge aperti contemporaneamente, uno per il conto prop sulla porta 7777, e uno per il conto personale sulla porta 7778. Tutti devono restare aperti insieme mentre usi il software.'},
-  {title:'📥 Passo 1 — scarica i file',
-   html:'<div style="font-size:12px;color:var(--t2);line-height:2;font-family:var(--fd)">Clicca i pulsanti di download qui nella sezione Setup Bridge:<br><br><div style="display:flex;flex-direction:column;gap:10px"><div style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px"><div style="font-size:18px">📄</div><div><b style="color:var(--t)">bridge.py</b><br><span style="font-size:11px">Il traduttore tra PropHedge e MetaTrader</span></div></div><div style="background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.3);border-radius:8px;padding:12px;display:flex;align-items:center;gap:10px"><div style="font-size:18px">⚙️</div><div><b style="color:var(--t)">avvia_bridge.bat</b><br><span style="font-size:11px">Doppio clic → partono entrambi i bridge in automatico</span></div></div></div><div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:10px;margin-top:10px;color:var(--green);font-size:11px">✅ Metti entrambi nella stessa cartella — ad esempio sul Desktop</div></div>',
-   audio:'Nella sezione Setup Bridge in basso, clicca il pulsante per scaricare bridge punto py e poi scarica avvia underscore bridge punto bat. Metti entrambi i file nella stessa cartella, ad esempio sul Desktop. È importante che siano nella stessa cartella.'},
-  {title:'🐍 Passo 2 — installa Python',
-   html:'<div style="font-size:12px;color:var(--t2);line-height:2;font-family:var(--fd)">Se non hai Python, vai su <b style="color:var(--teal)">python.org/downloads</b> e scarica Python 3.12.<br><br><div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:12px;margin-bottom:10px"><b style="color:var(--red)">⚠️ IMPORTANTISSIMO:</b><br>Nella prima schermata dell\'installer spunta:<br><b style="font-size:13px;color:var(--amber)">☑ Add Python to PATH</b><br><span style="font-size:11px">Senza questa spunta i bridge non si avviano</span></div><div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:10px;color:var(--green);font-size:11px">✅ Se hai già Python installato salta questo passo</div></div>',
-   audio:'Se non hai Python installato, vai sul sito python punto org slash downloads e scarica la versione 3.12. Durante l\'installazione, nella prima schermata, è fondamentale spuntare la casella "Add Python to PATH" in basso. Senza questa spunta i bridge non funzionano. Se hai già Python puoi saltare questo passo.'},
-  {title:'📦 Passo 3 — installa le librerie',
-   html:'<div style="font-size:12px;color:var(--t2);line-height:2;font-family:var(--fd)">Apri il Prompt dei comandi: <b>Windows + R</b>, scrivi <b>cmd</b>, Invio.<br>Poi tasto destro nella finestra nera e incolla:<br><br><div style="background:#07091a;border:1px solid #2a2f55;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin:8px 0"><code style="font-size:11px;color:#38BDF8">py -m pip install flask flask-cors MetaTrader5</code><button onclick="navigator.clipboard.writeText(\'py -m pip install flask flask-cors MetaTrader5\');this.textContent=\'✓ Copiato\';setTimeout(()=>this.textContent=\'📋 Copia\',2000)" style="background:var(--bg3);border:1px solid var(--border);border-radius:5px;color:var(--t2);padding:3px 8px;font-size:10px;cursor:pointer">📋 Copia</button></div>Aspetta 1-2 minuti. Vedrai <b style="color:var(--green)">Successfully installed</b>.<br><div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:10px;margin-top:8px;color:var(--green);font-size:11px">✅ Si fa una volta sola</div></div>',
-   audio:'Apri il Prompt dei comandi premendo Windows più R, scrivi cmd e premi Invio. Nella finestra nera clicca con il tasto destro del mouse e incolla il comando: py meno m pip install flask flask-cors MetaTrader5. Premi Invio e aspetta uno o due minuti. Vedrai "Successfully installed" quando ha finito. Questo si fa una volta sola.'},
-  {title:'▶ Passo 4 — avvia i bridge',
-   html:'<div style="font-size:12px;color:var(--t2);line-height:2;font-family:var(--fd)">Fai <b style="color:var(--t)">doppio clic su avvia_bridge.bat</b>.<br>Si apriranno 2 finestre nere automaticamente:<br><br><div style="background:#07091a;border:1px solid #38BDF8;border-radius:8px;padding:10px;margin-bottom:8px"><div style="font-size:10px;color:#38BDF8;margin-bottom:4px">PROP — porta 7777</div><div style="font-size:11px;color:#34D399;font-family:var(--fd)">✓ PropHedge Bridge avviato su 127.0.0.1:7777</div></div><div style="background:#07091a;border:1px solid #A78BFA;border-radius:8px;padding:10px;margin-bottom:10px"><div style="font-size:10px;color:#A78BFA;margin-bottom:4px">PERSONALE — porta 7778</div><div style="font-size:11px;color:#34D399;font-family:var(--fd)">✓ PropHedge Bridge avviato su 127.0.0.1:7778</div></div><div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:10px;color:var(--red);font-size:11px">⚠️ Non chiudere queste finestre — minimizzale soltanto</div><div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:10px;color:var(--amber);font-size:11px;margin-top:8px">⚠️ Windows blocca il file? Tasto destro → Proprietà → spunta <b>Sblocca</b> → OK</div></div>',
-   audio:'Vai nella cartella dove hai salvato i file e fai doppio clic su avvia underscore bridge punto bat. Si apriranno automaticamente due finestre nere. La prima mostra il bridge avviato sulla porta 7777 per il conto prop, la seconda sulla porta 7778 per il conto personale. Non chiudere mai queste finestre mentre usi il software, minimizzale soltanto.'},
-  {title:'🤖 Passo 5 — attiva AutoTrading in MT4/MT5',
-   html:'<div style="font-size:12px;color:var(--t2);line-height:2;font-family:var(--fd)">Apri MT4/MT5 e accedi. Poi attiva il trading automatico:<br><br><div style="display:flex;flex-direction:column;gap:10px"><div style="display:flex;gap:10px;align-items:flex-start"><div style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</div><div>Pulsante <b>Algo Trading</b> in alto → deve essere <b style="color:var(--green)">verde</b></div></div><div style="display:flex;gap:10px;align-items:flex-start"><div style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</div><div><b>Strumenti → Opzioni → Expert Advisors</b><br>→ <b>"Disabilita trading API Python"</b> deve essere <b style="color:var(--red)">deselezionato</b></div></div><div style="display:flex;gap:10px;align-items:flex-start"><div style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">3</div><div>Ripeti per <b>entrambe</b> le istanze MT4/MT5</div></div></div></div>',
-   audio:'Apri MetaTrader e accedi al tuo conto. Nella barra degli strumenti in alto cerca il pulsante Algo Trading. Deve essere verde. Se è grigio cliccalo per attivarlo. Poi vai su Strumenti, Opzioni, Expert Advisors e assicurati che "Disabilita trading tramite API Python esterne" sia deselezionata. Ripeti questo per entrambe le piattaforme MetaTrader, quella del conto prop e quella del conto personale.'},
-  {title:'✅ Passo 6 — connetti e opera',
-   html:'<div style="font-size:12px;color:var(--t2);line-height:2;font-family:var(--fd)">Nel tab Live Trading inserisci le credenziali:<br><br><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px"><div style="background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.3);border-radius:8px;padding:10px"><b style="color:#38BDF8">🎯 Conto PROP</b> — server, login, password del conto challenge</div><div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.3);border-radius:8px;padding:10px"><b style="color:#A78BFA">🛡️ Conto PERSONALE</b> — server, login, password del conto reale</div></div>Quando vedi <b style="color:var(--green)">● Connesso</b> su entrambi sei pronto!<br><br><div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;font-size:11px"><b style="color:var(--t)">Ogni volta che usi PropHedge:</b><br>1. Doppio clic su avvia_bridge.bat<br>2. Apri MT4/MT5 su entrambi i conti<br>3. Connetti nel tab Live Trading</div></div>',
-   audio:'Ora inserisci le credenziali nei due form. Per il conto prop inserisci server, login e password del tuo conto challenge. Per il conto personale inserisci le credenziali del tuo conto reale. Clicca Connetti su entrambi. Quando vedi il pallino verde Connesso su entrambi sei pronto per operare direttamente da PropHedge. Ogni volta che usi il software: prima avvia bridge bat, poi apri MetaTrader, poi connetti nel tab Live Trading.'}
+
+/* ═══ GUIDA BRIDGE MT5 ═══ */
+
+{title:'🎮 Ciao! Vediamo come connettersi in 5 minuti',
+ html:`<div style="font-family:var(--fd);font-size:12px;color:var(--t2);line-height:2">
+  <div style="text-align:center;margin-bottom:16px">
+    <svg width="260" height="110" viewBox="0 0 260 110">
+      <!-- Browser -->
+      <rect x="10" y="20" width="80" height="60" rx="8" fill="rgba(56,189,248,.15)" stroke="#38BDF8" stroke-width="1.5"/>
+      <rect x="10" y="20" width="80" height="16" rx="8" fill="rgba(56,189,248,.3)"/>
+      <text x="50" y="31" text-anchor="middle" fill="#38BDF8" font-size="8" font-family="monospace">PropHedge</text>
+      <text x="50" y="60" text-anchor="middle" fill="#38BDF8" font-size="18">💻</text>
+      <!-- Bridge -->
+      <rect x="90" y="35" width="80" height="30" rx="6" fill="rgba(167,139,250,.15)" stroke="#A78BFA" stroke-width="1.5"/>
+      <text x="130" y="55" text-anchor="middle" fill="#A78BFA" font-size="9" font-family="monospace">bridge.py</text>
+      <!-- MT5 -->
+      <rect x="170" y="20" width="80" height="60" rx="8" fill="rgba(52,211,153,.15)" stroke="#34D399" stroke-width="1.5"/>
+      <text x="210" y="57" text-anchor="middle" fill="#34D399" font-size="18">📈</text>
+      <text x="210" y="72" text-anchor="middle" fill="#34D399" font-size="8" font-family="monospace">MT4/MT5</text>
+      <!-- Arrows -->
+      <line x1="90" y1="50" x2="170" y2="50" stroke="#FBBF24" stroke-width="2" stroke-dasharray="4"/>
+      <polygon points="168,46 176,50 168,54" fill="#FBBF24"/>
+      <line x1="170" y1="50" x2="90" y2="50" stroke="#FBBF24" stroke-width="1" stroke-dasharray="2" opacity=".4"/>
+    </svg>
+  </div>
+  <div style="background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);border-radius:10px;padding:12px;margin-bottom:10px">
+    <b style="color:#38BDF8;font-size:13px">Come funziona? Semplicissimo! 👇</b><br>
+    PropHedge è nel browser • bridge.py è il "traduttore" • MT5 è la piattaforma
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:8px;padding:10px">
+      🎯 <b style="color:#34D399">Conto PROP</b> → porta 7777
+    </div>
+    <div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.2);border-radius:8px;padding:10px">
+      🛡️ <b style="color:#A78BFA">Conto PERSONALE</b> → porta 7778
+    </div>
+  </div>
+</div>`,
+ audio:'Ciao! Questa guida ti aiuta a collegare PropHedge ai tuoi conti MetaTrader in pochi minuti. PropHedge è nel browser, MetaTrader è sul tuo PC, e il Bridge è il traduttore tra i due. Troverai tutto semplice, promesso!'},
+
+{title:'📥 Passo 1 — Scarica Python',
+ html:`<div style="font-family:var(--fd);font-size:12px;color:var(--t2);line-height:1.9">
+  <div style="text-align:center;margin-bottom:14px">
+    <svg width="260" height="90" viewBox="0 0 260 90">
+      <rect x="30" y="10" width="200" height="70" rx="10" fill="#1e2741" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="130" y="32" text-anchor="middle" fill="white" font-size="11" font-family="sans-serif" font-weight="bold">Python 3.12 Installer</text>
+      <rect x="50" y="42" width="160" height="18" rx="4" fill="#0a0f1e" stroke="#2a2f55"/>
+      <rect x="54" y="46" width="12" height="10" rx="2" fill="#3b82f6"/>
+      <text x="72" y="55" fill="#34D399" font-size="9" font-family="sans-serif" font-weight="bold">☑ Add Python to PATH</text>
+      <rect x="175" y="56" width="20" height="10" rx="3" fill="#FBBF24"/>
+      <text x="185" y="64" text-anchor="middle" fill="#000" font-size="7" font-weight="bold">NEXT</text>
+      <!-- Arrow pointing to checkbox -->
+      <line x1="40" y1="80" x2="55" y2="56" stroke="#F87171" stroke-width="2"/>
+      <text x="5" y="85" fill="#F87171" font-size="9" font-family="sans-serif">← SPUNTA!</text>
+    </svg>
+  </div>
+  <div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.4);border-radius:10px;padding:12px;margin-bottom:10px">
+    <b style="color:#F87171;font-size:13px">⚠️ IMPORTANTISSIMO!</b><br>
+    Quando installi Python, nella prima schermata devi spuntare:<br>
+    <b style="font-size:14px;color:#FBBF24">☑ Add Python to PATH</b><br>
+    <span style="font-size:10px;opacity:.8">Se dimentichi questa spunta, niente funziona!</span>
+  </div>
+  <button onclick="window.open('https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe','_blank')" style="width:100%;background:linear-gradient(135deg,#3b82f6,#6366f1);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer">⬇ Scarica Python 3.12 (click qui!)</button>
+</div>`,
+ audio:'Primo passo: installa Python. Clicca il pulsante per scaricarlo. Quando si apre il programma di installazione, nella prima schermata in basso trovi una casella con scritto "Add Python to PATH". Devi assolutamente spuntarla! È fondamentale. Poi clicca su Install Now e aspetta che finisca.'},
+
+{title:'📦 Passo 2 — Installa le librerie',
+ html:`<div style="font-family:var(--fd);font-size:12px;color:var(--t2);line-height:1.9">
+  <div style="text-align:center;margin-bottom:14px">
+    <svg width="260" height="90" viewBox="0 0 260 90">
+      <rect x="20" y="5" width="220" height="80" rx="6" fill="#0a0a0a" stroke="#2a2f55"/>
+      <text x="30" y="25" fill="#7880a8" font-size="9" font-family="monospace">C:\Users\Utente&gt;</text>
+      <text x="30" y="40" fill="#38BDF8" font-size="9" font-family="monospace">py -m pip install flask</text>
+      <text x="30" y="52" fill="#38BDF8" font-size="9" font-family="monospace">flask-cors MetaTrader5</text>
+      <text x="30" y="72" fill="#34D399" font-size="9" font-family="monospace">Successfully installed ✓</text>
+      <!-- cursor blink -->
+      <rect x="178" y="43" width="5" height="10" fill="#38BDF8" opacity=".8">
+        <animate attributeName="opacity" values="0.8;0;0.8" dur="1s" repeatCount="indefinite"/>
+      </rect>
+    </svg>
+  </div>
+  <div style="font-size:11px;margin-bottom:10px;color:var(--t2)">
+    <b style="color:var(--t)">Come aprire il Prompt dei comandi:</b><br>
+    1. Premi il tasto <b style="color:#FBBF24">Windows</b> sulla tastiera<br>
+    2. Scrivi <b style="color:#38BDF8">cmd</b><br>
+    3. Premi <b style="color:#34D399">Invio</b><br>
+    4. Si apre una finestra nera — è normale!
+  </div>
+  <div style="background:#0a0f1e;border:1px solid #2a2f55;border-radius:8px;padding:10px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <code style="font-size:10px;color:#38BDF8">py -m pip install flask flask-cors MetaTrader5</code>
+    <button onclick="navigator.clipboard.writeText('py -m pip install flask flask-cors MetaTrader5');this.textContent='✓';setTimeout(()=>this.textContent='📋',2000)" style="background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);border-radius:5px;color:#38BDF8;padding:4px 8px;font-size:10px;cursor:pointer;flex-shrink:0">📋</button>
+  </div>
+  <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:8px;padding:8px;font-size:11px;color:var(--green)">
+    ✅ Copia il comando → incolla nella finestra nera con <b>tasto destro</b> → premi Invio → aspetta 2 minuti
+  </div>
+</div>`,
+ audio:'Passo due. Apri il Prompt dei comandi. Premi il tasto Windows, scrivi cmd e premi Invio. Si apre una finestra nera. Clicca il pulsante copia qui nella guida, poi nella finestra nera clicca con il tasto destro del mouse per incollare, e premi Invio. Aspetta due minuti finché vedi "Successfully installed". Si fa una volta sola!'},
+
+{title:'⬇ Passo 3 — Scarica bridge.py',
+ html:`<div style="font-family:var(--fd);font-size:12px;color:var(--t2);line-height:1.9">
+  <div style="text-align:center;margin-bottom:14px">
+    <svg width="260" height="90" viewBox="0 0 260 90">
+      <!-- Desktop icon -->
+      <rect x="90" y="10" width="80" height="55" rx="6" fill="#1a1f3a" stroke="#A78BFA" stroke-width="1.5"/>
+      <text x="130" y="42" text-anchor="middle" font-size="22">🖥️</text>
+      <text x="130" y="58" text-anchor="middle" fill="#A78BFA" font-size="9" font-family="monospace">Desktop</text>
+      <!-- File -->
+      <rect x="105" y="35" width="50" height="35" rx="4" fill="#0a0f1e" stroke="#34D399" stroke-width="1.5">
+        <animate attributeName="y" values="35;50;50;35" dur="2s" repeatCount="indefinite"/>
+      </rect>
+      <text x="130" y="56" text-anchor="middle" fill="#34D399" font-size="8" font-family="monospace">
+        <animate attributeName="y" values="56;71;71;56" dur="2s" repeatCount="indefinite"/>
+        bridge.py
+      </text>
+      <!-- Arrow down -->
+      <line x1="130" y1="5" x2="130" y2="30" stroke="#FBBF24" stroke-width="2">
+        <animate attributeName="y2" values="20;32;20" dur="1s" repeatCount="indefinite"/>
+      </line>
+      <polygon points="124,28 130,36 136,28" fill="#FBBF24">
+        <animate attributeName="points" values="124,20 130,28 136,20;124,28 130,36 136,28;124,20 130,28 136,20" dur="1s" repeatCount="indefinite"/>
+      </polygon>
+    </svg>
+  </div>
+  <div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.3);border-radius:10px;padding:12px;margin-bottom:12px">
+    <b style="color:#A78BFA">Scarica bridge.py e salvalo sul Desktop</b><br>
+    <span style="font-size:11px">Quando il browser chiede dove salvarlo, scegli <b>Desktop</b></span>
+  </div>
+  <button onclick="liveDownloadGuide()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#A78BFA);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">⬇ Scarica bridge.py</button>
+  <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:8px;padding:8px;font-size:11px;color:var(--green)">
+    ✅ Mettilo sul Desktop — è più facile trovarlo dopo!
+  </div>
+</div>`,
+ audio:'Passo tre. Clicca il pulsante qui sotto per scaricare bridge punto py. Quando il browser ti chiede dove salvarlo, seleziona il Desktop. Così è più facile trovarlo dopo.'},
+
+{title:'▶ Passo 4 — Avvia bridge.py',
+ html:`<div style="font-family:var(--fd);font-size:12px;color:var(--t2);line-height:1.9">
+  <div style="text-align:center;margin-bottom:14px">
+    <svg width="260" height="90" viewBox="0 0 260 90">
+      <rect x="20" y="5" width="220" height="80" rx="6" fill="#0a0a0a" stroke="#34D399"/>
+      <text x="30" y="22" fill="#7880a8" font-size="8" font-family="monospace">Amministratore: Prompt dei comandi</text>
+      <text x="30" y="38" fill="#7880a8" font-size="9" font-family="monospace">C:\Windows\system32&gt; cd C:\Users\Utente\Desktop</text>
+      <text x="30" y="52" fill="#7880a8" font-size="9" font-family="monospace">C:\Users\Utente\Desktop&gt; py bridge.py</text>
+      <text x="30" y="68" fill="#34D399" font-size="9" font-family="monospace">PropHedge Bridge v3.0 — Porta 7777 ✓ 7778 ✓</text>
+    </svg>
+  </div>
+  <div style="font-size:11px;margin-bottom:10px">
+    <b style="color:var(--t)">Come avviare il bridge (ogni volta che usi PropHedge):</b>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+      <div style="background:var(--bg3);border-radius:7px;padding:8px;display:flex;gap:8px;align-items:center">
+        <span style="background:#7F77DD;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">1</span>
+        Premi <b>Windows</b>, scrivi <b>cmd</b>, <b style="color:#F87171">tasto destro</b> → <b>"Esegui come Amministratore"</b>
+      </div>
+      <div style="background:var(--bg3);border-radius:7px;padding:8px;display:flex;gap:8px;align-items:center">
+        <span style="background:#7F77DD;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">2</span>
+        Scrivi: <code style="color:#38BDF8;background:#0a0f1e;padding:2px 6px;border-radius:4px">cd C:\Users\Utente\Desktop</code> → Invio
+      </div>
+      <div style="background:var(--bg3);border-radius:7px;padding:8px;display:flex;gap:8px;align-items:center">
+        <span style="background:#1D9E75;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">3</span>
+        Scrivi: <code style="color:#34D399;background:#0a0f1e;padding:2px 6px;border-radius:4px">py bridge.py</code> → Invio
+        <button onclick="navigator.clipboard.writeText('py bridge.py');this.textContent='✓';setTimeout(()=>this.textContent='📋',2000)" style="background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);border-radius:4px;color:#34D399;padding:2px 7px;font-size:10px;cursor:pointer">📋</button>
+      </div>
+    </div>
+  </div>
+  <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-radius:8px;padding:8px;font-size:11px;color:var(--red)">
+    ⚠️ <b>Non chiudere</b> la finestra nera — minimizzala soltanto!
+  </div>
+</div>`,
+ audio:'Passo quattro, avvia il bridge. Premi il tasto Windows, scrivi cmd, ma invece di premere Invio fai clic con il tasto destro del mouse e scegli "Esegui come Amministratore". Si apre la finestra nera. Scrivi cd, spazio, C due punti backslash Users backslash Utente backslash Desktop, e premi Invio. Poi scrivi py bridge punto py e premi Invio. Vedrai apparire le righe verdi. Non chiudere questa finestra, minimizzala soltanto.'},
+
+{title:'🤖 Passo 5 — Attiva AutoTrading in MT5',
+ html:`<div style="font-family:var(--fd);font-size:12px;color:var(--t2);line-height:1.9">
+  <div style="text-align:center;margin-bottom:12px">
+    <svg width="260" height="80" viewBox="0 0 260 80">
+      <!-- MT5 toolbar simulation -->
+      <rect x="10" y="5" width="240" height="30" rx="4" fill="#1a1f3a" stroke="#2a2f55"/>
+      <text x="20" y="24" fill="#7880a8" font-size="8" font-family="sans-serif">File  View  Insert  Charts  Tools  Window  Help</text>
+      <!-- Algo Trading button GREEN -->
+      <rect x="160" y="8" width="80" height="22" rx="4" fill="#059669" stroke="#34D399" stroke-width="1.5"/>
+      <text x="200" y="22" text-anchor="middle" fill="white" font-size="9" font-weight="bold" font-family="sans-serif">▶ Algo Trading</text>
+      <!-- Arrow pointing -->
+      <line x1="200" y1="50" x2="200" y2="34" stroke="#FBBF24" stroke-width="2"/>
+      <polygon points="195,34 200,28 205,34" fill="#FBBF24"/>
+      <text x="200" y="65" text-anchor="middle" fill="#FBBF24" font-size="9" font-family="sans-serif">Deve essere VERDE!</text>
+    </svg>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:flex-start">
+      <span style="background:#059669;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</span>
+      <div>In MT5 cerca il pulsante <b>"Algo Trading"</b> in alto<br>
+      → deve essere <b style="color:#34D399">VERDE</b>. Se è grigio, cliccalo!</div>
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:flex-start">
+      <span style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</span>
+      <div><b>Strumenti → Opzioni → Expert Advisors</b><br>
+      → Spunta <b>"Consenti importazioni DLL"</b></div>
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:flex-start">
+      <span style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">3</span>
+      <div>Fai questa cosa su <b>entrambi</b> i MetaTrader aperti</div>
+    </div>
+  </div>
+</div>`,
+ audio:'Passo cinque. In MetaTrader cerca il pulsante Algo Trading nella barra degli strumenti in alto. Deve essere verde. Se è grigio o rosso, cliccaci sopra per attivarlo. Poi vai su Strumenti, Opzioni, Expert Advisors, e spunta "Consenti importazioni DLL". Clicca OK. Fai questa cosa su entrambi i MetaTrader, sia quello del conto prop che quello del conto personale.'},
+
+{title:'🔗 Passo 6 — Connetti i conti!',
+ html:`<div style="font-family:var(--fd);font-size:12px;color:var(--t2);line-height:1.9">
+  <div style="text-align:center;margin-bottom:12px">
+    <svg width="260" height="80" viewBox="0 0 260 80">
+      <!-- Two account cards -->
+      <rect x="10" y="10" width="110" height="55" rx="8" fill="rgba(56,189,248,.1)" stroke="#38BDF8" stroke-width="1.5"/>
+      <text x="65" y="28" text-anchor="middle" fill="#38BDF8" font-size="9" font-weight="bold">🎯 CONTO PROP</text>
+      <text x="65" y="42" text-anchor="middle" fill="#7880a8" font-size="8">Server + Login + Password</text>
+      <rect x="24" y="50" width="82" height="10" rx="4" fill="#38BDF8" opacity=".8"/>
+      <text x="65" y="58" text-anchor="middle" fill="white" font-size="7" font-weight="bold">Connetti PROP</text>
+
+      <rect x="140" y="10" width="110" height="55" rx="8" fill="rgba(167,139,250,.1)" stroke="#A78BFA" stroke-width="1.5"/>
+      <text x="195" y="28" text-anchor="middle" fill="#A78BFA" font-size="9" font-weight="bold">🛡️ PERSONALE</text>
+      <text x="195" y="42" text-anchor="middle" fill="#7880a8" font-size="8">Server + Login + Password</text>
+      <rect x="154" y="50" width="82" height="10" rx="4" fill="#A78BFA" opacity=".8"/>
+      <text x="195" y="58" text-anchor="middle" fill="white" font-size="7" font-weight="bold">Connetti PERS.</text>
+
+      <!-- Connected checkmarks -->
+      <circle cx="110" cy="10" r="8" fill="#059669"><animate attributeName="r" values="8;10;8" dur="1.5s" repeatCount="indefinite"/></circle>
+      <text x="110" y="14" text-anchor="middle" fill="white" font-size="9">✓</text>
+      <circle cx="240" cy="10" r="8" fill="#059669"><animate attributeName="r" values="8;10;8" dur="1.5s" begin="0.5s" repeatCount="indefinite"/></circle>
+      <text x="240" y="14" text-anchor="middle" fill="white" font-size="9">✓</text>
+    </svg>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+    <div style="background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.3);border-radius:8px;padding:10px">
+      <b style="color:#38BDF8">PROP</b> → scegli MT5 → inserisci Server, Login, Password del conto challenge
+    </div>
+    <div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.3);border-radius:8px;padding:10px">
+      <b style="color:#A78BFA">PERSONALE</b> → scegli MT5 → inserisci Server, Login, Password del conto reale
+    </div>
+  </div>
+  <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:10px;padding:12px">
+    <b style="color:#34D399;font-size:13px">🎉 Quando vedi ● LIVE CONNESSO su entrambi sei pronto!</b><br>
+    <span style="font-size:11px">Da ora puoi aprire trade dal Journal con un solo clic</span>
+  </div>
+</div>`,
+ audio:'Ultimo passo! Torna nel tab Live Trading di PropHedge. Per il conto PROP seleziona MT5, inserisci il server, il numero di login e la password del tuo conto challenge. Poi clicca Connetti PROP. Fai lo stesso per il conto personale. Quando vedi il pallino verde con scritto "LIVE CONNESSO" su entrambi, sei pronto! Da questo momento puoi aprire posizioni su entrambi i conti con un solo clic dal Journal.'},
+
+/* ═══ GUIDA EA MT4 ═══ */
+
+{title:'📱 Guida EA per MT4 — Solo conto personale!',
+ html:`<div style="font-family:var(--fd);font-size:12px;color:var(--t2);line-height:1.9">
+  <div style="background:rgba(248,113,113,.1);border:2px solid rgba(248,113,113,.5);border-radius:10px;padding:14px;margin-bottom:14px;text-align:center">
+    <div style="font-size:20px;margin-bottom:6px">🚫</div>
+    <b style="color:#F87171;font-size:13px">SOLO per il conto PERSONALE!</b><br>
+    <span style="font-size:11px">L'EA NON va mai installato sul conto PROP — le prop firm potrebbero non accettarlo</span>
+  </div>
+  <div style="text-align:center;margin-bottom:12px">
+    <svg width="260" height="70" viewBox="0 0 260 70">
+      <rect x="10" y="10" width="110" height="50" rx="8" fill="rgba(248,113,113,.1)" stroke="#F87171" stroke-width="2" stroke-dasharray="6"/>
+      <text x="65" y="32" text-anchor="middle" fill="#F87171" font-size="22">🚫</text>
+      <text x="65" y="50" text-anchor="middle" fill="#F87171" font-size="9" font-weight="bold">CONTO PROP</text>
+      <rect x="140" y="10" width="110" height="50" rx="8" fill="rgba(52,211,153,.1)" stroke="#34D399" stroke-width="2"/>
+      <text x="195" y="32" text-anchor="middle" fill="#34D399" font-size="22">✅</text>
+      <text x="195" y="50" text-anchor="middle" fill="#34D399" font-size="9" font-weight="bold">CONTO PERSONALE</text>
+    </svg>
+  </div>
+  <div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:10px;font-size:11px">
+    <b style="color:#FBBF24">Perché solo sul personale?</b><br>
+    Le prop firm monitorano gli EA per evitare cheating. Usiamo Python per il conto prop (più sicuro). Per il conto personale invece usi il tuo broker normale — nessun problema!
+  </div>
+</div>`,
+ audio:'Attenzione! Questa guida è per installare l\'Expert Advisor in MetaTrader 4, ma solo per il conto personale. Non installare mai l\'EA sul conto prop perché le prop firm potrebbero non accettarlo. Per il conto prop utilizziamo il bridge Python che è più sicuro.'},
+
+{title:'⬇ EA Step 1 — Scarica il file EA',
+ html:`<div style="font-family:var(--fd);font-size:12px;color:var(--t2);line-height:1.9">
+  <div style="text-align:center;margin-bottom:14px">
+    <svg width="260" height="80" viewBox="0 0 260 80">
+      <rect x="80" y="5" width="100" height="65" rx="6" fill="#1a1f3a" stroke="#34D399" stroke-width="1.5"/>
+      <text x="130" y="25" text-anchor="middle" fill="#7880a8" font-size="8">Downloads</text>
+      <rect x="95" y="30" width="70" height="30" rx="4" fill="#0a1428" stroke="#34D399"/>
+      <text x="130" y="48" text-anchor="middle" fill="#34D399" font-size="8" font-family="monospace">prophedge_mt4.mq4</text>
+      <line x1="130" y1="5" x2="130" y2="26" stroke="#FBBF24" stroke-width="2" stroke-dasharray="3"/>
+    </svg>
+  </div>
+  <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:10px;padding:12px;margin-bottom:12px">
+    <b style="color:#34D399">Clicca il pulsante qui sotto</b> per scaricare il file EA.<br>
+    <span style="font-size:11px">Salvalo dove vuoi — lo apriamo subito dopo</span>
+  </div>
+  <button onclick="liveDownloadEA()" style="width:100%;background:linear-gradient(135deg,#059669,#34D399);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer">⬇ Scarica EA PropHedge per MT4</button>
+</div>`,
+ audio:'Primo passo per MT4. Clicca il pulsante per scaricare il file dell\'Expert Advisor. Si chiama prophedge underscore mt4 punto mq4. Salvalo dove vuoi, lo troveremo tra poco.'},
+
+{title:'📂 EA Step 2 — Apri la cartella degli EA in MT4',
+ html:`<div style="font-family:var(--fd);font-size:12px;color:var(--t2);line-height:1.9">
+  <div style="text-align:center;margin-bottom:12px">
+    <svg width="260" height="80" viewBox="0 0 260 80">
+      <!-- MT4 menu -->
+      <rect x="10" y="5" width="240" height="20" rx="3" fill="#1a1f3a" stroke="#2a2f55"/>
+      <text x="20" y="18" fill="white" font-size="9" font-family="sans-serif">File  </text>
+      <text x="50" y="18" fill="#FBBF24" font-size="9" font-family="sans-serif" font-weight="bold">Strumenti</text>
+      <text x="105" y="18" fill="white" font-size="9" font-family="sans-serif">  Help</text>
+      <!-- Dropdown -->
+      <rect x="45" y="25" width="120" height="50" rx="4" fill="#0a1428" stroke="#FBBF24"/>
+      <text x="55" y="40" fill="#7880a8" font-size="9" font-family="sans-serif">Opzioni...</text>
+      <rect x="50" y="46" width="110" height="15" rx="3" fill="rgba(52,211,153,.2)"/>
+      <text x="55" y="57" fill="#34D399" font-size="9" font-family="sans-serif" font-weight="bold">📂 Apri cartella dati</text>
+    </svg>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:flex-start">
+      <span style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</span>
+      In MT4 clicca su <b>Strumenti</b> nel menu in alto
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:flex-start">
+      <span style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</span>
+      Clicca <b>"Apri cartella dati"</b>
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:flex-start">
+      <span style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">3</span>
+      Si apre una cartella — entra nella cartella <b style="color:#FBBF24">MQL4 → Experts</b>
+    </div>
+  </div>
+</div>`,
+ audio:'Passo due. In MetaTrader 4 clicca su Strumenti nel menu in alto, poi su "Apri cartella dati". Si aprirà una finestra di Esplora File. Entra nella cartella MQL4 e poi nella cartella Experts.'},
+
+{title:'📋 EA Step 3 — Copia il file nella cartella',
+ html:`<div style="font-family:var(--fd);font-size:12px;color:var(--t2);line-height:1.9">
+  <div style="text-align:center;margin-bottom:12px">
+    <svg width="260" height="80" viewBox="0 0 260 80">
+      <!-- Source -->
+      <rect x="10" y="20" width="80" height="40" rx="6" fill="#1a1f3a" stroke="#7880a8"/>
+      <text x="50" y="38" text-anchor="middle" fill="#7880a8" font-size="8">Downloads</text>
+      <rect x="20" y="42" width="60" height="14" rx="3" fill="#0a1428" stroke="#34D399"/>
+      <text x="50" y="52" text-anchor="middle" fill="#34D399" font-size="7">prophedge_mt4.mq4</text>
+      <!-- Arrow -->
+      <line x1="95" y1="40" x2="160" y2="40" stroke="#FBBF24" stroke-width="2"/>
+      <polygon points="158,36 166,40 158,44" fill="#FBBF24"/>
+      <text x="128" y="35" text-anchor="middle" fill="#FBBF24" font-size="8">copia qui!</text>
+      <!-- Destination -->
+      <rect x="165" y="20" width="85" height="40" rx="6" fill="rgba(52,211,153,.1)" stroke="#34D399" stroke-width="2"/>
+      <text x="207" y="37" text-anchor="middle" fill="#34D399" font-size="8" font-weight="bold">MQL4/Experts</text>
+      <rect x="175" y="42" width="65" height="14" rx="3" fill="#0a1428" stroke="#34D399"/>
+      <text x="207" y="52" text-anchor="middle" fill="#34D399" font-size="7">prophedge_mt4.mq4</text>
+    </svg>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:flex-start">
+      <span style="background:#059669;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</span>
+      Copia il file <b>prophedge_mt4.mq4</b> che hai scaricato
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:flex-start">
+      <span style="background:#059669;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</span>
+      Incollalo nella cartella <b style="color:#FBBF24">MQL4/Experts</b> appena aperta
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:flex-start">
+      <span style="background:#059669;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">3</span>
+      Torna in MT4 e premi <b>F5</b> oppure riavvia MT4
+    </div>
+  </div>
+</div>`,
+ audio:'Passo tre. Prendi il file prophedge underscore mt4 punto mq4 che hai appena scaricato e copialo dentro la cartella MQL4 slash Experts. Poi torna in MetaTrader 4 e premi il tasto F5 per aggiornare la lista degli Expert Advisor.'},
+
+{title:'🖱️ EA Step 4 — Applica l\'EA a un grafico',
+ html:`<div style="font-family:var(--fd);font-size:12px;color:var(--t2);line-height:1.9">
+  <div style="text-align:center;margin-bottom:12px">
+    <svg width="260" height="80" viewBox="0 0 260 80">
+      <!-- Navigator panel -->
+      <rect x="10" y="5" width="70" height="70" rx="4" fill="#1a1f3a" stroke="#2a2f55"/>
+      <text x="45" y="18" text-anchor="middle" fill="#7880a8" font-size="8">Navigator</text>
+      <text x="20" y="32" fill="#7880a8" font-size="8">▼ Expert Advisors</text>
+      <rect x="15" y="36" width="60" height="14" rx="3" fill="rgba(52,211,153,.2)" stroke="#34D399"/>
+      <text x="45" y="47" text-anchor="middle" fill="#34D399" font-size="7" font-weight="bold">PropHedge MT4</text>
+      <!-- Arrow drag -->
+      <path d="M85 43 Q130 20 175 43" stroke="#FBBF24" stroke-width="2" fill="none" stroke-dasharray="4"/>
+      <polygon points="173,39 181,43 173,47" fill="#FBBF24"/>
+      <!-- Chart -->
+      <rect x="180" y="5" width="70" height="70" rx="4" fill="#0a1428" stroke="#34D399" stroke-width="2"/>
+      <polyline points="190,55 200,40 210,50 220,30 230,45 240,25" stroke="#34D399" stroke-width="1.5" fill="none"/>
+      <text x="215" y="68" text-anchor="middle" fill="#34D399" font-size="8">Grafico</text>
+    </svg>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:flex-start">
+      <span style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">1</span>
+      Nel pannello <b>Navigator</b> a sinistra in MT4 trovi <b>"Expert Advisors"</b>
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:flex-start">
+      <span style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">2</span>
+      Trovi <b>"PropHedge MT4"</b> nella lista — <b>doppio clic</b> su di esso
+    </div>
+    <div style="background:var(--bg3);border-radius:8px;padding:10px;display:flex;gap:10px;align-items:flex-start">
+      <span style="background:#7F77DD;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">3</span>
+      Si apre una finestra → spunta <b>"Consenti trading"</b> → OK
+    </div>
+  </div>
+  <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:8px;padding:8px;font-size:11px;color:var(--green);margin-top:8px">
+    ✅ Vedrai una faccina sorridente 🙂 in alto a destra del grafico = EA attivo!
+  </div>
+</div>`,
+ audio:'Passo quattro. Nel pannello Navigator di MetaTrader 4, che di solito si trova a sinistra, cerca la cartella "Expert Advisors" e aprila. Troverai "PropHedge MT4" nella lista. Fai doppio clic su di esso. Si apre una finestra di configurazione, assicurati di spuntare "Consenti trading" e poi clicca OK. Se vedi una faccina sorridente in alto a destra del grafico significa che l\'EA è attivo e funzionante!'},
+
+{title:'✅ EA Step 5 — Connetti da PropHedge!',
+ html:`<div style="font-family:var(--fd);font-size:12px;color:var(--t2);line-height:1.9">
+  <div style="text-align:center;margin-bottom:12px">
+    <svg width="260" height="70" viewBox="0 0 260 70">
+      <rect x="10" y="10" width="240" height="50" rx="8" fill="rgba(52,211,153,.1)" stroke="#34D399" stroke-width="2"/>
+      <circle cx="40" cy="35" r="12" fill="#059669">
+        <animate attributeName="r" values="12;15;12" dur="1.5s" repeatCount="indefinite"/>
+      </circle>
+      <text x="40" y="39" text-anchor="middle" fill="white" font-size="12">✓</text>
+      <text x="160" y="30" text-anchor="middle" fill="#34D399" font-size="13" font-weight="bold">● LIVE CONNESSO</text>
+      <text x="160" y="48" text-anchor="middle" fill="#7880a8" font-size="10">Conto Personale MT4</text>
+    </svg>
+  </div>
+  <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.3);border-radius:10px;padding:14px;margin-bottom:12px;text-align:center">
+    <b style="color:#34D399;font-size:14px">🎉 Sei pronto!</b><br>
+    <span style="font-size:11px">Ora torna su PropHedge → Live Trading → seleziona MT4 → inserisci le credenziali → Connetti Personale</span>
+  </div>
+  <div style="background:var(--bg3);border-radius:8px;padding:10px;font-size:11px">
+    <b>Ogni volta che usi PropHedge:</b><br>
+    1. Apri MT4 con l'EA attivo (pallino verde in alto)<br>
+    2. Clicca Connetti Personale in PropHedge<br>
+    3. Inizia a operare! 🚀
+  </div>
+</div>`,
+ audio:'Perfetto, hai finito! Torna su PropHedge nel tab Live Trading. Per il conto personale seleziona MT4, inserisci server, login e password, e clicca Connetti Personale. Vedrai il pallino verde con scritto Live Connesso. Da questo momento puoi aprire posizioni sul conto personale direttamente da PropHedge. Ogni volta che usi il software ti basta aprire MT4 con l\'EA attivo e cliccare Connetti. Ottimo lavoro!'}
+
 ];
+
+function liveDownloadEA(){
+  var code = `//+------------------------------------------------------------------+
+//|  PropHedge MT4 Bridge EA                                         |
+//|  Solo per conto PERSONALE — non usare su conti prop!             |
+//|  Versione 1.0                                                    |
+//+------------------------------------------------------------------+
+#property strict
+
+#include <WinAPI/winsock2.mqh>
+
+input int    BridgePort = 7778;   // Porta bridge (7778 = personale)
+input string BridgeHost = "127.0.0.1";
+
+int    serverSocket = INVALID_HANDLE;
+bool   connected    = false;
+
+int OnInit(){
+   serverSocket = SocketCreate();
+   if(serverSocket == INVALID_HANDLE){ Print("PropHedge: errore socket"); return INIT_FAILED; }
+   if(!SocketConnect(serverSocket, BridgeHost, BridgePort, 3000)){
+      Print("PropHedge: connessione fallita porta ", BridgePort);
+      return INIT_FAILED;
+   }
+   connected = true;
+   Print("PropHedge Bridge MT4 connesso su porta ", BridgePort);
+   EventSetMillisecondTimer(500);
+   return INIT_SUCCEEDED;
+}
+
+void OnTimer(){
+   if(!connected) return;
+   // Heartbeat
+   string msg = "ping\\n";
+   uchar  buf[];
+   StringToCharArray(msg, buf, 0, StringLen(msg));
+   SocketSend(serverSocket, buf, ArraySize(buf)-1);
+}
+
+void OnDeinit(const int reason){
+   if(serverSocket != INVALID_HANDLE) SocketClose(serverSocket);
+   Print("PropHedge Bridge MT4 disconnesso.");
+}
+`;
+  var blob = new Blob([code], {type:'text/plain'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href = url; a.download = 'prophedge_mt4.mq4'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function liveTutorialOpenMT4(){
+  /* Apre il tutorial dal passo EA (passo 7 = indice 7) */
+  _tutStep = 7;
+  var m = document.getElementById('liveTutModal');
+  if(m){ m.style.display='flex'; _liveTutRender(); }
+}
 
 function liveTutorialOpen(){
   _tutStep=0;
