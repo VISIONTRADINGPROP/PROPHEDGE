@@ -9127,68 +9127,78 @@ async function liveBridgeTest(){
 }
 
 async function liveConnectSingle(propId, side){
-  var isP = side === 'prop';
-  var srv = document.getElementById(isP?'lp_propSrv':'lp_persSrv')?.value.trim();
-  var log = parseInt(document.getElementById(isP?'lp_propLog':'lp_persLog')?.value)||0;
-  var pwd = document.getElementById(isP?'lp_propPwd':'lp_persPwd')?.value||'';
-  var errEl = document.getElementById(isP?'lp_propErr':'lp_persErr');
-  var btn   = document.getElementById(isP?'lpConnPropBtn':'lpConnPersBtn');
-  if(errEl) errEl.style.display='none';
+  var isP = side === "prop";
+  var plat = isP ? (_bridge.prop.platform||"mt5") : (_bridge.pers.platform||"mt5");
+  var srv  = document.getElementById(isP?"lp_propSrv":"lp_persSrv")?.value.trim();
+  var log  = parseInt(document.getElementById(isP?"lp_propLog":"lp_persLog")?.value)||0;
+  var pwd  = document.getElementById(isP?"lp_propPwd":"lp_persPwd")?.value||"";
+  var errEl= document.getElementById(isP?"lp_propErr":"lp_persErr");
+  var btn  = document.getElementById(isP?"lpConnPropBtn":"lpConnPersBtn");
+  if(errEl) errEl.style.display="none";
+
   if(!srv||!log||!pwd){
-    if(errEl){errEl.textContent='⚠️ Compila server, login e password.';errEl.style.display='block';}
+    if(errEl){errEl.textContent="⚠️ Compila server, login e password.";errEl.style.display="block";}
     return;
   }
-  if(btn){btn.textContent='⏳ Connessione...';btn.disabled=true;}
+
+  /* MT4 — connessione tramite EA WebRequest */  
+  if(plat === "mt4"){
+    if(btn){btn.textContent="⏳ Verifica EA...";btn.disabled=true;}
+    var port = isP ? 7777 : 7778;
+    try{
+      var r = await fetch("http://127.0.0.1:"+port+"/account",{cache:"no-store"});
+      var acc = await r.json();
+      if(acc && acc.login){
+        _bridge[side].connected=true; _bridge[side].account=acc;
+        if(btn){btn.textContent=isP?"✅ PROP connessa":"✅ PERSONALE connesso";btn.style.background="linear-gradient(135deg,#059669,#34D399)";}
+        liveRenderAccount(side, acc);
+        if(!_bridgePollTimer){_bridgePollTimer=setInterval(liveRefreshAll,3000);_bridge[side].propId=propId;}
+        return;
+      } else { throw new Error("vuoto"); }
+    }catch(e){
+      _bridge[side].connected=false;
+      if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
+      if(errEl){errEl.innerHTML="❌ EA non risponde.<br><span style=\"font-size:9px\">Assicurati che bridge.py sia avviato e l'EA PropHedge sia attivo sul grafico MT4</span>";errEl.style.display="block";}
+    }
+    return;
+  }
+
+  /* MT5 — connessione tramite Python bridge */
+  if(btn){btn.textContent="⏳ Connessione...";btn.disabled=true;}
   var port = isP ? 7777 : 7778;
-  /* Salva credenziali */
-  try{
-    var saved=JSON.parse(localStorage.getItem('ph_live_creds_'+propId)||'{}');
-    if(isP){saved.propServer=srv;saved.propLogin=log;saved.propPwd=pwd;saved.propPlat=_bridge.prop.platform;}
-    else   {saved.persServer=srv;saved.persLogin=log;saved.persPwd=pwd;saved.persPlat=_bridge.pers.platform;}
-    localStorage.setItem('ph_live_creds_'+propId,JSON.stringify(saved));
+  try{var saved=JSON.parse(localStorage.getItem("ph_live_creds_"+propId)||"{}");
+    if(isP){saved.propServer=srv;saved.propLogin=log;}else{saved.persServer=srv;saved.persLogin=log;}
+    localStorage.setItem("ph_live_creds_"+propId,JSON.stringify(saved));
   }catch(e){}
   try{
-    var r = await fetch('http://127.0.0.1:'+port+'/connect',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({login:log,password:pwd,server:srv,platform:isP?_bridge.prop.platform:_bridge.pers.platform})
+    var r = await fetch("http://127.0.0.1:"+port+"/connect",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({login:log,password:pwd,server:srv,platform:plat})
     });
     var d = await r.json();
     if(d.ok){
       _bridge[side].connected=true;
-      _bridge[side].server=srv; _bridge[side].login=log;
-      if(btn){btn.textContent=isP?'✅ PROP connessa':'✅ PERSONALE connesso';btn.style.background='linear-gradient(135deg,#059669,#34D399)';}
+      if(btn){btn.textContent=isP?"✅ PROP connessa":"✅ PERSONALE connesso";btn.style.background="linear-gradient(135deg,#059669,#34D399)";}
       if(_bridge.prop.connected&&_bridge.pers.connected){
         if(_bridgePollTimer)clearInterval(_bridgePollTimer);
         _bridgePollTimer=setInterval(liveRefreshAll,3000);
         _bridge.prop.propId=propId; _bridge.pers.propId=propId;
       }
       await liveRefreshSide(side);
-      setTimeout(function(){
-        var el=document.getElementById('liveRoot');if(el)el.outerHTML=renderLive();
-        setTimeout(_bridgeRestoreGrids,50);
-      },0);
+      setTimeout(function(){var el=document.getElementById("liveRoot");if(el)el.outerHTML=renderLive();setTimeout(_bridgeRestoreGrids,50);},0);
     } else {
       _bridge[side].connected=false;
-      if(btn){btn.textContent=isP?'🎯 Connetti PROP':'🛡️ Connetti PERSONALE';btn.disabled=false;}
-      var errMsg = d.error ? JSON.stringify(d.error) : 'Login fallito';
-      var extraHelp = '';
-      if(d.error && (d.error.code===-10004||d.error.code===-10005)){
-        extraHelp = '<br><br><b style="color:var(--amber)">⚠️ Come risolvere:</b><br>'
-          +'1. Apri MT4/MT5<br>'
-          +'2. Menu <b>Strumenti → Opzioni → Expert Advisors</b><br>'
-          +'3. Spunta: <b>Consenti il trading automatizzato</b><br>'
-          +'4. Spunta: <b>Consenti importazioni DLL</b><br>'
-          +'5. Clicca OK → riprova Connetti';
+      if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
+      var extraHelp="";
+      if(d.error&&(d.error.code===-10004||d.error.code===-10005)){
+        extraHelp="<br><b style=\"color:var(--amber)\">⚠️ Come risolvere:</b><br>1. Chiudi MT5 dalla tray<br>2. Riapri MT5 come Amministratore<br>3. Riapri cmd come Amministratore → py bridge.py<br>4. Riprova Connetti";
       }
-      if(errEl){
-        errEl.innerHTML = '❌ Errore: <b>'+errMsg+'</b>'+extraHelp;
-        errEl.style.display='block';
-      }
+      if(errEl){errEl.innerHTML="❌ "+(d.error?JSON.stringify(d.error):"Errore")+extraHelp;errEl.style.display="block";}
     }
   }catch(e){
     _bridge[side].connected=false;
-    if(btn){btn.textContent=isP?'🎯 Connetti PROP':'🛡️ Connetti PERSONALE';btn.disabled=false;}
-    if(errEl){errEl.textContent='❌ Bridge non risponde sulla porta '+port+'. Avvia bridge.py prima.';errEl.style.display='block';}
+    if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
+    if(errEl){errEl.textContent="❌ Bridge non risponde. Avvia bridge.py prima.";errEl.style.display="block";}
   }
 }
 
