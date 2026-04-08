@@ -7933,8 +7933,7 @@ function renderDash(){
 
 
     /* ── Stato connessione bridge per questa sfida ── */
-    var bridgeConn = typeof _bridge !== "undefined" && _bridge.prop.connected && _bridge.pers.connected
-      && String(_bridge.prop.propId) === String(p.id);
+    var bridgeConn = typeof _bridge !== "undefined" && _bridge.prop.connected && _bridge.pers.connected;
     var livePos = bridgeConn
       ? (_bridge.prop.positions||[]).map(function(pos){return Object.assign({},pos,{_side:"prop"});}).concat(
           (_bridge.pers.positions||[]).map(function(pos){return Object.assign({},pos,{_side:"pers"});}))
@@ -9178,6 +9177,7 @@ async function liveConnectSingle(propId, side){
     var d = await r.json();
     if(d.ok){
       _bridge[side].connected=true;
+      _bridge[side].propId = propId;
       if(btn){btn.textContent=isP?"✅ PROP connessa":"✅ PERSONALE connesso";btn.style.background="linear-gradient(135deg,#059669,#34D399)";}
       if(_bridge.prop.connected&&_bridge.pers.connected){
         if(_bridgePollTimer)clearInterval(_bridgePollTimer);
@@ -9185,7 +9185,12 @@ async function liveConnectSingle(propId, side){
         _bridge.prop.propId=propId; _bridge.pers.propId=propId;
       }
       await liveRefreshSide(side);
-      setTimeout(function(){var el=document.getElementById("liveRoot");if(el)el.outerHTML=renderLive();setTimeout(_bridgeRestoreGrids,50);},0);
+      setTimeout(function(){
+        var el=document.getElementById("liveRoot");if(el)el.outerHTML=renderLive();
+        setTimeout(_bridgeRestoreGrids,50);
+        /* Aggiorna Journal se aperto */
+        if(typeof currentTab!=="undefined"&&currentTab==="journal"&&typeof renderJournal==="function") renderJournal();
+      },0);
     } else {
       _bridge[side].connected=false;
       if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
@@ -11340,8 +11345,7 @@ function jrnlRenderMain(){
 
   /* Stato connessione bridge per questa sfida */
   var bridgeConn = typeof _bridge !== 'undefined'
-    && _bridge.prop.connected && _bridge.pers.connected
-    && _bridge.prop.propId === sess.linkedPropId;
+    && _bridge.prop.connected && _bridge.pers.connected;
 
   var html='';
 
