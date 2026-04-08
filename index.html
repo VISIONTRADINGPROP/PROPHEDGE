@@ -10251,25 +10251,47 @@ def connect_mt5(login, password, server):
     """
     import os, glob, subprocess, time
 
-    # Tentativo 1: login diretto
-    for attempt in range(3):
-        print(f"  [T{attempt+1}] mt5.initialize()...")
-        init_ok = mt5.initialize()
-        print(f"  [T{attempt+1}] initialize={init_ok}, last_error={mt5.last_error()}")
-        if init_ok:
-            print(f"  [T{attempt+1}] mt5.login({login}, server={server})...")
-            ok = mt5.login(int(login), password=password, server=server)
-            print(f"  [T{attempt+1}] login={ok}, last_error={mt5.last_error()}")
-            if ok:
-                info = mt5.account_info()
-                print(f"  Connesso: {info.login if info else login}")
-                return True, None
-            err = mt5.last_error()
-            mt5.shutdown()
-            time.sleep(0.5)
-        else:
-            print(f"  [T{attempt+1}] initialize fallito: {mt5.last_error()}")
-            time.sleep(1)
+    MT5_PATH = r"C:\Program Files\MetaTrader 5\terminal64.exe"
+
+    # Tentativo 1: initialize con credenziali dirette (metodo più affidabile)
+    print(f"  [T1] initialize con credenziali dirette...")
+    mt5.shutdown()
+    ok = mt5.initialize(
+        path=MT5_PATH if os.path.exists(MT5_PATH) else None,
+        login=int(login),
+        password=password,
+        server=server,
+        timeout=30000
+    )
+    print(f"  [T1] result={ok}, error={mt5.last_error()}")
+    if ok:
+        info = mt5.account_info()
+        print(f"  Connesso: {info.login if info else login}")
+        return True, None
+    mt5.shutdown()
+    time.sleep(1)
+
+    # Tentativo 2: initialize senza path poi login separato
+    print(f"  [T2] initialize senza path...")
+    ok = mt5.initialize(login=int(login), password=password, server=server, timeout=30000)
+    print(f"  [T2] result={ok}, error={mt5.last_error()}")
+    if ok:
+        info = mt5.account_info()
+        print(f"  Connesso: {info.login if info else login}")
+        return True, None
+    mt5.shutdown()
+    time.sleep(1)
+
+    # Tentativo 3: initialize vuoto poi login
+    print(f"  [T3] initialize vuoto...")
+    ok = mt5.initialize(timeout=30000)
+    print(f"  [T3] init={ok}, error={mt5.last_error()}")
+    if ok:
+        ok2 = mt5.login(int(login), password=password, server=server)
+        print(f"  [T3] login={ok2}, error={mt5.last_error()}")
+        if ok2:
+            return True, None
+    mt5.shutdown()
 
     # Tentativo 2: trova il terminale con glob su tutto il PC
     for exe in ['terminal64.exe', 'terminal.exe']:
