@@ -9145,12 +9145,17 @@ async function liveConnectSingle(propId, side){
       _bridge[side].connected=false;
       if(btn){btn.textContent=isP?'🎯 Connetti PROP':'🛡️ Connetti PERSONALE';btn.disabled=false;}
       var errMsg = d.error ? JSON.stringify(d.error) : 'Login fallito';
-      /* Mostra anche il codice errore MT5 se disponibile */
-      if(typeof d.error === 'object' && d.error !== null) errMsg = JSON.stringify(d.error);
+      var extraHelp = '';
+      if(d.error && (d.error.code===-10004||d.error.code===-10005)){
+        extraHelp = '<br><br><b style="color:var(--amber)">⚠️ Come risolvere:</b><br>'
+          +'1. Apri MT4/MT5<br>'
+          +'2. Menu <b>Strumenti → Opzioni → Expert Advisors</b><br>'
+          +'3. Spunta: <b>Consenti il trading automatizzato</b><br>'
+          +'4. Spunta: <b>Consenti importazioni DLL</b><br>'
+          +'5. Clicca OK → riprova Connetti';
+      }
       if(errEl){
-        errEl.innerHTML = '❌ MT5 ha rifiutato il login:<br>'
-          +'<b style="color:var(--amber)">'+errMsg+'</b><br>'
-          +'<span style="font-size:9px;opacity:.7">Verifica: server esatto (es. FundedNext-Server3), login numerico, password corretta</span>';
+        errEl.innerHTML = '❌ Errore: <b>'+errMsg+'</b>'+extraHelp;
         errEl.style.display='block';
       }
     }
@@ -9695,43 +9700,73 @@ import MetaTrader5 as mt5
 
 def connect_mt5(login, password, server):
     """
-    Connette a MT4/MT5 già aperto sul PC.
-    Prova prima senza percorso (MT5 già aperto),
-    poi cerca automaticamente in tutti i percorsi comuni.
+    Connette a MT4/MT5 in tutti i modi possibili.
+    Strategia a 4 tentativi — funziona su qualsiasi PC.
     """
-    import os, glob
+    import os, glob, subprocess, time
 
-    # Tentativo 1: MT5 è già aperto, connettiti direttamente
-    if mt5.initialize():
-        ok = mt5.login(login, password, server)
-        if ok:
-            return True, None
-        mt5.shutdown()
+    # Tentativo 1: login diretto con credenziali (il più veloce)
+    # Funziona se MT5 è già aperto e ha auto-trading abilitato
+    for attempt in range(3):
+        if mt5.initialize():
+            ok = mt5.login(int(login), password=password, server=server)
+            if ok:
+                info = mt5.account_info()
+                print(f"  Connesso: {info.login if info else login}")
+                return True, None
+            err = mt5.last_error()
+            print(f"  Tentativo {attempt+1}: {err}")
+            mt5.shutdown()
+            time.sleep(0.5)
 
-    # Tentativo 2: cerca il terminale in tutto il PC
-    exe = 'terminal64.exe'
-    search = [
-        r"C:\Program Files",
-        r"C:\Program Files (x86)",
-        r"D:\Program Files",
-        os.path.join(os.environ.get("APPDATA",""), "MetaQuotes", "Terminal"),
-        os.path.join(os.environ.get("LOCALAPPDATA",""), "Programs"),
-    ]
-    for root in search:
-        if not root or not os.path.isdir(root): continue
-        for path in glob.glob(os.path.join(root, "**", exe), recursive=True):
-            try:
-                if mt5.initialize(path=path):
-                    ok = mt5.login(login, password, server)
-                    if ok:
-                        print(f"  Connesso tramite: {path}")
-                        return True, None
+    # Tentativo 2: trova il terminale con glob su tutto il PC
+    for exe in ['terminal64.exe', 'terminal.exe']:
+        roots = [
+            r"C:\Program Files",
+            r"C:\Program Files (x86)",
+            r"D:\Program Files",
+            os.path.join(os.environ.get("APPDATA",""), "MetaQuotes", "Terminal"),
+            os.path.join(os.environ.get("LOCALAPPDATA",""), "Programs"),
+        ]
+        for root in roots:
+            if not root or not os.path.isdir(root): continue
+            for path in glob.glob(os.path.join(root, "**", exe), recursive=True):
+                try:
                     mt5.shutdown()
-            except:
-                continue
+                    if mt5.initialize(path=path):
+                        ok = mt5.login(int(login), password=password, server=server)
+                        if ok:
+                            print(f"  Connesso via {path}")
+                            return True, None
+                        mt5.shutdown()
+                except Exception as e:
+                    print(f"  {path}: {e}")
+                    continue
+
+    # Tentativo 3: avvia MT5 dal registro di Windows e riprova
+    try:
+        import winreg
+        reg_paths = [
+            r"SOFTWARE\Classes\mt5\shell\open\command",
+            r"SOFTWARE\MetaQuotes Software Corp.\MetaTrader 5",
+        ]
+        for reg_path in reg_paths:
+            try:
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_path)
+                val, _ = winreg.QueryValueEx(key, "")
+                exe_path = val.split('"')[1] if '"' in val else val.split()[0]
+                if os.path.exists(exe_path):
+                    subprocess.Popen([exe_path])
+                    time.sleep(4)
+                    if mt5.initialize():
+                        ok = mt5.login(int(login), password=password, server=server)
+                        if ok: return True, None
+                    mt5.shutdown()
+            except: pass
+    except: pass
 
     err = mt5.last_error()
-    return False, {"code": err[0], "msg": str(err[1])}
+    return False, {"code": err[0], "msg": "Impossibile connettersi a MetaTrader. Assicurati che sia aperto e che AutoTrading sia attivo (pulsante verde in alto). Errore: " + str(err[1])}
 
 def create_app():
     app = Flask(__name__)
