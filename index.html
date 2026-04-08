@@ -7956,14 +7956,23 @@ function renderDash(){
         + "</div>";
     });
 
+    /* FIX sync: applica regola 70% identica al journal */
+    var _dashLotProp = c.propLots;
+    var _dashLotPers = c.hedgeLots;
+    if(typeof _simCH1 !== 'undefined'){
+      if(_simCH1._above70Active && _simCH1._lotPersHalved > 0)
+        _dashLotPers = _simCH1._lotPersHalved;
+      if(_simCH1._above70Loss && _dashLotProp > 0.01)
+        _dashLotProp = Math.floor(_dashLotProp * 50) / 100;
+    }
     cards+='<div class="pc ai" onclick="openJournalForProp('+p.id+')">'
       +'<div class="pc-glow"></div>'
       +'<button class="pc-del" onclick="event.stopPropagation();delPropSync('+p.id+')">✕</button>'
       +'<div class="pc-top"><div class="pc-logo">'+logo+'</div>'
       +'<div><div class="pc-nm">'+p.name+'</div><div class="pc-mt">'+uF(p.size)+' DD '+p.maxDD+'% '+p.days+'gg '+(p.asset||'EUR/USD')+'</div></div></div>'
       +'<div class="pc-st">'
-      +'<div class="pst"><div class="pst-l">Lotti prop</div><div class="pst-v v-teal">'+c.propLots+'</div></div>'
-      +'<div class="pst"><div class="pst-l">Lotti pers.</div><div class="pst-v v-violet">'+c.hedgeLots+'</div></div>'
+      +'<div class="pst"><div class="pst-l">Lotti prop</div><div class="pst-v v-teal">'+_dashLotProp+'</div></div>'
+      +'<div class="pst"><div class="pst-l">Lotti pers.</div><div class="pst-v v-violet">'+_dashLotPers+'</div></div>'
       +'<div class="pst"><div class="pst-l">Netto (B)</div><div class="pst-v '+nc+'">'+sgn(c.sB_net)+uF(c.sB_net)+'</div></div>'
       +'</div>'+pnlBadge
       +'<div style="margin-top:10px;display:flex;flex-direction:column;gap:4px">'+connBadge+posRows+'</div>'
@@ -8131,7 +8140,8 @@ function renderDashDetailPage(){
 
 
 
-    +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;color:var(--t3);font-family:var(--fh)">Lotti Prop</span><span style="font-size:13px;font-weight:700;font-family:var(--fd);color:var(--teal)">'+c.propLots+' lot</span></div>'
+    /* FIX sync: effective lots con regola 70% */
+    +(function(){var _ep=c.propLots;if(typeof _simCH1!=='undefined'&&_simCH1._above70Loss&&_ep>0.01)_ep=Math.floor(_ep*50)/100;return '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:10px;color:var(--t3);font-family:var(--fh)">Lotti Prop</span><span style="font-size:13px;font-weight:700;font-family:var(--fd);color:var(--teal)">'+_ep+' lot</span></div>';})()    
 
 
 
@@ -8309,7 +8319,7 @@ function renderCalc(){
 
 
 
-    +'<div class="ac-row"><span>Lotti da aprire</span><span class="v-teal">'+c.propLots+' lot</span></div>'
+    +(function(){var _ep=c.propLots;if(typeof _simCH1!=='undefined'&&_simCH1._above70Loss&&_ep>0.01)_ep=Math.floor(_ep*50)/100;return '<div class="ac-row"><span>Lotti da aprire</span><span class="v-teal">'+_ep+' lot</span></div>';})()
 
 
 
@@ -9252,8 +9262,8 @@ async function liveConnectBoth(propId){
 
   try{
     var [rProp, rPers] = await Promise.all([
-      fetch('http://127.0.0.1:7777/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login:propLog,password:propPwd,server:propSrv,platform:_bridge.prop.platform})}).then(r=>r.json()),
-      fetch('http://127.0.0.1:7778/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login:persLog,password:persPwd,server:persSrv,platform:_bridge.pers.platform})}).then(r=>r.json())
+      fetch('http://127.0.0.1:7777/connect',{method:'POST',headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},body:JSON.stringify({login:propLog,password:propPwd,server:propSrv,platform:_bridge.prop.platform})}).then(r=>r.json()),
+      fetch('http://127.0.0.1:7778/connect',{method:'POST',headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},body:JSON.stringify({login:persLog,password:persPwd,server:persSrv,platform:_bridge.pers.platform})}).then(r=>r.json())
     ]);
 
     _bridge.prop.connected = !!rProp.ok;
@@ -9290,6 +9300,9 @@ function _liveTryAutoConnect(){
 function renderHedgePanel(calcLots){
   var s70 = typeof _simCH1 !== 'undefined' ? _simCH1 : null;
   var lotProp = calcLots.prop;
+  /* FIX: applica regola 70% loss identica al journal */
+  if(s70 && s70._above70Loss && lotProp > 0.01)
+    lotProp = Math.floor(lotProp * 50) / 100;
   var lotPers = (s70 && s70._above70Active && s70._lotPersHalved > 0)
     ? s70._lotPersHalved : calcLots.pers;
   var sl = calcLots.sl || 100;
@@ -9373,7 +9386,7 @@ async function liveConnectSide(side){
   b.server = srv; b.login = log;
   try{
     var r = await fetch('http://127.0.0.1:'+b.port+'/connect',{
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},
       body: JSON.stringify({login:log, password:pwd, server:srv, platform:b.platform})
     });
     var d = await r.json();
@@ -9516,11 +9529,11 @@ async function liveOpenHedge(propDir){
   try{
     var [rProp, rPers] = await Promise.all([
       fetch('http://127.0.0.1:7777/order',{
-        method:'POST', headers:{'Content-Type':'application/json'},
+        method:'POST', headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},
         body: JSON.stringify({symbol:sym, volume:lotProp, side:propDir, sl:0, tp:0, comment:'PH_PROP'})
       }).then(r=>r.json()),
       fetch('http://127.0.0.1:7778/order',{
-        method:'POST', headers:{'Content-Type':'application/json'},
+        method:'POST', headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},
         body: JSON.stringify({symbol:sym, volume:lotPers, side:persDir, sl:0, tp:0, comment:'PH_PERS'})
       }).then(r=>r.json())
     ]);
@@ -9617,7 +9630,7 @@ function liveModifyModal(side, ticket, sl, tp){
   if(nsl===null||ntp===null) return;
   var port = _bridge[side].port;
   fetch('http://127.0.0.1:'+port+'/modify',{
-    method:'POST', headers:{'Content-Type':'application/json'},
+    method:'POST', headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},
     body: JSON.stringify({ticket:ticket, sl:parseFloat(nsl)||0, tp:parseFloat(ntp)||0})
   }).then(function(r){return r.json();}).then(function(d){
     alert((d.retcode===10009||d.retcode===0)?'✅ SL/TP aggiornati.':'❌ '+d.comment);
@@ -9630,7 +9643,7 @@ async function liveClosePos(side, ticket){
   var port = _bridge[side].port;
   try{
     var r = await fetch('http://127.0.0.1:'+port+'/close',{
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},
       body: JSON.stringify({ticket:ticket})
     });
     var d = await r.json();
@@ -11336,6 +11349,22 @@ function jrnlRenderSidebar(){
 
 function jrnlRenderMain(){
   var sess=jrnlGetActive();if(!sess)return'<div style="padding:30px;color:var(--t3)">Seleziona una sfida</div>';
+  /* FIX: auto-restore _bridge.connected se bridge è vivo ma stato perso dopo reload */
+  (async function(){
+    if(!_bridge.prop.connected||!_bridge.pers.connected){
+      try{
+        var p7 = await fetch('http://127.0.0.1:7777/account',{cache:'no-store'});
+        var p8 = await fetch('http://127.0.0.1:7778/account',{cache:'no-store'});
+        if(p7.ok && !_bridge.prop.connected){ _bridge.prop.connected=true; }
+        if(p8.ok && !_bridge.pers.connected){ _bridge.pers.connected=true; }
+        if(_bridge.prop.connected && _bridge.pers.connected && !_bridgePollTimer){
+          _bridgePollTimer = setInterval(liveRefreshAll, 3000);
+          /* Aggiorna rendering journal per mostrare pulsanti live */
+          setTimeout(function(){ if(typeof renderJournal==='function') renderJournal(); }, 200);
+        }
+      }catch(e){}
+    }
+  })();
   var i=jrnl.activeIdx;
   var pt=(sess.propTrades||[]).slice().sort(function(a,b){return new Date(b.open_time||b.opened_at||0)-new Date(a.open_time||a.opened_at||0);});
   var bt=(sess.brokerTrades||[]).slice().sort(function(a,b){return new Date(b.open_time||b.opened_at||0)-new Date(a.open_time||a.opened_at||0);});
@@ -11386,8 +11415,8 @@ function jrnlRenderMain(){
       /* Parametri calcolati */
       +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">'
       +[
-        ['Lotti PROP',  lotProp+' lot', '#38BDF8'],
-        ['Lotti PERS',  lotPers+' lot', '#A78BFA'],
+        ['Lotti PROP',  lotProp+' lot'+((_simCH1&&_simCH1._above70Loss)?' ⚠':''), '#38BDF8'],
+        ['Lotti PERS',  lotPers+' lot'+((_simCH1&&_simCH1._above70Active)?' ⚡':''), '#A78BFA'],
         ['SL / TP',     sl+' / '+tp+' pip', 'var(--amber)'],
         ['Asset',       sym, 'var(--teal)']
       ].map(function(k){
@@ -11604,6 +11633,13 @@ async function jrnlOpenHedge(sessIdx, propDir){
   if(sym==='GOLD') sym='XAUUSD';
   var lotProp = prop.lots || 0.01;
   var lotPers = prop.lotPers || prop.lotsHedge || 0.01;
+  /* FIX sync 70%: applica stessa regola del journal */
+  if(typeof _simCH1 !== 'undefined'){
+    if(_simCH1._above70Active && _simCH1._lotPersHalved > 0)
+      lotPers = _simCH1._lotPersHalved;
+    if(_simCH1._above70Loss && lotProp > 0.01)
+      lotProp = Math.floor(lotProp * 50) / 100;
+  }
   var sl      = prop.slPips || 100;
   var tp      = prop.tpPips || 100;
   var persDir = propDir==='buy' ? 'sell' : 'buy';
@@ -11617,23 +11653,72 @@ async function jrnlOpenHedge(sessIdx, propDir){
   }
 
   var res = document.getElementById('jHedgeResult_'+sessIdx);
-  if(res){ res.style.display='block'; res.style.background='rgba(251,191,36,.08)'; res.style.color='var(--amber)'; res.textContent='⏳ Apertura in corso...'; }
+  if(res){ res.style.display='block'; res.style.background='rgba(251,191,36,.08)'; res.style.color='var(--amber)'; res.textContent='⏳ Verifica bridge...'; }
+
+  /* ── FIX CORS: usa text/plain per evitare preflight OPTIONS ──
+     Content-Type: application/json richiede preflight che bridge.py non gestisce.
+     text/plain è una "simple request" → nessun preflight → arriva al bridge. */
+  async function _bridgeSendOrder(port, payload){
+    var r = await fetch('http://127.0.0.1:'+port+'/order',{
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify(payload)
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  }
+
+  /* ── Ping rapido per diagnostica ── */
+  async function _bridgePing(port){
+    try{
+      var r = await fetch('http://127.0.0.1:'+port+'/account',{cache:'no-store'});
+      return r.ok;
+    }catch(e){ return false; }
+  }
 
   try{
-    var [rProp, rPers] = await Promise.all([
-      fetch('http://127.0.0.1:7777/order',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({symbol:sym,volume:lotProp,side:propDir,sl:0,tp:0,comment:'PH_PROP_'+sess.name})}).then(r=>r.json()),
-      fetch('http://127.0.0.1:7778/order',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({symbol:sym,volume:lotPers,side:persDir,sl:0,tp:0,comment:'PH_PERS_'+sess.name})}).then(r=>r.json())
-    ]);
+    /* 1. Verifica che entrambi i bridge rispondano */
+    if(res) res.textContent='⏳ Ping bridge...';
+    var pingProp = await _bridgePing(7777);
+    var pingPers = await _bridgePing(7778);
 
-    var okProp = rProp.retcode===10009||rProp.retcode===0;
-    var okPers = rPers.retcode===10009||rPers.retcode===0;
+    if(!pingProp || !pingPers){
+      if(res){ res.style.background='rgba(248,113,113,.1)'; res.style.color='var(--red)';
+        var portErr = !pingProp ? 'PROP (7777)' : 'PERSONALE (7778)';
+        res.innerHTML='❌ Bridge '+portErr+' non risponde.<br>'
+          +'<span style="font-size:9px;opacity:.8">Assicurati che bridge.py sia avviato su <b>entrambe</b> le porte (7777 e 7778).<br>'
+          +'Lancia: <code>py bridge.py</code> — gestisce entrambe in automatico.</span>';
+      }
+      return;
+    }
+
+    /* 2. Invia ordine PROP */
+    if(res) res.textContent='⏳ Invio ordine PROP...';
+    var rProp, rPers;
+    try{
+      rProp = await _bridgeSendOrder(7777, {symbol:sym, volume:lotProp, side:propDir, sl:0, tp:0, comment:'PH_PROP_'+sess.name});
+    }catch(e){
+      if(res){ res.style.background='rgba(248,113,113,.1)'; res.style.color='var(--red)';
+        res.innerHTML='❌ Errore ordine PROP: '+e.message+'<br><span style="font-size:9px">Controlla che /order sia supportato dal bridge.</span>'; }
+      return;
+    }
+
+    /* 3. Invia ordine PERSONALE */
+    if(res) res.textContent='⏳ Invio ordine PERSONALE...';
+    try{
+      rPers = await _bridgeSendOrder(7778, {symbol:sym, volume:lotPers, side:persDir, sl:0, tp:0, comment:'PH_PERS_'+sess.name});
+    }catch(e){
+      if(res){ res.style.background='rgba(248,113,113,.1)'; res.style.color='var(--red)';
+        res.innerHTML='❌ Errore ordine PERSONALE: '+e.message+'<br><span style="font-size:9px">Controlla porta 7778 e EA su MT4.</span>'; }
+      return;
+    }
+
+    var okProp = rProp && (rProp.retcode===10009||rProp.retcode===0||rProp.ok);
+    var okPers = rPers && (rPers.retcode===10009||rPers.retcode===0||rPers.ok);
 
     if(okProp && okPers){
       if(res){ res.style.background='rgba(52,211,153,.1)'; res.style.color='var(--green)';
-        res.textContent='✅ PROP '+propDir.toUpperCase()+' '+lotProp+'lot #'+rProp.order+' · PERS '+persDir.toUpperCase()+' '+lotPers+'lot #'+rPers.order; }
-      /* Registra trade aperto per tracking chiusura */
+        res.textContent='✅ PROP '+propDir.toUpperCase()+' '+lotProp+'lot #'+(rProp.order||'—')+' · PERS '+persDir.toUpperCase()+' '+lotPers+'lot #'+(rPers.order||'—'); }
       if(!_openHedgeTrades) _openHedgeTrades=[];
       _openHedgeTrades.push({
         propTicket:rProp.order, persTicket:rPers.order,
@@ -11643,11 +11728,16 @@ async function jrnlOpenHedge(sessIdx, propDir){
       });
     } else {
       if(res){ res.style.background='rgba(248,113,113,.1)'; res.style.color='var(--red)';
-        res.textContent='❌ PROP: '+(okProp?'OK':JSON.stringify(rProp.comment||rProp.retcode))+' · PERS: '+(okPers?'OK':JSON.stringify(rPers.comment||rPers.retcode)); }
+        var errMsg = '';
+        if(!okProp) errMsg += 'PROP: '+(rProp.comment||rProp.retcode||JSON.stringify(rProp))+' ';
+        if(!okPers) errMsg += 'PERS: '+(rPers.comment||rPers.retcode||JSON.stringify(rPers));
+        res.textContent = '❌ '+errMsg.trim(); }
     }
   } catch(e){
     if(res){ res.style.background='rgba(248,113,113,.1)'; res.style.color='var(--red)';
-      res.textContent='❌ Bridge non raggiungibile. Assicurati che bridge.py sia avviato.'; }
+      res.innerHTML='❌ Errore inatteso: '+e.message+'<br>'
+        +'<span style="font-size:9px">Apri il bridge, verifica che le porte 7777 e 7778 siano libere.<br>'
+        +'Se il bridge risponde ma gli ordini falliscono, aggiorna bridge.py con il supporto CORS.</span>'; }
   }
 }
 
@@ -11825,6 +11915,13 @@ function jrnlRenderSimulator(sess, prop, sessIdx){
   var pipVal  = (typeof _chPipVal === 'function') ? _chPipVal(asset) : 10;
   var lotProp = prop.lots || 0.01;
   var lotPers = prop.lotPers || prop.lotsHedge || 0.01;
+  /* FIX sync 70%: applica stessa regola del journal */
+  if(typeof _simCH1 !== 'undefined'){
+    if(_simCH1._above70Active && _simCH1._lotPersHalved > 0)
+      lotPers = _simCH1._lotPersHalved;
+    if(_simCH1._above70Loss && lotProp > 0.01)
+      lotProp = Math.floor(lotProp * 50) / 100;
+  }
   var tgtUsd  = size * (tgtPct/100);
 
   var html = '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;margin:14px 0;overflow:hidden">'
@@ -12138,7 +12235,7 @@ async function jrnlSync(i,side){
 
 
 
-    var r=await fetch('/api/ctrader-positions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({access_token:conn.token,account_id:conn.accountId,env:conn.env,connected_at:conn.connectedAt||sess.createdAt||null})});
+    var r=await fetch('/api/ctrader-positions',{method:'POST',headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},body:JSON.stringify({access_token:conn.token,account_id:conn.accountId,env:conn.env,connected_at:conn.connectedAt||sess.createdAt||null})});
 
 
 
@@ -15215,7 +15312,7 @@ async function _tgSend(text, replyToMsgId){
     var body = {chat_id: _TG_CHAT_ID, text: text, parse_mode: 'HTML'};
     if(replyToMsgId) body.reply_to_message_id = replyToMsgId;
     var res = await fetch('https://api.telegram.org/bot'+_TG_TOKEN+'/sendMessage',{
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST', headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},
       body: JSON.stringify(body)
     });
     var data = await res.json();
@@ -15381,7 +15478,7 @@ async function aiFloatSend(){
     var res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{
-        'Content-Type':'application/json',
+        'Content-Type':'text/plain' /* FIX: evita CORS preflight */,
         'Authorization':'Bearer '+_GROQ_KEY
       },
       body: JSON.stringify({
