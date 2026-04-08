@@ -8896,7 +8896,17 @@ function renderLive(){
 
     /* PULSANTE UNICO CONNETTI */
     html += '<div style="margin-bottom:20px">'
-      +'<button id="lpConnBtn" onclick="liveConnectBoth('+sfida.id+')" style="width:100%;background:linear-gradient(135deg,#38BDF8,#A78BFA);border:none;border-radius:12px;color:#fff;padding:14px;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:.05em">🔌 CONNETTI ENTRAMBI I CONTI</button>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+      +'<div>'
+      +'<button id="lpConnPropBtn" onclick="liveConnectSingle('+sfida.id+',\'prop\')" style="width:100%;background:linear-gradient(135deg,#0ea5e9,#38BDF8);border:none;border-radius:10px;color:#fff;padding:12px;font-size:13px;font-weight:800;cursor:pointer">🎯 Connetti PROP</button>'
+      +'<div id="lp_propErr" style="margin-top:5px;font-size:10px;color:var(--red);font-family:var(--fd);display:none"></div>'
+      +'</div>'
+      +'<div>'
+      +'<button id="lpConnPersBtn" onclick="liveConnectSingle('+sfida.id+',\'pers\')" style="width:100%;background:linear-gradient(135deg,#7c3aed,#A78BFA);border:none;border-radius:10px;color:#fff;padding:12px;font-size:13px;font-weight:800;cursor:pointer">🛡️ Connetti PERSONALE</button>'
+      +'<div id="lp_persErr" style="margin-top:5px;font-size:10px;color:var(--red);font-family:var(--fd);display:none"></div>'
+      +'</div>'
+      +'</div>'
+      +'<button id="lpConnBtn" onclick="liveConnectBoth('+sfida.id+')" style="width:100%;background:linear-gradient(135deg,#38BDF8,#A78BFA);border:none;border-radius:12px;color:#fff;padding:11px;font-size:13px;font-weight:700;cursor:pointer;opacity:.85">🔌 Connetti entrambi insieme</button>'
       +'<div id="lp_globalErr" style="margin-top:8px;font-size:11px;font-family:var(--fd);display:none"></div>'
       +'</div>';
   }
@@ -9034,6 +9044,59 @@ function liveSaveCreds(propId){
   if(persSrv) creds.persServer=persSrv;
   if(persLog) creds.persLogin=persLog;
   try{ localStorage.setItem('ph_live_creds_'+propId, JSON.stringify(creds)); } catch(e){}
+}
+
+async function liveConnectSingle(propId, side){
+  var isP = side === 'prop';
+  var srv = document.getElementById(isP?'lp_propSrv':'lp_persSrv')?.value.trim();
+  var log = parseInt(document.getElementById(isP?'lp_propLog':'lp_persLog')?.value)||0;
+  var pwd = document.getElementById(isP?'lp_propPwd':'lp_persPwd')?.value||'';
+  var errEl = document.getElementById(isP?'lp_propErr':'lp_persErr');
+  var btn   = document.getElementById(isP?'lpConnPropBtn':'lpConnPersBtn');
+  if(errEl) errEl.style.display='none';
+  if(!srv||!log||!pwd){
+    if(errEl){errEl.textContent='⚠️ Compila server, login e password.';errEl.style.display='block';}
+    return;
+  }
+  if(btn){btn.textContent='⏳ Connessione...';btn.disabled=true;}
+  var port = isP ? 7777 : 7778;
+  /* Salva credenziali */
+  try{
+    var saved=JSON.parse(localStorage.getItem('ph_live_creds_'+propId)||'{}');
+    if(isP){saved.propServer=srv;saved.propLogin=log;saved.propPlat=_bridge.prop.platform;}
+    else   {saved.persServer=srv;saved.persLogin=log;saved.persPlat=_bridge.pers.platform;}
+    localStorage.setItem('ph_live_creds_'+propId,JSON.stringify(saved));
+  }catch(e){}
+  try{
+    var r = await fetch('http://127.0.0.1:'+port+'/connect',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({login:log,password:pwd,server:srv,platform:isP?_bridge.prop.platform:_bridge.pers.platform})
+    });
+    var d = await r.json();
+    if(d.ok){
+      _bridge[side].connected=true;
+      _bridge[side].server=srv; _bridge[side].login=log;
+      if(btn){btn.textContent=isP?'✅ PROP connessa':'✅ PERSONALE connesso';btn.style.background=isP?'linear-gradient(135deg,#059669,#34D399)':'linear-gradient(135deg,#059669,#34D399)';}
+      if(_bridge.prop.connected&&_bridge.pers.connected){
+        if(_bridgePollTimer)clearInterval(_bridgePollTimer);
+        _bridgePollTimer=setInterval(liveRefreshAll,3000);
+        _bridge.prop.propId=propId; _bridge.pers.propId=propId;
+      }
+      await liveRefreshSide(side);
+      setTimeout(function(){
+        var el=document.getElementById('liveRoot');if(el)el.outerHTML=renderLive();
+        setTimeout(_bridgeRestoreGrids,50);
+      },0);
+    } else {
+      _bridge[side].connected=false;
+      if(btn){btn.textContent=isP?'🎯 Connetti PROP':'🛡️ Connetti PERSONALE';btn.disabled=false;}
+      if(errEl){errEl.textContent='❌ '+(d.error||'Credenziali errate o server non trovato');errEl.style.display='block';}
+    }
+  }catch(e){
+    _bridge[side].connected=false;
+    if(btn){btn.textContent=isP?'🎯 Connetti PROP':'🛡️ Connetti PERSONALE';btn.disabled=false;}
+    if(errEl){errEl.textContent='❌ Bridge non risponde sulla porta '+port+'. Avvia bridge.py prima.';errEl.style.display='block';}
+  }
 }
 
 async function liveConnectBoth(propId){
