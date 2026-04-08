@@ -8844,8 +8844,8 @@ function renderLive(){
 
   /* FORM CONNESSIONE */
   if(sfida){
-    var propSrv = creds.propServer||''; var propLog = creds.propLogin||''; var propPwd = '';
-    var persSrv = creds.persServer||''; var persLog = creds.persLogin||''; var persPwd = '';
+    var propSrv = creds.propServer||''; var propLog = creds.propLogin||''; var propPwd = creds.propPwd||'';
+    var persSrv = creds.persServer||''; var persLog = creds.persLogin||''; var persPwd = creds.persPwd||'';
     var propPlat = creds.propPlat||'mt5'; var persPlat = creds.persPlat||'mt4';
 
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">';
@@ -8866,7 +8866,10 @@ function renderLive(){
       +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Login</div>'
       +'<input id="lp_propLog" type="number" value="'+propLog+'" placeholder="123456" onchange="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
       +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Password</div>'
-      +'<input id="lp_propPwd" type="password" placeholder="••••••" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'<div style="position:relative">'
+      +'<input id="lp_propPwd" type="password" value="'+propPwd+'" placeholder="••••••" onchange="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 32px 7px 10px;font-size:12px;outline:none">'
+      +'<button onclick="var f=document.getElementById(\'lp_propPwd\');f.type=f.type===\'password\'?\'text\':\'password\';this.textContent=f.type===\'password\'?\'👁\':\'🙈\'" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:var(--t3);padding:0;line-height:1">👁</button>'
+      +'</div></div>'
       +'</div>'
       +'<div id="lp_propErr" style="font-size:10px;color:var(--red);font-family:var(--fd);display:none;margin-bottom:6px"></div>'
       +'</div>';
@@ -8887,7 +8890,10 @@ function renderLive(){
       +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Login</div>'
       +'<input id="lp_persLog" type="number" value="'+persLog+'" placeholder="123456" onchange="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
       +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Password</div>'
-      +'<input id="lp_persPwd" type="password" placeholder="••••••" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'<div style="position:relative">'
+      +'<input id="lp_persPwd" type="password" value="'+persPwd+'" placeholder="••••••" onchange="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 32px 7px 10px;font-size:12px;outline:none">'
+      +'<button onclick="var f=document.getElementById(\'lp_persPwd\');f.type=f.type===\'password\'?\'text\':\'password\';this.textContent=f.type===\'password\'?\'👁\':\'🙈\'" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:var(--t3);padding:0;line-height:1">👁</button>'
+      +'</div></div>'
       +'</div>'
       +'<div id="lp_persErr" style="font-size:10px;color:var(--red);font-family:var(--fd);display:none;margin-bottom:6px"></div>'
       +'</div>';
@@ -8896,6 +8902,9 @@ function renderLive(){
 
     /* PULSANTE UNICO CONNETTI */
     html += '<div style="margin-bottom:20px">'
+      /* Testa bridge prima di connettere */
+      +'<div id="bridgeTestResult" style="margin-bottom:12px"></div>'
+      +'<button onclick="liveBridgeTest()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t2);padding:9px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px">🔍 Verifica bridge attivo</button>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
       +'<div>'
       +'<button id="lpConnPropBtn" onclick="liveConnectSingle('+sfida.id+',\'prop\')" style="width:100%;background:linear-gradient(135deg,#0ea5e9,#38BDF8);border:none;border-radius:10px;color:#fff;padding:12px;font-size:13px;font-weight:800;cursor:pointer">🎯 Connetti PROP</button>'
@@ -9037,13 +9046,47 @@ function liveSaveCreds(propId){
   try{ var s=localStorage.getItem('ph_live_creds_'+propId); creds=s?JSON.parse(s):{};} catch(e){}
   var propSrv = document.getElementById('lp_propSrv')?.value||'';
   var propLog = document.getElementById('lp_propLog')?.value||'';
+  var propPwd = document.getElementById('lp_propPwd')?.value||'';
   var persSrv = document.getElementById('lp_persSrv')?.value||'';
   var persLog = document.getElementById('lp_persLog')?.value||'';
+  var persPwd = document.getElementById('lp_persPwd')?.value||'';
   if(propSrv) creds.propServer=propSrv;
   if(propLog) creds.propLogin=propLog;
+  if(propPwd) creds.propPwd=propPwd;
   if(persSrv) creds.persServer=persSrv;
   if(persLog) creds.persLogin=persLog;
+  if(persPwd) creds.persPwd=persPwd;
   try{ localStorage.setItem('ph_live_creds_'+propId, JSON.stringify(creds)); } catch(e){}
+}
+
+async function liveBridgeTest(){
+  var el = document.getElementById('bridgeTestResult');
+  if(!el) return;
+  el.innerHTML = '<div style="font-size:11px;color:var(--amber);font-family:var(--fd);padding:8px 12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.2);border-radius:7px">⏳ Verifica in corso...</div>';
+
+  var results = await Promise.allSettled([
+    fetch('http://127.0.0.1:7777/account',{cache:'no-store'}).then(r=>r.ok?'ok':'err'),
+    fetch('http://127.0.0.1:7778/account',{cache:'no-store'}).then(r=>r.ok?'ok':'err')
+  ]);
+
+  var p7777 = results[0].status==='fulfilled' && results[0].value==='ok';
+  var p7778 = results[1].status==='fulfilled' && results[1].value==='ok';
+
+  var html = '<div style="font-size:11px;font-family:var(--fd);padding:10px 14px;border-radius:8px;border:1px solid '+(p7777&&p7778?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)')+';background:'+(p7777&&p7778?'rgba(52,211,153,.08)':'rgba(248,113,113,.06)')+'">';
+
+  html += '<div style="font-weight:700;margin-bottom:6px;color:'+(p7777&&p7778?'var(--green)':'var(--red)')+'">'+(p7777&&p7778?'✅ Bridge attivo e funzionante':'❌ Problemi rilevati')+'</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+  html += '<div style="padding:6px 10px;border-radius:6px;background:var(--bg3);color:'+(p7777?'var(--green)':'var(--red)');
+  html += '">'+(p7777?'✅':'❌')+' Bridge PROP (7777)</div>';
+  html += '<div style="padding:6px 10px;border-radius:6px;background:var(--bg3);color:'+(p7778?'var(--green)':'var(--red)');
+  html += '">'+(p7778?'✅':'❌')+' Bridge PERS (7778)</div>';
+  html += '</div>';
+
+  if(!p7777||!p7778){
+    html += '<div style="margin-top:8px;color:var(--amber);font-size:10px">⚠️ Il bridge non risponde. Apri il Prompt dei comandi, vai sul Desktop (<code>cd Desktop</code>) e lancia: <b>py bridge.py</b></div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 async function liveConnectSingle(propId, side){
@@ -9063,8 +9106,8 @@ async function liveConnectSingle(propId, side){
   /* Salva credenziali */
   try{
     var saved=JSON.parse(localStorage.getItem('ph_live_creds_'+propId)||'{}');
-    if(isP){saved.propServer=srv;saved.propLogin=log;saved.propPlat=_bridge.prop.platform;}
-    else   {saved.persServer=srv;saved.persLogin=log;saved.persPlat=_bridge.pers.platform;}
+    if(isP){saved.propServer=srv;saved.propLogin=log;saved.propPwd=pwd;saved.propPlat=_bridge.prop.platform;}
+    else   {saved.persServer=srv;saved.persLogin=log;saved.persPwd=pwd;saved.persPlat=_bridge.pers.platform;}
     localStorage.setItem('ph_live_creds_'+propId,JSON.stringify(saved));
   }catch(e){}
   try{
@@ -9127,8 +9170,8 @@ async function liveConnectBoth(propId){
   try{
     var saved = {};
     try{ saved=JSON.parse(localStorage.getItem('ph_live_creds_'+propId)||'{}');}catch(e){}
-    saved.propServer=propSrv; saved.propLogin=propLog; saved.propPlat=_bridge.prop.platform;
-    saved.persServer=persSrv; saved.persLogin=persLog; saved.persPlat=_bridge.pers.platform;
+    saved.propServer=propSrv; saved.propLogin=propLog; saved.propPwd=propPwd; saved.propPlat=_bridge.prop.platform;
+    saved.persServer=persSrv; saved.persLogin=persLog; saved.persPwd=persPwd; saved.persPlat=_bridge.pers.platform;
     localStorage.setItem('ph_live_creds_'+propId, JSON.stringify(saved));
   }catch(e){}
 
