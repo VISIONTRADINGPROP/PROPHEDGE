@@ -10060,45 +10060,106 @@ var _tutSteps=[
 
 function liveDownloadEA(){
   var code = `//+------------------------------------------------------------------+
-//|  PropHedge MT4 Bridge EA                                         |
-//|  Solo per conto PERSONALE — non usare su conti prop!             |
-//|  Versione 1.0                                                    |
+//|  PropHedge MT4 Bridge EA v2.0                                    |
+//|  Usa WebRequest — nessuna DLL esterna necessaria                 |
+//|  SOLO per conto PERSONALE — non usare su conti prop!             |
 //+------------------------------------------------------------------+
 #property strict
 
-#include <WinAPI/winsock2.mqh>
+input int BridgePort = 7778; // Porta bridge personale
 
-input int    BridgePort = 7778;   // Porta bridge (7778 = personale)
-input string BridgeHost = "127.0.0.1";
-
-int    serverSocket = INVALID_HANDLE;
-bool   connected    = false;
+string BridgeURL;
 
 int OnInit(){
-   serverSocket = SocketCreate();
-   if(serverSocket == INVALID_HANDLE){ Print("PropHedge: errore socket"); return INIT_FAILED; }
-   if(!SocketConnect(serverSocket, BridgeHost, BridgePort, 3000)){
-      Print("PropHedge: connessione fallita porta ", BridgePort);
-      return INIT_FAILED;
+   BridgeURL = "http://127.0.0.1:" + IntegerToString(BridgePort);
+   
+   // Verifica connessione al bridge
+   string result = BridgeGet("/account");
+   if(StringLen(result) > 0){
+      Print("PropHedge Bridge MT4 connesso! ", result);
+   } else {
+      Print("PropHedge: bridge non risponde su porta ", BridgePort, ". Avvia bridge.py prima.");
    }
-   connected = true;
-   Print("PropHedge Bridge MT4 connesso su porta ", BridgePort);
-   EventSetMillisecondTimer(500);
+   
+   EventSetMillisecondTimer(1000);
    return INIT_SUCCEEDED;
 }
 
-void OnTimer(){
-   if(!connected) return;
-   // Heartbeat
-   string msg = "ping\\n";
-   uchar  buf[];
-   StringToCharArray(msg, buf, 0, StringLen(msg));
-   SocketSend(serverSocket, buf, ArraySize(buf)-1);
+void OnDeinit(const int reason){
+   EventKillTimer();
+   Print("PropHedge Bridge MT4 disconnesso.");
 }
 
-void OnDeinit(const int reason){
-   if(serverSocket != INVALID_HANDLE) SocketClose(serverSocket);
-   Print("PropHedge Bridge MT4 disconnesso.");
+void OnTimer(){
+   // Heartbeat ogni secondo — aggiorna posizioni aperte
+   BridgeGet("/account");
+}
+
+// Funzione GET generica
+string BridgeGet(string endpoint){
+   string headers = "Content-Type: application/json\\r\\n";
+   char   post[];
+   char   result[];
+   string resultHeaders;
+   
+   int res = WebRequest(
+      "GET",
+      BridgeURL + endpoint,
+      headers,
+      5000,
+      post,
+      result,
+      resultHeaders
+   );
+   
+   if(res == -1){
+      int err = GetLastError();
+      if(err == 4060){
+         Print("ERRORE: Devi abilitare WebRequest per 127.0.0.1 in MT4.");
+         Print("Vai su: Strumenti -> Opzioni -> Expert Advisors");
+         Print("Spunta 'Consenti WebRequest per i seguenti URL'");
+         Print("Aggiungi: http://127.0.0.1:7778");
+      }
+      return "";
+   }
+   
+   return CharArrayToString(result);
+}
+
+// Funzione POST generica
+string BridgePost(string endpoint, string body){
+   string headers = "Content-Type: application/json\\r\\n";
+   char   post[];
+   char   result[];
+   string resultHeaders;
+   
+   StringToCharArray(body, post, 0, StringLen(body));
+   ArrayResize(post, ArraySize(post)-1);
+   
+   int res = WebRequest(
+      "POST",
+      BridgeURL + endpoint,
+      headers,
+      5000,
+      post,
+      result,
+      resultHeaders
+   );
+   
+   if(res == -1) return "";
+   return CharArrayToString(result);
+}
+
+// Apre un ordine tramite PropHedge Bridge
+int PropHedgeOrder(string symbol, int cmd, double lots, double sl=0, double tp=0){
+   string side = (cmd == OP_BUY) ? "buy" : "sell";
+   string body = StringFormat(
+      "{\\\"symbol\\\":\\\"%s\\\",\\\"side\\\":\\\"%s\\\",\\\"volume\\\":%.2f,\\\"sl\\\":%.5f,\\\"tp\\\":%.5f,\\\"comment\\\":\\\"PropHedge\\\"}",
+      symbol, side, lots, sl, tp
+   );
+   string result = BridgePost("/order", body);
+   Print("PropHedge ordine: ", result);
+   return (StringLen(result) > 0) ? 1 : -1;
 }
 `;
   var blob = new Blob([code], {type:'text/plain'});
