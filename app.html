@@ -9119,7 +9119,7 @@ async function liveConnectSingle(propId, side){
     if(d.ok){
       _bridge[side].connected=true;
       _bridge[side].server=srv; _bridge[side].login=log;
-      if(btn){btn.textContent=isP?'✅ PROP connessa':'✅ PERSONALE connesso';btn.style.background=isP?'linear-gradient(135deg,#059669,#34D399)':'linear-gradient(135deg,#059669,#34D399)';}
+      if(btn){btn.textContent=isP?'✅ PROP connessa':'✅ PERSONALE connesso';btn.style.background='linear-gradient(135deg,#059669,#34D399)';}
       if(_bridge.prop.connected&&_bridge.pers.connected){
         if(_bridgePollTimer)clearInterval(_bridgePollTimer);
         _bridgePollTimer=setInterval(liveRefreshAll,3000);
@@ -9133,7 +9133,15 @@ async function liveConnectSingle(propId, side){
     } else {
       _bridge[side].connected=false;
       if(btn){btn.textContent=isP?'🎯 Connetti PROP':'🛡️ Connetti PERSONALE';btn.disabled=false;}
-      if(errEl){errEl.textContent='❌ '+(d.error||'Credenziali errate o server non trovato');errEl.style.display='block';}
+      var errMsg = d.error ? JSON.stringify(d.error) : 'Login fallito';
+      /* Mostra anche il codice errore MT5 se disponibile */
+      if(typeof d.error === 'object' && d.error !== null) errMsg = JSON.stringify(d.error);
+      if(errEl){
+        errEl.innerHTML = '❌ MT5 ha rifiutato il login:<br>'
+          +'<b style="color:var(--amber)">'+errMsg+'</b><br>'
+          +'<span style="font-size:9px;opacity:.7">Verifica: server esatto (es. FundedNext-Server3), login numerico, password corretta</span>';
+        errEl.style.display='block';
+      }
     }
   }catch(e){
     _bridge[side].connected=false;
@@ -9695,7 +9703,12 @@ def create_app():
         d = request.json
         mt5.initialize()
         ok = mt5.login(int(d['login']), d['password'], d['server'])
-        return jsonify({'ok': bool(ok), 'error': str(mt5.last_error()) if not ok else None})
+        err = mt5.last_error() if not ok else None
+        return jsonify({
+            'ok': bool(ok),
+            'error': {'code': err[0], 'msg': err[1]} if err and not ok else None,
+            'account': mt5.account_info()._asdict().get('login') if ok else None
+        })
 
     @app.route('/account')
     def account():
