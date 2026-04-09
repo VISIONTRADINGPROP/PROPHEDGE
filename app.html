@@ -9277,6 +9277,8 @@ async function liveConnectBoth(propId){
       _bridge.prop.propId = propId; _bridge.pers.propId = propId;
       if(_bridgePollTimer) clearInterval(_bridgePollTimer);
       _bridgePollTimer = setInterval(liveRefreshAll, 3000);
+      /* FIX: salva stato connessione in localStorage (credenziali già salvate sopra) */
+      try{ localStorage.setItem('ph_bridge_conn','1'); localStorage.setItem('ph_bridge_propId', propId); }catch(e){}
       await liveRefreshAll();
     }
 
@@ -11349,21 +11351,36 @@ function jrnlRenderSidebar(){
 
 function jrnlRenderMain(){
   var sess=jrnlGetActive();if(!sess)return'<div style="padding:30px;color:var(--t3)">Seleziona una sfida</div>';
-  /* FIX: auto-restore _bridge.connected se bridge è vivo ma stato perso dopo reload */
+  /* FIX CORRETTO: ripristina stato bridge SOLO se localStorage lo conferma
+     E il bridge risponde, E le credenziali salvate corrispondono all'account attivo */
   (async function(){
-    if(!_bridge.prop.connected||!_bridge.pers.connected){
-      try{
-        var p7 = await fetch('http://127.0.0.1:7777/account',{cache:'no-store'});
-        var p8 = await fetch('http://127.0.0.1:7778/account',{cache:'no-store'});
-        if(p7.ok && !_bridge.prop.connected){ _bridge.prop.connected=true; }
-        if(p8.ok && !_bridge.pers.connected){ _bridge.pers.connected=true; }
-        if(_bridge.prop.connected && _bridge.pers.connected && !_bridgePollTimer){
-          _bridgePollTimer = setInterval(liveRefreshAll, 3000);
-          /* Aggiorna rendering journal per mostrare pulsanti live */
-          setTimeout(function(){ if(typeof renderJournal==='function') renderJournal(); }, 200);
-        }
-      }catch(e){}
-    }
+    if(_bridge.prop.connected && _bridge.pers.connected) return; /* già connesso */
+    var wasConn = localStorage.getItem('ph_bridge_conn')==='1';
+    if(!wasConn) return; /* mai connesso — non fare nulla */
+    var savedPropId = localStorage.getItem('ph_bridge_propId');
+    var creds = null;
+    try{ creds = JSON.parse(localStorage.getItem('ph_live_creds_'+savedPropId)||'null'); }catch(e){}
+    if(!creds || !creds.propLogin || !creds.persLogin) return; /* nessuna credenziale salvata */
+    try{
+      /* Verifica che l'account attivo sul bridge corrisponda al login salvato */
+      var r7 = await fetch('http://127.0.0.1:7777/account',{cache:'no-store'});
+      var r8 = await fetch('http://127.0.0.1:7778/account',{cache:'no-store'});
+      if(!r7.ok || !r8.ok) { localStorage.removeItem('ph_bridge_conn'); return; }
+      var a7 = await r7.json(); var a8 = await r8.json();
+      /* Controlla che login coincida — evita falsi "connesso" con altri account */
+      var propMatch = a7.login && String(a7.login) === String(creds.propLogin);
+      var persMatch = a8.login && String(a8.login) === String(creds.persLogin);
+      if(propMatch && persMatch){
+        _bridge.prop.connected=true; _bridge.prop.account=a7; _bridge.prop.propId=savedPropId;
+        _bridge.pers.connected=true; _bridge.pers.account=a8; _bridge.pers.propId=savedPropId;
+        if(!_bridgePollTimer) _bridgePollTimer=setInterval(liveRefreshAll,3000);
+        /* Aggiorna Journal per mostrare pulsanti live */
+        setTimeout(function(){ if(typeof renderJournal==='function') renderJournal(); }, 300);
+      } else {
+        /* Login diverso — bridge si è disconnesso o cambiato account */
+        localStorage.removeItem('ph_bridge_conn');
+      }
+    }catch(e){ localStorage.removeItem('ph_bridge_conn'); }
   })();
   var i=jrnl.activeIdx;
   var pt=(sess.propTrades||[]).slice().sort(function(a,b){return new Date(b.open_time||b.opened_at||0)-new Date(a.open_time||a.opened_at||0);});
@@ -14847,6 +14864,7 @@ function showPolicy(){document.getElementById('policyModal').style.display='bloc
 
 
 function resetConsent(){try{localStorage.removeItem('ph_consent');}catch(e){}location.reload();}
+function _bridgeDisconnect(){ try{localStorage.removeItem('ph_bridge_conn');localStorage.removeItem('ph_bridge_propId');}catch(e){} _bridge.prop.connected=false;_bridge.pers.connected=false; if(_bridgePollTimer){clearInterval(_bridgePollTimer);_bridgePollTimer=null;} if(typeof renderJournal==='function')renderJournal(); }
 
 
 
