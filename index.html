@@ -10106,106 +10106,175 @@ var _tutSteps=[
 
 function liveDownloadEA(){
   var code = `//+------------------------------------------------------------------+
-//|  PropHedge MT4 Bridge EA v2.0                                    |
-//|  Usa WebRequest — nessuna DLL esterna necessaria                 |
-//|  SOLO per conto PERSONALE — non usare su conti prop!             |
+//|  PropHedge MT4 Bridge EA v3.0                                    |
+//|  Architettura: EA fa polling su bridge.py porta 7778             |
+//|  Il bridge riceve ordini dal software e li accoda                |
+//|  L'EA preleva gli ordini dalla coda e li esegue in MT4           |
 //+------------------------------------------------------------------+
 #property strict
 
-input int BridgePort = 7778; // Porta bridge personale
+input int    BridgePort   = 7778;      // Porta bridge
+input int    PollInterval = 500;       // Polling ogni 500ms
+input string MagicComment = "PropHedge";
 
 string BridgeURL;
 
 int OnInit(){
    BridgeURL = "http://127.0.0.1:" + IntegerToString(BridgePort);
+   EventSetMillisecondTimer(PollInterval);
    
-   // Verifica connessione al bridge
-   string result = BridgeGet("/account");
-   if(StringLen(result) > 0){
-      Print("PropHedge Bridge MT4 connesso! ", result);
-   } else {
-      Print("PropHedge: bridge non risponde su porta ", BridgePort, ". Avvia bridge.py prima.");
-   }
-   
-   EventSetMillisecondTimer(1000);
+   // Heartbeat iniziale
+   SendHeartbeat();
+   Print("PropHedge EA v3.0 avviato — bridge: ", BridgeURL);
    return INIT_SUCCEEDED;
 }
 
 void OnDeinit(const int reason){
    EventKillTimer();
-   Print("PropHedge Bridge MT4 disconnesso.");
 }
 
 void OnTimer(){
-   // Heartbeat ogni secondo — aggiorna posizioni aperte
-   BridgeGet("/account");
+   SendHeartbeat();
+   PollOrders();
 }
 
-// Funzione GET generica
-string BridgeGet(string endpoint){
-   string headers = "Content-Type: application/json\\r\\n";
-   char   post[];
-   char   result[];
-   string resultHeaders;
-   
-   int res = WebRequest(
-      "GET",
-      BridgeURL + endpoint,
-      headers,
-      5000,
-      post,
-      result,
-      resultHeaders
+// Invia account info e posizioni al bridge (heartbeat)
+void SendHeartbeat(){
+   // Account info
+   string accJson = StringFormat(
+      "{\"login\":%d,\"balance\":%.2f,\"equity\":%.2f,\"currency\":\"%s\",\"server\":\"%s\",\"from_ea\":true}",
+      AccountNumber(), AccountBalance(), AccountEquity(),
+      AccountCurrency(), AccountServer()
    );
+   BridgePost("/account?from_ea=1", accJson);
    
-   if(res == -1){
-      int err = GetLastError();
-      if(err == 4060){
-         Print("ERRORE: Devi abilitare WebRequest per 127.0.0.1 in MT4.");
-         Print("Vai su: Strumenti -> Opzioni -> Expert Advisors");
-         Print("Spunta 'Consenti WebRequest per i seguenti URL'");
-         Print("Aggiungi: http://127.0.0.1:7778");
+   // Posizioni aperte
+   string posJson = "[";
+   int total = OrdersTotal();
+   for(int i = 0; i < total; i++){
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+      if(i > 0) posJson += ",";
+      posJson += StringFormat(
+         "{\"ticket\":%d,\"symbol\":\"%s\",\"volume\":%.2f,\"type\":%d,\"profit\":%.2f,\"price_open\":%.5f}",
+         OrderTicket(), OrderSymbol(), OrderLots(), OrderType(), OrderProfit(), OrderOpenPrice()
+      );
+   }
+   posJson += "]";
+   BridgePost("/positions?from_ea=1", posJson);
+}
+
+// Preleva ordini pendenti dal bridge ed eseguili
+void PollOrders(){
+   string response = BridgeGet("/pending");
+   if(StringLen(response) < 3) return;
+   
+   // Parse JSON array semplice — cerca oggetti con "id" e "side"
+   int pos = 0;
+   while(true){
+      int idStart  = StringFind(response, "\"id\":", pos);
+      if(idStart < 0) break;
+      
+      // Estrai id
+      int idValStart = idStart + 5;
+      int idValEnd   = StringFind(response, ",", idValStart);
+      if(idValEnd < 0) idValEnd = StringFind(response, "}", idValStart);
+      long orderId = (long)StringToInteger(StringSubstr(response, idValStart, idValEnd - idValStart));
+      
+      // Controlla action (close o order normale)
+      bool isClose = StringFind(response, "\"close\"", idStart) >= 0 && 
+                     StringFind(response, "\"close\"", idStart) < idStart + 50;
+      
+      string result;
+      if(isClose){
+         // Chiudi posizione
+         int ticketStart = StringFind(response, "\"ticket\":", idStart);
+         if(ticketStart >= 0){
+            int ticketValEnd = StringFind(response, ",", ticketStart+9);
+            if(ticketValEnd < 0) ticketValEnd = StringFind(response, "}", ticketStart+9);
+            int ticket = (int)StringToInteger(StringSubstr(response, ticketStart+9, ticketValEnd-(ticketStart+9)));
+            bool closed = CloseOrder(ticket);
+            result = StringFormat("{\"retcode\":%d,\"comment\":\"%s\"}", closed?0:-1, closed?"OK":"Errore chiusura");
+         }
+      } else {
+         // Apri ordine
+         string sym  = ExtractString(response, "\"symbol\":", idStart);
+         string side = ExtractString(response, "\"side\":", idStart);
+         double vol  = StringToDouble(ExtractString(response, "\"volume\":", idStart));
+         string cmt  = ExtractString(response, "\"comment\":", idStart);
+         if(StringLen(cmt) < 1) cmt = MagicComment;
+         
+         int cmd    = (side == "buy") ? OP_BUY : OP_SELL;
+         double prc = (cmd == OP_BUY) ? MarketInfo(sym, MODE_ASK) : MarketInfo(sym, MODE_BID);
+         
+         int ticket = OrderSend(sym, cmd, vol, prc, 3, 0, 0, cmt, 0, 0,
+                                cmd == OP_BUY ? clrGreen : clrRed);
+         if(ticket > 0){
+            result = StringFormat("{\"retcode\":0,\"order\":%d,\"comment\":\"OK\"}", ticket);
+            Print("PropHedge ordine aperto: #", ticket, " ", sym, " ", side, " ", vol, "lot");
+         } else {
+            int err = GetLastError();
+            result = StringFormat("{\"retcode\":%d,\"comment\":\"Errore MT4: %d\"}", err, err);
+            Print("PropHedge errore ordine: ", err, " ", sym, " ", side);
+         }
       }
+      
+      // Notifica il bridge che l'ordine e' stato eseguito
+      string notifyBody = StringFormat("{\"id\":%d,\"result\":%s}", orderId, result);
+      BridgePost("/pending/result", notifyBody);
+      
+      pos = idStart + 5;
+   }
+}
+
+bool CloseOrder(int ticket){
+   if(!OrderSelect(ticket, SELECT_BY_TICKET)) return false;
+   double prc = (OrderType() == OP_BUY) ? MarketInfo(OrderSymbol(), MODE_BID)
+                                         : MarketInfo(OrderSymbol(), MODE_ASK);
+   return OrderClose(ticket, OrderLots(), prc, 3);
+}
+
+// Estrae stringa da JSON dopo una chiave
+string ExtractString(const string &json, string key, int fromPos){
+   int kStart = StringFind(json, key, fromPos);
+   if(kStart < 0) return "";
+   int vStart = kStart + StringLen(key);
+   // Salta spazi e virgolette
+   while(vStart < StringLen(json) && (StringGetChar(json, vStart) == ' ' || StringGetChar(json, vStart) == '"'))
+      vStart++;
+   int vEnd = vStart;
+   bool inQuote = (StringGetChar(json, kStart + StringLen(key)) == '"' || 
+                   StringGetChar(json, vStart-1) == '"');
+   if(inQuote){
+      vEnd = StringFind(json, "\"", vStart);
+   } else {
+      while(vEnd < StringLen(json) && StringGetChar(json, vEnd) != ',' && 
+            StringGetChar(json, vEnd) != '}') vEnd++;
+   }
+   return StringSubstr(json, vStart, vEnd - vStart);
+}
+
+string BridgeGet(string endpoint){
+   string headers = "Content-Type: application/json\r\n";
+   char post[], result[];
+   string resultHeaders;
+   int res = WebRequest("GET", BridgeURL+endpoint, headers, 3000, post, result, resultHeaders);
+   if(res == -1){ 
+      int err = GetLastError();
+      if(err == 4060) Print("PropHedge: abilita WebRequest per http://127.0.0.1:7778 in MT4 Opzioni");
       return "";
    }
-   
    return CharArrayToString(result);
 }
 
-// Funzione POST generica
 string BridgePost(string endpoint, string body){
-   string headers = "Content-Type: application/json\\r\\n";
-   char   post[];
-   char   result[];
+   string headers = "Content-Type: application/json\r\n";
+   char post[], result[];
    string resultHeaders;
-   
    StringToCharArray(body, post, 0, StringLen(body));
    ArrayResize(post, ArraySize(post)-1);
-   
-   int res = WebRequest(
-      "POST",
-      BridgeURL + endpoint,
-      headers,
-      5000,
-      post,
-      result,
-      resultHeaders
-   );
-   
+   int res = WebRequest("POST", BridgeURL+endpoint, headers, 3000, post, result, resultHeaders);
    if(res == -1) return "";
    return CharArrayToString(result);
-}
-
-// Apre un ordine tramite PropHedge Bridge
-int PropHedgeOrder(string symbol, int cmd, double lots, double sl=0, double tp=0){
-   string side = (cmd == OP_BUY) ? "buy" : "sell";
-   string body = StringFormat(
-      "{\\\"symbol\\\":\\\"%s\\\",\\\"side\\\":\\\"%s\\\",\\\"volume\\\":%.2f,\\\"sl\\\":%.5f,\\\"tp\\\":%.5f,\\\"comment\\\":\\\"PropHedge\\\"}",
-      symbol, side, lots, sl, tp
-   );
-   string result = BridgePost("/order", body);
-   Print("PropHedge ordine: ", result);
-   return (StringLen(result) > 0) ? 1 : -1;
 }
 `;
   var blob = new Blob([code], {type:'text/plain'});
@@ -10280,202 +10349,326 @@ function liveTutGo(dir){
 if(window.speechSynthesis) window.speechSynthesis.getVoices();
 
 function liveDownloadGuide(){
-  var code = `# PropHedge Bridge v5.1
-# Gestisce SOLO il conto PROP su porta 7777 (MT5)
-# Il conto PERSONALE MT4 e' gestito dall'EA PropHedge su MT4 (porta 7778)
-# Il conto PERSONALE MT5 puo usare: py bridge.py --port 7778 --worker
+  var code = `# PropHedge Bridge v6.0
+# Porta 7777: PROP   — MT5 tramite Python MetaTrader5
+# Porta 7778: PERS   — MT4 tramite EA polling (o MT5 se il personale e' MT5)
 #
-# Avvio normale: py bridge.py
-# Solo porta specifica: py bridge.py --port 7777
+# Avvio: py bridge.py
+# Solo una porta: py bridge.py --port 7777
 
-import sys, time, json as _json, argparse
+import sys, time, threading, json as _json, argparse
 
 parser = argparse.ArgumentParser(add_help=False)
-parser.add_argument('--port', type=int, default=7777)
-parser.add_argument('--worker', action='store_true')
+parser.add_argument('--port', type=int, default=0)
 args, _ = parser.parse_known_args()
-
-PORT  = args.port
-LABEL = "PROP" if PORT == 7777 else "PERSONALE"
-
-try:
-    import MetaTrader5 as mt5
-except ImportError:
-    print(f"[{LABEL}:{PORT}] ERRORE: py -m pip install MetaTrader5")
-    sys.exit(1)
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-_connected_login = 0
+# ── Coda ordini pendenti per MT4 (EA polling) ───────────────────
+_pending_orders = []          # ordini in attesa che l'EA esegua
+_pending_lock   = threading.Lock()
+_ea_account     = {}          # ultimo account info ricevuto dall'EA
+_ea_positions   = []          # posizioni aperte ricevute dall'EA
+_ea_last_seen   = 0           # timestamp ultimo heartbeat EA
 
-def connect_mt5(login, password, server):
-    global _connected_login
-    mt5.initialize()
-    acc = mt5.account_info()
-    if acc and acc.login == login:
-        _connected_login = login
-        return True, None
-    ok = mt5.login(login=login, password=password, server=server)
-    if ok:
-        _connected_login = login
-        return True, None
-    err = mt5.last_error()
-    return False, {"code": err[0], "msg": err[1]}
+def make_app(port):
+    label = "PROP" if port == 7777 else "PERS"
+    _connected_login = [0]     # usa lista per mutabilita' in closure
 
-def get_json_safe():
+    # MT5 (solo se disponibile)
     try:
-        d = request.get_json(force=True, silent=True)
-        if d: return d
-        raw = request.data.decode('utf-8', errors='ignore').strip()
-        if raw: return _json.loads(raw)
-    except Exception:
-        pass
-    return {}
+        import MetaTrader5 as mt5_mod
+        MT5 = mt5_mod
+    except ImportError:
+        MT5 = None
 
-def find_symbol(sym):
-    for s in [sym, sym+".a", sym+".b", sym+".x", sym+"m", sym+"M"]:
-        tick = mt5.symbol_info_tick(s)
-        if tick:
-            mt5.symbol_select(s, True)
-            return s, tick
-    mt5.symbol_select(sym, True)
-    time.sleep(0.3)
-    tick = mt5.symbol_info_tick(sym)
-    if tick: return sym, tick
-    return None, None
+    app = Flask(f'bridge_{port}')
+    CORS(app, resources={r'/*': {'origins': '*'}})
 
-app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+    @app.after_request
+    def cors(r):
+        r.headers['Access-Control-Allow-Origin'] = '*'
+        r.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        r.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
+        return r
 
-@app.after_request
-def add_cors(r):
-    r.headers["Access-Control-Allow-Origin"] = "*"
-    r.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-    r.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
-    return r
+    @app.route('/<path:p>', methods=['OPTIONS'])
+    def opt(p): return '', 204
 
-@app.route("/<path:p>", methods=["OPTIONS"])
-def opt(p): return "", 204
+    @app.route('/ping')
+    def ping():
+        ea_alive = (time.time() - _ea_last_seen) < 10 if port == 7778 else False
+        return jsonify({'ok': True, 'version': '6.0', 'port': port, 'label': label,
+                        'connected_login': _connected_login[0],
+                        'ea_alive': ea_alive})
 
-@app.route("/ping")
-def ping():
-    return jsonify({"ok": True, "version": "5.1", "port": PORT, "label": LABEL,
-                    "connected_login": _connected_login})
+    def get_json_safe():
+        try:
+            d = request.get_json(force=True, silent=True)
+            if d: return d
+            raw = request.data.decode('utf-8', errors='ignore').strip()
+            if raw: return _json.loads(raw)
+        except Exception: pass
+        return {}
 
-@app.route("/connect", methods=["POST"])
-def connect():
-    try:
+    # ════════════════════════════════════════════════════════════
+    # CONNECT
+    # ════════════════════════════════════════════════════════════
+    @app.route('/connect', methods=['POST'])
+    def connect():
         d = get_json_safe()
-        if not d: return jsonify({"ok": False, "error": "Dati mancanti"})
-        ok, err = connect_mt5(int(d.get("login", 0)), d.get("password",""), d.get("server",""))
-        print(f"[{LABEL}:{PORT}] Connect login={d.get('login')} -> {'OK' if ok else 'FAIL: '+str(err)}")
-        return jsonify({"ok": ok, "error": err})
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)})
+        if not d: return jsonify({'ok': False, 'error': 'Dati mancanti'})
+        login  = int(d.get('login', 0))
+        pwd    = d.get('password', '')
+        srv    = d.get('server', '')
+        plat   = d.get('platform', 'mt5').lower()
 
-@app.route("/account")
-def account():
-    try:
-        info = mt5.account_info()
-        if not info: return jsonify({})
-        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in info._asdict().items()})
-    except Exception as e:
-        return jsonify({"error": str(e)})
+        # MT4: connessione tramite EA — verifica che l'EA stia girando
+        if plat == 'mt4':
+            if port == 7778 and (time.time() - _ea_last_seen) < 15:
+                # EA e' vivo, usa il suo account info
+                acc = _ea_account.copy()
+                if acc.get('login'):
+                    _connected_login[0] = acc['login']
+                    print(f'[{label}:{port}] MT4 EA connesso, login={acc["login"]}')
+                    return jsonify({'ok': True, 'error': None})
+            return jsonify({'ok': False,
+                            'error': 'EA MT4 non risponde. Assicurati che EA PropHedge sia sul grafico MT4.'})
 
-@app.route("/positions")
-def positions():
-    try:
-        pos = mt5.positions_get() or []
-        return jsonify([{k:(float(v) if hasattr(v,"real") else v) for k,v in p._asdict().items()} for p in pos])
-    except Exception:
+        # MT5: connessione tramite Python bridge
+        if not MT5:
+            return jsonify({'ok': False, 'error': 'MetaTrader5 non installato. Esegui: pip install MetaTrader5'})
+        try:
+            MT5.initialize()
+            acc = MT5.account_info()
+            if acc and acc.login == login:
+                _connected_login[0] = login
+                return jsonify({'ok': True, 'error': None})
+            ok = MT5.login(login=login, password=pwd, server=srv)
+            if ok:
+                _connected_login[0] = login
+                print(f'[{label}:{port}] MT5 connesso login={login}')
+                return jsonify({'ok': True, 'error': None})
+            err = MT5.last_error()
+            return jsonify({'ok': False, 'error': {'code': err[0], 'msg': err[1]}})
+        except Exception as e:
+            return jsonify({'ok': False, 'error': str(e)})
+
+    # ════════════════════════════════════════════════════════════
+    # ACCOUNT — serve sia per PropHedge (check connessione) sia per EA (heartbeat)
+    # ════════════════════════════════════════════════════════════
+    @app.route('/account')
+    def account():
+        global _ea_last_seen, _ea_account
+
+        # Parametro ?from_ea=1 : l'EA sta facendo heartbeat, invia il suo account
+        if request.args.get('from_ea') == '1':
+            body = get_json_safe()
+            if body and body.get('login'):
+                _ea_account = body
+                _ea_last_seen = time.time()
+                _connected_login[0] = body['login']
+                return jsonify({'ok': True})
+
+        # Se porta 7778 e EA vivo, ritorna info EA
+        if port == 7778 and (time.time() - _ea_last_seen) < 15 and _ea_account.get('login'):
+            return jsonify(_ea_account)
+
+        # Altrimenti MT5
+        if MT5:
+            try:
+                info = MT5.account_info()
+                if info: return jsonify({k:(float(v) if hasattr(v,'real') else v)
+                                         for k,v in info._asdict().items()})
+            except Exception: pass
+        return jsonify({})
+
+    # ════════════════════════════════════════════════════════════
+    # POSITIONS
+    # ════════════════════════════════════════════════════════════
+    @app.route('/positions')
+    def positions():
+        global _ea_positions
+
+        # EA invia le sue posizioni
+        if request.args.get('from_ea') == '1':
+            body = get_json_safe()
+            if isinstance(body, list):
+                _ea_positions = body
+            return jsonify({'ok': True})
+
+        if port == 7778 and (time.time() - _ea_last_seen) < 15:
+            return jsonify(_ea_positions)
+
+        if MT5:
+            try:
+                pos = MT5.positions_get() or []
+                return jsonify([{k:(float(v) if hasattr(v,'real') else v)
+                                 for k,v in p._asdict().items()} for p in pos])
+            except Exception: pass
         return jsonify([])
 
-@app.route("/history")
-def history():
-    try:
-        ticket = int(request.args.get("ticket", 0))
-        deals = mt5.history_deals_get(position=ticket) or []
-        return jsonify({"profit": sum(d.profit for d in deals), "ticket": ticket})
-    except Exception:
-        return jsonify({"profit": 0, "ticket": 0})
-
-@app.route("/order", methods=["POST"])
-def order():
-    try:
+    # ════════════════════════════════════════════════════════════
+    # ORDER
+    # ════════════════════════════════════════════════════════════
+    @app.route('/order', methods=['POST'])
+    def order():
         d = get_json_safe()
-        if not d: return jsonify({"retcode": -1, "comment": "Dati ordine mancanti"})
-        if not _connected_login:
-            return jsonify({"retcode": -1, "comment": f"Bridge {LABEL} non connesso. Prima clicca Connetti."})
-        sym_in = d.get("symbol", "")
-        if not sym_in: return jsonify({"retcode": -1, "comment": "Simbolo mancante"})
-        sym, tick = find_symbol(sym_in)
-        if not sym:
-            return jsonify({"retcode": -1, "comment": f"Simbolo {sym_in} non trovato. Aprilo su MT5."})
-        side = d.get("side", "buy").lower()
-        price = tick.ask if side == "buy" else tick.bid
-        vol = round(float(d.get("volume", 0.01)), 2)
-        otype = mt5.ORDER_TYPE_BUY if side == "buy" else mt5.ORDER_TYPE_SELL
-        base = {
-            "action": mt5.TRADE_ACTION_DEAL,
-            "symbol": sym, "volume": vol, "type": otype, "price": price,
-            "sl": float(d.get("sl", 0)) or 0.0,
-            "tp": float(d.get("tp", 0)) or 0.0,
-            "deviation": 20, "magic": 234000,
-            "comment": d.get("comment", "PropHedge"),
-            "type_time": mt5.ORDER_TIME_GTC,
-        }
-        r = None
-        for filling in [mt5.ORDER_FILLING_IOC, mt5.ORDER_FILLING_FOK, mt5.ORDER_FILLING_RETURN]:
-            r = mt5.order_send(dict(base, type_filling=filling))
-            if r and r.retcode in (10009, 10008, 0): break
-            if r and r.retcode not in (10030, 10014): break
-        if not r: return jsonify({"retcode": -1, "comment": "order_send None"})
-        print(f"[{LABEL}:{PORT}] Order {side} {vol}lot {sym} -> retcode={r.retcode} order={r.order}")
-        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
-    except Exception as e:
-        return jsonify({"retcode": -1, "comment": str(e)})
+        if not d: return jsonify({'retcode': -1, 'comment': 'Dati mancanti'})
+        if not _connected_login[0]:
+            return jsonify({'retcode': -1, 'comment': f'{label} non connesso. Clicca Connetti prima.'})
 
-@app.route("/modify", methods=["POST"])
-def modify():
-    try:
+        # MT4: metti ordine in coda, l'EA lo preleva con /pending
+        if port == 7778 and (time.time() - _ea_last_seen) < 15:
+            order_id = int(time.time() * 1000)
+            with _pending_lock:
+                _pending_orders.append({'id': order_id, **d})
+            # Attendi al massimo 5 secondi che l'EA esegua
+            deadline = time.time() + 5
+            while time.time() < deadline:
+                time.sleep(0.1)
+                with _pending_lock:
+                    done = [o for o in _pending_orders if o.get('id') == order_id and o.get('executed')]
+                if done:
+                    result = done[0].get('result', {})
+                    return jsonify(result)
+            return jsonify({'retcode': -1, 'comment': 'Timeout EA — ordine non eseguito in 5 secondi'})
+
+        # MT5: esegui direttamente
+        if not MT5: return jsonify({'retcode': -1, 'comment': 'MetaTrader5 non disponibile'})
+        try:
+            sym_in = d.get('symbol', '')
+            sym, tick = find_symbol_mt5(MT5, sym_in)
+            if not sym: return jsonify({'retcode': -1, 'comment': f'Simbolo {sym_in} non trovato'})
+            side  = d.get('side', 'buy').lower()
+            price = tick.ask if side == 'buy' else tick.bid
+            vol   = round(float(d.get('volume', 0.01)), 2)
+            otype = MT5.ORDER_TYPE_BUY if side == 'buy' else MT5.ORDER_TYPE_SELL
+            base  = {'action': MT5.TRADE_ACTION_DEAL, 'symbol': sym, 'volume': vol,
+                     'type': otype, 'price': price,
+                     'sl': float(d.get('sl', 0)) or 0.0, 'tp': float(d.get('tp', 0)) or 0.0,
+                     'deviation': 20, 'magic': 234000,
+                     'comment': d.get('comment', 'PropHedge'), 'type_time': MT5.ORDER_TIME_GTC}
+            r = None
+            for fill in [MT5.ORDER_FILLING_IOC, MT5.ORDER_FILLING_FOK, MT5.ORDER_FILLING_RETURN]:
+                r = MT5.order_send(dict(base, type_filling=fill))
+                if r and r.retcode in (10009, 10008, 0): break
+                if r and r.retcode not in (10030, 10014): break
+            if not r: return jsonify({'retcode': -1, 'comment': 'order_send None'})
+            print(f'[{label}:{port}] Order {side} {vol}lot {sym} -> {r.retcode}')
+            return jsonify({k:(float(v) if hasattr(v,'real') else v) for k,v in r._asdict().items()})
+        except Exception as e:
+            return jsonify({'retcode': -1, 'comment': str(e)})
+
+    # ════════════════════════════════════════════════════════════
+    # PENDING — l'EA fa polling qui per prelevare ordini da eseguire
+    # ════════════════════════════════════════════════════════════
+    @app.route('/pending')
+    def pending():
+        global _ea_last_seen, _ea_account
+        _ea_last_seen = time.time()
+        with _pending_lock:
+            orders = [o for o in _pending_orders if not o.get('executed')]
+        return jsonify(orders)
+
+    @app.route('/pending/result', methods=['POST'])
+    def pending_result():
         d = get_json_safe()
-        r = mt5.order_send({"action": mt5.TRADE_ACTION_SLTP,
-            "position": int(d.get("ticket",0)),
-            "sl": float(d.get("sl",0)), "tp": float(d.get("tp",0))})
-        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
-    except Exception as e:
-        return jsonify({"retcode": -1, "comment": str(e)})
+        order_id = d.get('id')
+        result   = d.get('result', {})
+        with _pending_lock:
+            for o in _pending_orders:
+                if o.get('id') == order_id:
+                    o['executed'] = True
+                    o['result']   = result
+                    break
+        return jsonify({'ok': True})
 
-@app.route("/close", methods=["POST"])
-def close():
-    try:
+    @app.route('/history')
+    def history():
+        if MT5:
+            try:
+                ticket = int(request.args.get('ticket', 0))
+                deals  = MT5.history_deals_get(position=ticket) or []
+                return jsonify({'profit': sum(d.profit for d in deals), 'ticket': ticket})
+            except Exception: pass
+        return jsonify({'profit': 0, 'ticket': 0})
+
+    @app.route('/close', methods=['POST'])
+    def close():
         d = get_json_safe()
-        ticket = int(d.get("ticket", 0))
-        pos = mt5.positions_get(ticket=ticket)
-        if not pos: return jsonify({"retcode": -1, "comment": "Non trovata"})
-        p = pos[0]
-        tick = mt5.symbol_info_tick(p.symbol)
-        price = tick.bid if p.type == 0 else tick.ask
-        r = mt5.order_send({
-            "action": mt5.TRADE_ACTION_DEAL, "symbol": p.symbol, "volume": p.volume,
-            "type": mt5.ORDER_TYPE_SELL if p.type == 0 else mt5.ORDER_TYPE_BUY,
-            "position": ticket, "price": price, "deviation": 20, "magic": 234000,
-            "comment": "PropHedge close", "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
-        })
-        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
-    except Exception as e:
-        return jsonify({"retcode": -1, "comment": str(e)})
+        ticket = int(d.get('ticket', 0))
 
-if __name__ == "__main__":
-    print("=" * 52)
-    print(f"  PropHedge Bridge v5.1 — {LABEL} porta {PORT}")
-    print("=" * 52)
-    print(f"  In ascolto su http://127.0.0.1:{PORT}")
-    print("  Torna su PropHedge e clicca Connetti PROP.")
-    print()
-    app.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
+        # MT4: coda chiusura
+        if port == 7778 and (time.time() - _ea_last_seen) < 15:
+            order_id = int(time.time() * 1000)
+            with _pending_lock:
+                _pending_orders.append({'id': order_id, 'action': 'close', 'ticket': ticket})
+            deadline = time.time() + 5
+            while time.time() < deadline:
+                time.sleep(0.1)
+                with _pending_lock:
+                    done = [o for o in _pending_orders if o.get('id') == order_id and o.get('executed')]
+                if done: return jsonify(done[0].get('result', {}))
+            return jsonify({'retcode': -1, 'comment': 'Timeout chiusura'})
+
+        if MT5:
+            try:
+                pos = MT5.positions_get(ticket=ticket)
+                if not pos: return jsonify({'retcode': -1, 'comment': 'Non trovata'})
+                p = pos[0]
+                t = MT5.symbol_info_tick(p.symbol)
+                price = t.bid if p.type == 0 else t.ask
+                r = MT5.order_send({'action': MT5.TRADE_ACTION_DEAL, 'symbol': p.symbol,
+                    'volume': p.volume,
+                    'type': MT5.ORDER_TYPE_SELL if p.type == 0 else MT5.ORDER_TYPE_BUY,
+                    'position': ticket, 'price': price, 'deviation': 20, 'magic': 234000,
+                    'comment': 'PropHedge close', 'type_time': MT5.ORDER_TIME_GTC,
+                    'type_filling': MT5.ORDER_FILLING_IOC})
+                return jsonify({k:(float(v) if hasattr(v,'real') else v) for k,v in r._asdict().items()})
+            except Exception as e:
+                return jsonify({'retcode': -1, 'comment': str(e)})
+        return jsonify({'retcode': -1, 'comment': 'Non disponibile'})
+
+    return app
+
+def find_symbol_mt5(mt5, sym):
+    for s in [sym, sym+'.a', sym+'.b', sym+'.x', sym+'m', sym+'M']:
+        t = mt5.symbol_info_tick(s)
+        if t: mt5.symbol_select(s, True); return s, t
+    mt5.symbol_select(sym, True); time.sleep(0.3)
+    t = mt5.symbol_info_tick(sym)
+    if t: return sym, t
+    return None, None
+
+def run_server(app, port):
+    label = 'PROP' if port == 7777 else 'PERS'
+    try:
+        print(f'[{label}:{port}] In ascolto su http://127.0.0.1:{port}')
+        app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+    except OSError as e:
+        if '10048' in str(e) or 'already in use' in str(e).lower():
+            print(f'[WARN] Porta {port} occupata — bridge gia attivo?')
+        else:
+            print(f'[ERR {label}:{port}] {e}')
+
+if __name__ == '__main__':
+    target_port = args.port
+
+    if target_port:
+        # Porta singola (es. py bridge.py --port 7777)
+        run_server(make_app(target_port), target_port)
+    else:
+        # Entrambe le porte in thread separati
+        print('=' * 52)
+        print('  PropHedge Bridge v6.0')
+        print('  Porta 7777  PROP   (MT5)')
+        print('  Porta 7778  PERS   (MT4 EA polling + MT5)')
+        print('=' * 52)
+        t = threading.Thread(target=run_server, args=(make_app(7777), 7777), daemon=True)
+        t.start()
+        run_server(make_app(7778), 7778)
 
 `;
   var blob=new Blob([code],{type:'text/plain'});
