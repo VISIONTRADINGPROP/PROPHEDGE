@@ -10573,7 +10573,7 @@ string JVal(string json, string key)
 
 string Http_Get(string ep)
 {
-   string hdr="Content-Type: application/json\r\n";
+   string hdr="Content-Type: application/json"+CharToStr(13)+CharToStr(10);
    uchar post[],res[];
    string rh;
    int code=WebRequest("GET",g_url+ep,hdr,3000,post,res,rh);
@@ -10588,7 +10588,7 @@ string Http_Get(string ep)
 
 string Http_Post(string ep, string body)
 {
-   string hdr="Content-Type: application/json\r\n";
+   string hdr="Content-Type: application/json"+CharToStr(13)+CharToStr(10);
    uchar post[],res[];
    string rh;
    StringToCharArray(body,post,0,StringLen(body));
