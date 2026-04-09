@@ -10435,204 +10435,162 @@ if __name__ == '__main__':
 
 function liveDownloadEA(){
   var code = `//+------------------------------------------------------------------+
-//|  PropHedge MT4 Bridge EA v3.1                                    |
-//|  Polling su bridge.py porta 7778                                  |
+//|  PropHedge MT4 Bridge EA v3.2                                    |
 //+------------------------------------------------------------------+
 #property strict
 
-input int    InpBridgePort   = 7778;
-input int    InpPollInterval = 500;
-input string InpComment      = "PropHedge";
+input int    InpPort     = 7778;
+input int    InpInterval = 500;
 
 string g_url;
 
+//--- Prototipi
+string HttpGet(string endpoint);
+string HttpPost(string endpoint, string body);
+string JStr(const string &s, string key, int from);
+
 int OnInit()
 {
-   g_url = "http://127.0.0.1:" + IntegerToString(InpBridgePort);
-   EventSetMillisecondTimer(InpPollInterval);
-   DoHeartbeat();
-   Print("PropHedge EA v3.1 avviato — ", g_url);
+   g_url = "http://127.0.0.1:" + IntegerToString(InpPort);
+   EventSetMillisecondTimer(InpInterval);
+   Print("PropHedge EA v3.2 — ", g_url);
    return(INIT_SUCCEEDED);
 }
 
-void OnDeinit(const int reason)
-{
-   EventKillTimer();
-}
+void OnDeinit(const int reason) { EventKillTimer(); }
 
 void OnTimer()
 {
-   DoHeartbeat();
-   DoPollOrders();
+   Heartbeat();
+   PollOrders();
 }
 
-//--- Heartbeat: invia account e posizioni al bridge
-void DoHeartbeat()
+//--- Heartbeat
+void Heartbeat()
 {
-   string acc = StringFormat(
-      "{\"login\":%d,\"balance\":%.2f,\"equity\":%.2f,\"currency\":\"%s\",\"server\":\"%s\"}",
-      AccountNumber(), AccountBalance(), AccountEquity(),
-      AccountCurrency(), AccountServer()
-   );
-   HttpPost("/account?from_ea=1", acc);
+   string a = "{";
+   a += "\"login\":" + IntegerToString(AccountNumber()) + ",";
+   a += "\"balance\":" + DoubleToString(AccountBalance(),2) + ",";
+   a += "\"equity\":" + DoubleToString(AccountEquity(),2) + ",";
+   a += "\"currency\":\"" + AccountCurrency() + "\",";
+   a += "\"server\":\"" + AccountServer() + "\"";
+   a += "}";
+   HttpPost("/account?from_ea=1", a);
 
-   string pos = "[";
-   int total = OrdersTotal();
-   for(int i = 0; i < total; i++)
+   string p = "[";
+   int tot = OrdersTotal();
+   for(int i=0; i<tot; i++)
    {
-      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
-      if(i > 0) pos += ",";
-      pos += StringFormat(
-         "{\"ticket\":%d,\"symbol\":\"%s\",\"volume\":%.2f,\"type\":%d,\"profit\":%.2f}",
-         OrderTicket(), OrderSymbol(), OrderLots(), OrderType(), OrderProfit()
-      );
+      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
+      if(i > 0) p += ",";
+      p += "{";
+      p += "\"ticket\":" + IntegerToString(OrderTicket()) + ",";
+      p += "\"symbol\":\"" + OrderSymbol() + "\",";
+      p += "\"volume\":" + DoubleToString(OrderLots(),2) + ",";
+      p += "\"type\":" + IntegerToString(OrderType()) + ",";
+      p += "\"profit\":" + DoubleToString(OrderProfit(),2);
+      p += "}";
    }
-   pos += "]";
-   HttpPost("/positions?from_ea=1", pos);
+   p += "]";
+   HttpPost("/positions?from_ea=1", p);
 }
 
-//--- Preleva ordini pendenti ed eseguili
-void DoPollOrders()
+//--- Polling ordini
+void PollOrders()
 {
    string resp = HttpGet("/pending");
    if(StringLen(resp) < 5) return;
 
-   int searchPos = 0;
+   int pos = 0;
    while(true)
    {
-      int idIdx = StringFind(resp, "\"id\":", searchPos);
+      int idIdx = StringFind(resp, "\"id\":", pos);
       if(idIdx < 0) break;
 
-      //--- Leggi id
-      int idStart = idIdx + 5;
-      int idEnd   = StringFind(resp, ",", idStart);
-      if(idEnd < 0) idEnd = StringFind(resp, "}", idStart);
-      string idStr = StringSubstr(resp, idStart, idEnd - idStart);
+      int    idEnd  = StringFind(resp, ",", idIdx+5);
+      if(idEnd < 0) idEnd = StringFind(resp, "}", idIdx+5);
+      string idStr  = StringSubstr(resp, idIdx+5, idEnd-(idIdx+5));
       StringTrimLeft(idStr); StringTrimRight(idStr);
 
-      //--- Controlla se e' chiusura
-      int closeIdx  = StringFind(resp, "\"close\"", idIdx);
-      int nextBrace = StringFind(resp, "}", idIdx);
-      bool isClose  = (closeIdx > 0 && closeIdx < nextBrace);
+      string sym  = JStr(resp, "\"symbol\":", idIdx);
+      string side = JStr(resp, "\"side\":", idIdx);
+      double vol  = StringToDouble(JStr(resp, "\"volume\":", idIdx));
+      string cmt  = JStr(resp, "\"comment\":", idIdx);
+      if(StringLen(cmt) < 1) cmt = "PropHedge";
 
-      string resultJson;
-
-      if(isClose)
+      string res = "";
+      if(StringLen(sym) > 0 && vol > 0)
       {
-         int tkIdx = StringFind(resp, "\"ticket\":", idIdx);
-         if(tkIdx > 0 && tkIdx < nextBrace)
+         int    cmd = (side == "buy") ? OP_BUY : OP_SELL;
+         double prc = (cmd == OP_BUY) ? MarketInfo(sym,MODE_ASK) : MarketInfo(sym,MODE_BID);
+         int    tk  = OrderSend(sym, cmd, vol, prc, 3, 0, 0, cmt, 0, 0,
+                                (cmd==OP_BUY)?clrGreen:clrRed);
+         if(tk > 0)
          {
-            int tkStart = tkIdx + 9;
-            int tkEnd   = StringFind(resp, ",", tkStart);
-            if(tkEnd < 0 || tkEnd > nextBrace) tkEnd = nextBrace;
-            int ticket  = (int)StringToInteger(StringSubstr(resp, tkStart, tkEnd - tkStart));
-            bool ok     = CloseTicket(ticket);
-            resultJson  = ok ? "{\"retcode\":0,\"comment\":\"closed\"}"
-                             : "{\"retcode\":-1,\"comment\":\"close failed\"}";
+            Print("PropHedge ordine #",tk," ",sym," ",side," ",DoubleToString(vol,2),"lot");
+            res = "{\"retcode\":0,\"order\":" + IntegerToString(tk) + ",\"comment\":\"OK\"}";
+         }
+         else
+         {
+            int err = GetLastError();
+            Print("PropHedge errore ",err," ",sym," ",side);
+            res = "{\"retcode\":" + IntegerToString(err) + ",\"comment\":\"MT4 err " + IntegerToString(err) + "\"}";
          }
       }
       else
       {
-         string sym  = JsonStr(resp, "\"symbol\":", idIdx);
-         string side = JsonStr(resp, "\"side\":", idIdx);
-         double vol  = StringToDouble(JsonStr(resp, "\"volume\":", idIdx));
-         string cmt  = JsonStr(resp, "\"comment\":", idIdx);
-         if(StringLen(cmt) < 1) cmt = InpComment;
-
-         if(StringLen(sym) > 0 && vol > 0)
-         {
-            int    cmd  = (side == "buy") ? OP_BUY : OP_SELL;
-            double prc  = (cmd == OP_BUY) ? MarketInfo(sym, MODE_ASK)
-                                           : MarketInfo(sym, MODE_BID);
-            int    tk   = OrderSend(sym, cmd, vol, prc, 3, 0, 0, cmt, 0, 0,
-                                    (cmd == OP_BUY) ? clrGreen : clrRed);
-            if(tk > 0)
-            {
-               resultJson = StringFormat("{\"retcode\":0,\"order\":%d,\"comment\":\"OK\"}", tk);
-               Print("PropHedge ordine: #", tk, " ", sym, " ", side, " ", DoubleToString(vol, 2), "lot");
-            }
-            else
-            {
-               int err = GetLastError();
-               resultJson = StringFormat("{\"retcode\":%d,\"comment\":\"MT4 err %d\"}", err, err);
-               Print("PropHedge errore: ", err, " ", sym, " ", side);
-            }
-         }
-         else
-         {
-            resultJson = "{\"retcode\":-1,\"comment\":\"dati mancanti\"}";
-         }
+         res = "{\"retcode\":-1,\"comment\":\"dati mancanti\"}";
       }
 
-      //--- Notifica bridge
-      string notif = StringFormat("{\"id\":%s,\"result\":%s}", idStr, resultJson);
+      string notif = "{\"id\":" + idStr + ",\"result\":" + res + "}";
       HttpPost("/pending/result", notif);
 
-      searchPos = idIdx + 5;
+      pos = idIdx + 5;
    }
 }
 
-bool CloseTicket(int ticket)
+//--- Estrae valore stringa da JSON
+string JStr(const string &json, string key, int from)
 {
-   if(!OrderSelect(ticket, SELECT_BY_TICKET)) return(false);
-   double prc = (OrderType() == OP_BUY) ? MarketInfo(OrderSymbol(), MODE_BID)
-                                         : MarketInfo(OrderSymbol(), MODE_ASK);
-   return(OrderClose(ticket, OrderLots(), prc, 3));
-}
-
-//--- Estrae valore stringa da JSON dopo una chiave
-string JsonStr(const string &json, const string key, int fromPos)
-{
-   int kIdx = StringFind(json, key, fromPos);
-   if(kIdx < 0) return("");
-   int vStart = kIdx + StringLen(key);
-   while(vStart < StringLen(json) &&
-         (StringGetChar(json, vStart) == ' ' ||
-          StringGetChar(json, vStart) == '"'))
-      vStart++;
-   int vEnd = vStart;
-   bool wasQuote = (vStart > 0 && StringGetChar(json, vStart - 1) == '"');
-   if(wasQuote)
-   {
-      vEnd = StringFind(json, "\"", vStart);
-      if(vEnd < 0) vEnd = vStart;
-   }
+   int k = StringFind(json, key, from);
+   if(k < 0) return("");
+   int s = k + StringLen(key);
+   bool q = (StringGetChar(json,s) == (uchar)34);
+   if(q) s++;
+   int e = s;
+   if(q)
+      e = StringFind(json, "\"", s);
    else
-   {
-      while(vEnd < StringLen(json) &&
-            StringGetChar(json, vEnd) != ',' &&
-            StringGetChar(json, vEnd) != '}')
-         vEnd++;
-   }
-   return(StringSubstr(json, vStart, vEnd - vStart));
+      { while(e < StringLen(json) && StringGetChar(json,e) != (uchar)44 && StringGetChar(json,e) != (uchar)125) e++; }
+   if(e < 0) e = s;
+   return(StringSubstr(json, s, e-s));
 }
 
 //--- GET
-string HttpGet(const string endpoint)
+string HttpGet(string ep)
 {
-   string headers = "Content-Type: application/json\r\n";
-   uchar  post[], res[];
-   string resHeaders;
-   int code = WebRequest("GET", g_url + endpoint, headers, 3000, post, res, resHeaders);
+   string hdr = "Content-Type: application/json\r\n";
+   uchar post[], res[];
+   string rh;
+   int code = WebRequest("GET", g_url+ep, hdr, 3000, post, res, rh);
    if(code == -1)
    {
-      int err = GetLastError();
-      if(err == 4060)
-         Print("Abilita WebRequest per ", g_url, " in MT4 Opzioni -> Expert Advisors");
+      if(GetLastError() == 4060)
+         Print("Aggiungi ",g_url," a MT4 Opzioni->Expert Advisors->WebRequest");
       return("");
    }
    return(CharArrayToString(res));
 }
 
 //--- POST
-string HttpPost(const string endpoint, const string body)
+string HttpPost(string ep, string body)
 {
-   string headers = "Content-Type: application/json\r\n";
-   uchar  post[], res[];
-   string resHeaders;
+   string hdr = "Content-Type: application/json\r\n";
+   uchar post[], res[];
+   string rh;
    StringToCharArray(body, post, 0, StringLen(body));
-   ArrayResize(post, ArraySize(post) - 1);
-   int code = WebRequest("POST", g_url + endpoint, headers, 3000, post, res, resHeaders);
+   ArrayResize(post, ArraySize(post)-1);
+   int code = WebRequest("POST", g_url+ep, hdr, 3000, post, res, rh);
    if(code == -1) return("");
    return(CharArrayToString(res));
 }
