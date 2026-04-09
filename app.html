@@ -7702,13 +7702,12 @@ function delPropSync(id){
 
 
   if(dashDetailId===id)dashDetailId=null;
-
-
-
+  /* FIX: salva props dopo eliminazione */
+  if(typeof saveProps==='function') saveProps();
+  /* FIX: rimuovi credenziali live */
+  try{ localStorage.removeItem('ph_live_creds_'+id); }catch(e){}
+  try{ localStorage.removeItem('ph_sim_'+id); }catch(e){}
   render();
-
-
-
 }
 
 
@@ -8884,7 +8883,10 @@ function renderLive(){
       +'<input id="lp_propSrv" value="'+propSrv+'" placeholder="es. FundedNext-Server3" oninput="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px">'
       +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Login</div>'
-      +'<input id="lp_propLog" type="number" value="'+propLog+'" placeholder="123456" oninput="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'<div style="display:flex;gap:4px;align-items:center">'
+      +'<input id="lp_propLog" type="number" value="'+propLog+'" placeholder="123456" oninput="liveSaveCreds('+sfida.id+');liveFillByLogin(\'prop\','+sfida.id+')" style="flex:1;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none">'
+      +'<button onclick="liveClearCreds(\'prop\','+sfida.id+')" title="Cancella dati" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);border-radius:6px;color:var(--red);padding:6px 8px;font-size:10px;cursor:pointer;flex-shrink:0">🗑</button>'
+      +'</div></div>'
       +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Password</div>'
       +'<div style="position:relative">'
       +'<input id="lp_propPwd" type="password" value="'+propPwd+'" placeholder="••••••" oninput="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 32px 7px 10px;font-size:12px;outline:none">'
@@ -8908,7 +8910,10 @@ function renderLive(){
       +'<input id="lp_persSrv" value="'+persSrv+'" placeholder="es. TopFX-Live 13" oninput="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px">'
       +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Login</div>'
-      +'<input id="lp_persLog" type="number" value="'+persLog+'" placeholder="123456" oninput="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'<div style="display:flex;gap:4px;align-items:center">'
+      +'<input id="lp_persLog" type="number" value="'+persLog+'" placeholder="123456" oninput="liveSaveCreds('+sfida.id+');liveFillByLogin(\'pers\','+sfida.id+')" style="flex:1;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none">'
+      +'<button onclick="liveClearCreds(\'pers\','+sfida.id+')" title="Cancella dati" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);border-radius:6px;color:var(--red);padding:6px 8px;font-size:10px;cursor:pointer;flex-shrink:0">🗑</button>'
+      +'</div></div>'
       +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Password</div>'
       +'<div style="position:relative">'
       +'<input id="lp_persPwd" type="password" value="'+persPwd+'" placeholder="••••••" oninput="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 32px 7px 10px;font-size:12px;outline:none">'
@@ -9111,6 +9116,55 @@ function liveSaveCreds(propId){
   try{ localStorage.setItem('ph_live_creds_'+propId, JSON.stringify(creds)); } catch(e){}
 }
 
+/* ── AUTOFILL: digita login → riempie server e password se già salvati ── */
+function liveFillByLogin(side, propId){
+  var logEl = document.getElementById(side==='prop'?'lp_propLog':'lp_persLog');
+  if(!logEl) return;
+  var login = logEl.value.trim();
+  if(!login || login.length < 4) return; /* aspetta almeno 4 cifre */
+  /* Cerca nelle credenziali salvate di tutte le sfide */
+  var allKeys = [];
+  try{
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      if(k && k.startsWith('ph_live_creds_')) allKeys.push(k);
+    }
+  }catch(e){}
+  for(var j=0;j<allKeys.length;j++){
+    try{
+      var c=JSON.parse(localStorage.getItem(allKeys[j])||'{}');
+      var matchProp = side==='prop' && String(c.propLogin)===login;
+      var matchPers = side==='pers' && String(c.persLogin)===login;
+      if(matchProp){
+        var srvEl=document.getElementById('lp_propSrv'); if(srvEl&&c.propServer&&!srvEl.value) srvEl.value=c.propServer;
+        var pwdEl=document.getElementById('lp_propPwd'); if(pwdEl&&c.propPwd&&!pwdEl.value)   pwdEl.value=c.propPwd;
+        liveSaveCreds(propId); return;
+      }
+      if(matchPers){
+        var srvEl2=document.getElementById('lp_persSrv'); if(srvEl2&&c.persServer&&!srvEl2.value) srvEl2.value=c.persServer;
+        var pwdEl2=document.getElementById('lp_persPwd'); if(pwdEl2&&c.persPwd&&!pwdEl2.value)   pwdEl2.value=c.persPwd;
+        liveSaveCreds(propId); return;
+      }
+    }catch(e){}
+  }
+}
+
+/* ── CLEAR: cancella credenziali di un lato ── */
+function liveClearCreds(side, propId){
+  if(!confirm('Cancellare le credenziali '+(side==='prop'?'PROP':'PERSONALE')+'?')) return;
+  try{
+    var c=JSON.parse(localStorage.getItem('ph_live_creds_'+propId)||'{}');
+    if(side==='prop'){ delete c.propServer; delete c.propLogin; delete c.propPwd; }
+    else             { delete c.persServer; delete c.persLogin; delete c.persPwd; }
+    localStorage.setItem('ph_live_creds_'+propId, JSON.stringify(c));
+  }catch(e){}
+  /* Svuota i campi visibili */
+  var prefix = side==='prop'?'lp_prop':'lp_pers';
+  ['Srv','Log','Pwd'].forEach(function(f){
+    var el=document.getElementById(prefix+f); if(el) el.value='';
+  });
+}
+
 async function liveBridgeTest(){
   var el = document.getElementById('bridgeTestResult');
   if(!el) return;
@@ -9120,6 +9174,10 @@ async function liveBridgeTest(){
     fetch('http://127.0.0.1:7777/account',{cache:'no-store'}).then(r=>r.ok?'ok':'err'),
     fetch('http://127.0.0.1:7778/account',{cache:'no-store'}).then(r=>r.ok?'ok':'err')
   ]);
+  /* Verifica versione bridge */
+  var ver7='?', ver8='?';
+  try{ var rv7=await fetch('http://127.0.0.1:7777/ping',{cache:'no-store'}); var rj7=await rv7.json(); ver7=rj7.version||'vecchia'; }catch(e){ ver7='vecchia'; }
+  try{ var rv8=await fetch('http://127.0.0.1:7778/ping',{cache:'no-store'}); var rj8=await rv8.json(); ver8=rj8.version||'vecchia'; }catch(e){ ver8='vecchia'; }
 
   var p7777 = results[0].status==='fulfilled' && results[0].value==='ok';
   var p7778 = results[1].status==='fulfilled' && results[1].value==='ok';
@@ -9129,11 +9187,14 @@ async function liveBridgeTest(){
   html += '<div style="font-weight:700;margin-bottom:6px;color:'+(p7777&&p7778?'var(--green)':'var(--red)')+'">'+(p7777&&p7778?'✅ Bridge attivo e funzionante':'❌ Problemi rilevati')+'</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
   html += '<div style="padding:6px 10px;border-radius:6px;background:var(--bg3);color:'+(p7777?'var(--green)':'var(--red)');
-  html += '">'+(p7777?'✅':'❌')+' Bridge PROP (7777)</div>';
+  html += '">'+(p7777?'✅':'❌')+' Bridge PROP (7777) '+(p7777?'<span style="color:var(--t3);font-size:9px">v'+ver7+'</span>':'')+'</div>';
   html += '<div style="padding:6px 10px;border-radius:6px;background:var(--bg3);color:'+(p7778?'var(--green)':'var(--red)');
   html += '">'+(p7778?'✅':'❌')+' Bridge PERS (7778)</div>';
   html += '</div>';
 
+  if(p7777 && ver7==='vecchia'){
+    html += '<div style="margin-top:6px;padding:6px 10px;border-radius:6px;background:rgba(251,191,36,.08);color:var(--amber);font-size:10px">⚠️ Stai usando una versione vecchia di bridge.py — scarica quella aggiornata per supporto ordini migliorato</div>';
+  }
   if(!p7777||!p7778){
     html += '<div style="margin-top:8px;color:var(--amber);font-size:10px">⚠️ Il bridge non risponde. Apri il Prompt dei comandi, vai sul Desktop (<code>cd Desktop</code>) e lancia: <b>py bridge.py</b></div>';
   }
@@ -9165,9 +9226,19 @@ async function liveConnectSingle(propId, side){
       var acc = await r.json();
       if(acc && acc.login){
         _bridge[side].connected=true; _bridge[side].account=acc;
+        _bridge[side].propId=propId;
+        /* FIX: salva stato connessione in localStorage */
+        if(_bridge.prop.connected&&_bridge.pers.connected){
+          try{ localStorage.setItem('ph_bridge_conn','1'); localStorage.setItem('ph_bridge_propId',String(propId)); }catch(e){}
+          if(!_bridgePollTimer) _bridgePollTimer=setInterval(liveRefreshAll,3000);
+        }
         if(btn){btn.textContent=isP?"✅ PROP connessa":"✅ PERSONALE connesso";btn.style.background="linear-gradient(135deg,#059669,#34D399)";}
         liveRenderAccount(side, acc);
-        if(!_bridgePollTimer){_bridgePollTimer=setInterval(liveRefreshAll,3000);_bridge[side].propId=propId;}
+        /* FIX: aggiorna journal per mostrare badge LIVE */
+        setTimeout(function(){
+          var el=document.getElementById("liveRoot");if(el)el.outerHTML=renderLive();
+          if(typeof renderJournal==='function') renderJournal();
+        }, 100);
         return;
       } else { throw new Error("vuoto"); }
     }catch(e){
@@ -9182,7 +9253,8 @@ async function liveConnectSingle(propId, side){
   if(btn){btn.textContent="⏳ Connessione...";btn.disabled=true;}
   var port = isP ? 7777 : 7778;
   try{var saved=JSON.parse(localStorage.getItem("ph_live_creds_"+propId)||"{}");
-    if(isP){saved.propServer=srv;saved.propLogin=log;}else{saved.persServer=srv;saved.persLogin=log;}
+    if(isP){saved.propServer=srv;saved.propLogin=log;saved.propPwd=pwd;saved.propPlat=plat;}
+    else{saved.persServer=srv;saved.persLogin=log;saved.persPwd=pwd;saved.persPlat=plat;}
     localStorage.setItem("ph_live_creds_"+propId,JSON.stringify(saved));
   }catch(e){}
   try{
@@ -10278,6 +10350,7 @@ function liveDownloadGuide(){
 import threading
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import time
 import MetaTrader5 as mt5
 
 def connect_mt5(login, password, server):
@@ -10394,9 +10467,13 @@ def create_app():
 
     @app.route("/connect", methods=["POST"])
     def connect():
-        d = request.json
-        ok, err = connect_mt5(int(d["login"]), d["password"], d["server"])
-        return jsonify({"ok": ok, "error": err})
+        try:
+            d = request.get_json(force=True)
+            if not d: return jsonify({"ok": False, "error": "Dati mancanti"})
+            ok, err = connect_mt5(int(d["login"]), d["password"], d["server"])
+            return jsonify({"ok": ok, "error": err})
+        except Exception as e:
+            return jsonify({"ok": False, "error": str(e)})
 
     @app.route("/account")
     def account():
@@ -10415,25 +10492,56 @@ def create_app():
         deals = mt5.history_deals_get(position=ticket) or []
         return jsonify({"profit": sum(d.profit for d in deals), "ticket": ticket})
 
+    @app.route("/ping")
+    def ping(): return jsonify({"ok": True, "version": "3.1"})
+
     @app.route("/order", methods=["POST"])
     def order():
-        d = request.json
-        sym = d["symbol"]
-        tick = mt5.symbol_info_tick(sym)
-        side = d.get("side", "buy")
-        price = tick.ask if side == "buy" else tick.bid
-        req = {
-            "action": mt5.TRADE_ACTION_DEAL, "symbol": sym,
-            "volume": float(d["volume"]),
-            "type": mt5.ORDER_TYPE_BUY if side == "buy" else mt5.ORDER_TYPE_SELL,
-            "price": price, "sl": float(d.get("sl", 0)), "tp": float(d.get("tp", 0)),
-            "deviation": 10, "magic": 234000,
-            "comment": d.get("comment", "PropHedge"),
-            "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
-        }
-        r = mt5.order_send(req)
-        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
+        try:
+            d = request.get_json(force=True)
+            if not d: return jsonify({"retcode": -1, "comment": "JSON mancante"})
+            sym = d.get("symbol", "")
+            if not sym: return jsonify({"retcode": -1, "comment": "Symbol mancante"})
+            # Prova il simbolo così com'è, poi con suffissi comuni
+            tick = mt5.symbol_info_tick(sym)
+            if not tick:
+                for sfx in ["", ".a", ".b", ".x", "m", "M"]:
+                    tick = mt5.symbol_info_tick(sym + sfx)
+                    if tick: sym = sym + sfx; break
+            if not tick:
+                # Prova ad abilitare il simbolo
+                mt5.symbol_select(sym, True)
+                import time; time.sleep(0.3)
+                tick = mt5.symbol_info_tick(sym)
+            if not tick:
+                return jsonify({"retcode": -1, "comment": f"Simbolo {sym} non trovato. Aprilo su MT5 prima."})
+            side = d.get("side", "buy")
+            price = tick.ask if side == "buy" else tick.bid
+            vol = float(d.get("volume", 0.01))
+            sl_v = float(d.get("sl", 0)); tp_v = float(d.get("tp", 0))
+            # Gestione filling mode (diverso per broker)
+            for filling in [mt5.ORDER_FILLING_IOC, mt5.ORDER_FILLING_FOK, mt5.ORDER_FILLING_RETURN]:
+                req = {
+                    "action": mt5.TRADE_ACTION_DEAL, "symbol": sym,
+                    "volume": vol,
+                    "type": mt5.ORDER_TYPE_BUY if side == "buy" else mt5.ORDER_TYPE_SELL,
+                    "price": price,
+                    "sl": sl_v if sl_v > 0 else 0.0,
+                    "tp": tp_v if tp_v > 0 else 0.0,
+                    "deviation": 20, "magic": 234000,
+                    "comment": d.get("comment", "PropHedge"),
+                    "type_time": mt5.ORDER_TIME_GTC,
+                    "type_filling": filling,
+                }
+                r = mt5.order_send(req)
+                if r and r.retcode in (10009, 10008, 0):
+                    break
+                if r and r.retcode not in (10030,):  # 10030 = filling non supportato
+                    break
+            if not r: return jsonify({"retcode": -1, "comment": "order_send fallito"})
+            return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
+        except Exception as e:
+            return jsonify({"retcode": -1, "comment": str(e)})
 
     @app.route("/modify", methods=["POST"])
     def modify():
@@ -11685,11 +11793,26 @@ async function jrnlOpenHedge(sessIdx, propDir){
     return r.json();
   }
 
-  /* ── Ping rapido per diagnostica ── */
+  /* ── Ping rapido per diagnostica — controlla anche versione ── */
   async function _bridgePing(port){
     try{
       var r = await fetch('http://127.0.0.1:'+port+'/account',{cache:'no-store'});
-      return r.ok;
+      if(!r.ok) return false;
+      /* Controlla versione */
+      try{
+        var rv = await fetch('http://127.0.0.1:'+port+'/ping',{cache:'no-store'});
+        var rj = await rv.json();
+        if(!rj.version || rj.version < '3.1'){
+          if(res){ res.style.background='rgba(251,191,36,.1)'; res.style.color='var(--amber)';
+            res.innerHTML='⚠️ bridge.py versione vecchia — scarica quella aggiornata dal tab Live Trading → <b>Scarica bridge.py</b>.<br><span style="font-size:9px">La versione aggiornata gestisce ordini, simboli e filling mode in modo affidabile.</span>'; }
+          return false;
+        }
+      }catch(e){ /* /ping non esiste = versione vecchia */
+        if(res){ res.style.background='rgba(251,191,36,.1)'; res.style.color='var(--amber)';
+          res.innerHTML='⚠️ bridge.py versione vecchia — scarica quella aggiornata dal tab Live Trading → <b>Scarica bridge.py</b>.'; }
+        return false;
+      }
+      return true;
     }catch(e){ return false; }
   }
 
@@ -11730,8 +11853,8 @@ async function jrnlOpenHedge(sessIdx, propDir){
       return;
     }
 
-    var okProp = rProp && (rProp.retcode===10009||rProp.retcode===0||rProp.ok);
-    var okPers = rPers && (rPers.retcode===10009||rPers.retcode===0||rPers.ok);
+    var okProp = rProp && (rProp.retcode===10009||rProp.retcode===10008||rProp.retcode===0||rProp.ok||rProp.order);
+    var okPers = rPers && (rPers.retcode===10009||rPers.retcode===10008||rPers.retcode===0||rPers.ok||rPers.order);
 
     if(okProp && okPers){
       if(res){ res.style.background='rgba(52,211,153,.1)'; res.style.color='var(--green)';
@@ -12030,6 +12153,9 @@ function jrnlDelete(i){
       activeId = props.length ? props[0].id : null;
     try{ localStorage.removeItem('ph_live_creds_'+linkedId); } catch(e){}
     try{ localStorage.removeItem('ph_sim_'+linkedId); } catch(e){}
+    try{ localStorage.removeItem('ph_bridge_conn'); localStorage.removeItem('ph_bridge_propId'); } catch(e){}
+    /* FIX: salva props dopo eliminazione */
+    if(typeof saveProps === 'function') saveProps();
     /* Aggiorna dashboard */
     if(typeof render === 'function') render();
   }
