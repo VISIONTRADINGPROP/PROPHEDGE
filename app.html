@@ -8966,7 +8966,7 @@ function renderLive(){
     +'<div style="flex:1">'
     +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Scarica il Bridge</div>'
     +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:8px">Il file che collega PropHedge ai tuoi conti MetaTrader.</div>'
-    +'<button onclick="liveDownloadGuide()" style="background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:8px;color:#fff;padding:8px 18px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica bridge.py</button>'
+    +'<button onclick="liveDownloadGuide()" style="background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:8px;color:#fff;padding:8px 18px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica bridge.py (PROP 7777)</button>'
     +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:5px">Salvalo sul Desktop</div>'
     +'</div></div>'
 
@@ -8994,7 +8994,7 @@ function renderLive(){
     +'<button onclick="navigator.clipboard.writeText(\'py bridge.py\');this.textContent=\'✓\';setTimeout(()=>this.textContent=\'📋\',2000)" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:5px;color:#34D399;padding:5px 10px;font-size:10px;cursor:pointer;flex-shrink:0">📋 Copia</button>'
     +'</div>'
     +'<div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:7px;padding:8px 12px;margin-top:8px;font-size:11px;color:var(--green);font-family:var(--fd);line-height:1.8">'
-    +'✅ Si apre una finestra nera — è normale, lasciala aperta.<br>✅ Gestisce PROP (7777) + PERSONALE (7778) in automatico.<br>⚠️ <b>Non chiudere</b> quella finestra mentre usi il software.'
+    +'✅ Si apre una finestra — bridge PROP su porta 7777 attivo.<br>✅ Conto PERSONALE MT4: installa l\'EA PropHedge su MT4 (gestisce porta 7778).<br>✅ Conto PERSONALE MT5: esegui <b>py bridge.py --port 7778</b> in un\'altra finestra.<br>⚠️ Non chiudere quella finestra durante il trading.'
     +'</div></div></div>'
 
     /* STEP 5: AutoTrading */
@@ -9111,9 +9111,9 @@ async function liveBridgeTest(){
   var p7777 = results[0].status==='fulfilled' && results[0].value==='ok';
   var p7778 = results[1].status==='fulfilled' && results[1].value==='ok';
 
-  var html = '<div style="font-size:11px;font-family:var(--fd);padding:10px 14px;border-radius:8px;border:1px solid '+(p7777&&p7778?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)')+';background:'+(p7777&&p7778?'rgba(52,211,153,.08)':'rgba(248,113,113,.06)')+'">';
+  var html = '<div style="font-size:11px;font-family:var(--fd);padding:10px 14px;border-radius:8px;border:1px solid '+(p7777?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)')+';background:'+(p7777&&p7778?'rgba(52,211,153,.08)':'rgba(248,113,113,.06)')+'">';
 
-  html += '<div style="font-weight:700;margin-bottom:6px;color:'+(p7777&&p7778?'var(--green)':'var(--red)')+'">'+(p7777&&p7778?'✅ Bridge attivo e funzionante':'❌ Problemi rilevati')+'</div>';
+  html += '<div style="font-weight:700;margin-bottom:6px;color:'+(p7777?'var(--green)':'var(--red)')+'">'+(p7777?'✅ Bridge PROP attivo':'❌ Bridge PROP non risponde')+'</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
   html += '<div style="padding:6px 10px;border-radius:6px;background:var(--bg3);color:'+(p7777?'var(--green)':'var(--red)');
   html += '">'+(p7777?'✅':'❌')+' Bridge PROP (7777)</div>';
@@ -9121,7 +9121,12 @@ async function liveBridgeTest(){
   html += '">'+(p7778?'✅':'❌')+' Bridge PERS (7778)</div>';
   html += '</div>';
 
-  if(!p7777||!p7778){
+  if(p7778){
+    html += '<div style="padding:5px 10px;border-radius:6px;background:var(--bg3);color:var(--green);margin-top:4px">✅ Bridge PERSONALE (7778) attivo — MT5 personale connesso</div>';
+  } else {
+    html += '<div style="padding:5px 10px;border-radius:6px;background:var(--bg3);color:var(--t3);margin-top:4px">ℹ️ Bridge PERSONALE (7778): non attivo — normale se usi MT4 con EA</div>';
+  }
+  if(!p7777){
     html += '<div style="margin-top:8px;color:var(--amber);font-size:10px">⚠️ Il bridge non risponde. Apri il Prompt dei comandi, vai sul Desktop (<code>cd Desktop</code>) e lancia: <b>py bridge.py</b></div>';
   }
   html += '</div>';
@@ -9641,7 +9646,7 @@ async function liveClosePos(side, ticket){
 function liveDownloadBat(){
   /* PowerShell script — non bloccato dalle zone sicurezza Internet come i .bat
      L'utente fa tasto destro → "Esegui con PowerShell" */
-  var code = '# PropHedge Bridge Launcher\r\n# Tasto destro su questo file → Esegui con PowerShell\r\n\r\nWrite-Host "=========================================="\r\nWrite-Host " PropHedge Bridge - Avvio automatico"\r\nWrite-Host "=========================================="\r\nWrite-Host ""\r\n\r\n$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path\r\n$bridge = Join-Path $scriptDir "bridge.py"\r\n\r\nif (-not (Test-Path $bridge)) {\r\n    Write-Host "ERRORE: bridge.py non trovato nella stessa cartella!" -ForegroundColor Red\r\n    Write-Host "Assicurati che bridge.py e questo file siano nella stessa cartella."\r\n    Read-Host "Premi Invio per uscire"\r\n    exit\r\n}\r\n\r\nWrite-Host "Avvio Bridge PROP (porta 7777)..." -ForegroundColor Cyan\r\nStart-Process powershell -ArgumentList "-NoExit", "-Command", "cd \'$scriptDir\'; py bridge.py --port 7777" -WindowStyle Normal\r\n\r\nStart-Sleep -Seconds 2\r\n\r\nWrite-Host "Avvio Bridge PERSONALE (porta 7778)..." -ForegroundColor Magenta\r\nStart-Process powershell -ArgumentList "-NoExit", "-Command", "cd \'$scriptDir\'; py bridge.py --port 7778" -WindowStyle Normal\r\n\r\nStart-Sleep -Seconds 1\r\nWrite-Host ""\r\nWrite-Host "Entrambi i bridge sono avviati!" -ForegroundColor Green\r\nWrite-Host "Torna su PropHedge e connetti i conti."\r\nWrite-Host ""\r\nRead-Host "Premi Invio per chiudere questa finestra"\r\n';
+  var code = '# PropHedge Bridge Launcher\r\n# Tasto destro su questo file → Esegui con PowerShell\r\n\r\nWrite-Host "=========================================="\r\nWrite-Host " PropHedge Bridge - Avvio automatico"\r\nWrite-Host "=========================================="\r\nWrite-Host ""\r\n\r\n$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path\r\n$bridge = Join-Path $scriptDir "bridge.py"\r\n\r\nif (-not (Test-Path $bridge)) {\r\n    Write-Host "ERRORE: bridge.py non trovato nella stessa cartella!" -ForegroundColor Red\r\n    Write-Host "Assicurati che bridge.py e questo file siano nella stessa cartella."\r\n    Read-Host "Premi Invio per uscire"\r\n    exit\r\n}\r\n\r\nWrite-Host "Avvio Bridge PROP (porta 7777)..." -ForegroundColor Cyan\r\nStart-Process powershell -ArgumentList "-NoExit", "-Command", "cd \'$scriptDir\'; py bridge.py --port 7777" -WindowStyle Normal\r\n\r\nStart-Sleep -Seconds 2Write-Host \"\\r\\n[OK] Bridge PROP (7777) avviato!\\r\\nPer PERSONALE MT4: installa EA PropHedge su MT4 (gestisce porta 7778 automaticamente).\" -ForegroundColor Green\\r\\nart-Sleep -Seconds 1\r\nWrite-Host ""\r\nWrite-Host "Entrambi i bridge sono avviati!" -ForegroundColor Green\r\nWrite-Host "Torna su PropHedge e connetti i conti."\r\nWrite-Host ""\r\nRead-Host "Premi Invio per chiudere questa finestra"\r\n';
 
   var blob = new Blob([code], {type:'text/plain'});
   var url  = URL.createObjectURL(blob);
@@ -9780,7 +9785,7 @@ var _tutSteps=[
     <b style="color:#A78BFA">Scarica bridge.py e salvalo sul Desktop</b><br>
     <span style="font-size:11px">Quando il browser chiede dove salvarlo, scegli <b>Desktop</b></span>
   </div>
-  <button onclick="liveDownloadGuide()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#A78BFA);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">⬇ Scarica bridge.py</button>
+  <button onclick="liveDownloadGuide()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#A78BFA);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">⬇ Scarica bridge.py (PROP 7777)</button>
   <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:8px;padding:8px;font-size:11px;color:var(--green)">
     ✅ Mettilo sul Desktop — è più facile trovarlo dopo!
   </div>
@@ -10254,66 +10259,33 @@ function liveTutGo(dir){
 if(window.speechSynthesis) window.speechSynthesis.getVoices();
 
 function liveDownloadGuide(){
-  var code = `# PropHedge Bridge v5.0
-# UN PROCESSO = UNA PORTA = UN CONTO MT5
-# 
-# Avvio automatico (raccomandato):
-#   py bridge.py              <- avvia ENTRAMBE le porte (7777 + 7778) in processi SEPARATI
-#   py bridge.py --port 7777  <- solo porta 7777 (PROP)
-#   py bridge.py --port 7778  <- solo porta 7778 (PERSONALE)
+  var code = `# PropHedge Bridge v5.1
+# Gestisce SOLO il conto PROP su porta 7777 (MT5)
+# Il conto PERSONALE MT4 e' gestito dall'EA PropHedge su MT4 (porta 7778)
+# Il conto PERSONALE MT5 puo usare: py bridge.py --port 7778 --worker
 #
-# Requisiti (una volta sola): py -m pip install flask flask-cors MetaTrader5
+# Avvio normale: py bridge.py
+# Solo porta specifica: py bridge.py --port 7777
 
-import sys, time, json as _json, subprocess, os, argparse
+import sys, time, json as _json, argparse
 
-# ── Argomenti ──────────────────────────────────────────────────────
 parser = argparse.ArgumentParser(add_help=False)
-parser.add_argument('--port', type=int, default=0)
-parser.add_argument('--worker', action='store_true')   # flag interno
+parser.add_argument('--port', type=int, default=7777)
+parser.add_argument('--worker', action='store_true')
 args, _ = parser.parse_known_args()
 
-# ── Se avviato senza --worker, lancia DUE processi separati ───────
-if not args.worker and args.port == 0:
-    print("=" * 52)
-    print("  PropHedge Bridge v5.0")
-    print("  Avvio DUE processi separati (un MT5 per porta):")
-    print("  Porta 7777  PROP      (MT5 account prop firm)")
-    print("  Porta 7778  PERSONALE (MT5 account personale)")
-    print("=" * 52)
-    print()
-    script = os.path.abspath(__file__)
-    py = sys.executable
-    # Processo 1: porta 7777
-    p1 = subprocess.Popen([py, script, '--port', '7777', '--worker'],
-                          creationflags=subprocess.CREATE_NEW_CONSOLE if sys.platform=='win32' else 0)
-    time.sleep(1)
-    # Processo 2: porta 7778
-    p2 = subprocess.Popen([py, script, '--port', '7778', '--worker'],
-                          creationflags=subprocess.CREATE_NEW_CONSOLE if sys.platform=='win32' else 0)
-    print("  Entrambi i bridge avviati!")
-    print("  Torna su PropHedge e clicca Connetti.")
-    print("  (Chiudi questa finestra quando vuoi — i bridge rimangono attivi)")
-    try:
-        p1.wait(); p2.wait()
-    except KeyboardInterrupt:
-        p1.terminate(); p2.terminate()
-    sys.exit(0)
-
-# ── Codice del singolo processo (worker) ──────────────────────────
-PORT = args.port or 7777
+PORT  = args.port
 LABEL = "PROP" if PORT == 7777 else "PERSONALE"
 
 try:
     import MetaTrader5 as mt5
 except ImportError:
-    print(f"[{LABEL}:{PORT}] ERRORE: MetaTrader5 non installato.")
-    print(f"[{LABEL}:{PORT}] Esegui: py -m pip install MetaTrader5")
+    print(f"[{LABEL}:{PORT}] ERRORE: py -m pip install MetaTrader5")
     sys.exit(1)
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-# Stato connessione di QUESTO processo (isolato dall'altro)
 _connected_login = 0
 
 def connect_mt5(login, password, server):
@@ -10367,7 +10339,7 @@ def opt(p): return "", 204
 
 @app.route("/ping")
 def ping():
-    return jsonify({"ok": True, "version": "5.0", "port": PORT, "label": LABEL,
+    return jsonify({"ok": True, "version": "5.1", "port": PORT, "label": LABEL,
                     "connected_login": _connected_login})
 
 @app.route("/connect", methods=["POST"])
@@ -10411,21 +10383,19 @@ def history():
 def order():
     try:
         d = get_json_safe()
-        if not d:
-            return jsonify({"retcode": -1, "comment": "Dati ordine mancanti"})
+        if not d: return jsonify({"retcode": -1, "comment": "Dati ordine mancanti"})
         if not _connected_login:
-            return jsonify({"retcode": -1, "comment": f"Bridge {LABEL} non connesso. Fai prima /connect."})
+            return jsonify({"retcode": -1, "comment": f"Bridge {LABEL} non connesso. Prima clicca Connetti."})
         sym_in = d.get("symbol", "")
-        if not sym_in:
-            return jsonify({"retcode": -1, "comment": "Simbolo mancante"})
+        if not sym_in: return jsonify({"retcode": -1, "comment": "Simbolo mancante"})
         sym, tick = find_symbol(sym_in)
         if not sym:
-            return jsonify({"retcode": -1, "comment": f"Simbolo {sym_in} non trovato su {LABEL}. Aprilo su MT5."})
+            return jsonify({"retcode": -1, "comment": f"Simbolo {sym_in} non trovato. Aprilo su MT5."})
         side = d.get("side", "buy").lower()
         price = tick.ask if side == "buy" else tick.bid
         vol = round(float(d.get("volume", 0.01)), 2)
         otype = mt5.ORDER_TYPE_BUY if side == "buy" else mt5.ORDER_TYPE_SELL
-        base_req = {
+        base = {
             "action": mt5.TRADE_ACTION_DEAL,
             "symbol": sym, "volume": vol, "type": otype, "price": price,
             "sl": float(d.get("sl", 0)) or 0.0,
@@ -10436,11 +10406,10 @@ def order():
         }
         r = None
         for filling in [mt5.ORDER_FILLING_IOC, mt5.ORDER_FILLING_FOK, mt5.ORDER_FILLING_RETURN]:
-            r = mt5.order_send(dict(base_req, type_filling=filling))
+            r = mt5.order_send(dict(base, type_filling=filling))
             if r and r.retcode in (10009, 10008, 0): break
             if r and r.retcode not in (10030, 10014): break
-        if not r:
-            return jsonify({"retcode": -1, "comment": "order_send None"})
+        if not r: return jsonify({"retcode": -1, "comment": "order_send None"})
         print(f"[{LABEL}:{PORT}] Order {side} {vol}lot {sym} -> retcode={r.retcode} order={r.order}")
         return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
     except Exception as e:
@@ -10479,7 +10448,12 @@ def close():
         return jsonify({"retcode": -1, "comment": str(e)})
 
 if __name__ == "__main__":
-    print(f"[{LABEL}] Bridge v5.0 in ascolto su porta {PORT}...")
+    print("=" * 52)
+    print(f"  PropHedge Bridge v5.1 — {LABEL} porta {PORT}")
+    print("=" * 52)
+    print(f"  In ascolto su http://127.0.0.1:{PORT}")
+    print("  Torna su PropHedge e clicca Connetti PROP.")
+    print()
     app.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
 
 `;
