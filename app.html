@@ -8944,7 +8944,7 @@ function renderLive(){
     /* AVVISO: solo una volta */
     +'<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:10px;padding:12px 16px;margin-bottom:16px">'
     +'<div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:4px">✅ Il Bridge si configura UNA VOLTA SOLA — poi funziona per tutte le sfide</div>'
-    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8">Non serve reinstallarlo mai. Ogni giorno basta solo aprire il cmd e scrivere <b>py bridge.py</b>.</div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8"><b>PROP MT5:</b> <code>py bridge.py</code> porta 7777<br><b>PERS MT5:</b> apri un 2° cmd: <code>py bridge.py --port 7778</code><br><b>PERS MT4:</b> installa EA PropHedge su MT4 (porta 7778 automatica)</div>'
     +'</div>'
     +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:14px">⚙️ Configurazione iniziale (una sola volta)</div>'
 
@@ -9167,7 +9167,16 @@ async function liveConnectSingle(propId, side){
     }catch(e){
       _bridge[side].connected=false;
       if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
-      if(errEl){errEl.innerHTML="❌ EA non risponde.<br><span style=\"font-size:9px\">Assicurati che bridge.py sia avviato e l'EA PropHedge sia attivo sul grafico MT4</span>";errEl.style.display="block";}
+      if(errEl){errEl.innerHTML='❌ EA non risponde sulla porta '+port+'.<br>'
+        +'<span style="font-size:10px;line-height:1.8">'
+        +'<b>Passi da fare:</b><br>'
+        +'1. Apri MT4 → Strumenti → Opzioni → Consulenti Esperti<br>'
+        +'2. Spunta <b>Consenti WebRequest</b> → aggiungi <b>http://127.0.0.1:7778</b><br>'
+        +'3. Scarica e installa l\'EA PropHedge (pulsante qui sotto)<br>'
+        +'4. Trascina l\'EA su un grafico qualsiasi → lascialo aperto<br>'
+        +'5. Ripremi Connetti PERSONALE'
+        +'</span>';
+        errEl.style.display="block";}
     }
     return;
   }
@@ -9213,7 +9222,19 @@ async function liveConnectSingle(propId, side){
   }catch(e){
     _bridge[side].connected=false;
     if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
-    if(errEl){errEl.textContent="❌ Bridge non risponde. Avvia bridge.py prima.";errEl.style.display="block";}
+    if(errEl){
+      var errPort = isP ? 7777 : 7778;
+      var errCmd  = isP ? 'py bridge.py' : 'py bridge.py --port 7778';
+      errEl.innerHTML='❌ Bridge non risponde sulla porta '+errPort+'.<br>'
+        +'<span style="font-size:10px;line-height:1.8">'
+        +(isP
+          ?'Avvia il bridge: apri un cmd e scrivi <b>py bridge.py</b>'
+          :'Devi avviare un <b>secondo</b> bridge per il conto personale MT5:<br>'
+           +'Apri un <b>secondo cmd</b> e scrivi: <b>py bridge.py --port 7778</b><br>'
+           +'(Il primo bridge su 7777 gestisce il PROP, il secondo su 7778 il PERSONALE)'
+        )+'</span>';
+      errEl.style.display="block";
+    }
   }
 }
 
