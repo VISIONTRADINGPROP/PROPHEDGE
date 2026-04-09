@@ -8796,6 +8796,54 @@ function renderGuide(){
     +'</div>';
 }
 
+function liveDownloadLauncher(){
+  var b64 = 'IyBQcm9wSGVkZ2UgQnJpZGdlIHY1LjAKIyBVTiBQUk9DRVNTTyA9IFVOQSBQT1JUQSA9IFVOIENPTlRPIE1UNQojIAojIEF2dmlvIGF1dG9tYXRpY28gKHJhY2NvbWFuZGF0byk6CiMgICBweSBicmlkZ2UucHkgICAgICAgICAgICAgIDwtIGF2dmlhIEVOVFJBTUJFIGxlIHBvcnRlICg3Nzc3ICsgNzc3OCkgaW4gcHJvY2Vzc2kgU0VQQVJBVEkKIyAgIHB5IGJyaWRnZS5weSAtLXBvcnQgNzc3NyAgPC0gc29sbyBwb3J0YSA3Nzc3IChQUk9QKQojICAgcHkgYnJpZGdlLnB5IC0tcG9ydCA3Nzc4ICA8LSBzb2xvIHBvcnRhIDc3NzggKFBFUlNPTkFMRSkKIwojIFJlcXVpc2l0aSAodW5hIHZvbHRhIHNvbGEpOiBweSAtbSBwaXAgaW5zdGFsbCBmbGFzayBmbGFzay1jb3JzIE1ldGFUcmFkZXI1CgppbXBvcnQgc3lzLCB0aW1lLCBqc29uIGFzIF9qc29uLCBzdWJwcm9jZXNzLCBvcywgYXJncGFyc2UKCiMg4pSA4pSAIEFyZ29tZW50aSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKcGFyc2VyID0gYXJncGFyc2UuQXJndW1lbnRQYXJzZXIoYWRkX2hlbHA9RmFsc2UpCnBhcnNlci5hZGRfYXJndW1lbnQoJy0tcG9ydCcsIHR5cGU9aW50LCBkZWZhdWx0PTApCnBhcnNlci5hZGRfYXJndW1lbnQoJy0td29ya2VyJywgYWN0aW9uPSdzdG9yZV90cnVlJykgICAjIGZsYWcgaW50ZXJubwphcmdzLCBfID0gcGFyc2VyLnBhcnNlX2tub3duX2FyZ3MoKQoKIyDilIDilIAgU2UgYXZ2aWF0byBzZW56YSAtLXdvcmtlciwgbGFuY2lhIERVRSBwcm9jZXNzaSBzZXBhcmF0aSDilIDilIDilIDilIDilIDilIDilIAKaWYgbm90IGFyZ3Mud29ya2VyIGFuZCBhcmdzLnBvcnQgPT0gMDoKICAgIHByaW50KCI9IiAqIDUyKQogICAgcHJpbnQoIiAgUHJvcEhlZGdlIEJyaWRnZSB2NS4wIikKICAgIHByaW50KCIgIEF2dmlvIERVRSBwcm9jZXNzaSBzZXBhcmF0aSAodW4gTVQ1IHBlciBwb3J0YSk6IikKICAgIHByaW50KCIgIFBvcnRhIDc3NzcgIFBST1AgICAgICAoTVQ1IGFjY291bnQgcHJvcCBmaXJtKSIpCiAgICBwcmludCgiICBQb3J0YSA3Nzc4ICBQRVJTT05BTEUgKE1UNSBhY2NvdW50IHBlcnNvbmFsZSkiKQogICAgcHJpbnQoIj0iICogNTIpCiAgICBwcmludCgpCiAgICBzY3JpcHQgPSBvcy5wYXRoLmFic3BhdGgoX19maWxlX18pCiAgICBweSA9IHN5cy5leGVjdXRhYmxlCiAgICAjIFByb2Nlc3NvIDE6IHBvcnRhIDc3NzcKICAgIHAxID0gc3VicHJvY2Vzcy5Qb3BlbihbcHksIHNjcmlwdCwgJy0tcG9ydCcsICc3Nzc3JywgJy0td29ya2VyJ10sCiAgICAgICAgICAgICAgICAgICAgICAgICAgY3JlYXRpb25mbGFncz1zdWJwcm9jZXNzLkNSRUFURV9ORVdfQ09OU09MRSBpZiBzeXMucGxhdGZvcm09PSd3aW4zMicgZWxzZSAwKQogICAgdGltZS5zbGVlcCgxKQogICAgIyBQcm9jZXNzbyAyOiBwb3J0YSA3Nzc4CiAgICBwMiA9IHN1YnByb2Nlc3MuUG9wZW4oW3B5LCBzY3JpcHQsICctLXBvcnQnLCAnNzc3OCcsICctLXdvcmtlciddLAogICAgICAgICAgICAgICAgICAgICAgICAgIGNyZWF0aW9uZmxhZ3M9c3VicHJvY2Vzcy5DUkVBVEVfTkVXX0NPTlNPTEUgaWYgc3lzLnBsYXRmb3JtPT0nd2luMzInIGVsc2UgMCkKICAgIHByaW50KCIgIEVudHJhbWJpIGkgYnJpZGdlIGF2dmlhdGkhIikKICAgIHByaW50KCIgIFRvcm5hIHN1IFByb3BIZWRnZSBlIGNsaWNjYSBDb25uZXR0aS4iKQogICAgcHJpbnQoIiAgKENoaXVkaSBxdWVzdGEgZmluZXN0cmEgcXVhbmRvIHZ1b2kg4oCUIGkgYnJpZGdlIHJpbWFuZ29ubyBhdHRpdmkpIikKICAgIHRyeToKICAgICAgICBwMS53YWl0KCk7IHAyLndhaXQoKQogICAgZXhjZXB0IEtleWJvYXJkSW50ZXJydXB0OgogICAgICAgIHAxLnRlcm1pbmF0ZSgpOyBwMi50ZXJtaW5hdGUoKQogICAgc3lzLmV4aXQoMCkKCiMg4pSA4pSAIENvZGljZSBkZWwgc2luZ29sbyBwcm9jZXNzbyAod29ya2VyKSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKUE9SVCA9IGFyZ3MucG9ydCBvciA3Nzc3CkxBQkVMID0gIlBST1AiIGlmIFBPUlQgPT0gNzc3NyBlbHNlICJQRVJTT05BTEUiCgp0cnk6CiAgICBpbXBvcnQgTWV0YVRyYWRlcjUgYXMgbXQ1CmV4Y2VwdCBJbXBvcnRFcnJvcjoKICAgIHByaW50KGYiW3tMQUJFTH06e1BPUlR9XSBFUlJPUkU6IE1ldGFUcmFkZXI1IG5vbiBpbnN0YWxsYXRvLiIpCiAgICBwcmludChmIlt7TEFCRUx9OntQT1JUfV0gRXNlZ3VpOiBweSAtbSBwaXAgaW5zdGFsbCBNZXRhVHJhZGVyNSIpCiAgICBzeXMuZXhpdCgxKQoKZnJvbSBmbGFzayBpbXBvcnQgRmxhc2ssIHJlcXVlc3QsIGpzb25pZnkKZnJvbSBmbGFza19jb3JzIGltcG9ydCBDT1JTCgojIFN0YXRvIGNvbm5lc3Npb25lIGRpIFFVRVNUTyBwcm9jZXNzbyAoaXNvbGF0byBkYWxsJ2FsdHJvKQpfY29ubmVjdGVkX2xvZ2luID0gMAoKZGVmIGNvbm5lY3RfbXQ1KGxvZ2luLCBwYXNzd29yZCwgc2VydmVyKToKICAgIGdsb2JhbCBfY29ubmVjdGVkX2xvZ2luCiAgICBtdDUuaW5pdGlhbGl6ZSgpCiAgICBhY2MgPSBtdDUuYWNjb3VudF9pbmZvKCkKICAgIGlmIGFjYyBhbmQgYWNjLmxvZ2luID09IGxvZ2luOgogICAgICAgIF9jb25uZWN0ZWRfbG9naW4gPSBsb2dpbgogICAgICAgIHJldHVybiBUcnVlLCBOb25lCiAgICBvayA9IG10NS5sb2dpbihsb2dpbj1sb2dpbiwgcGFzc3dvcmQ9cGFzc3dvcmQsIHNlcnZlcj1zZXJ2ZXIpCiAgICBpZiBvazoKICAgICAgICBfY29ubmVjdGVkX2xvZ2luID0gbG9naW4KICAgICAgICByZXR1cm4gVHJ1ZSwgTm9uZQogICAgZXJyID0gbXQ1Lmxhc3RfZXJyb3IoKQogICAgcmV0dXJuIEZhbHNlLCB7ImNvZGUiOiBlcnJbMF0sICJtc2ciOiBlcnJbMV19CgpkZWYgZ2V0X2pzb25fc2FmZSgpOgogICAgdHJ5OgogICAgICAgIGQgPSByZXF1ZXN0LmdldF9qc29uKGZvcmNlPVRydWUsIHNpbGVudD1UcnVlKQogICAgICAgIGlmIGQ6IHJldHVybiBkCiAgICAgICAgcmF3ID0gcmVxdWVzdC5kYXRhLmRlY29kZSgndXRmLTgnLCBlcnJvcnM9J2lnbm9yZScpLnN0cmlwKCkKICAgICAgICBpZiByYXc6IHJldHVybiBfanNvbi5sb2FkcyhyYXcpCiAgICBleGNlcHQgRXhjZXB0aW9uOgogICAgICAgIHBhc3MKICAgIHJldHVybiB7fQoKZGVmIGZpbmRfc3ltYm9sKHN5bSk6CiAgICBmb3IgcyBpbiBbc3ltLCBzeW0rIi5hIiwgc3ltKyIuYiIsIHN5bSsiLngiLCBzeW0rIm0iLCBzeW0rIk0iXToKICAgICAgICB0aWNrID0gbXQ1LnN5bWJvbF9pbmZvX3RpY2socykKICAgICAgICBpZiB0aWNrOgogICAgICAgICAgICBtdDUuc3ltYm9sX3NlbGVjdChzLCBUcnVlKQogICAgICAgICAgICByZXR1cm4gcywgdGljawogICAgbXQ1LnN5bWJvbF9zZWxlY3Qoc3ltLCBUcnVlKQogICAgdGltZS5zbGVlcCgwLjMpCiAgICB0aWNrID0gbXQ1LnN5bWJvbF9pbmZvX3RpY2soc3ltKQogICAgaWYgdGljazogcmV0dXJuIHN5bSwgdGljawogICAgcmV0dXJuIE5vbmUsIE5vbmUKCmFwcCA9IEZsYXNrKF9fbmFtZV9fKQpDT1JTKGFwcCwgcmVzb3VyY2VzPXtyIi8qIjogeyJvcmlnaW5zIjogIioifX0pCgpAYXBwLmFmdGVyX3JlcXVlc3QKZGVmIGFkZF9jb3JzKHIpOgogICAgci5oZWFkZXJzWyJBY2Nlc3MtQ29udHJvbC1BbGxvdy1PcmlnaW4iXSA9ICIqIgogICAgci5oZWFkZXJzWyJBY2Nlc3MtQ29udHJvbC1BbGxvdy1IZWFkZXJzIl0gPSAiQ29udGVudC1UeXBlLCBBdXRob3JpemF0aW9uIgogICAgci5oZWFkZXJzWyJBY2Nlc3MtQ29udHJvbC1BbGxvdy1NZXRob2RzIl0gPSAiR0VULFBPU1QsT1BUSU9OUyIKICAgIHJldHVybiByCgpAYXBwLnJvdXRlKCIvPHBhdGg6cD4iLCBtZXRob2RzPVsiT1BUSU9OUyJdKQpkZWYgb3B0KHApOiByZXR1cm4gIiIsIDIwNAoKQGFwcC5yb3V0ZSgiL3BpbmciKQpkZWYgcGluZygpOgogICAgcmV0dXJuIGpzb25pZnkoeyJvayI6IFRydWUsICJ2ZXJzaW9uIjogIjUuMCIsICJwb3J0IjogUE9SVCwgImxhYmVsIjogTEFCRUwsCiAgICAgICAgICAgICAgICAgICAgImNvbm5lY3RlZF9sb2dpbiI6IF9jb25uZWN0ZWRfbG9naW59KQoKQGFwcC5yb3V0ZSgiL2Nvbm5lY3QiLCBtZXRob2RzPVsiUE9TVCJdKQpkZWYgY29ubmVjdCgpOgogICAgdHJ5OgogICAgICAgIGQgPSBnZXRfanNvbl9zYWZlKCkKICAgICAgICBpZiBub3QgZDogcmV0dXJuIGpzb25pZnkoeyJvayI6IEZhbHNlLCAiZXJyb3IiOiAiRGF0aSBtYW5jYW50aSJ9KQogICAgICAgIG9rLCBlcnIgPSBjb25uZWN0X210NShpbnQoZC5nZXQoImxvZ2luIiwgMCkpLCBkLmdldCgicGFzc3dvcmQiLCIiKSwgZC5nZXQoInNlcnZlciIsIiIpKQogICAgICAgIHByaW50KGYiW3tMQUJFTH06e1BPUlR9XSBDb25uZWN0IGxvZ2luPXtkLmdldCgnbG9naW4nKX0gLT4geydPSycgaWYgb2sgZWxzZSAnRkFJTDogJytzdHIoZXJyKX0iKQogICAgICAgIHJldHVybiBqc29uaWZ5KHsib2siOiBvaywgImVycm9yIjogZXJyfSkKICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICByZXR1cm4ganNvbmlmeSh7Im9rIjogRmFsc2UsICJlcnJvciI6IHN0cihlKX0pCgpAYXBwLnJvdXRlKCIvYWNjb3VudCIpCmRlZiBhY2NvdW50KCk6CiAgICB0cnk6CiAgICAgICAgaW5mbyA9IG10NS5hY2NvdW50X2luZm8oKQogICAgICAgIGlmIG5vdCBpbmZvOiByZXR1cm4ganNvbmlmeSh7fSkKICAgICAgICByZXR1cm4ganNvbmlmeSh7azooZmxvYXQodikgaWYgaGFzYXR0cih2LCJyZWFsIikgZWxzZSB2KSBmb3Igayx2IGluIGluZm8uX2FzZGljdCgpLml0ZW1zKCl9KQogICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgIHJldHVybiBqc29uaWZ5KHsiZXJyb3IiOiBzdHIoZSl9KQoKQGFwcC5yb3V0ZSgiL3Bvc2l0aW9ucyIpCmRlZiBwb3NpdGlvbnMoKToKICAgIHRyeToKICAgICAgICBwb3MgPSBtdDUucG9zaXRpb25zX2dldCgpIG9yIFtdCiAgICAgICAgcmV0dXJuIGpzb25pZnkoW3trOihmbG9hdCh2KSBpZiBoYXNhdHRyKHYsInJlYWwiKSBlbHNlIHYpIGZvciBrLHYgaW4gcC5fYXNkaWN0KCkuaXRlbXMoKX0gZm9yIHAgaW4gcG9zXSkKICAgIGV4Y2VwdCBFeGNlcHRpb246CiAgICAgICAgcmV0dXJuIGpzb25pZnkoW10pCgpAYXBwLnJvdXRlKCIvaGlzdG9yeSIpCmRlZiBoaXN0b3J5KCk6CiAgICB0cnk6CiAgICAgICAgdGlja2V0ID0gaW50KHJlcXVlc3QuYXJncy5nZXQoInRpY2tldCIsIDApKQogICAgICAgIGRlYWxzID0gbXQ1Lmhpc3RvcnlfZGVhbHNfZ2V0KHBvc2l0aW9uPXRpY2tldCkgb3IgW10KICAgICAgICByZXR1cm4ganNvbmlmeSh7InByb2ZpdCI6IHN1bShkLnByb2ZpdCBmb3IgZCBpbiBkZWFscyksICJ0aWNrZXQiOiB0aWNrZXR9KQogICAgZXhjZXB0IEV4Y2VwdGlvbjoKICAgICAgICByZXR1cm4ganNvbmlmeSh7InByb2ZpdCI6IDAsICJ0aWNrZXQiOiAwfSkKCkBhcHAucm91dGUoIi9vcmRlciIsIG1ldGhvZHM9WyJQT1NUIl0pCmRlZiBvcmRlcigpOgogICAgdHJ5OgogICAgICAgIGQgPSBnZXRfanNvbl9zYWZlKCkKICAgICAgICBpZiBub3QgZDoKICAgICAgICAgICAgcmV0dXJuIGpzb25pZnkoeyJyZXRjb2RlIjogLTEsICJjb21tZW50IjogIkRhdGkgb3JkaW5lIG1hbmNhbnRpIn0pCiAgICAgICAgaWYgbm90IF9jb25uZWN0ZWRfbG9naW46CiAgICAgICAgICAgIHJldHVybiBqc29uaWZ5KHsicmV0Y29kZSI6IC0xLCAiY29tbWVudCI6IGYiQnJpZGdlIHtMQUJFTH0gbm9uIGNvbm5lc3NvLiBGYWkgcHJpbWEgL2Nvbm5lY3QuIn0pCiAgICAgICAgc3ltX2luID0gZC5nZXQoInN5bWJvbCIsICIiKQogICAgICAgIGlmIG5vdCBzeW1faW46CiAgICAgICAgICAgIHJldHVybiBqc29uaWZ5KHsicmV0Y29kZSI6IC0xLCAiY29tbWVudCI6ICJTaW1ib2xvIG1hbmNhbnRlIn0pCiAgICAgICAgc3ltLCB0aWNrID0gZmluZF9zeW1ib2woc3ltX2luKQogICAgICAgIGlmIG5vdCBzeW06CiAgICAgICAgICAgIHJldHVybiBqc29uaWZ5KHsicmV0Y29kZSI6IC0xLCAiY29tbWVudCI6IGYiU2ltYm9sbyB7c3ltX2lufSBub24gdHJvdmF0byBzdSB7TEFCRUx9LiBBcHJpbG8gc3UgTVQ1LiJ9KQogICAgICAgIHNpZGUgPSBkLmdldCgic2lkZSIsICJidXkiKS5sb3dlcigpCiAgICAgICAgcHJpY2UgPSB0aWNrLmFzayBpZiBzaWRlID09ICJidXkiIGVsc2UgdGljay5iaWQKICAgICAgICB2b2wgPSByb3VuZChmbG9hdChkLmdldCgidm9sdW1lIiwgMC4wMSkpLCAyKQogICAgICAgIG90eXBlID0gbXQ1Lk9SREVSX1RZUEVfQlVZIGlmIHNpZGUgPT0gImJ1eSIgZWxzZSBtdDUuT1JERVJfVFlQRV9TRUxMCiAgICAgICAgYmFzZV9yZXEgPSB7CiAgICAgICAgICAgICJhY3Rpb24iOiBtdDUuVFJBREVfQUNUSU9OX0RFQUwsCiAgICAgICAgICAgICJzeW1ib2wiOiBzeW0sICJ2b2x1bWUiOiB2b2wsICJ0eXBlIjogb3R5cGUsICJwcmljZSI6IHByaWNlLAogICAgICAgICAgICAic2wiOiBmbG9hdChkLmdldCgic2wiLCAwKSkgb3IgMC4wLAogICAgICAgICAgICAidHAiOiBmbG9hdChkLmdldCgidHAiLCAwKSkgb3IgMC4wLAogICAgICAgICAgICAiZGV2aWF0aW9uIjogMjAsICJtYWdpYyI6IDIzNDAwMCwKICAgICAgICAgICAgImNvbW1lbnQiOiBkLmdldCgiY29tbWVudCIsICJQcm9wSGVkZ2UiKSwKICAgICAgICAgICAgInR5cGVfdGltZSI6IG10NS5PUkRFUl9USU1FX0dUQywKICAgICAgICB9CiAgICAgICAgciA9IE5vbmUKICAgICAgICBmb3IgZmlsbGluZyBpbiBbbXQ1Lk9SREVSX0ZJTExJTkdfSU9DLCBtdDUuT1JERVJfRklMTElOR19GT0ssIG10NS5PUkRFUl9GSUxMSU5HX1JFVFVSTl06CiAgICAgICAgICAgIHIgPSBtdDUub3JkZXJfc2VuZChkaWN0KGJhc2VfcmVxLCB0eXBlX2ZpbGxpbmc9ZmlsbGluZykpCiAgICAgICAgICAgIGlmIHIgYW5kIHIucmV0Y29kZSBpbiAoMTAwMDksIDEwMDA4LCAwKTogYnJlYWsKICAgICAgICAgICAgaWYgciBhbmQgci5yZXRjb2RlIG5vdCBpbiAoMTAwMzAsIDEwMDE0KTogYnJlYWsKICAgICAgICBpZiBub3QgcjoKICAgICAgICAgICAgcmV0dXJuIGpzb25pZnkoeyJyZXRjb2RlIjogLTEsICJjb21tZW50IjogIm9yZGVyX3NlbmQgTm9uZSJ9KQogICAgICAgIHByaW50KGYiW3tMQUJFTH06e1BPUlR9XSBPcmRlciB7c2lkZX0ge3ZvbH1sb3Qge3N5bX0gLT4gcmV0Y29kZT17ci5yZXRjb2RlfSBvcmRlcj17ci5vcmRlcn0iKQogICAgICAgIHJldHVybiBqc29uaWZ5KHtrOihmbG9hdCh2KSBpZiBoYXNhdHRyKHYsInJlYWwiKSBlbHNlIHYpIGZvciBrLHYgaW4gci5fYXNkaWN0KCkuaXRlbXMoKX0pCiAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgcmV0dXJuIGpzb25pZnkoeyJyZXRjb2RlIjogLTEsICJjb21tZW50Ijogc3RyKGUpfSkKCkBhcHAucm91dGUoIi9tb2RpZnkiLCBtZXRob2RzPVsiUE9TVCJdKQpkZWYgbW9kaWZ5KCk6CiAgICB0cnk6CiAgICAgICAgZCA9IGdldF9qc29uX3NhZmUoKQogICAgICAgIHIgPSBtdDUub3JkZXJfc2VuZCh7ImFjdGlvbiI6IG10NS5UUkFERV9BQ1RJT05fU0xUUCwKICAgICAgICAgICAgInBvc2l0aW9uIjogaW50KGQuZ2V0KCJ0aWNrZXQiLDApKSwKICAgICAgICAgICAgInNsIjogZmxvYXQoZC5nZXQoInNsIiwwKSksICJ0cCI6IGZsb2F0KGQuZ2V0KCJ0cCIsMCkpfSkKICAgICAgICByZXR1cm4ganNvbmlmeSh7azooZmxvYXQodikgaWYgaGFzYXR0cih2LCJyZWFsIikgZWxzZSB2KSBmb3Igayx2IGluIHIuX2FzZGljdCgpLml0ZW1zKCl9KQogICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgIHJldHVybiBqc29uaWZ5KHsicmV0Y29kZSI6IC0xLCAiY29tbWVudCI6IHN0cihlKX0pCgpAYXBwLnJvdXRlKCIvY2xvc2UiLCBtZXRob2RzPVsiUE9TVCJdKQpkZWYgY2xvc2UoKToKICAgIHRyeToKICAgICAgICBkID0gZ2V0X2pzb25fc2FmZSgpCiAgICAgICAgdGlja2V0ID0gaW50KGQuZ2V0KCJ0aWNrZXQiLCAwKSkKICAgICAgICBwb3MgPSBtdDUucG9zaXRpb25zX2dldCh0aWNrZXQ9dGlja2V0KQogICAgICAgIGlmIG5vdCBwb3M6IHJldHVybiBqc29uaWZ5KHsicmV0Y29kZSI6IC0xLCAiY29tbWVudCI6ICJOb24gdHJvdmF0YSJ9KQogICAgICAgIHAgPSBwb3NbMF0KICAgICAgICB0aWNrID0gbXQ1LnN5bWJvbF9pbmZvX3RpY2socC5zeW1ib2wpCiAgICAgICAgcHJpY2UgPSB0aWNrLmJpZCBpZiBwLnR5cGUgPT0gMCBlbHNlIHRpY2suYXNrCiAgICAgICAgciA9IG10NS5vcmRlcl9zZW5kKHsKICAgICAgICAgICAgImFjdGlvbiI6IG10NS5UUkFERV9BQ1RJT05fREVBTCwgInN5bWJvbCI6IHAuc3ltYm9sLCAidm9sdW1lIjogcC52b2x1bWUsCiAgICAgICAgICAgICJ0eXBlIjogbXQ1Lk9SREVSX1RZUEVfU0VMTCBpZiBwLnR5cGUgPT0gMCBlbHNlIG10NS5PUkRFUl9UWVBFX0JVWSwKICAgICAgICAgICAgInBvc2l0aW9uIjogdGlja2V0LCAicHJpY2UiOiBwcmljZSwgImRldmlhdGlvbiI6IDIwLCAibWFnaWMiOiAyMzQwMDAsCiAgICAgICAgICAgICJjb21tZW50IjogIlByb3BIZWRnZSBjbG9zZSIsICJ0eXBlX3RpbWUiOiBtdDUuT1JERVJfVElNRV9HVEMsCiAgICAgICAgICAgICJ0eXBlX2ZpbGxpbmciOiBtdDUuT1JERVJfRklMTElOR19JT0MsCiAgICAgICAgfSkKICAgICAgICByZXR1cm4ganNvbmlmeSh7azooZmxvYXQodikgaWYgaGFzYXR0cih2LCJyZWFsIikgZWxzZSB2KSBmb3Igayx2IGluIHIuX2FzZGljdCgpLml0ZW1zKCl9KQogICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgIHJldHVybiBqc29uaWZ5KHsicmV0Y29kZSI6IC0xLCAiY29tbWVudCI6IHN0cihlKX0pCgppZiBfX25hbWVfXyA9PSAiX19tYWluX18iOgogICAgcHJpbnQoZiJbe0xBQkVMfV0gQnJpZGdlIHY1LjAgaW4gYXNjb2x0byBzdSBwb3J0YSB7UE9SVH0uLi4iKQogICAgYXBwLnJ1bihob3N0PSIwLjAuMC4wIiwgcG9ydD1QT1JULCBkZWJ1Zz1GYWxzZSwgdXNlX3JlbG9hZGVyPUZhbHNlKQo=';
+  var bat = [
+    '@echo off',
+    'chcp 65001 >nul 2>&1',
+    'title PropHedge Bridge v5.0',
+    'echo.',
+    'echo  ============================================',
+    'echo   PropHedge Bridge v5.0',
+    'echo  ============================================',
+    'echo.',
+    'python --version >nul 2>&1',
+    'if errorlevel 1 (',
+    '  py --version >nul 2>&1',
+    '  if errorlevel 1 (',
+    '    echo  ERRORE: Python non trovato!',
+    '    echo  Scarica da https://www.python.org/downloads',
+    '    pause',
+    '    exit /b 1',
+    '  )',
+    '  set PYTHON=py',
+    ') else (',
+    '  set PYTHON=python',
+    ')',
+    'echo  Installazione dipendenze...',
+    '%PYTHON% -m pip install flask flask-cors MetaTrader5 -q --disable-pip-version-check',
+    'echo  OK.',
+    'set BRIDGE_DIR=%TEMP%\\PropHedgeBridge',
+    'if not exist \"%BRIDGE_DIR%\" mkdir \"%BRIDGE_DIR%\"',
+    '%PYTHON% -c "import base64,os; open(os.path.join(os.environ[\'TEMP\'],\'PropHedgeBridge\',\'bridge.py\'),\'w\',encoding=\'utf-8\').write(base64.b64decode(\'IyBQcm9wSGVkZ2UgQnJpZGdlIHY1LjAKIyBVTiBQUk9DRVNTTyA9IFVOQSBQT1JUQSA9IFVOIENPTlRPIE1UNQojIAojIEF2dmlvIGF1dG9tYXRpY28gKHJhY2NvbWFuZGF0byk6CiMgICBweSBicmlkZ2UucHkgICAgICAgICAgICAgIDwtIGF2dmlhIEVOVFJBTUJFIGxlIHBvcnRlICg3Nzc3ICsgNzc3OCkgaW4gcHJvY2Vzc2kgU0VQQVJBVEkKIyAgIHB5IGJyaWRnZS5weSAtLXBvcnQgNzc3NyAgPC0gc29sbyBwb3J0YSA3Nzc3IChQUk9QKQojICAgcHkgYnJpZGdlLnB5IC0tcG9ydCA3Nzc4ICA8LSBzb2xvIHBvcnRhIDc3NzggKFBFUlNPTkFMRSkKIwojIFJlcXVpc2l0aSAodW5hIHZvbHRhIHNvbGEpOiBweSAtbSBwaXAgaW5zdGFsbCBmbGFzayBmbGFzay1jb3JzIE1ldGFUcmFkZXI1CgppbXBvcnQgc3lzLCB0aW1lLCBqc29uIGFzIF9qc29uLCBzdWJwcm9jZXNzLCBvcywgYXJncGFyc2UKCiMg4pSA4pSAIEFyZ29tZW50aSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKcGFyc2VyID0gYXJncGFyc2UuQXJndW1lbnRQYXJzZXIoYWRkX2hlbHA9RmFsc2UpCnBhcnNlci5hZGRfYXJndW1lbnQoJy0tcG9ydCcsIHR5cGU9aW50LCBkZWZhdWx0PTApCnBhcnNlci5hZGRfYXJndW1lbnQoJy0td29ya2VyJywgYWN0aW9uPSdzdG9yZV90cnVlJykgICAjIGZsYWcgaW50ZXJubwphcmdzLCBfID0gcGFyc2VyLnBhcnNlX2tub3duX2FyZ3MoKQoKIyDilIDilIAgU2UgYXZ2aWF0byBzZW56YSAtLXdvcmtlciwgbGFuY2lhIERVRSBwcm9jZXNzaSBzZXBhcmF0aSDilIDilIDilIDilIDilIDilIDilIAKaWYgbm90IGFyZ3Mud29ya2VyIGFuZCBhcmdzLnBvcnQgPT0gMDoKICAgIHByaW50KCI9IiAqIDUyKQogICAgcHJpbnQoIiAgUHJvcEhlZGdlIEJyaWRnZSB2NS4wIikKICAgIHByaW50KCIgIEF2dmlvIERVRSBwcm9jZXNzaSBzZXBhcmF0aSAodW4gTVQ1IHBlciBwb3J0YSk6IikKICAgIHByaW50KCIgIFBvcnRhIDc3NzcgIFBST1AgICAgICAoTVQ1IGFjY291bnQgcHJvcCBmaXJtKSIpCiAgICBwcmludCgiICBQb3J0YSA3Nzc4ICBQRVJTT05BTEUgKE1UNSBhY2NvdW50IHBlcnNvbmFsZSkiKQogICAgcHJpbnQoIj0iICogNTIpCiAgICBwcmludCgpCiAgICBzY3JpcHQgPSBvcy5wYXRoLmFic3BhdGgoX19maWxlX18pCiAgICBweSA9IHN5cy5leGVjdXRhYmxlCiAgICAjIFByb2Nlc3NvIDE6IHBvcnRhIDc3NzcKICAgIHAxID0gc3VicHJvY2Vzcy5Qb3BlbihbcHksIHNjcmlwdCwgJy0tcG9ydCcsICc3Nzc3JywgJy0td29ya2VyJ10sCiAgICAgICAgICAgICAgICAgICAgICAgICAgY3JlYXRpb25mbGFncz1zdWJwcm9jZXNzLkNSRUFURV9ORVdfQ09OU09MRSBpZiBzeXMucGxhdGZvcm09PSd3aW4zMicgZWxzZSAwKQogICAgdGltZS5zbGVlcCgxKQogICAgIyBQcm9jZXNzbyAyOiBwb3J0YSA3Nzc4CiAgICBwMiA9IHN1YnByb2Nlc3MuUG9wZW4oW3B5LCBzY3JpcHQsICctLXBvcnQnLCAnNzc3OCcsICctLXdvcmtlciddLAogICAgICAgICAgICAgICAgICAgICAgICAgIGNyZWF0aW9uZmxhZ3M9c3VicHJvY2Vzcy5DUkVBVEVfTkVXX0NPTlNPTEUgaWYgc3lzLnBsYXRmb3JtPT0nd2luMzInIGVsc2UgMCkKICAgIHByaW50KCIgIEVudHJhbWJpIGkgYnJpZGdlIGF2dmlhdGkhIikKICAgIHByaW50KCIgIFRvcm5hIHN1IFByb3BIZWRnZSBlIGNsaWNjYSBDb25uZXR0aS4iKQogICAgcHJpbnQoIiAgKENoaXVkaSBxdWVzdGEgZmluZXN0cmEgcXVhbmRvIHZ1b2kg4oCUIGkgYnJpZGdlIHJpbWFuZ29ubyBhdHRpdmkpIikKICAgIHRyeToKICAgICAgICBwMS53YWl0KCk7IHAyLndhaXQoKQogICAgZXhjZXB0IEtleWJvYXJkSW50ZXJydXB0OgogICAgICAgIHAxLnRlcm1pbmF0ZSgpOyBwMi50ZXJtaW5hdGUoKQogICAgc3lzLmV4aXQoMCkKCiMg4pSA4pSAIENvZGljZSBkZWwgc2luZ29sbyBwcm9jZXNzbyAod29ya2VyKSDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAKUE9SVCA9IGFyZ3MucG9ydCBvciA3Nzc3CkxBQkVMID0gIlBST1AiIGlmIFBPUlQgPT0gNzc3NyBlbHNlICJQRVJTT05BTEUiCgp0cnk6CiAgICBpbXBvcnQgTWV0YVRyYWRlcjUgYXMgbXQ1CmV4Y2VwdCBJbXBvcnRFcnJvcjoKICAgIHByaW50KGYiW3tMQUJFTH06e1BPUlR9XSBFUlJPUkU6IE1ldGFUcmFkZXI1IG5vbiBpbnN0YWxsYXRvLiIpCiAgICBwcmludChmIlt7TEFCRUx9OntQT1JUfV0gRXNlZ3VpOiBweSAtbSBwaXAgaW5zdGFsbCBNZXRhVHJhZGVyNSIpCiAgICBzeXMuZXhpdCgxKQoKZnJvbSBmbGFzayBpbXBvcnQgRmxhc2ssIHJlcXVlc3QsIGpzb25pZnkKZnJvbSBmbGFza19jb3JzIGltcG9ydCBDT1JTCgojIFN0YXRvIGNvbm5lc3Npb25lIGRpIFFVRVNUTyBwcm9jZXNzbyAoaXNvbGF0byBkYWxsJ2FsdHJvKQpfY29ubmVjdGVkX2xvZ2luID0gMAoKZGVmIGNvbm5lY3RfbXQ1KGxvZ2luLCBwYXNzd29yZCwgc2VydmVyKToKICAgIGdsb2JhbCBfY29ubmVjdGVkX2xvZ2luCiAgICBtdDUuaW5pdGlhbGl6ZSgpCiAgICBhY2MgPSBtdDUuYWNjb3VudF9pbmZvKCkKICAgIGlmIGFjYyBhbmQgYWNjLmxvZ2luID09IGxvZ2luOgogICAgICAgIF9jb25uZWN0ZWRfbG9naW4gPSBsb2dpbgogICAgICAgIHJldHVybiBUcnVlLCBOb25lCiAgICBvayA9IG10NS5sb2dpbihsb2dpbj1sb2dpbiwgcGFzc3dvcmQ9cGFzc3dvcmQsIHNlcnZlcj1zZXJ2ZXIpCiAgICBpZiBvazoKICAgICAgICBfY29ubmVjdGVkX2xvZ2luID0gbG9naW4KICAgICAgICByZXR1cm4gVHJ1ZSwgTm9uZQogICAgZXJyID0gbXQ1Lmxhc3RfZXJyb3IoKQogICAgcmV0dXJuIEZhbHNlLCB7ImNvZGUiOiBlcnJbMF0sICJtc2ciOiBlcnJbMV19CgpkZWYgZ2V0X2pzb25fc2FmZSgpOgogICAgdHJ5OgogICAgICAgIGQgPSByZXF1ZXN0LmdldF9qc29uKGZvcmNlPVRydWUsIHNpbGVudD1UcnVlKQogICAgICAgIGlmIGQ6IHJldHVybiBkCiAgICAgICAgcmF3ID0gcmVxdWVzdC5kYXRhLmRlY29kZSgndXRmLTgnLCBlcnJvcnM9J2lnbm9yZScpLnN0cmlwKCkKICAgICAgICBpZiByYXc6IHJldHVybiBfanNvbi5sb2FkcyhyYXcpCiAgICBleGNlcHQgRXhjZXB0aW9uOgogICAgICAgIHBhc3MKICAgIHJldHVybiB7fQoKZGVmIGZpbmRfc3ltYm9sKHN5bSk6CiAgICBmb3IgcyBpbiBbc3ltLCBzeW0rIi5hIiwgc3ltKyIuYiIsIHN5bSsiLngiLCBzeW0rIm0iLCBzeW0rIk0iXToKICAgICAgICB0aWNrID0gbXQ1LnN5bWJvbF9pbmZvX3RpY2socykKICAgICAgICBpZiB0aWNrOgogICAgICAgICAgICBtdDUuc3ltYm9sX3NlbGVjdChzLCBUcnVlKQogICAgICAgICAgICByZXR1cm4gcywgdGljawogICAgbXQ1LnN5bWJvbF9zZWxlY3Qoc3ltLCBUcnVlKQogICAgdGltZS5zbGVlcCgwLjMpCiAgICB0aWNrID0gbXQ1LnN5bWJvbF9pbmZvX3RpY2soc3ltKQogICAgaWYgdGljazogcmV0dXJuIHN5bSwgdGljawogICAgcmV0dXJuIE5vbmUsIE5vbmUKCmFwcCA9IEZsYXNrKF9fbmFtZV9fKQpDT1JTKGFwcCwgcmVzb3VyY2VzPXtyIi8qIjogeyJvcmlnaW5zIjogIioifX0pCgpAYXBwLmFmdGVyX3JlcXVlc3QKZGVmIGFkZF9jb3JzKHIpOgogICAgci5oZWFkZXJzWyJBY2Nlc3MtQ29udHJvbC1BbGxvdy1PcmlnaW4iXSA9ICIqIgogICAgci5oZWFkZXJzWyJBY2Nlc3MtQ29udHJvbC1BbGxvdy1IZWFkZXJzIl0gPSAiQ29udGVudC1UeXBlLCBBdXRob3JpemF0aW9uIgogICAgci5oZWFkZXJzWyJBY2Nlc3MtQ29udHJvbC1BbGxvdy1NZXRob2RzIl0gPSAiR0VULFBPU1QsT1BUSU9OUyIKICAgIHJldHVybiByCgpAYXBwLnJvdXRlKCIvPHBhdGg6cD4iLCBtZXRob2RzPVsiT1BUSU9OUyJdKQpkZWYgb3B0KHApOiByZXR1cm4gIiIsIDIwNAoKQGFwcC5yb3V0ZSgiL3BpbmciKQpkZWYgcGluZygpOgogICAgcmV0dXJuIGpzb25pZnkoeyJvayI6IFRydWUsICJ2ZXJzaW9uIjogIjUuMCIsICJwb3J0IjogUE9SVCwgImxhYmVsIjogTEFCRUwsCiAgICAgICAgICAgICAgICAgICAgImNvbm5lY3RlZF9sb2dpbiI6IF9jb25uZWN0ZWRfbG9naW59KQoKQGFwcC5yb3V0ZSgiL2Nvbm5lY3QiLCBtZXRob2RzPVsiUE9TVCJdKQpkZWYgY29ubmVjdCgpOgogICAgdHJ5OgogICAgICAgIGQgPSBnZXRfanNvbl9zYWZlKCkKICAgICAgICBpZiBub3QgZDogcmV0dXJuIGpzb25pZnkoeyJvayI6IEZhbHNlLCAiZXJyb3IiOiAiRGF0aSBtYW5jYW50aSJ9KQogICAgICAgIG9rLCBlcnIgPSBjb25uZWN0X210NShpbnQoZC5nZXQoImxvZ2luIiwgMCkpLCBkLmdldCgicGFzc3dvcmQiLCIiKSwgZC5nZXQoInNlcnZlciIsIiIpKQogICAgICAgIHByaW50KGYiW3tMQUJFTH06e1BPUlR9XSBDb25uZWN0IGxvZ2luPXtkLmdldCgnbG9naW4nKX0gLT4geydPSycgaWYgb2sgZWxzZSAnRkFJTDogJytzdHIoZXJyKX0iKQogICAgICAgIHJldHVybiBqc29uaWZ5KHsib2siOiBvaywgImVycm9yIjogZXJyfSkKICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICByZXR1cm4ganNvbmlmeSh7Im9rIjogRmFsc2UsICJlcnJvciI6IHN0cihlKX0pCgpAYXBwLnJvdXRlKCIvYWNjb3VudCIpCmRlZiBhY2NvdW50KCk6CiAgICB0cnk6CiAgICAgICAgaW5mbyA9IG10NS5hY2NvdW50X2luZm8oKQogICAgICAgIGlmIG5vdCBpbmZvOiByZXR1cm4ganNvbmlmeSh7fSkKICAgICAgICByZXR1cm4ganNvbmlmeSh7azooZmxvYXQodikgaWYgaGFzYXR0cih2LCJyZWFsIikgZWxzZSB2KSBmb3Igayx2IGluIGluZm8uX2FzZGljdCgpLml0ZW1zKCl9KQogICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgIHJldHVybiBqc29uaWZ5KHsiZXJyb3IiOiBzdHIoZSl9KQoKQGFwcC5yb3V0ZSgiL3Bvc2l0aW9ucyIpCmRlZiBwb3NpdGlvbnMoKToKICAgIHRyeToKICAgICAgICBwb3MgPSBtdDUucG9zaXRpb25zX2dldCgpIG9yIFtdCiAgICAgICAgcmV0dXJuIGpzb25pZnkoW3trOihmbG9hdCh2KSBpZiBoYXNhdHRyKHYsInJlYWwiKSBlbHNlIHYpIGZvciBrLHYgaW4gcC5fYXNkaWN0KCkuaXRlbXMoKX0gZm9yIHAgaW4gcG9zXSkKICAgIGV4Y2VwdCBFeGNlcHRpb246CiAgICAgICAgcmV0dXJuIGpzb25pZnkoW10pCgpAYXBwLnJvdXRlKCIvaGlzdG9yeSIpCmRlZiBoaXN0b3J5KCk6CiAgICB0cnk6CiAgICAgICAgdGlja2V0ID0gaW50KHJlcXVlc3QuYXJncy5nZXQoInRpY2tldCIsIDApKQogICAgICAgIGRlYWxzID0gbXQ1Lmhpc3RvcnlfZGVhbHNfZ2V0KHBvc2l0aW9uPXRpY2tldCkgb3IgW10KICAgICAgICByZXR1cm4ganNvbmlmeSh7InByb2ZpdCI6IHN1bShkLnByb2ZpdCBmb3IgZCBpbiBkZWFscyksICJ0aWNrZXQiOiB0aWNrZXR9KQogICAgZXhjZXB0IEV4Y2VwdGlvbjoKICAgICAgICByZXR1cm4ganNvbmlmeSh7InByb2ZpdCI6IDAsICJ0aWNrZXQiOiAwfSkKCkBhcHAucm91dGUoIi9vcmRlciIsIG1ldGhvZHM9WyJQT1NUIl0pCmRlZiBvcmRlcigpOgogICAgdHJ5OgogICAgICAgIGQgPSBnZXRfanNvbl9zYWZlKCkKICAgICAgICBpZiBub3QgZDoKICAgICAgICAgICAgcmV0dXJuIGpzb25pZnkoeyJyZXRjb2RlIjogLTEsICJjb21tZW50IjogIkRhdGkgb3JkaW5lIG1hbmNhbnRpIn0pCiAgICAgICAgaWYgbm90IF9jb25uZWN0ZWRfbG9naW46CiAgICAgICAgICAgIHJldHVybiBqc29uaWZ5KHsicmV0Y29kZSI6IC0xLCAiY29tbWVudCI6IGYiQnJpZGdlIHtMQUJFTH0gbm9uIGNvbm5lc3NvLiBGYWkgcHJpbWEgL2Nvbm5lY3QuIn0pCiAgICAgICAgc3ltX2luID0gZC5nZXQoInN5bWJvbCIsICIiKQogICAgICAgIGlmIG5vdCBzeW1faW46CiAgICAgICAgICAgIHJldHVybiBqc29uaWZ5KHsicmV0Y29kZSI6IC0xLCAiY29tbWVudCI6ICJTaW1ib2xvIG1hbmNhbnRlIn0pCiAgICAgICAgc3ltLCB0aWNrID0gZmluZF9zeW1ib2woc3ltX2luKQogICAgICAgIGlmIG5vdCBzeW06CiAgICAgICAgICAgIHJldHVybiBqc29uaWZ5KHsicmV0Y29kZSI6IC0xLCAiY29tbWVudCI6IGYiU2ltYm9sbyB7c3ltX2lufSBub24gdHJvdmF0byBzdSB7TEFCRUx9LiBBcHJpbG8gc3UgTVQ1LiJ9KQogICAgICAgIHNpZGUgPSBkLmdldCgic2lkZSIsICJidXkiKS5sb3dlcigpCiAgICAgICAgcHJpY2UgPSB0aWNrLmFzayBpZiBzaWRlID09ICJidXkiIGVsc2UgdGljay5iaWQKICAgICAgICB2b2wgPSByb3VuZChmbG9hdChkLmdldCgidm9sdW1lIiwgMC4wMSkpLCAyKQogICAgICAgIG90eXBlID0gbXQ1Lk9SREVSX1RZUEVfQlVZIGlmIHNpZGUgPT0gImJ1eSIgZWxzZSBtdDUuT1JERVJfVFlQRV9TRUxMCiAgICAgICAgYmFzZV9yZXEgPSB7CiAgICAgICAgICAgICJhY3Rpb24iOiBtdDUuVFJBREVfQUNUSU9OX0RFQUwsCiAgICAgICAgICAgICJzeW1ib2wiOiBzeW0sICJ2b2x1bWUiOiB2b2wsICJ0eXBlIjogb3R5cGUsICJwcmljZSI6IHByaWNlLAogICAgICAgICAgICAic2wiOiBmbG9hdChkLmdldCgic2wiLCAwKSkgb3IgMC4wLAogICAgICAgICAgICAidHAiOiBmbG9hdChkLmdldCgidHAiLCAwKSkgb3IgMC4wLAogICAgICAgICAgICAiZGV2aWF0aW9uIjogMjAsICJtYWdpYyI6IDIzNDAwMCwKICAgICAgICAgICAgImNvbW1lbnQiOiBkLmdldCgiY29tbWVudCIsICJQcm9wSGVkZ2UiKSwKICAgICAgICAgICAgInR5cGVfdGltZSI6IG10NS5PUkRFUl9USU1FX0dUQywKICAgICAgICB9CiAgICAgICAgciA9IE5vbmUKICAgICAgICBmb3IgZmlsbGluZyBpbiBbbXQ1Lk9SREVSX0ZJTExJTkdfSU9DLCBtdDUuT1JERVJfRklMTElOR19GT0ssIG10NS5PUkRFUl9GSUxMSU5HX1JFVFVSTl06CiAgICAgICAgICAgIHIgPSBtdDUub3JkZXJfc2VuZChkaWN0KGJhc2VfcmVxLCB0eXBlX2ZpbGxpbmc9ZmlsbGluZykpCiAgICAgICAgICAgIGlmIHIgYW5kIHIucmV0Y29kZSBpbiAoMTAwMDksIDEwMDA4LCAwKTogYnJlYWsKICAgICAgICAgICAgaWYgciBhbmQgci5yZXRjb2RlIG5vdCBpbiAoMTAwMzAsIDEwMDE0KTogYnJlYWsKICAgICAgICBpZiBub3QgcjoKICAgICAgICAgICAgcmV0dXJuIGpzb25pZnkoeyJyZXRjb2RlIjogLTEsICJjb21tZW50IjogIm9yZGVyX3NlbmQgTm9uZSJ9KQogICAgICAgIHByaW50KGYiW3tMQUJFTH06e1BPUlR9XSBPcmRlciB7c2lkZX0ge3ZvbH1sb3Qge3N5bX0gLT4gcmV0Y29kZT17ci5yZXRjb2RlfSBvcmRlcj17ci5vcmRlcn0iKQogICAgICAgIHJldHVybiBqc29uaWZ5KHtrOihmbG9hdCh2KSBpZiBoYXNhdHRyKHYsInJlYWwiKSBlbHNlIHYpIGZvciBrLHYgaW4gci5fYXNkaWN0KCkuaXRlbXMoKX0pCiAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgcmV0dXJuIGpzb25pZnkoeyJyZXRjb2RlIjogLTEsICJjb21tZW50Ijogc3RyKGUpfSkKCkBhcHAucm91dGUoIi9tb2RpZnkiLCBtZXRob2RzPVsiUE9TVCJdKQpkZWYgbW9kaWZ5KCk6CiAgICB0cnk6CiAgICAgICAgZCA9IGdldF9qc29uX3NhZmUoKQogICAgICAgIHIgPSBtdDUub3JkZXJfc2VuZCh7ImFjdGlvbiI6IG10NS5UUkFERV9BQ1RJT05fU0xUUCwKICAgICAgICAgICAgInBvc2l0aW9uIjogaW50KGQuZ2V0KCJ0aWNrZXQiLDApKSwKICAgICAgICAgICAgInNsIjogZmxvYXQoZC5nZXQoInNsIiwwKSksICJ0cCI6IGZsb2F0KGQuZ2V0KCJ0cCIsMCkpfSkKICAgICAgICByZXR1cm4ganNvbmlmeSh7azooZmxvYXQodikgaWYgaGFzYXR0cih2LCJyZWFsIikgZWxzZSB2KSBmb3Igayx2IGluIHIuX2FzZGljdCgpLml0ZW1zKCl9KQogICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgIHJldHVybiBqc29uaWZ5KHsicmV0Y29kZSI6IC0xLCAiY29tbWVudCI6IHN0cihlKX0pCgpAYXBwLnJvdXRlKCIvY2xvc2UiLCBtZXRob2RzPVsiUE9TVCJdKQpkZWYgY2xvc2UoKToKICAgIHRyeToKICAgICAgICBkID0gZ2V0X2pzb25fc2FmZSgpCiAgICAgICAgdGlja2V0ID0gaW50KGQuZ2V0KCJ0aWNrZXQiLCAwKSkKICAgICAgICBwb3MgPSBtdDUucG9zaXRpb25zX2dldCh0aWNrZXQ9dGlja2V0KQogICAgICAgIGlmIG5vdCBwb3M6IHJldHVybiBqc29uaWZ5KHsicmV0Y29kZSI6IC0xLCAiY29tbWVudCI6ICJOb24gdHJvdmF0YSJ9KQogICAgICAgIHAgPSBwb3NbMF0KICAgICAgICB0aWNrID0gbXQ1LnN5bWJvbF9pbmZvX3RpY2socC5zeW1ib2wpCiAgICAgICAgcHJpY2UgPSB0aWNrLmJpZCBpZiBwLnR5cGUgPT0gMCBlbHNlIHRpY2suYXNrCiAgICAgICAgciA9IG10NS5vcmRlcl9zZW5kKHsKICAgICAgICAgICAgImFjdGlvbiI6IG10NS5UUkFERV9BQ1RJT05fREVBTCwgInN5bWJvbCI6IHAuc3ltYm9sLCAidm9sdW1lIjogcC52b2x1bWUsCiAgICAgICAgICAgICJ0eXBlIjogbXQ1Lk9SREVSX1RZUEVfU0VMTCBpZiBwLnR5cGUgPT0gMCBlbHNlIG10NS5PUkRFUl9UWVBFX0JVWSwKICAgICAgICAgICAgInBvc2l0aW9uIjogdGlja2V0LCAicHJpY2UiOiBwcmljZSwgImRldmlhdGlvbiI6IDIwLCAibWFnaWMiOiAyMzQwMDAsCiAgICAgICAgICAgICJjb21tZW50IjogIlByb3BIZWRnZSBjbG9zZSIsICJ0eXBlX3RpbWUiOiBtdDUuT1JERVJfVElNRV9HVEMsCiAgICAgICAgICAgICJ0eXBlX2ZpbGxpbmciOiBtdDUuT1JERVJfRklMTElOR19JT0MsCiAgICAgICAgfSkKICAgICAgICByZXR1cm4ganNvbmlmeSh7azooZmxvYXQodikgaWYgaGFzYXR0cih2LCJyZWFsIikgZWxzZSB2KSBmb3Igayx2IGluIHIuX2FzZGljdCgpLml0ZW1zKCl9KQogICAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgICAgIHJldHVybiBqc29uaWZ5KHsicmV0Y29kZSI6IC0xLCAiY29tbWVudCI6IHN0cihlKX0pCgppZiBfX25hbWVfXyA9PSAiX19tYWluX18iOgogICAgcHJpbnQoZiJbe0xBQkVMfV0gQnJpZGdlIHY1LjAgaW4gYXNjb2x0byBzdSBwb3J0YSB7UE9SVH0uLi4iKQogICAgYXBwLnJ1bihob3N0PSIwLjAuMC4wIiwgcG9ydD1QT1JULCBkZWJ1Zz1GYWxzZSwgdXNlX3JlbG9hZGVyPUZhbHNlKQo=\').decode(\'utf-8\'))"',
+    'echo  Bridge pronto.',
+    'echo.',
+    'echo  Avvio Bridge PROP (porta 7777)...',
+    'start \"PropHedge PROP :7777\" %PYTHON% \"%BRIDGE_DIR%\\bridge.py\" --port 7777 --worker',
+    'timeout /t 2 /nobreak >nul',
+    'echo  Avvio Bridge PERSONALE (porta 7778)...',
+    'start \"PropHedge PERS :7778\" %PYTHON% \"%BRIDGE_DIR%\\bridge.py\" --port 7778 --worker',
+    'echo.',
+    'echo  Bridge avviati! Torna su PropHedge e connetti.',
+    'timeout /t 4 /nobreak >nul'
+  ].join('\r\n');
+  var blob=new Blob([bat],{type:'text/plain'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download='avvia_bridge.bat'; a.click();
+  URL.revokeObjectURL(url);
+}
+
 function renderEADownload(){ return '<div></div>'; } // deprecata
 
 /* ═══════════════════════════════════════════════════════
@@ -8984,7 +9032,10 @@ function renderLive(){
     +'<div style="flex:1">'
     +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Scarica il Bridge</div>'
     +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:8px">Il file che collega PropHedge ai tuoi conti MetaTrader.</div>'
-    +'<button onclick="liveDownloadGuide()" style="background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:8px;color:#fff;padding:8px 18px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica bridge.py</button>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    +'<button onclick="liveDownloadLauncher()" style="background:linear-gradient(135deg,#059669,#34D399);border:none;border-radius:8px;color:#fff;padding:10px 20px;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px">🚀 Avvia Bridge (1 clic)</button>'
+    +'<button onclick="liveDownloadGuide()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t2);padding:10px 16px;font-size:11px;font-weight:600;cursor:pointer">⬇ Solo bridge.py</button>'
+    +'</div>'
     +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:5px">Salvalo sul Desktop</div>'
     +'</div></div>'
 
@@ -9012,7 +9063,7 @@ function renderLive(){
     +'<button onclick="navigator.clipboard.writeText(\'py bridge.py\');this.textContent=\'✓\';setTimeout(()=>this.textContent=\'📋\',2000)" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:5px;color:#34D399;padding:5px 10px;font-size:10px;cursor:pointer;flex-shrink:0">📋 Copia</button>'
     +'</div>'
     +'<div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:7px;padding:8px 12px;margin-top:8px;font-size:11px;color:var(--green);font-family:var(--fd);line-height:1.8">'
-    +'✅ Si apre una finestra nera — è normale, lasciala aperta.<br>✅ Gestisce PROP (7777) + PERSONALE (7778) in automatico.<br>⚠️ <b>Non chiudere</b> quella finestra mentre usi il software.'
+    +'✅ Si aprono DUE finestre — una per PROP (7777) e una per PERSONALE (7778).<br>✅ Ogni conto MT5 ha la SUA finestra separata — così gli ordini vanno al conto giusto.<br>⚠️ Non chiudere quelle finestre durante il trading.'
     +'</div></div></div>'
 
     /* STEP 5: AutoTrading */
@@ -9600,6 +9651,17 @@ async function liveOpenHedge(propDir){
   /* Calcola prezzi SL/TP in punti (approssimazione) */
   var pipVal   = sym.includes('XAU')||sym.includes('GOLD') ? 0.1 : 0.0001;
 
+  /* Verifica cross-account prima di inviare */
+  try{
+    var _a7=await (await fetch('http://127.0.0.1:7777/account',{cache:'no-store'})).json();
+    var _a8=await (await fetch('http://127.0.0.1:7778/account',{cache:'no-store'})).json();
+    if(_a7.login && _a8.login && _a7.login===_a8.login){
+      if(res){res.style.display='block';res.style.background='rgba(248,113,113,.1)';res.style.color='var(--red)';
+        res.innerHTML='❌ PROP e PERSONALE connessi allo stesso account (#'+_a7.login+')!<br>'
+          +'<span style="font-size:9px">Scarica e riavvia bridge.py v5.0 — apre finestre separate per ogni conto.</span>';}
+      return;
+    }
+  }catch(e){}
   try{
     var [rProp, rPers] = await Promise.all([
       fetch('http://127.0.0.1:7777/order',{
@@ -9612,8 +9674,8 @@ async function liveOpenHedge(propDir){
       }).then(r=>r.json())
     ]);
 
-    var okProp = rProp.retcode===10009||rProp.retcode===0;
-    var okPers = rPers.retcode===10009||rPers.retcode===0;
+    var okProp = rProp.retcode===10009||rProp.retcode===10008||rProp.retcode===0||rProp.order;
+    var okPers = rPers.retcode===10009||rPers.retcode===10008||rPers.retcode===0||rPers.order;
 
     if(res){
       res.style.display='block';
@@ -9868,7 +9930,8 @@ var _tutSteps=[
     <b style="color:#A78BFA">Scarica bridge.py e salvalo sul Desktop</b><br>
     <span style="font-size:11px">Quando il browser chiede dove salvarlo, scegli <b>Desktop</b></span>
   </div>
-  <button onclick="liveDownloadGuide()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#A78BFA);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">⬇ Scarica bridge.py</button>
+  <button onclick="liveDownloadLauncher()" style="width:100%;background:linear-gradient(135deg,#059669,#34D399);border:none;border-radius:8px;color:#fff;padding:12px;font-size:13px;font-weight:800;cursor:pointer;margin-bottom:8px">🚀 Avvia Bridge (1 clic)</button>
+    <button onclick="liveDownloadGuide()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t2);padding:8px;font-size:11px;cursor:pointer;margin-bottom:8px">⬇ Solo bridge.py (avanzato)</button>
   <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:8px;padding:8px;font-size:11px;color:var(--green)">
     ✅ Mettilo sul Desktop — è più facile trovarlo dopo!
   </div>
@@ -10342,250 +10405,234 @@ function liveTutGo(dir){
 if(window.speechSynthesis) window.speechSynthesis.getVoices();
 
 function liveDownloadGuide(){
-  var code = `# PropHedge Bridge v3.0
-# NESSUNA CONFIGURAZIONE — si collega automaticamente a MT4/MT5 aperto
-# Avvio: py bridge.py
+  var code = `# PropHedge Bridge v5.0
+# UN PROCESSO = UNA PORTA = UN CONTO MT5
+# 
+# Avvio automatico (raccomandato):
+#   py bridge.py              <- avvia ENTRAMBE le porte (7777 + 7778) in processi SEPARATI
+#   py bridge.py --port 7777  <- solo porta 7777 (PROP)
+#   py bridge.py --port 7778  <- solo porta 7778 (PERSONALE)
+#
 # Requisiti (una volta sola): py -m pip install flask flask-cors MetaTrader5
 
-import threading
+import sys, time, json as _json, subprocess, os, argparse
+
+# ── Argomenti ──────────────────────────────────────────────────────
+parser = argparse.ArgumentParser(add_help=False)
+parser.add_argument('--port', type=int, default=0)
+parser.add_argument('--worker', action='store_true')   # flag interno
+args, _ = parser.parse_known_args()
+
+# ── Se avviato senza --worker, lancia DUE processi separati ───────
+if not args.worker and args.port == 0:
+    print("=" * 52)
+    print("  PropHedge Bridge v5.0")
+    print("  Avvio DUE processi separati (un MT5 per porta):")
+    print("  Porta 7777  PROP      (MT5 account prop firm)")
+    print("  Porta 7778  PERSONALE (MT5 account personale)")
+    print("=" * 52)
+    print()
+    script = os.path.abspath(__file__)
+    py = sys.executable
+    # Processo 1: porta 7777
+    p1 = subprocess.Popen([py, script, '--port', '7777', '--worker'],
+                          creationflags=subprocess.CREATE_NEW_CONSOLE if sys.platform=='win32' else 0)
+    time.sleep(1)
+    # Processo 2: porta 7778
+    p2 = subprocess.Popen([py, script, '--port', '7778', '--worker'],
+                          creationflags=subprocess.CREATE_NEW_CONSOLE if sys.platform=='win32' else 0)
+    print("  Entrambi i bridge avviati!")
+    print("  Torna su PropHedge e clicca Connetti.")
+    print("  (Chiudi questa finestra quando vuoi — i bridge rimangono attivi)")
+    try:
+        p1.wait(); p2.wait()
+    except KeyboardInterrupt:
+        p1.terminate(); p2.terminate()
+    sys.exit(0)
+
+# ── Codice del singolo processo (worker) ──────────────────────────
+PORT = args.port or 7777
+LABEL = "PROP" if PORT == 7777 else "PERSONALE"
+
+try:
+    import MetaTrader5 as mt5
+except ImportError:
+    print(f"[{LABEL}:{PORT}] ERRORE: MetaTrader5 non installato.")
+    print(f"[{LABEL}:{PORT}] Esegui: py -m pip install MetaTrader5")
+    sys.exit(1)
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import time
-import MetaTrader5 as mt5
+
+# Stato connessione di QUESTO processo (isolato dall'altro)
+_connected_login = 0
 
 def connect_mt5(login, password, server):
-    """
-    Connette a MT4/MT5 in tutti i modi possibili.
-    Strategia a 4 tentativi — funziona su qualsiasi PC.
-    """
-    import os, glob, subprocess, time
-
-    MT5_PATH = r"C:\Program Files\MetaTrader 5\terminal64.exe"
-
-    # Tentativo 1: initialize con credenziali dirette (metodo più affidabile)
-    print(f"  [T1] initialize con credenziali dirette...")
-    mt5.shutdown()
-    ok = mt5.initialize(
-        path=MT5_PATH if os.path.exists(MT5_PATH) else None,
-        login=int(login),
-        password=password,
-        server=server,
-        timeout=30000
-    )
-    print(f"  [T1] result={ok}, error={mt5.last_error()}")
-    if ok:
-        info = mt5.account_info()
-        print(f"  Connesso: {info.login if info else login}")
+    global _connected_login
+    mt5.initialize()
+    acc = mt5.account_info()
+    if acc and acc.login == login:
+        _connected_login = login
         return True, None
-    mt5.shutdown()
-    time.sleep(1)
-
-    # Tentativo 2: initialize senza path poi login separato
-    print(f"  [T2] initialize senza path...")
-    ok = mt5.initialize(login=int(login), password=password, server=server, timeout=30000)
-    print(f"  [T2] result={ok}, error={mt5.last_error()}")
+    ok = mt5.login(login=login, password=password, server=server)
     if ok:
-        info = mt5.account_info()
-        print(f"  Connesso: {info.login if info else login}")
+        _connected_login = login
         return True, None
-    mt5.shutdown()
-    time.sleep(1)
-
-    # Tentativo 3: initialize vuoto poi login
-    print(f"  [T3] initialize vuoto...")
-    ok = mt5.initialize(timeout=30000)
-    print(f"  [T3] init={ok}, error={mt5.last_error()}")
-    if ok:
-        ok2 = mt5.login(int(login), password=password, server=server)
-        print(f"  [T3] login={ok2}, error={mt5.last_error()}")
-        if ok2:
-            return True, None
-    mt5.shutdown()
-
-    # Tentativo 2: trova il terminale con glob su tutto il PC
-    for exe in ['terminal64.exe', 'terminal.exe']:
-        roots = [
-            r"C:\Program Files",
-            r"C:\Program Files (x86)",
-            r"D:\Program Files",
-            os.path.join(os.environ.get("APPDATA",""), "MetaQuotes", "Terminal"),
-            os.path.join(os.environ.get("LOCALAPPDATA",""), "Programs"),
-        ]
-        for root in roots:
-            if not root or not os.path.isdir(root): continue
-            for path in glob.glob(os.path.join(root, "**", exe), recursive=True):
-                try:
-                    mt5.shutdown()
-                    if mt5.initialize(path=path):
-                        ok = mt5.login(int(login), password=password, server=server)
-                        if ok:
-                            print(f"  Connesso via {path}")
-                            return True, None
-                        mt5.shutdown()
-                except Exception as e:
-                    print(f"  {path}: {e}")
-                    continue
-
-    # Tentativo 3: avvia MT5 dal registro di Windows e riprova
-    try:
-        import winreg
-        reg_paths = [
-            r"SOFTWARE\Classes\mt5\shell\open\command",
-            r"SOFTWARE\MetaQuotes Software Corp.\MetaTrader 5",
-        ]
-        for reg_path in reg_paths:
-            try:
-                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_path)
-                val, _ = winreg.QueryValueEx(key, "")
-                exe_path = val.split('"')[1] if '"' in val else val.split()[0]
-                if os.path.exists(exe_path):
-                    subprocess.Popen([exe_path])
-                    time.sleep(4)
-                    if mt5.initialize():
-                        ok = mt5.login(int(login), password=password, server=server)
-                        if ok: return True, None
-                    mt5.shutdown()
-            except: pass
-    except: pass
-
     err = mt5.last_error()
-    return False, {"code": err[0], "msg": "Impossibile connettersi a MetaTrader. Assicurati che sia aperto e che AutoTrading sia attivo (pulsante verde in alto). Errore: " + str(err[1])}
+    return False, {"code": err[0], "msg": err[1]}
 
-def create_app():
-    app = Flask(__name__)
-    CORS(app, resources={r"/*": {"origins": "*"}})
+def get_json_safe():
+    try:
+        d = request.get_json(force=True, silent=True)
+        if d: return d
+        raw = request.data.decode('utf-8', errors='ignore').strip()
+        if raw: return _json.loads(raw)
+    except Exception:
+        pass
+    return {}
 
-    @app.after_request
-    def add_cors(r):
-        r.headers["Access-Control-Allow-Origin"] = "*"
-        r.headers["Access-Control-Allow-Headers"] = "Content-Type"
-        r.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
-        return r
+def find_symbol(sym):
+    for s in [sym, sym+".a", sym+".b", sym+".x", sym+"m", sym+"M"]:
+        tick = mt5.symbol_info_tick(s)
+        if tick:
+            mt5.symbol_select(s, True)
+            return s, tick
+    mt5.symbol_select(sym, True)
+    time.sleep(0.3)
+    tick = mt5.symbol_info_tick(sym)
+    if tick: return sym, tick
+    return None, None
 
-    @app.route("/<path:p>", methods=["OPTIONS"])
-    def opt(p): return "", 204
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
-    @app.route("/connect", methods=["POST"])
-    def connect():
-        try:
-            d = request.get_json(force=True)
-            if not d: return jsonify({"ok": False, "error": "Dati mancanti"})
-            ok, err = connect_mt5(int(d["login"]), d["password"], d["server"])
-            return jsonify({"ok": ok, "error": err})
-        except Exception as e:
-            return jsonify({"ok": False, "error": str(e)})
+@app.after_request
+def add_cors(r):
+    r.headers["Access-Control-Allow-Origin"] = "*"
+    r.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    r.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
+    return r
 
-    @app.route("/account")
-    def account():
+@app.route("/<path:p>", methods=["OPTIONS"])
+def opt(p): return "", 204
+
+@app.route("/ping")
+def ping():
+    return jsonify({"ok": True, "version": "5.0", "port": PORT, "label": LABEL,
+                    "connected_login": _connected_login})
+
+@app.route("/connect", methods=["POST"])
+def connect():
+    try:
+        d = get_json_safe()
+        if not d: return jsonify({"ok": False, "error": "Dati mancanti"})
+        ok, err = connect_mt5(int(d.get("login", 0)), d.get("password",""), d.get("server",""))
+        print(f"[{LABEL}:{PORT}] Connect login={d.get('login')} -> {'OK' if ok else 'FAIL: '+str(err)}")
+        return jsonify({"ok": ok, "error": err})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)})
+
+@app.route("/account")
+def account():
+    try:
         info = mt5.account_info()
         if not info: return jsonify({})
         return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in info._asdict().items()})
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
-    @app.route("/positions")
-    def positions():
+@app.route("/positions")
+def positions():
+    try:
         pos = mt5.positions_get() or []
         return jsonify([{k:(float(v) if hasattr(v,"real") else v) for k,v in p._asdict().items()} for p in pos])
+    except Exception:
+        return jsonify([])
 
-    @app.route("/history")
-    def history():
+@app.route("/history")
+def history():
+    try:
         ticket = int(request.args.get("ticket", 0))
         deals = mt5.history_deals_get(position=ticket) or []
         return jsonify({"profit": sum(d.profit for d in deals), "ticket": ticket})
+    except Exception:
+        return jsonify({"profit": 0, "ticket": 0})
 
-    @app.route("/ping")
-    def ping(): return jsonify({"ok": True, "version": "3.1"})
-
-    @app.route("/order", methods=["POST"])
-    def order():
-        try:
-            d = request.get_json(force=True)
-            if not d: return jsonify({"retcode": -1, "comment": "JSON mancante"})
-            sym = d.get("symbol", "")
-            if not sym: return jsonify({"retcode": -1, "comment": "Symbol mancante"})
-            # Prova il simbolo così com'è, poi con suffissi comuni
-            tick = mt5.symbol_info_tick(sym)
-            if not tick:
-                for sfx in ["", ".a", ".b", ".x", "m", "M"]:
-                    tick = mt5.symbol_info_tick(sym + sfx)
-                    if tick: sym = sym + sfx; break
-            if not tick:
-                # Prova ad abilitare il simbolo
-                mt5.symbol_select(sym, True)
-                import time; time.sleep(0.3)
-                tick = mt5.symbol_info_tick(sym)
-            if not tick:
-                return jsonify({"retcode": -1, "comment": f"Simbolo {sym} non trovato. Aprilo su MT5 prima."})
-            side = d.get("side", "buy")
-            price = tick.ask if side == "buy" else tick.bid
-            vol = float(d.get("volume", 0.01))
-            sl_v = float(d.get("sl", 0)); tp_v = float(d.get("tp", 0))
-            # Gestione filling mode (diverso per broker)
-            for filling in [mt5.ORDER_FILLING_IOC, mt5.ORDER_FILLING_FOK, mt5.ORDER_FILLING_RETURN]:
-                req = {
-                    "action": mt5.TRADE_ACTION_DEAL, "symbol": sym,
-                    "volume": vol,
-                    "type": mt5.ORDER_TYPE_BUY if side == "buy" else mt5.ORDER_TYPE_SELL,
-                    "price": price,
-                    "sl": sl_v if sl_v > 0 else 0.0,
-                    "tp": tp_v if tp_v > 0 else 0.0,
-                    "deviation": 20, "magic": 234000,
-                    "comment": d.get("comment", "PropHedge"),
-                    "type_time": mt5.ORDER_TIME_GTC,
-                    "type_filling": filling,
-                }
-                r = mt5.order_send(req)
-                if r and r.retcode in (10009, 10008, 0):
-                    break
-                if r and r.retcode not in (10030,):  # 10030 = filling non supportato
-                    break
-            if not r: return jsonify({"retcode": -1, "comment": "order_send fallito"})
-            return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
-        except Exception as e:
-            return jsonify({"retcode": -1, "comment": str(e)})
-
-    @app.route("/modify", methods=["POST"])
-    def modify():
-        d = request.json
-        req = {"action": mt5.TRADE_ACTION_SLTP, "position": int(d["ticket"]),
-               "sl": float(d["sl"]), "tp": float(d["tp"])}
-        r = mt5.order_send(req)
+@app.route("/order", methods=["POST"])
+def order():
+    try:
+        d = get_json_safe()
+        if not d:
+            return jsonify({"retcode": -1, "comment": "Dati ordine mancanti"})
+        if not _connected_login:
+            return jsonify({"retcode": -1, "comment": f"Bridge {LABEL} non connesso. Fai prima /connect."})
+        sym_in = d.get("symbol", "")
+        if not sym_in:
+            return jsonify({"retcode": -1, "comment": "Simbolo mancante"})
+        sym, tick = find_symbol(sym_in)
+        if not sym:
+            return jsonify({"retcode": -1, "comment": f"Simbolo {sym_in} non trovato su {LABEL}. Aprilo su MT5."})
+        side = d.get("side", "buy").lower()
+        price = tick.ask if side == "buy" else tick.bid
+        vol = round(float(d.get("volume", 0.01)), 2)
+        otype = mt5.ORDER_TYPE_BUY if side == "buy" else mt5.ORDER_TYPE_SELL
+        base_req = {
+            "action": mt5.TRADE_ACTION_DEAL,
+            "symbol": sym, "volume": vol, "type": otype, "price": price,
+            "sl": float(d.get("sl", 0)) or 0.0,
+            "tp": float(d.get("tp", 0)) or 0.0,
+            "deviation": 20, "magic": 234000,
+            "comment": d.get("comment", "PropHedge"),
+            "type_time": mt5.ORDER_TIME_GTC,
+        }
+        r = None
+        for filling in [mt5.ORDER_FILLING_IOC, mt5.ORDER_FILLING_FOK, mt5.ORDER_FILLING_RETURN]:
+            r = mt5.order_send(dict(base_req, type_filling=filling))
+            if r and r.retcode in (10009, 10008, 0): break
+            if r and r.retcode not in (10030, 10014): break
+        if not r:
+            return jsonify({"retcode": -1, "comment": "order_send None"})
+        print(f"[{LABEL}:{PORT}] Order {side} {vol}lot {sym} -> retcode={r.retcode} order={r.order}")
         return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
+    except Exception as e:
+        return jsonify({"retcode": -1, "comment": str(e)})
 
-    @app.route("/close", methods=["POST"])
-    def close():
-        ticket = int(request.json["ticket"])
+@app.route("/modify", methods=["POST"])
+def modify():
+    try:
+        d = get_json_safe()
+        r = mt5.order_send({"action": mt5.TRADE_ACTION_SLTP,
+            "position": int(d.get("ticket",0)),
+            "sl": float(d.get("sl",0)), "tp": float(d.get("tp",0))})
+        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
+    except Exception as e:
+        return jsonify({"retcode": -1, "comment": str(e)})
+
+@app.route("/close", methods=["POST"])
+def close():
+    try:
+        d = get_json_safe()
+        ticket = int(d.get("ticket", 0))
         pos = mt5.positions_get(ticket=ticket)
-        if not pos: return jsonify({"retcode": -1, "comment": "Not found"})
+        if not pos: return jsonify({"retcode": -1, "comment": "Non trovata"})
         p = pos[0]
         tick = mt5.symbol_info_tick(p.symbol)
         price = tick.bid if p.type == 0 else tick.ask
-        req = {
+        r = mt5.order_send({
             "action": mt5.TRADE_ACTION_DEAL, "symbol": p.symbol, "volume": p.volume,
             "type": mt5.ORDER_TYPE_SELL if p.type == 0 else mt5.ORDER_TYPE_BUY,
-            "position": ticket, "price": price, "deviation": 10, "magic": 234000,
-            "comment": "PropHedge close",
-            "type_time": mt5.ORDER_TIME_GTC, "type_filling": mt5.ORDER_FILLING_IOC,
-        }
-        r = mt5.order_send(req)
+            "position": ticket, "price": price, "deviation": 20, "magic": 234000,
+            "comment": "PropHedge close", "type_time": mt5.ORDER_TIME_GTC,
+            "type_filling": mt5.ORDER_FILLING_IOC,
+        })
         return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
-
-    return app
-
-def run(port):
-    create_app().run(host="127.0.0.1", port=port, debug=False, use_reloader=False)
+    except Exception as e:
+        return jsonify({"retcode": -1, "comment": str(e)})
 
 if __name__ == "__main__":
-    print("=" * 50)
-    print("  PropHedge Bridge v3.0")
-    print("  Porta 7777 (PROP)      attiva")
-    print("  Porta 7778 (PERSONALE) attiva")
-    print("=" * 50)
-    print("  Lascia questa finestra aperta.")
-    print("  Torna su PropHedge e clicca Connetti.")
-    t = threading.Thread(target=run, args=(7777,), daemon=True)
-    t.start()
-    run(7778)
-`;
+    print(f"[{LABEL}] Bridge v5.0 in ascolto su porta {PORT}...")
+    app.run(host="0.0.0.0", port=PORT, debug=False, use_reloader=False)
+
   var blob=new Blob([code],{type:'text/plain'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');a.href=url;a.download='bridge.py';a.click();
@@ -11458,6 +11505,20 @@ function jrnlRenderSidebar(){
 
 
 function jrnlRenderMain(){
+  /* Controlla versione bridge — mostra avviso se vecchio */
+  (function(){
+    fetch('http://127.0.0.1:7777/ping',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+      var old=document.getElementById('jBridgeBanner');
+      if(j.version&&parseFloat(j.version)>=5.0){if(old)old.remove();}
+      else if(!old){
+        var b=document.createElement('div');b.id='jBridgeBanner';
+        b.style.cssText='position:sticky;top:0;z-index:999;background:#dc2626;color:#fff;font-family:var(--fd);font-size:11px;font-weight:700;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0';
+        b.innerHTML='⚠️ bridge.py vecchio — gli ordini falliranno! Scarica la v4.0 dal tab Live Trading → Scarica bridge.py, chiudi il vecchio e riesegui.'
+          +'<button onclick="goTab('live',document.getElementById('tabLive'));liveDownloadGuide()" style="background:#fff;color:#dc2626;border:none;border-radius:5px;padding:3px 10px;font-size:10px;font-weight:800;cursor:pointer">⬇ Scarica ora</button>';
+        var jm=document.getElementById('jmain');if(jm)jm.prepend(b);
+      }
+    }).catch(function(){});
+  })();
   var sess=jrnlGetActive();if(!sess)return'<div style="padding:30px;color:var(--t3)">Seleziona una sfida</div>';
   /* FIX CORRETTO: ripristina stato bridge SOLO se localStorage lo conferma
      E il bridge risponde, E le credenziali salvate corrispondono all'account attivo */
@@ -11789,7 +11850,7 @@ async function jrnlOpenHedge(sessIdx, propDir){
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify(payload)
     });
-    if(!r.ok) throw new Error('HTTP '+r.status);
+    if(!r.ok) throw new Error('HTTP '+r.status+' — assicurati che bridge.py v5.0 sia avviato');
     return r.json();
   }
 
@@ -11802,7 +11863,7 @@ async function jrnlOpenHedge(sessIdx, propDir){
       try{
         var rv = await fetch('http://127.0.0.1:'+port+'/ping',{cache:'no-store'});
         var rj = await rv.json();
-        if(!rj.version || rj.version < '3.1'){
+        if(!rj.version || rj.parseFloat(version||0) < 5.0){
           if(res){ res.style.background='rgba(251,191,36,.1)'; res.style.color='var(--amber)';
             res.innerHTML='⚠️ bridge.py versione vecchia — scarica quella aggiornata dal tab Live Trading → <b>Scarica bridge.py</b>.<br><span style="font-size:9px">La versione aggiornata gestisce ordini, simboli e filling mode in modo affidabile.</span>'; }
           return false;
@@ -11817,10 +11878,25 @@ async function jrnlOpenHedge(sessIdx, propDir){
   }
 
   try{
-    /* 1. Verifica che entrambi i bridge rispondano */
-    if(res) res.textContent='⏳ Ping bridge...';
+    /* 1. Verifica bridge + controlla che i due account siano DIVERSI */
+    if(res) res.textContent='⏳ Verifica bridge...';
     var pingProp = await _bridgePing(7777);
     var pingPers = await _bridgePing(7778);
+    /* Controlla che i due bridge non siano connessi allo stesso account */
+    if(pingProp && pingPers){
+      try{
+        var a7=await (await fetch('http://127.0.0.1:7777/account',{cache:'no-store'})).json();
+        var a8=await (await fetch('http://127.0.0.1:7778/account',{cache:'no-store'})).json();
+        if(a7.login && a8.login && a7.login===a8.login){
+          if(res){res.style.background='rgba(248,113,113,.1)';res.style.color='var(--red)';
+            res.innerHTML='❌ <b>ATTENZIONE: entrambi i bridge sono connessi allo stesso account (#'+a7.login+')!</b><br>'
+              +'<span style="font-size:9px">Devi avere DUE MT5 aperti con account diversi.<br>'
+              +'Usa il nuovo bridge.py v5.0 che apre due finestre separate — una per PROP e una per PERSONALE.'
+              +'</span>';}
+          return;
+        }
+      }catch(e){}
+    }
 
     if(!pingProp || !pingPers){
       if(res){ res.style.background='rgba(248,113,113,.1)'; res.style.color='var(--red)';
