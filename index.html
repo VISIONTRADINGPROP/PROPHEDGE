@@ -10435,7 +10435,7 @@ if __name__ == '__main__':
 
 function liveDownloadEA(){
   var code = `//+------------------------------------------------------------------+
-//|  PropHedge MT4 Bridge EA v4.0                                    |
+//|  PropHedge MT4 Bridge EA v4.1                                    |
 //+------------------------------------------------------------------+
 #property strict
 
@@ -10443,18 +10443,18 @@ input int InpPort     = 7778;
 input int InpInterval = 500;
 
 string g_url;
-string Q;
+string QQ;
 
-string HttpGet(string ep);
-string HttpPost(string ep, string body);
-string JVal(const string &json, const string key, const int from);
+string Http_Get(string ep);
+string Http_Post(string ep, string body);
+string JVal(string json, string key);
 
 int OnInit()
 {
-   Q     = Chr(34);
+   QQ    = CharToStr(34);
    g_url = "http://127.0.0.1:" + IntegerToString(InpPort);
    EventSetMillisecondTimer(InpInterval);
-   Print("PropHedge EA v4.0 avviato — ", g_url);
+   Print("PropHedge EA v4.1 — ", g_url);
    return(INIT_SUCCEEDED);
 }
 
@@ -10469,153 +10469,132 @@ void OnTimer()
 void Heartbeat()
 {
    string a = "{";
-   a += Q+"login"+Q+":"  + IntegerToString(AccountNumber())    + ",";
-   a += Q+"balance"+Q+":" + DoubleToString(AccountBalance(),2) + ",";
-   a += Q+"equity"+Q+":"  + DoubleToString(AccountEquity(),2)  + ",";
-   a += Q+"currency"+Q+":" + Q + AccountCurrency() + Q + ",";
-   a += Q+"server"+Q+":"   + Q + AccountServer()   + Q;
+   a += QQ+"login"+QQ    +":"+IntegerToString(AccountNumber())    +",";
+   a += QQ+"balance"+QQ  +":"+DoubleToString(AccountBalance(),2)  +",";
+   a += QQ+"equity"+QQ   +":"+DoubleToString(AccountEquity(),2)   +",";
+   a += QQ+"currency"+QQ +":"+QQ+AccountCurrency()+QQ             +",";
+   a += QQ+"server"+QQ   +":"+QQ+AccountServer()+QQ;
    a += "}";
-   HttpPost("/account?from_ea=1", a);
+   Http_Post("/account?from_ea=1", a);
 
    string p = "[";
-   int tot = OrdersTotal();
-   for(int i = 0; i < tot; i++)
+   int total = OrdersTotal();
+   for(int i=0; i<total; i++)
    {
-      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
-      if(i > 0) p += ",";
-      p += "{";
-      p += Q+"ticket"+Q+":"  + IntegerToString(OrderTicket()) + ",";
-      p += Q+"symbol"+Q+":"  + Q + OrderSymbol() + Q + ",";
-      p += Q+"volume"+Q+":"  + DoubleToString(OrderLots(), 2) + ",";
-      p += Q+"type"+Q+":"    + IntegerToString(OrderType())   + ",";
-      p += Q+"profit"+Q+":"  + DoubleToString(OrderProfit(),2);
-      p += "}";
+      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
+      if(i>0) p += ",";
+      string row = "{";
+      row += QQ+"ticket"+QQ+":"+IntegerToString(OrderTicket())+",";
+      row += QQ+"symbol"+QQ+":"+QQ+OrderSymbol()+QQ+",";
+      row += QQ+"volume"+QQ+":"+DoubleToString(OrderLots(),2)+",";
+      row += QQ+"type"+QQ  +":"+IntegerToString(OrderType())+",";
+      row += QQ+"profit"+QQ+":"+DoubleToString(OrderProfit(),2);
+      row += "}";
+      p += row;
    }
    p += "]";
-   HttpPost("/positions?from_ea=1", p);
+   Http_Post("/positions?from_ea=1", p);
 }
 
 void PollOrders()
 {
-   string resp = HttpGet("/pending");
-   if(StringLen(resp) < 5) return;
+   string resp = Http_Get("/pending");
+   if(StringLen(resp)<5) return;
 
-   int searchPos = 0;
+   string idKey = QQ+"id"+QQ+":";
+   int from = 0;
    while(true)
    {
-      string idKey = Q+"id"+Q+":";
-      int    idIdx = StringFind(resp, idKey, searchPos);
-      if(idIdx < 0) break;
+      int idPos = StringFind(resp, idKey, from);
+      if(idPos<0) break;
 
-      int    idS   = idIdx + StringLen(idKey);
-      int    idE   = StringFind(resp, ",", idS);
-      if(idE < 0) idE = StringFind(resp, "}", idS);
-      string idStr = StringSubstr(resp, idS, idE - idS);
-      StringTrimLeft(idStr);
-      StringTrimRight(idStr);
+      int vs = idPos + StringLen(idKey);
+      int ve = StringFind(resp, ",", vs);
+      int vb = StringFind(resp, "}", vs);
+      if(ve<0||(vb>=0&&vb<ve)) ve = vb;
+      if(ve<0) break;
 
-      string sym  = JVal(resp, Q+"symbol"+Q+":", idIdx);
-      string side = JVal(resp, Q+"side"+Q+":",   idIdx);
-      string volS = JVal(resp, Q+"volume"+Q+":", idIdx);
-      double vol  = StringToDouble(volS);
-      string cmt  = JVal(resp, Q+"comment"+Q+":", idIdx);
-      if(StringLen(cmt) < 1) cmt = "PropHedge";
+      string idStr = StringSubstr(resp, vs, ve-vs);
+      StringTrimLeft(idStr); StringTrimRight(idStr);
 
-      string result = "";
+      string sym  = JVal(resp, QQ+"symbol"+QQ+":");
+      string side = JVal(resp, QQ+"side"+QQ+":");
+      double vol  = StringToDouble(JVal(resp, QQ+"volume"+QQ+":"));
+      string cmt  = JVal(resp, QQ+"comment"+QQ+":");
+      if(StringLen(cmt)<1) cmt="PropHedge";
 
-      if(StringLen(sym) > 0 && vol > 0.0)
+      string res = "";
+      if(StringLen(sym)>0 && vol>0.0)
       {
-         int    cmd = (side == "buy") ? OP_BUY : OP_SELL;
-         double prc = (cmd == OP_BUY)
-                      ? MarketInfo(sym, MODE_ASK)
-                      : MarketInfo(sym, MODE_BID);
-
-         int tk = OrderSend(sym, cmd, vol, prc, 3, 0, 0, cmt, 0, 0,
-                            (cmd == OP_BUY) ? clrGreen : clrRed);
-         if(tk > 0)
+         int    cmd = (side=="buy") ? OP_BUY : OP_SELL;
+         double prc = (cmd==OP_BUY) ? MarketInfo(sym,MODE_ASK) : MarketInfo(sym,MODE_BID);
+         int    tk  = OrderSend(sym,cmd,vol,prc,3,0,0,cmt,0,0,(cmd==OP_BUY)?clrGreen:clrRed);
+         if(tk>0)
          {
-            Print("PropHedge ordine #", tk, " ", sym, " ", side, " ", DoubleToString(vol,2), " lot");
-            result  = "{";
-            result += Q+"retcode"+Q+":0,";
-            result += Q+"order"+Q+":" + IntegerToString(tk) + ",";
-            result += Q+"comment"+Q+":" + Q+"OK"+Q;
-            result += "}";
+            Print("PropHedge #",tk," ",sym," ",side," ",DoubleToString(vol,2),"lot");
+            res = "{"+QQ+"retcode"+QQ+":0,"+QQ+"order"+QQ+":"+IntegerToString(tk)+","+QQ+"comment"+QQ+":"+QQ+"OK"+QQ+"}";
          }
          else
          {
-            int err = GetLastError();
-            Print("PropHedge errore ", err, " ", sym, " ", side);
-            result  = "{";
-            result += Q+"retcode"+Q+":" + IntegerToString(err) + ",";
-            result += Q+"comment"+Q+":" + Q+"MT4 err "+IntegerToString(err)+Q;
-            result += "}";
+            int err=GetLastError();
+            Print("PropHedge errore ",err," ",sym);
+            res = "{"+QQ+"retcode"+QQ+":"+IntegerToString(err)+","+QQ+"comment"+QQ+":"+QQ+"err"+QQ+"}";
          }
       }
       else
       {
-         result  = "{";
-         result += Q+"retcode"+Q+":-1,";
-         result += Q+"comment"+Q+":" + Q+"dati mancanti"+Q;
-         result += "}";
+         res = "{"+QQ+"retcode"+QQ+":-1,"+QQ+"comment"+QQ+":"+QQ+"dati mancanti"+QQ+"}";
       }
 
-      string notif = "{";
-      notif += Q+"id"+Q+":" + idStr + ",";
-      notif += Q+"result"+Q+":" + result;
-      notif += "}";
-      HttpPost("/pending/result", notif);
+      string notif = "{"+QQ+"id"+QQ+":"+idStr+","+QQ+"result"+QQ+":"+res+"}";
+      Http_Post("/pending/result", notif);
 
-      searchPos = idIdx + 5;
+      from = idPos+5;
    }
 }
 
-string JVal(const string &json, const string key, const int from)
+string JVal(string json, string key)
 {
-   int ki = StringFind(json, key, from);
-   if(ki < 0) return("");
-   int s = ki + StringLen(key);
-   bool isStr = (StringGetChar(json, s) == (uchar)34);
+   int ki = StringFind(json, key, 0);
+   if(ki<0) return("");
+   int s = ki+StringLen(key);
+   bool isStr = (StringGetChar(json,s)==34);
    if(isStr) s++;
    int e = s;
-   if(isStr)
+   while(e<StringLen(json))
    {
-      e = StringFind(json, Chr(34), s);
-      if(e < 0) e = s;
+      uchar c = (uchar)StringGetChar(json,e);
+      if(isStr && c==34) break;
+      if(!isStr && (c==44||c==125)) break;
+      e++;
    }
-   else
-   {
-      while(e < StringLen(json) &&
-            StringGetChar(json, e) != (uchar)44 &&
-            StringGetChar(json, e) != (uchar)125)
-         e++;
-   }
-   return(StringSubstr(json, s, e - s));
+   return(StringSubstr(json,s,e-s));
 }
 
-string HttpGet(string ep)
+string Http_Get(string ep)
 {
-   string hdr = "Content-Type: application/json\r\n";
-   uchar  post[], res[];
+   string hdr="Content-Type: application/json\r\n";
+   uchar post[],res[];
    string rh;
-   int code = WebRequest("GET", g_url + ep, hdr, 3000, post, res, rh);
-   if(code < 0)
+   int code=WebRequest("GET",g_url+ep,hdr,3000,post,res,rh);
+   if(code<0)
    {
-      if(GetLastError() == 4060)
-         Print("Abilita WebRequest per ", g_url, " in MT4 Opzioni -> Expert Advisors");
+      if(GetLastError()==4060)
+         Print("Abilita WebRequest per ",g_url," in MT4 Opzioni > Expert Advisors");
       return("");
    }
    return(CharArrayToString(res));
 }
 
-string HttpPost(string ep, string body)
+string Http_Post(string ep, string body)
 {
-   string hdr = "Content-Type: application/json\r\n";
-   uchar  post[], res[];
+   string hdr="Content-Type: application/json\r\n";
+   uchar post[],res[];
    string rh;
-   StringToCharArray(body, post, 0, StringLen(body));
-   ArrayResize(post, ArraySize(post) - 1);
-   int code = WebRequest("POST", g_url + ep, hdr, 3000, post, res, rh);
-   if(code < 0) return("");
+   StringToCharArray(body,post,0,StringLen(body));
+   ArrayResize(post,ArraySize(post)-1);
+   int code=WebRequest("POST",g_url+ep,hdr,3000,post,res,rh);
+   if(code<0) return("");
    return(CharArrayToString(res));
 }
 
