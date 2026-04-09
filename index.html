@@ -9262,8 +9262,8 @@ async function liveConnectBoth(propId){
 
   try{
     var [rProp, rPers] = await Promise.all([
-      fetch('http://127.0.0.1:7777/connect',{method:'POST',headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},body:JSON.stringify({login:propLog,password:propPwd,server:propSrv,platform:_bridge.prop.platform})}).then(r=>r.json()),
-      fetch('http://127.0.0.1:7778/connect',{method:'POST',headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},body:JSON.stringify({login:persLog,password:persPwd,server:persSrv,platform:_bridge.pers.platform})}).then(r=>r.json())
+      fetch('http://127.0.0.1:7777/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login:propLog,password:propPwd,server:propSrv,platform:_bridge.prop.platform})}).then(r=>r.json()),
+      fetch('http://127.0.0.1:7778/connect',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({login:persLog,password:persPwd,server:persSrv,platform:_bridge.pers.platform})}).then(r=>r.json())
     ]);
 
     _bridge.prop.connected = !!rProp.ok;
@@ -9388,7 +9388,7 @@ async function liveConnectSide(side){
   b.server = srv; b.login = log;
   try{
     var r = await fetch('http://127.0.0.1:'+b.port+'/connect',{
-      method:'POST', headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({login:log, password:pwd, server:srv, platform:b.platform})
     });
     var d = await r.json();
@@ -9531,11 +9531,11 @@ async function liveOpenHedge(propDir){
   try{
     var [rProp, rPers] = await Promise.all([
       fetch('http://127.0.0.1:7777/order',{
-        method:'POST', headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},
+        method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({symbol:sym, volume:lotProp, side:propDir, sl:0, tp:0, comment:'PH_PROP'})
       }).then(r=>r.json()),
       fetch('http://127.0.0.1:7778/order',{
-        method:'POST', headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},
+        method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({symbol:sym, volume:lotPers, side:persDir, sl:0, tp:0, comment:'PH_PERS'})
       }).then(r=>r.json())
     ]);
@@ -9632,7 +9632,7 @@ function liveModifyModal(side, ticket, sl, tp){
   if(nsl===null||ntp===null) return;
   var port = _bridge[side].port;
   fetch('http://127.0.0.1:'+port+'/modify',{
-    method:'POST', headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},
+    method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ticket:ticket, sl:parseFloat(nsl)||0, tp:parseFloat(ntp)||0})
   }).then(function(r){return r.json();}).then(function(d){
     alert((d.retcode===10009||d.retcode===0)?'✅ SL/TP aggiornati.':'❌ '+d.comment);
@@ -9645,7 +9645,7 @@ async function liveClosePos(side, ticket){
   var port = _bridge[side].port;
   try{
     var r = await fetch('http://127.0.0.1:'+port+'/close',{
-      method:'POST', headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ticket:ticket})
     });
     var d = await r.json();
@@ -11678,7 +11678,7 @@ async function jrnlOpenHedge(sessIdx, propDir){
   async function _bridgeSendOrder(port, payload){
     var r = await fetch('http://127.0.0.1:'+port+'/order',{
       method:'POST',
-      headers:{'Content-Type':'text/plain'},
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify(payload)
     });
     if(!r.ok) throw new Error('HTTP '+r.status);
@@ -12252,7 +12252,7 @@ async function jrnlSync(i,side){
 
 
 
-    var r=await fetch('/api/ctrader-positions',{method:'POST',headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},body:JSON.stringify({access_token:conn.token,account_id:conn.accountId,env:conn.env,connected_at:conn.connectedAt||sess.createdAt||null})});
+    var r=await fetch('/api/ctrader-positions',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({access_token:conn.token,account_id:conn.accountId,env:conn.env,connected_at:conn.connectedAt||sess.createdAt||null})});
 
 
 
@@ -15330,7 +15330,7 @@ async function _tgSend(text, replyToMsgId){
     var body = {chat_id: _TG_CHAT_ID, text: text, parse_mode: 'HTML'};
     if(replyToMsgId) body.reply_to_message_id = replyToMsgId;
     var res = await fetch('https://api.telegram.org/bot'+_TG_TOKEN+'/sendMessage',{
-      method:'POST', headers:{'Content-Type':'text/plain' /* FIX: evita CORS preflight */},
+      method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify(body)
     });
     var data = await res.json();
@@ -15496,7 +15496,7 @@ async function aiFloatSend(){
     var res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{
-        'Content-Type':'text/plain' /* FIX: evita CORS preflight */,
+        'Content-Type':'application/json',
         'Authorization':'Bearer '+_GROQ_KEY
       },
       body: JSON.stringify({
