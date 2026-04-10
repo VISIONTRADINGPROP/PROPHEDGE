@@ -8806,184 +8806,215 @@ function bridgeUrl(side){ return 'http://127.0.0.1:' + _bridge[side].port; }
 var BRIDGE_URL = 'http://127.0.0.1:7777'; // compat
 
 function renderLive(){
-  function loadCreds(id){ try{ var s=localStorage.getItem("ph_live_creds_"+id); return s?JSON.parse(s):{};} catch(e){return {};} }
+  var sfide=(typeof props!=='undefined')?props:[];
+  var selId=_liveSfidaId||(sfide.length?sfide[0].id:null);
+  var sfida=sfide.find(function(p){return p.id===selId;})||null;
+  var pid=sfida?sfida.id:0;
+  var C={}; try{var _s=localStorage.getItem('ph_live_creds_'+pid);C=_s?JSON.parse(_s):{}}catch(e){}
+  var bp=_bridge.prop, bn=_bridge.pers;
 
-  var sfide = (typeof props!=="undefined") ? props : [];
-  var selId = _liveSfidaId || (sfide.length ? sfide[0].id : null);
-  var sfida = sfide.find(function(p){return p.id===selId;}) || null;
-  var creds = sfida ? loadCreds(sfida.id) : {};
-  var bProp = _bridge.prop, bPers = _bridge.pers;
+  var div=document.createElement('div');
+  div.id='liveRoot';
 
-  /* ═══ HEADER STATO ═══ */
-  var bothConn = bProp.connected && bPers.connected;
-  var html = '<div id="liveRoot">'
-    +'<div style="background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 22px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between">'
-    +'<div>'
-    +'<div style="font-size:15px;font-weight:800;color:var(--t);margin-bottom:2px">Live Trading — Connessione Conti</div>'
-    +'<div style="font-size:12px;color:var(--t3)">Collega prop e personale · Fai trading dal Journal</div>'
-    +'</div>'
-    +(bothConn
-      ?'<span style="font-size:11px;font-weight:700;color:#34D399;font-family:var(--fd)">● Entrambi connessi — '+(sfida?sfida.name:"")+"</span>"
-      :(bProp.connected||bPers.connected)?'<span style="font-size:11px;color:var(--amber);font-family:var(--fd)">◐ Parzialmente connesso</span>'
-      :'<span style="font-size:11px;color:var(--t3)">● Non connesso</span>')
-    +'</div>';
+  // Header
+  var hdr=document.createElement('div');
+  hdr.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 22px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between';
+  var statTxt=bp.connected&&bn.connected?'<span style="color:#34D399;font-size:11px;font-weight:700;font-family:var(--fd)">● Entrambi connessi</span>'
+    :(bp.connected||bn.connected)?'<span style="color:var(--amber);font-size:11px;font-family:var(--fd)">◐ Parzialmente connesso</span>'
+    :'<span style="color:var(--t3);font-size:11px">● Non connesso</span>';
+  hdr.innerHTML='<div><div style="font-size:15px;font-weight:800;color:var(--t)">Live Trading</div><div style="font-size:12px;color:var(--t3)">Collega prop e personale · Fai trading dal Journal</div></div>'+statTxt;
+  div.appendChild(hdr);
 
-  /* ═══ SELEZIONE SFIDA ═══ */
+  // Selezione sfida
   if(sfide.length>1){
-    html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:10px">Quale sfida vuoi collegare?</div>'
-      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-      +sfide.map(function(p){
-        var active=(p.id===selId);
-        var hasCreds = !!(loadCreds(p.id).propServer);
-        return '<button onclick="liveSelectSfida('+p.id+')" style="padding:8px 16px;border-radius:8px;border:'+(active?"2px solid var(--teal)":"1px solid var(--border2)")+';background:'+(active?"rgba(56,189,248,.12)":"var(--bg3)")+';color:'+(active?"var(--teal)":"var(--t2)")+';font-size:12px;font-weight:'+(active?"700":"400")+';cursor:pointer">'
-          +p.name+(hasCreds?'<span style="margin-left:5px;font-size:9px;color:#34D399">●</span>':"")+'</button>';
-      }).join("")
-      +'</div></div>';
-  }
-
-  /* ═══ AVVISO INSTALLAZIONE EA ═══ */
-  if(!bProp.connected && !bPers.connected){
-    html+='<div style="background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.2);border-radius:12px;padding:16px 20px;margin-bottom:16px">'
-      +'<div style="font-size:13px;font-weight:800;color:var(--t);margin-bottom:10px">🚀 Prima di connetterti installa l\'EA PropHedge</div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">'
-      +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">'
-      +'<div style="font-size:12px;font-weight:700;color:#38BDF8;margin-bottom:6px">🎯 EA per MetaTrader 5 (PROP)</div>'
-      +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:10px;line-height:1.7">Porta 7777 · Conto challenge<br>Si installa in 30 secondi</div>'
-      +'<button onclick="liveDownloadEA5()" style="width:100%;background:linear-gradient(135deg,#0ea5e9,#38BDF8);border:none;border-radius:7px;color:#fff;padding:8px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica EA MT5</button>'
-      +'</div>'
-      +'<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">'
-      +'<div style="font-size:12px;font-weight:700;color:#A78BFA;margin-bottom:6px">🛡️ EA per MetaTrader 4/5 (PERSONALE)</div>'
-      +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:10px;line-height:1.7">Porta 7778 · Conto reale<br>MT4 o MT5 — stesso file</div>'
-      +'<div style="display:flex;gap:6px">'
-      +'<button onclick="liveDownloadEA5()" style="flex:1;background:linear-gradient(135deg,#7c3aed,#A78BFA);border:none;border-radius:7px;color:#fff;padding:8px;font-size:10px;font-weight:700;cursor:pointer">⬇ MT5</button>'
-      +'<button onclick="liveDownloadEA4()" style="flex:1;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);border-radius:7px;color:#A78BFA;padding:8px;font-size:10px;font-weight:700;cursor:pointer">⬇ MT4</button>'
-      +'</div></div></div>'
-      +'<button onclick="liveTutorialOpen()" style="background:linear-gradient(135deg,var(--amber),#f59e0b);border:none;border-radius:8px;color:#000;padding:8px 18px;font-size:11px;font-weight:700;cursor:pointer">▶ Guida installazione con audio</button>'
-      +'</div>';
-  }
-
-  /* ═══ FORM CONNESSIONE ═══ */
-  if(sfida){
-    var propSrv=creds.propServer||"",propLog=creds.propLogin||"",propPwd=creds.propPwd||"";
-    var persSrv=creds.persServer||"",persLog=creds.persLogin||"",persPwd=creds.persPwd||"";
-    var propPlat=creds.propPlat||"mt5", persPlat=creds.persPlat||"mt5";
-
-    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">';
-
-    /* Card PROP */
-    html+='<div style="background:var(--bg2);border:2px solid '+(bProp.connected?"#34D399":"rgba(56,189,248,.4)")+';border-radius:12px;padding:16px">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
-      +'<div style="font-size:12px;font-weight:800;color:#38BDF8">🎯 PROP — '+sfida.name+"</div>"
-      +(bProp.connected
-        ?'<span style="font-size:10px;font-weight:700;color:#34D399;font-family:var(--fd)">● Connesso — '+bProp.login+'</span>'
-        :'<span style="font-size:10px;color:var(--t3)">Non connesso</span>')
-      +'</div>'
-      +'<div style="margin-bottom:7px"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Piattaforma EA installato su</div>'
-      +'<div style="display:flex;gap:5px">'
-      +["mt4","mt5"].map(function(pl){var s=(propPlat===pl);return '<button onclick="liveSetPlat(this)" data-side="prop" data-plat="'+pl+'" data-pid="'+sfida.id+'" style="flex:1;padding:6px;border-radius:6px;border:'+(s?"2px solid #38BDF8":"1px solid var(--border2)")+';background:'+(s?"rgba(56,189,248,.12)":"var(--bg3)")+';color:'+(s?"#38BDF8":"var(--t3)")+';font-size:10px;font-weight:700;cursor:pointer">'+pl.toUpperCase()+'</button>';}).join("")
-      +'</div></div>'
-      /* Nessun campo server/login — l\'EA è già loggato su MT5 */
-      +'<div style="background:rgba(56,189,248,.06);border:1px solid rgba(56,189,248,.15);border-radius:8px;padding:10px;font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:10px;line-height:1.8">'
-      +'ℹ️ Apri MT5 sul conto PROP → installa EA → clicca Connetti PROP'
-      +'</div>'
-      +'<div id="lp_propErr" style="font-size:10px;color:var(--red);font-family:var(--fd);display:none;margin-bottom:6px"></div>'
-      +'</div>';
-
-    /* Card PERSONALE */
-    html+='<div style="background:var(--bg2);border:2px solid '+(bPers.connected?"#34D399":"rgba(167,139,250,.4)")+';border-radius:12px;padding:16px">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
-      +'<div style="font-size:12px;font-weight:800;color:#A78BFA">🛡️ PERSONALE</div>'
-      +(bPers.connected
-        ?'<span style="font-size:10px;font-weight:700;color:#34D399;font-family:var(--fd)">● Connesso — '+bPers.login+'</span>'
-        :'<span style="font-size:10px;color:var(--t3)">Non connesso</span>')
-      +'</div>'
-      +'<div style="margin-bottom:7px"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Piattaforma EA installato su</div>'
-      +'<div style="display:flex;gap:5px">'
-      +["mt4","mt5"].map(function(pl){var s=(persPlat===pl);return '<button onclick="liveSetPlat(this)" data-side="pers" data-plat="'+pl+'" data-pid="'+sfida.id+'" style="flex:1;padding:6px;border-radius:6px;border:'+(s?"2px solid #A78BFA":"1px solid var(--border2)")+';background:'+(s?"rgba(167,139,250,.12)":"var(--bg3)")+';color:'+(s?"#A78BFA":"var(--t3)")+';font-size:10px;font-weight:700;cursor:pointer">'+pl.toUpperCase()+'</button>';}).join("")
-      +'</div></div>'
-      +'<div style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.15);border-radius:8px;padding:10px;font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:10px;line-height:1.8">'
-      +'ℹ️ Apri MT4/MT5 sul conto PERSONALE → installa EA → clicca Connetti PERSONALE'
-      +'</div>'
-      +'<div id="lp_persErr" style="font-size:10px;color:var(--red);font-family:var(--fd);display:none;margin-bottom:6px"></div>'
-      +'</div>';
-
-    html+='</div>';
-
-    /* Pulsanti connetti */
-    html+='<div style="margin-bottom:20px">'
-      +'<div id="bridgeTestResult" style="margin-bottom:10px"></div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
-      +'<button id="lpConnPropBtn" onclick="liveConnectSingle('+sfida.id+',\'prop\')" style="'+(bProp.connected?"background:linear-gradient(135deg,#059669,#34D399)":"background:linear-gradient(135deg,#0ea5e9,#38BDF8)")+';border:none;border-radius:10px;color:#fff;padding:12px;font-size:13px;font-weight:800;cursor:pointer">'+(bProp.connected?"✅ PROP Connessa":"🎯 Connetti PROP")+'</button>'
-      +'<button id="lpConnPersBtn" onclick="liveConnectSingle('+sfida.id+',\'pers\')" style="'+(bPers.connected?"background:linear-gradient(135deg,#059669,#34D399)":"background:linear-gradient(135deg,#7c3aed,#A78BFA)")+';border:none;border-radius:10px;color:#fff;padding:12px;font-size:13px;font-weight:800;cursor:pointer">'+(bPers.connected?"✅ PERSONALE Connesso":"🛡️ Connetti PERSONALE")+'</button>'
-      +'</div>'
-      +'<button onclick="liveBridgeTest()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t2);padding:8px;font-size:11px;cursor:pointer">🔍 Verifica EA attivi</button>'
-      +'</div>';
-
-    /* Account info se connesso */
-    if(bProp.connected || bPers.connected){
-      html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">';
-      ["prop","pers"].forEach(function(side){
-        var b=_bridge[side];
-        var col=side==="prop"?"#38BDF8":"#A78BFA";
-        if(!b.connected){html+='<div></div>'; return;}
-        var acc=b.account||{};
-        var pnlCol=acc.profit>=0?"var(--green)":"var(--red)";
-        html+='<div style="background:var(--bg3);border:1px solid rgba(52,211,153,.2);border-radius:10px;padding:14px">'
-          +'<div style="font-size:10px;font-family:var(--fd);color:'+(col)+';margin-bottom:10px;letter-spacing:.05em">'+(side==="prop"?"🎯 CONTO PROP":"🛡️ CONTO PERSONALE")+'</div>'
-          +'<div id="accGrid_'+side+'">'
-          +[
-            '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px">',
-            kpi("Login",acc.login||"—","var(--t)")+kpi("Balance","$"+(acc.balance||0).toFixed(0),"var(--t)")+
-            kpi("Equity","$"+(acc.equity||0).toFixed(0),(acc.equity>=(acc.balance||0)?"var(--green)":"var(--red)"))+
-            kpi("P&L",(acc.profit>=0?"+":"")+((acc.profit||0).toFixed(2))+"$",pnlCol),
-            '</div>'
-          ].join("")
-          +'</div>'
-          +'</div>';
-      });
-      html+='</div>';
-    }
-  }
-
-  /* ═══ GRIDS POSIZIONI APERTE ═══ */
-  if(bProp.connected || bPers.connected){
-    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">';
-    ["prop","pers"].forEach(function(side){
-      if(!_bridge[side].connected){html+='<div></div>'; return;}
-      html+='<div id="posGrid_'+side+'"></div>';
+    var sfidaBox=document.createElement('div');
+    sfidaBox.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px';
+    sfidaBox.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:10px">Quale sfida vuoi collegare?</div>';
+    var sfidaRow=document.createElement('div');
+    sfidaRow.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+    sfide.forEach(function(p){
+      var active=(p.id===selId);
+      var btn=document.createElement('button');
+      btn.style.cssText='padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:'+(active?'700':'400')+';border:'+(active?'2px solid var(--teal)':'1px solid var(--border2)')+';background:'+(active?'rgba(56,189,248,.12)':'var(--bg3)')+';color:'+(active?'var(--teal)':'var(--t2)');
+      btn.textContent=p.name;
+      btn.dataset.sfida=p.id;
+      sfidaRow.appendChild(btn);
     });
-    html+='</div>';
+    sfidaBox.appendChild(sfidaRow);
+    div.appendChild(sfidaBox);
   }
 
-  /* GUIDA INSTALLAZIONE EA */
-  html+='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:14px">📋 Come installare l\'EA (guida rapida)</div>'
+  // Grid 2 card
+  var grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px';
 
-    /* Passaggi MT5 */
-    +step5(1,"Scarica l\'EA",
-      "Clicca il pulsante qui sopra per scaricare il file .mq5 (MT5) o .mq4 (MT4).",
-      '<button onclick="liveDownloadEA5()" style="background:linear-gradient(135deg,#0ea5e9,#38BDF8);border:none;border-radius:7px;color:#fff;padding:7px 16px;font-size:11px;font-weight:700;cursor:pointer;margin-right:8px">⬇ EA MT5</button>'+
-      '<button onclick="liveDownloadEA4()" style="background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);border-radius:7px;color:#A78BFA;padding:7px 16px;font-size:11px;font-weight:700;cursor:pointer">⬇ EA MT4</button>')
-    +step5(2,"Copia nella cartella Experts",
-      "In MT5: Strumenti → Apri cartella dati → MQL5 → Experts → incolla il file .mq5<br>In MT4: Strumenti → Apri cartella dati → MQL4 → Experts → incolla il file .mq4",
-      "")
-    +step5(3,"Compila e attiva",
-      "In MT5/MT4: apri l\'editor (tasto F4) → trova PropHedge nelle lista → tasto destro → Compila.<br>Poi torna sul grafico, doppio clic sull\'EA → si apre la finestra → OK.",
-      "")
-    +step5(4,"Imposta la porta corretta",
-      "L\'EA ha un parametro <b>BridgePort</b>:<br>● Conto PROP → porta <b>7777</b><br>● Conto PERSONALE → porta <b>7778</b>",
-      "")
-    +step5(5,"Attiva AutoTrading e DLL",
-      "In MT5/MT4 in alto clicca <b>Algo Trading</b> → deve essere verde.<br>Strumenti → Opzioni → Expert Advisors → spunta <b>Consenti importazioni DLL</b>.",
-      "")
-    +step5(6,"Clicca Connetti",
-      "Torna su PropHedge → Live Trading → Connetti PROP e Connetti PERSONALE. Se l\'EA risponde vedrai <b style=\'color:#34D399\'>● Connesso</b>.",
-      '<button onclick="liveTutorialOpen()" style="background:linear-gradient(135deg,var(--amber),#f59e0b);border:none;border-radius:7px;color:#000;padding:7px 16px;font-size:11px;font-weight:700;cursor:pointer">▶ Guida audio completa</button>')
-    +'</div>';
+  function makeCard(side,labelName,mainColor,g1,g2,placeholder){
+    var b=(side==='prop')?bp:bn;
+    var plat=C[side+'Plat']||'mt5';
+    var login=C[side+'Login']||'';
+    var pwd=C[side+'Pwd']||'';
+    var srv=C[side+'Server']||'';
 
-  html+='</div>'; /* fine liveRoot */
-  return html;
+    var card=document.createElement('div');
+    card.style.cssText='background:var(--bg2);border:2px solid '+(b.connected?'#34D399':mainColor)+';border-radius:14px;padding:18px';
+
+    // Header card
+    var ch=document.createElement('div');
+    ch.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:14px';
+    var ct=document.createElement('div');
+    ct.style.cssText='font-size:13px;font-weight:800;color:'+mainColor;
+    ct.textContent=labelName;
+    var cs=document.createElement('span');
+    cs.style.cssText='font-size:10px;font-family:var(--fd)';
+    if(b.connected){cs.style.color='#34D399';cs.style.background='rgba(52,211,153,.1)';cs.style.border='1px solid rgba(52,211,153,.25)';cs.style.borderRadius='5px';cs.style.padding='3px 8px';cs.style.fontWeight='700';cs.textContent='● #'+b.login;}
+    else{cs.style.color='var(--t3)';cs.textContent='Non connesso';}
+    ch.appendChild(ct); ch.appendChild(cs); card.appendChild(ch);
+
+    // Piattaforma
+    var pl=document.createElement('div');
+    pl.style.marginBottom='12px';
+    pl.innerHTML='<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Piattaforma</div>';
+    var plRow=document.createElement('div');
+    plRow.style.cssText='display:flex;gap:6px';
+    ['mt4','mt5','ctrader'].forEach(function(p){
+      var sel=(plat===p);
+      var b2=document.createElement('button');
+      b2.style.cssText='flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;border:'+(sel?'2px solid '+mainColor:'1px solid var(--border2)')+';background:'+(sel?'rgba(56,189,248,.08)':'var(--bg3)')+';color:'+(sel?mainColor:'var(--t3)');
+      b2.textContent=p==='ctrader'?'cTrader':p.toUpperCase();
+      b2.dataset.side=side; b2.dataset.plat=p; b2.dataset.pid=pid;
+      b2.className='plat-btn';
+      plRow.appendChild(b2);
+    });
+    pl.appendChild(plRow); card.appendChild(pl);
+
+    // N° conto
+    var lbl1=document.createElement('div');
+    lbl1.style.marginBottom='10px';
+    lbl1.innerHTML='<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">N° Conto</div>';
+    var inp1=document.createElement('input');
+    inp1.type='number'; inp1.id='lp_'+side+'Log'; inp1.value=login; inp1.placeholder='123456789';
+    inp1.className='live-inp'; inp1.dataset.pid=pid;
+    inp1.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t);padding:9px 12px;font-size:13px;font-weight:700;outline:none;font-family:var(--fd);box-sizing:border-box';
+    lbl1.appendChild(inp1); card.appendChild(lbl1);
+
+    // Password
+    var lbl2=document.createElement('div');
+    lbl2.style.marginBottom='10px';
+    lbl2.innerHTML='<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Password</div>';
+    var pwdWrap=document.createElement('div');
+    pwdWrap.style.position='relative';
+    var inp2=document.createElement('input');
+    inp2.type='password'; inp2.id='lp_'+side+'Pwd'; inp2.value=pwd; inp2.placeholder='••••••••';
+    inp2.className='live-inp'; inp2.dataset.pid=pid;
+    inp2.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t);padding:9px 36px 9px 12px;font-size:13px;outline:none;box-sizing:border-box';
+    var eye=document.createElement('button');
+    eye.type='button'; eye.textContent='👁'; eye.className='pwd-toggle'; eye.dataset.target='lp_'+side+'Pwd';
+    eye.style.cssText='position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:var(--t3)';
+    pwdWrap.appendChild(inp2); pwdWrap.appendChild(eye);
+    lbl2.appendChild(pwdWrap); card.appendChild(lbl2);
+
+    // Server
+    var lbl3=document.createElement('div');
+    lbl3.style.marginBottom='14px';
+    lbl3.innerHTML='<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Server</div>';
+    var inp3=document.createElement('input');
+    inp3.type='text'; inp3.id='lp_'+side+'Srv'; inp3.value=srv; inp3.placeholder=placeholder;
+    inp3.className='live-inp'; inp3.dataset.pid=pid;
+    inp3.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t);padding:9px 12px;font-size:12px;outline:none;box-sizing:border-box';
+    lbl3.appendChild(inp3); card.appendChild(lbl3);
+
+    // Errore
+    var err=document.createElement('div');
+    err.id='lp_'+side+'Err';
+    err.style.cssText='font-size:10px;color:var(--red);font-family:var(--fd);display:none;margin-bottom:8px;line-height:1.6';
+    card.appendChild(err);
+
+    // Bottone connetti
+    var connBtn=document.createElement('button');
+    connBtn.id='lpConn'+(side==='prop'?'Prop':'Pers')+'Btn';
+    connBtn.className='conn-btn';
+    connBtn.dataset.side=side; connBtn.dataset.pid=pid;
+    connBtn.style.cssText='width:100%;padding:12px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;color:#fff;background:'+(b.connected?'linear-gradient(135deg,#059669,#34D399)':'linear-gradient(135deg,'+g1+','+g2+')');
+    connBtn.textContent=b.connected?(side==='prop'?'✅ PROP Connessa':'✅ PERSONALE Connesso'):(side==='prop'?'🎯 Connetti PROP':'🛡️ Connetti PERSONALE');
+    card.appendChild(connBtn);
+
+    // Account info
+    if(b.connected&&b.account){
+      var acc=b.account;
+      var aGrid=document.createElement('div');
+      aGrid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px';
+      var pc=(acc.profit>=0)?'var(--green)':'var(--red)';
+      var ekv=(acc.equity>=(acc.balance||0))?'var(--green)':'var(--red)';
+      [['Balance','$'+parseFloat(acc.balance||0).toFixed(0),'var(--t)'],
+       ['Equity','$'+parseFloat(acc.equity||0).toFixed(0),ekv],
+       ['P&L',(acc.profit>=0?'+':'')+parseFloat(acc.profit||0).toFixed(2)+'$',pc],
+       ['Server',acc.server||'-','var(--t3)']].forEach(function(k){
+        var kcard=document.createElement('div');
+        kcard.style.cssText='background:var(--bg3);border-radius:7px;padding:8px;text-align:center';
+        kcard.innerHTML='<div style="font-size:16px;font-weight:800;color:'+k[2]+';font-family:var(--fh)">'+k[1]+'</div>'
+          +'<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-top:2px">'+k[0]+'</div>';
+        aGrid.appendChild(kcard);
+      });
+      card.appendChild(aGrid);
+    }
+    return card;
+  }
+
+  grid.appendChild(makeCard('prop','🎯 PROP — '+(sfida?sfida.name:'Sfida'),'#38BDF8','#0ea5e9','#38BDF8','FTMO-Server3'));
+  grid.appendChild(makeCard('pers','🛡️ PERSONALE','#A78BFA','#7c3aed','#A78BFA','Axi-US06-Live'));
+  div.appendChild(grid);
+
+  // Download EA
+  var dlBox=document.createElement('div');
+  dlBox.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px';
+  dlBox.innerHTML='<div style="font-size:13px;font-weight:800;color:var(--t);margin-bottom:6px">⬇ Scarica Expert Advisor PropHedge</div>'
+    +'<div style="font-size:12px;color:var(--t2);line-height:1.8;margin-bottom:16px">Nessun programma esterno. L\'EA gira dentro MT4/MT5 e comunica direttamente con PropHedge.</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+    +'<div style="background:var(--bg3);border:1px solid rgba(56,189,248,.25);border-radius:12px;padding:16px">'
+    +'<div style="font-size:11px;font-weight:700;color:#38BDF8;margin-bottom:4px">EA per MetaTrader 5</div>'
+    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-bottom:12px;line-height:1.7">prophedge_mt5.mq5 · Porta 7777 o 7778<br>Richiede MT5 build 2755+</div>'
+    +'<button class="dl-ea5" style="width:100%;background:linear-gradient(135deg,#0ea5e9,#38BDF8);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer">⬇ Scarica EA MT5</button>'
+    +'</div>'
+    +'<div style="background:var(--bg3);border:1px solid rgba(167,139,250,.25);border-radius:12px;padding:16px">'
+    +'<div style="font-size:11px;font-weight:700;color:#A78BFA;margin-bottom:4px">EA per MetaTrader 4</div>'
+    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-bottom:12px;line-height:1.7">prophedge_mt4.mq4 · Porta 7777 o 7778<br>Richiede MT4 build 1090+</div>'
+    +'<button class="dl-ea4" style="width:100%;background:linear-gradient(135deg,#7c3aed,#A78BFA);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer">⬇ Scarica EA MT4</button>'
+    +'</div></div>';
+  div.appendChild(dlBox);
+
+  // Guida
+  var guida=document.createElement('div');
+  guida.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px';
+  var guidaHdr=document.createElement('div');
+  guidaHdr.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:16px';
+  guidaHdr.innerHTML='<div style="font-size:13px;font-weight:800;color:var(--t)">📋 Come installare l\'EA</div>';
+  var tutBtn=document.createElement('button');
+  tutBtn.className='tut-btn';
+  tutBtn.style.cssText='background:linear-gradient(135deg,var(--amber),#f59e0b);border:none;border-radius:7px;color:#000;padding:7px 16px;font-size:11px;font-weight:700;cursor:pointer';
+  tutBtn.textContent='▶ Guida audio';
+  guidaHdr.appendChild(tutBtn);
+  guida.appendChild(guidaHdr);
+  [['1','Scarica l\'EA','Clicca i pulsanti sopra. MT5 per il PROP, MT4 o MT5 per il personale.'],
+   ['2','Copia in Experts','MT5: Strumenti → Apri cartella dati → MQL5 → Experts. MT4: ...→ MQL4 → Experts'],
+   ['3','Compila','Apri MetaEditor (F4) → trova PropHedge → tasto destro → Compila. 0 errori.'],
+   ['4','Trascina sul grafico','Doppio clic su PropHedge. Imposta BridgePort = 7777 per PROP, 7778 per PERSONALE.'],
+   ['5','Attiva AutoTrading','Pulsante Algo Trading in alto verde. Strumenti → Opzioni → Expert Advisors → Consenti DLL.'],
+   ['6','Connetti','Inserisci n° conto, password, server → clicca Connetti. Vedrai il conto verificato.']
+  ].forEach(function(s){
+    var row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:flex-start;gap:12px;margin-bottom:12px';
+    var num=document.createElement('div');
+    num.style.cssText='width:24px;height:24px;border-radius:50%;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38BDF8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0';
+    num.textContent=s[0];
+    var txt=document.createElement('div');
+    txt.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:3px">'+s[1]+'</div>'
+      +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8">'+s[2]+'</div>';
+    row.appendChild(num); row.appendChild(txt);
+    guida.appendChild(row);
+  });
+  div.appendChild(guida);
+
+  return div.outerHTML;
 }
 
 function step5(n,title,desc,extra){
@@ -9098,44 +9129,66 @@ async function liveBridgeTest(){
 }
 
 async function liveConnectSingle(propId, side){
-  var isP = side==="prop";
-  var port = isP ? 7777 : 7778;
-  var errEl = document.getElementById(isP?"lp_propErr":"lp_persErr");
-  var btn   = document.getElementById(isP?"lpConnPropBtn":"lpConnPersBtn");
+  var isP=side==="prop";
+  var port=isP?7777:7778;
+  var errEl=document.getElementById(isP?"lp_propErr":"lp_persErr");
+  var btn=document.getElementById(isP?"lpConnPropBtn":"lpConnPersBtnBtn");
+  var btn2=document.getElementById("lpConn"+(isP?"Prop":"Pers")+"Btn");
+  var b=btn||btn2;
   if(errEl) errEl.style.display="none";
-  if(btn){btn.textContent="⏳ Connessione...";btn.disabled=true;}
+  if(b){b.textContent="⏳ Connessione...";b.disabled=true;}
+
+  /* Leggi credenziali inserite dall'utente (per verifica) */
+  var login=parseInt(document.getElementById(isP?"lp_propLog":"lp_persLog")?.value||0);
+  var pwd=document.getElementById(isP?"lp_propPwd":"lp_persPwd")?.value||"";
+  var srv=document.getElementById(isP?"lp_propSrv":"lp_persSrv")?.value||"";
+
+  /* Salva credenziali */
   try{
-    var r = await fetch("http://127.0.0.1:"+port+"/account",{cache:"no-store"});
-    var acc = await r.json();
-    if(acc && acc.login){
-      _bridge[side].connected=true;
-      _bridge[side].account=acc;
-      _bridge[side].login=acc.login;
-      _bridge[side].port=port;
-      _bridge[side].propId=propId;
-      /* Salva piattaforma */
-      try{var c=JSON.parse(localStorage.getItem("ph_live_creds_"+propId)||"{}");
-        c[isP?"propPlat":"persPlat"]=_bridge[side].platform||"mt5";
-        localStorage.setItem("ph_live_creds_"+propId,JSON.stringify(c));}catch(e){}
-      if(btn){btn.textContent=isP?"✅ PROP Connessa":"✅ PERSONALE Connesso";
-        btn.style.background="linear-gradient(135deg,#059669,#34D399)";
-        btn.disabled=false;}
-      /* Avvia polling se entrambi connessi */
-      if(_bridge.prop.connected && _bridge.pers.connected){
-        if(_bridgePollTimer) clearInterval(_bridgePollTimer);
-        _bridgePollTimer = setInterval(liveRefreshAll,3000);
+    var c=JSON.parse(localStorage.getItem("ph_live_creds_"+propId)||"{}");
+    if(isP){c.propLogin=login;c.propPwd=pwd;c.propServer=srv;}
+    else    {c.persLogin=login;c.persPwd=pwd;c.persServer=srv;}
+    localStorage.setItem("ph_live_creds_"+propId,JSON.stringify(c));
+  }catch(e){}
+
+  try{
+    var r=await fetch("http://127.0.0.1:"+port+"/account",{cache:"no-store"});
+    var acc=await r.json();
+    if(!acc||!acc.login) throw new Error("account vuoto");
+
+    /* Verifica che il conto corrisponda se l'utente ha inserito un numero */
+    if(login && parseInt(acc.login)!==login){
+      if(errEl){
+        errEl.innerHTML="⚠️ L'EA è connesso al conto <b>"+acc.login+"</b> ma hai inserito <b>"+login+"</b>.<br>"
+          +"Apri MT5/MT4 con il conto corretto e riprova.";
+        errEl.style.display="block";
       }
-      /* Refresh live views */
-      await liveRefreshSide(side);
-      if(typeof currentTab!=="undefined" && currentTab==="journal" && typeof renderJournal==="function") renderJournal();
-      setTimeout(function(){var el=document.getElementById("liveRoot");if(el)el.outerHTML=renderLive();setTimeout(_bridgeRestoreGrids,50);},100);
-    } else { throw new Error("account vuoto"); }
+      if(b){b.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";b.disabled=false;}
+      return;
+    }
+
+    /* Connessione OK */
+    _bridge[side].connected=true;
+    _bridge[side].account=acc;
+    _bridge[side].login=acc.login;
+    _bridge[side].port=port;
+    _bridge[side].propId=propId;
+
+    if(_bridge.prop.connected&&_bridge.pers.connected){
+      if(_bridgePollTimer) clearInterval(_bridgePollTimer);
+      _bridgePollTimer=setInterval(liveRefreshAll,3000);
+    }
+    await liveRefreshSide(side);
+    if(typeof currentTab!=="undefined"&&currentTab==="journal"&&typeof renderJournal==="function") renderJournal();
+    setTimeout(function(){var el=document.getElementById("liveRoot");if(el)el.outerHTML=renderLive();setTimeout(_bridgeRestoreGrids,50);},100);
+
   }catch(e){
     _bridge[side].connected=false;
-    if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
+    if(b){b.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";b.disabled=false;}
     if(errEl){
       errEl.innerHTML="❌ EA non risponde sulla porta "+port+".<br>"
-        +"<span style=\"font-size:9px;color:var(--t3)\">Verifica: EA PropHedge è sul grafico? AutoTrading attivo? EA compilato?</span>";
+        +"<span style=\"font-size:9px\">Controlla: EA è sul grafico? AutoTrading verde? DLL abilitata?<br>"
+        +"Se hai appena installato l'EA, riavvia MT5/MT4.</span>";
       errEl.style.display="block";
     }
   }
@@ -9284,6 +9337,34 @@ function _bridgeRestoreGrids(){
   if(_bridge.pers.connected && _bridge.pers.account) liveRenderAccount('pers', _bridge.pers.account);
   var allPos = (_bridge.prop.positions||[]).concat(_bridge.pers.positions||[]);
   liveRenderAllPositions(allPos);
+
+  /* Event delegation per i nuovi bottoni data-* */
+  var root = document.getElementById('liveRoot');
+  if(!root) return;
+  root.addEventListener('click', function(e){
+    var t = e.target;
+    /* Selezione sfida */
+    if(t.dataset.sfida){ liveSelectSfida(parseInt(t.dataset.sfida)); return; }
+    /* Piattaforma */
+    if(t.classList.contains('plat-btn')){ liveSetPlat(t); return; }
+    /* Connetti */
+    if(t.classList.contains('conn-btn')){ liveConnectSingle(parseInt(t.dataset.pid),t.dataset.side); return; }
+    /* Download EA */
+    if(t.classList.contains('dl-ea5')){ liveDownloadEA5(); return; }
+    if(t.classList.contains('dl-ea4')){ liveDownloadEA4(); return; }
+    /* Tutorial */
+    if(t.classList.contains('tut-btn')){ liveTutorialOpen(); return; }
+    /* Mostra/nascondi password */
+    if(t.classList.contains('pwd-toggle')){
+      var f=document.getElementById(t.dataset.target);
+      if(f){ f.type=f.type==='password'?'text':'password'; t.textContent=f.type==='password'?'👁':'🙈'; }
+      return;
+    }
+  });
+  /* Auto-save credenziali */
+  root.querySelectorAll('.live-inp').forEach(function(inp){
+    inp.addEventListener('input', function(){ liveSaveCreds(parseInt(inp.dataset.pid)); });
+  });
 }
 
 async function liveConnectSide(side){
