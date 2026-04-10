@@ -8803,6 +8803,32 @@ function bridgeUrl(side){ return 'http://127.0.0.1:' + _bridge[side].port; }
 var BRIDGE_URL = 'http://127.0.0.1:7777'; // compat
 
 function renderLive(){
+  /* Controlla versione bridge e mostra banner aggiornamento */
+  setTimeout(function(){
+    Promise.allSettled([
+      fetch('http://127.0.0.1:7777/ping',{cache:'no-store'}).then(r=>r.json()),
+      fetch('http://127.0.0.1:7778/ping',{cache:'no-store'}).then(r=>r.json())
+    ]).then(function(results){
+      var v7 = results[0].status==='fulfilled' ? (results[0].value.version||'0') : '0';
+      var v8 = results[1].status==='fulfilled' ? (results[1].value.version||'0') : '0';
+      var needUpdate = parseFloat(v7) < 6.0 || parseFloat(v8) < 6.0;
+      var oldBanner = document.getElementById('_bridgeUpdateBanner');
+      if(oldBanner) oldBanner.remove();
+      if(needUpdate){
+        var root = document.getElementById('liveRoot');
+        if(!root) return;
+        var banner = document.createElement('div');
+        banner.id = '_bridgeUpdateBanner';
+        banner.style.cssText = 'background:#dc2626;color:#fff;font-family:var(--fd);font-size:12px;font-weight:700;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;';
+        banner.innerHTML = '<span>⚠️ Stai usando bridge.py vecchio (v'+v7+'). Serve la v6.0 per connettere entrambi i conti.</span>'
+          +'<div style="display:flex;gap:8px">'
+          +'<button onclick="liveDownloadGuide()" style="background:#fff;color:#dc2626;border:none;border-radius:6px;padding:6px 14px;font-weight:800;font-size:11px;cursor:pointer">⬇ Scarica bridge.py v6.0</button>'
+          +'<span style="font-size:10px;opacity:.8">Poi: chiudi il vecchio bridge → lancia il nuovo → riconnetti</span>'
+          +'</div>';
+        root.insertBefore(banner, root.firstChild);
+      }
+    }).catch(function(){});
+  }, 500);
   /* Carica credenziali salvate */
   function loadCreds(propId){
     try{ var s=localStorage.getItem('ph_live_creds_'+propId); return s?JSON.parse(s):null; }catch(e){return null;}
@@ -9153,9 +9179,14 @@ async function liveConnectSingle(propId, side){
     if(btn){btn.textContent="⏳ Verifica EA...";btn.disabled=true;}
     var port = isP ? 7777 : 7778;
     try{
+      /* Prima pinga per vedere se ea_alive */
+      var pingR = await fetch("http://127.0.0.1:"+port+"/ping",{cache:"no-store"});
+      var pingJ = await pingR.json();
+      if(!pingJ.ea_alive && !pingJ.connected_login){throw new Error("EA non risponde");}
       var r = await fetch("http://127.0.0.1:"+port+"/account",{cache:"no-store"});
       var acc = await r.json();
-      if(acc && acc.login){
+      if(!acc || !acc.login) acc = {login: pingJ.connected_login||0, balance:0, equity:0, currency:'USD', server:''};
+      if(acc.login || pingJ.connected_login){
         _bridge[side].connected=true; _bridge[side].account=acc; _bridge[side].propId=propId;
         if(_bridge.prop.connected&&_bridge.pers.connected){try{localStorage.setItem('ph_bridge_conn','1');localStorage.setItem('ph_bridge_propId',String(propId));}catch(e){}}
         if(btn){btn.textContent=isP?"✅ PROP connessa":"✅ PERSONALE connesso";btn.style.background="linear-gradient(135deg,#059669,#34D399)";}
@@ -9527,51 +9558,70 @@ function liveRenderAllPositions(positions){
 }
 
 async function liveOpenHedge(propDir){
-  var sym      = document.getElementById('h_sym')?.value || 'XAUUSD';
-  var lotProp  = parseFloat(document.getElementById('h_lotProp')?.value) || 0.01;
-  var lotPers  = parseFloat(document.getElementById('h_lotPers')?.value) || 0.01;
-  var slPips   = parseFloat(document.getElementById('h_sl')?.value) || 100;
-  var tpPips   = parseFloat(document.getElementById('h_tp')?.value) || 100;
-  var persDir  = propDir==='buy' ? 'sell' : 'buy';
-  var res      = document.getElementById('hedgeResult');
+  var sym     = document.getElementById('h_sym')?.value || 'XAUUSD';
+  var lotProp = parseFloat(document.getElementById('h_lotProp')?.value) || 0.01;
+  var lotPers = parseFloat(document.getElementById('h_lotPers')?.value) || 0.01;
+  var slPips  = parseFloat(document.getElementById('h_sl')?.value)  || 0;
+  var tpPips  = parseFloat(document.getElementById('h_tp')?.value)  || 0;
+  var persDir = propDir==='buy' ? 'sell' : 'buy';
+  var res     = document.getElementById('hedgeResult');
+  function setRes(bg,col,msg){ if(res){res.style.display='block';res.style.background=bg;res.style.color=col;res.innerHTML=msg;} }
 
-  /* Calcola prezzi SL/TP in punti (approssimazione) */
-  var pipVal   = sym.includes('XAU')||sym.includes('GOLD') ? 0.1 : 0.0001;
+  setRes('rgba(251,191,36,.08)','var(--amber)','⏳ Verifica connessioni...');
 
+  /* Ping reale: verifica che il login sia davvero settato */
+  async function pingConn(port){
+    try{ var r=await fetch('http://127.0.0.1:'+port+'/ping',{cache:'no-store'});
+         var j=await r.json(); return !!(j&&j.connected_login>0); }
+    catch(e){ return false; }
+  }
+  var propOk = await pingConn(7777);
+  var persOk = await pingConn(7778);
+
+  if(!propOk || !persOk){
+    var who = (!propOk?'PROP (7777) ':'') + (!persOk?'PERSONALE (7778)':'');
+    setRes('rgba(248,113,113,.1)','var(--red)',
+      '❌ '+who+' non connesso.<br>'
+      +'<span style="font-size:10px">Connetti ENTRAMBI i conti nel tab Live Trading, poi riprova.</span>');
+    return;
+  }
+
+  setRes('rgba(251,191,36,.08)','var(--amber)','⏳ Invio ordine PROP...');
   try{
-    var [rProp, rPers] = await Promise.all([
-      fetch('http://127.0.0.1:7777/order',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({symbol:sym, volume:lotProp, side:propDir, sl:0, tp:0, comment:'PH_PROP'})
-      }).then(r=>r.json()),
-      fetch('http://127.0.0.1:7778/order',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({symbol:sym, volume:lotPers, side:persDir, sl:0, tp:0, comment:'PH_PERS'})
-      }).then(r=>r.json())
-    ]);
+    var rP = await fetch('http://127.0.0.1:7777/order',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({symbol:sym,volume:lotProp,side:propDir,sl_pips:slPips,tp_pips:tpPips,comment:'PH_PROP'})
+    }).then(function(r){return r.json();});
 
-    var okProp = rProp&&(rProp.retcode===10009||rProp.retcode===10008||rProp.retcode===0||rProp.order);
-    var okPers = rPers&&(rPers.retcode===10009||rPers.retcode===10008||rPers.retcode===0||rPers.order);
+    var okP = rP&&(rP.retcode===10009||rP.retcode===10008||rP.retcode===0||rP.order>0);
+    if(!okP){
+      setRes('rgba(248,113,113,.1)','var(--red)','❌ PROP fallita: '+(rP.comment||rP.retcode||JSON.stringify(rP)));
+      return;
+    }
 
-    if(res){
-      res.style.display='block';
-      if(okProp && okPers){
-        res.style.background='rgba(52,211,153,.1)';res.style.color='var(--green)';
-        res.textContent='✅ Hedge aperto — PROP '+propDir.toUpperCase()+' '+lotProp+'lot #'+rProp.order+' · PERS '+persDir.toUpperCase()+' '+lotPers+'lot #'+rPers.order;
-        /* Registra nel simulatore come trade in corso */
-        _bridgeRegisterTrade(rProp.order, rPers.order, sym, propDir, lotProp, lotPers);
-      } else {
-        res.style.background='rgba(248,113,113,.1)';res.style.color='var(--red)';
-        res.textContent='❌ PROP: '+(okProp?'OK':'ERR '+rProp.comment)+' · PERS: '+(okPers?'OK':'ERR '+rPers.comment);
-      }
+    setRes('rgba(251,191,36,.08)','var(--amber)','⏳ Ordine PROP aperto #'+rP.order+'. Invio ordine PERSONALE...');
+
+    var rS = await fetch('http://127.0.0.1:7778/order',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({symbol:sym,volume:lotPers,side:persDir,sl_pips:slPips,tp_pips:tpPips,comment:'PH_PERS'})
+    }).then(function(r){return r.json();});
+
+    var okS = rS&&(rS.retcode===10009||rS.retcode===10008||rS.retcode===0||rS.order>0);
+    if(okP&&okS){
+      setRes('rgba(52,211,153,.1)','var(--green)',
+        '✅ PROP '+propDir.toUpperCase()+' '+lotProp+'lot #'+rP.order
+        +' | SL '+slPips+'pip TP '+tpPips+'pip<br>'
+        +'✅ PERS '+persDir.toUpperCase()+' '+lotPers+'lot #'+rS.order);
+      _bridgeRegisterTrade(rP.order, rS.order, sym, propDir, lotProp, lotPers);
+    } else {
+      setRes('rgba(248,113,113,.1)','var(--red)','✅ PROP #'+rP.order+' aperta | ❌ PERS fallita: '+(rS.comment||rS.retcode));
     }
     liveRefreshAll();
   } catch(e){
-    if(res){res.style.display='block';res.style.background='rgba(248,113,113,.1)';res.style.color='var(--red)';res.textContent='❌ Bridge non raggiungibile. Controlla che entrambe le istanze siano avviate.';}
+    setRes('rgba(248,113,113,.1)','var(--red)','❌ Errore: '+e.message);
   }
 }
 
-/* ── Registro trade aperti per matching con trade chiusi ── */
 var _openHedgeTrades = []; /* [{propTicket, persTicket, sym, dir, day} */
 
 function _bridgeRegisterTrade(propTicket, persTicket, sym, dir, lotProp, lotPers){
@@ -10105,12 +10155,12 @@ var _tutSteps=[
 ];
 
 function liveDownloadGuide(){
-  var code = `# PropHedge Bridge v6.0
-# Porta 7777: PROP   — MT5 tramite Python MetaTrader5
-# Porta 7778: PERS   — MT4 tramite EA polling (o MT5 se il personale e' MT5)
+  var code = `# PropHedge Bridge v7.0
+# Porta 7777: PROP   — MT5 Python
+# Porta 7778: PERS   — MT4 EA polling  (o MT5 se il personale e' MT5)
 #
-# Avvio: py bridge.py
-# Solo una porta: py bridge.py --port 7777
+# Avvio: py bridge.py             → entrambe le porte
+#        py bridge.py --port 7777 → solo PROP
 
 import sys, time, threading, json as _json, argparse
 
@@ -10121,18 +10171,54 @@ args, _ = parser.parse_known_args()
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-# ── Coda ordini pendenti per MT4 (EA polling) ───────────────────
-_pending_orders = []          # ordini in attesa che l'EA esegua
+_pending_orders = []
 _pending_lock   = threading.Lock()
-_ea_account     = {}          # ultimo account info ricevuto dall'EA
-_ea_positions   = []          # posizioni aperte ricevute dall'EA
-_ea_last_seen   = 0           # timestamp ultimo heartbeat EA
+_ea_account     = {}
+_ea_positions   = []
+_ea_last_seen   = 0
+
+def pip_size(sym):
+    s = sym.upper()
+    if 'XAU' in s or 'GOLD' in s: return 0.1
+    if 'XAG' in s or 'SILVER' in s: return 0.01
+    if 'JPY' in s: return 0.01
+    if any(x in s for x in ['NAS','US30','US500','GER','DAX','UK100']): return 1.0
+    return 0.0001
+
+def calc_sl_tp(sym, side, price, sl_pips, tp_pips):
+    pip = pip_size(sym)
+    sl_pts = sl_pips * pip
+    tp_pts = tp_pips * pip
+    if side == 'buy':
+        sl = round(price - sl_pts, 5) if sl_pips > 0 else 0.0
+        tp = round(price + tp_pts, 5) if tp_pips > 0 else 0.0
+    else:
+        sl = round(price + sl_pts, 5) if sl_pips > 0 else 0.0
+        tp = round(price - tp_pts, 5) if tp_pips > 0 else 0.0
+    return sl, tp
+
+def find_sym(mt5, sym):
+    for s in [sym, sym+'.a', sym+'.b', sym+'.x', sym+'m', sym+'M']:
+        t = mt5.symbol_info_tick(s)
+        if t: mt5.symbol_select(s, True); return s, t
+    mt5.symbol_select(sym, True); time.sleep(0.3)
+    t = mt5.symbol_info_tick(sym)
+    if t: return sym, t
+    return None, None
+
+def get_json_safe():
+    try:
+        d = request.get_json(force=True, silent=True)
+        if d: return d
+        raw = request.data.decode('utf-8', errors='ignore').strip()
+        if raw: return _json.loads(raw)
+    except Exception: pass
+    return {}
 
 def make_app(port):
-    label = "PROP" if port == 7777 else "PERS"
-    _connected_login = [0]     # usa lista per mutabilita' in closure
+    label = 'PROP' if port == 7777 else 'PERS'
+    _conn = [0]   # connected login
 
-    # MT5 (solo se disponibile)
     try:
         import MetaTrader5 as mt5_mod
         MT5 = mt5_mod
@@ -10154,56 +10240,39 @@ def make_app(port):
 
     @app.route('/ping')
     def ping():
-        ea_alive = (time.time() - _ea_last_seen) < 10 if port == 7778 else False
-        return jsonify({'ok': True, 'version': '6.0', 'port': port, 'label': label,
-                        'connected_login': _connected_login[0],
-                        'ea_alive': ea_alive})
+        ea_alive = port == 7778 and (time.time() - _ea_last_seen) < 10
+        return jsonify({'ok': True, 'version': '7.0', 'port': port,
+                        'label': label, 'connected_login': _conn[0], 'ea_alive': ea_alive})
 
-    def get_json_safe():
-        try:
-            d = request.get_json(force=True, silent=True)
-            if d: return d
-            raw = request.data.decode('utf-8', errors='ignore').strip()
-            if raw: return _json.loads(raw)
-        except Exception: pass
-        return {}
-
-    # ════════════════════════════════════════════════════════════
-    # CONNECT
-    # ════════════════════════════════════════════════════════════
     @app.route('/connect', methods=['POST'])
     def connect():
+        global _ea_last_seen, _ea_account
         d = get_json_safe()
         if not d: return jsonify({'ok': False, 'error': 'Dati mancanti'})
-        login  = int(d.get('login', 0))
-        pwd    = d.get('password', '')
-        srv    = d.get('server', '')
-        plat   = d.get('platform', 'mt5').lower()
+        login = int(d.get('login', 0))
+        plat  = d.get('platform', 'mt5').lower()
 
-        # MT4: connessione tramite EA — verifica che l'EA stia girando
+        # MT4 via EA
         if plat == 'mt4':
             if port == 7778 and (time.time() - _ea_last_seen) < 15:
-                # EA e' vivo, usa il suo account info
                 acc = _ea_account.copy()
                 if acc.get('login'):
-                    _connected_login[0] = acc['login']
-                    print(f'[{label}:{port}] MT4 EA connesso, login={acc["login"]}')
-                    return jsonify({'ok': True, 'error': None})
-            return jsonify({'ok': False,
-                            'error': 'EA MT4 non risponde. Assicurati che EA PropHedge sia sul grafico MT4.'})
+                    _conn[0] = int(acc['login'])
+                    print(f'[{label}:{port}] MT4 EA connesso login={_conn[0]}')
+                    return jsonify({'ok': True, 'error': None, 'account': acc})
+            return jsonify({'ok': False, 'error': 'EA MT4 non risponde. Installa EA PropHedge su MT4 e aspetta 2 secondi.'})
 
-        # MT5: connessione tramite Python bridge
-        if not MT5:
-            return jsonify({'ok': False, 'error': 'MetaTrader5 non installato. Esegui: pip install MetaTrader5'})
+        # MT5
+        if not MT5: return jsonify({'ok': False, 'error': 'MetaTrader5 non installato'})
         try:
             MT5.initialize()
             acc = MT5.account_info()
             if acc and acc.login == login:
-                _connected_login[0] = login
+                _conn[0] = login
                 return jsonify({'ok': True, 'error': None})
-            ok = MT5.login(login=login, password=pwd, server=srv)
+            ok = MT5.login(login=login, password=d.get('password',''), server=d.get('server',''))
             if ok:
-                _connected_login[0] = login
+                _conn[0] = login
                 print(f'[{label}:{port}] MT5 connesso login={login}')
                 return jsonify({'ok': True, 'error': None})
             err = MT5.last_error()
@@ -10211,118 +10280,96 @@ def make_app(port):
         except Exception as e:
             return jsonify({'ok': False, 'error': str(e)})
 
-    # ════════════════════════════════════════════════════════════
-    # ACCOUNT — serve sia per PropHedge (check connessione) sia per EA (heartbeat)
-    # ════════════════════════════════════════════════════════════
     @app.route('/account')
     def account():
         global _ea_last_seen, _ea_account
-
-        # Parametro ?from_ea=1 : l'EA sta facendo heartbeat, invia il suo account
         if request.args.get('from_ea') == '1':
             body = get_json_safe()
             if body and body.get('login'):
-                _ea_account = body
+                _ea_account  = body
                 _ea_last_seen = time.time()
-                _connected_login[0] = body['login']
-                return jsonify({'ok': True})
-
-        # Se porta 7778 e EA vivo, ritorna info EA
+                _conn[0] = int(body['login'])
+            return jsonify({'ok': True})
         if port == 7778 and (time.time() - _ea_last_seen) < 15 and _ea_account.get('login'):
             return jsonify(_ea_account)
-
-        # Altrimenti MT5
         if MT5:
             try:
                 info = MT5.account_info()
-                if info: return jsonify({k:(float(v) if hasattr(v,'real') else v)
-                                         for k,v in info._asdict().items()})
+                if info: return jsonify({k:(float(v) if hasattr(v,'real') else v) for k,v in info._asdict().items()})
             except Exception: pass
         return jsonify({})
 
-    # ════════════════════════════════════════════════════════════
-    # POSITIONS
-    # ════════════════════════════════════════════════════════════
     @app.route('/positions')
     def positions():
-        global _ea_positions
-
-        # EA invia le sue posizioni
+        global _ea_positions, _ea_last_seen
         if request.args.get('from_ea') == '1':
             body = get_json_safe()
-            if isinstance(body, list):
-                _ea_positions = body
+            if isinstance(body, list): _ea_positions = body
             return jsonify({'ok': True})
-
         if port == 7778 and (time.time() - _ea_last_seen) < 15:
             return jsonify(_ea_positions)
-
         if MT5:
             try:
                 pos = MT5.positions_get() or []
-                return jsonify([{k:(float(v) if hasattr(v,'real') else v)
-                                 for k,v in p._asdict().items()} for p in pos])
+                return jsonify([{k:(float(v) if hasattr(v,'real') else v) for k,v in p._asdict().items()} for p in pos])
             except Exception: pass
         return jsonify([])
 
-    # ════════════════════════════════════════════════════════════
-    # ORDER
-    # ════════════════════════════════════════════════════════════
     @app.route('/order', methods=['POST'])
     def order():
         d = get_json_safe()
         if not d: return jsonify({'retcode': -1, 'comment': 'Dati mancanti'})
-        if not _connected_login[0]:
+        if not _conn[0]:
             return jsonify({'retcode': -1, 'comment': f'{label} non connesso. Clicca Connetti prima.'})
 
-        # MT4: metti ordine in coda, l'EA lo preleva con /pending
-        if port == 7778 and (time.time() - _ea_last_seen) < 15:
-            order_id = int(time.time() * 1000)
-            with _pending_lock:
-                _pending_orders.append({'id': order_id, **d})
-            # Attendi al massimo 5 secondi che l'EA esegua
-            deadline = time.time() + 5
-            while time.time() < deadline:
-                time.sleep(0.1)
-                with _pending_lock:
-                    done = [o for o in _pending_orders if o.get('id') == order_id and o.get('executed')]
-                if done:
-                    result = done[0].get('result', {})
-                    return jsonify(result)
-            return jsonify({'retcode': -1, 'comment': 'Timeout EA — ordine non eseguito in 5 secondi'})
+        sym_in  = d.get('symbol', '')
+        side    = d.get('side', 'buy').lower()
+        vol     = round(float(d.get('volume', 0.01)), 2)
+        sl_pips = float(d.get('sl_pips', 0))
+        tp_pips = float(d.get('tp_pips', 0))
+        cmt     = d.get('comment', 'PropHedge')
 
-        # MT5: esegui direttamente
+        # MT4 EA polling
+        if port == 7778 and (time.time() - _ea_last_seen) < 15:
+            oid = int(time.time() * 1000)
+            with _pending_lock:
+                _pending_orders.append({'id': oid, 'symbol': sym_in, 'side': side,
+                                        'volume': vol, 'sl_pips': sl_pips,
+                                        'tp_pips': tp_pips, 'comment': cmt})
+            deadline = time.time() + 8
+            while time.time() < deadline:
+                time.sleep(0.15)
+                with _pending_lock:
+                    done = [o for o in _pending_orders if o.get('id') == oid and o.get('executed')]
+                if done: return jsonify(done[0].get('result', {}))
+            return jsonify({'retcode': -1, 'comment': 'Timeout EA (8s) — ordine non eseguito'})
+
+        # MT5 diretto
         if not MT5: return jsonify({'retcode': -1, 'comment': 'MetaTrader5 non disponibile'})
         try:
-            sym_in = d.get('symbol', '')
-            sym, tick = find_symbol_mt5(MT5, sym_in)
-            if not sym: return jsonify({'retcode': -1, 'comment': f'Simbolo {sym_in} non trovato'})
-            side  = d.get('side', 'buy').lower()
+            sym, tick = find_sym(MT5, sym_in)
+            if not sym: return jsonify({'retcode': -1, 'comment': f'Simbolo {sym_in} non trovato. Aprilo su MT5.'})
             price = tick.ask if side == 'buy' else tick.bid
-            vol   = round(float(d.get('volume', 0.01)), 2)
-            otype = MT5.ORDER_TYPE_BUY if side == 'buy' else MT5.ORDER_TYPE_SELL
-            base  = {'action': MT5.TRADE_ACTION_DEAL, 'symbol': sym, 'volume': vol,
-                     'type': otype, 'price': price,
-                     'sl': float(d.get('sl', 0)) or 0.0, 'tp': float(d.get('tp', 0)) or 0.0,
-                     'deviation': 20, 'magic': 234000,
-                     'comment': d.get('comment', 'PropHedge'), 'type_time': MT5.ORDER_TIME_GTC}
+            sl, tp = calc_sl_tp(sym, side, price, sl_pips, tp_pips)
+            otype  = MT5.ORDER_TYPE_BUY if side == 'buy' else MT5.ORDER_TYPE_SELL
+            base   = {'action': MT5.TRADE_ACTION_DEAL, 'symbol': sym, 'volume': vol,
+                      'type': otype, 'price': price, 'sl': sl, 'tp': tp,
+                      'deviation': 20, 'magic': 234000, 'comment': cmt,
+                      'type_time': MT5.ORDER_TIME_GTC}
             r = None
             for fill in [MT5.ORDER_FILLING_IOC, MT5.ORDER_FILLING_FOK, MT5.ORDER_FILLING_RETURN]:
                 r = MT5.order_send(dict(base, type_filling=fill))
                 if r and r.retcode in (10009, 10008, 0): break
                 if r and r.retcode not in (10030, 10014): break
             if not r: return jsonify({'retcode': -1, 'comment': 'order_send None'})
-            print(f'[{label}:{port}] Order {side} {vol}lot {sym} -> {r.retcode}')
+            print(f'[{label}:{port}] {side} {vol}lot {sym} SL={sl} TP={tp} -> {r.retcode} #{r.order}')
             return jsonify({k:(float(v) if hasattr(v,'real') else v) for k,v in r._asdict().items()})
         except Exception as e:
             return jsonify({'retcode': -1, 'comment': str(e)})
 
-    # ════════════════════════════════════════════════════════════
-    # PENDING — l'EA fa polling qui per prelevare ordini da eseguire
-    # ════════════════════════════════════════════════════════════
     @app.route('/pending')
     def pending():
-        global _ea_last_seen, _ea_account
+        global _ea_last_seen
         _ea_last_seen = time.time()
         with _pending_lock:
             orders = [o for o in _pending_orders if not o.get('executed')]
@@ -10331,13 +10378,12 @@ def make_app(port):
     @app.route('/pending/result', methods=['POST'])
     def pending_result():
         d = get_json_safe()
-        order_id = d.get('id')
-        result   = d.get('result', {})
+        oid = d.get('id')
         with _pending_lock:
             for o in _pending_orders:
-                if o.get('id') == order_id:
+                if o.get('id') == oid:
                     o['executed'] = True
-                    o['result']   = result
+                    o['result']   = d.get('result', {})
                     break
         return jsonify({'ok': True})
 
@@ -10347,7 +10393,7 @@ def make_app(port):
             try:
                 ticket = int(request.args.get('ticket', 0))
                 deals  = MT5.history_deals_get(position=ticket) or []
-                return jsonify({'profit': sum(d.profit for d in deals), 'ticket': ticket})
+                return jsonify({'profit': sum(x.profit for x in deals), 'ticket': ticket})
             except Exception: pass
         return jsonify({'profit': 0, 'ticket': 0})
 
@@ -10355,26 +10401,22 @@ def make_app(port):
     def close():
         d = get_json_safe()
         ticket = int(d.get('ticket', 0))
-
-        # MT4: coda chiusura
         if port == 7778 and (time.time() - _ea_last_seen) < 15:
-            order_id = int(time.time() * 1000)
+            oid = int(time.time() * 1000)
             with _pending_lock:
-                _pending_orders.append({'id': order_id, 'action': 'close', 'ticket': ticket})
-            deadline = time.time() + 5
+                _pending_orders.append({'id': oid, 'action': 'close', 'ticket': ticket})
+            deadline = time.time() + 8
             while time.time() < deadline:
-                time.sleep(0.1)
+                time.sleep(0.15)
                 with _pending_lock:
-                    done = [o for o in _pending_orders if o.get('id') == order_id and o.get('executed')]
+                    done = [o for o in _pending_orders if o.get('id') == oid and o.get('executed')]
                 if done: return jsonify(done[0].get('result', {}))
             return jsonify({'retcode': -1, 'comment': 'Timeout chiusura'})
-
         if MT5:
             try:
                 pos = MT5.positions_get(ticket=ticket)
                 if not pos: return jsonify({'retcode': -1, 'comment': 'Non trovata'})
-                p = pos[0]
-                t = MT5.symbol_info_tick(p.symbol)
+                p = pos[0]; t = MT5.symbol_info_tick(p.symbol)
                 price = t.bid if p.type == 0 else t.ask
                 r = MT5.order_send({'action': MT5.TRADE_ACTION_DEAL, 'symbol': p.symbol,
                     'volume': p.volume,
@@ -10389,15 +10431,6 @@ def make_app(port):
 
     return app
 
-def find_symbol_mt5(mt5, sym):
-    for s in [sym, sym+'.a', sym+'.b', sym+'.x', sym+'m', sym+'M']:
-        t = mt5.symbol_info_tick(s)
-        if t: mt5.symbol_select(s, True); return s, t
-    mt5.symbol_select(sym, True); time.sleep(0.3)
-    t = mt5.symbol_info_tick(sym)
-    if t: return sym, t
-    return None, None
-
 def run_server(app, port):
     label = 'PROP' if port == 7777 else 'PERS'
     try:
@@ -10405,26 +10438,24 @@ def run_server(app, port):
         app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
     except OSError as e:
         if '10048' in str(e) or 'already in use' in str(e).lower():
-            print(f'[WARN] Porta {port} occupata — bridge gia attivo?')
+            print(f'[WARN] Porta {port} gia occupata')
         else:
-            print(f'[ERR {label}:{port}] {e}')
+            print(f'[ERR] {e}')
 
 if __name__ == '__main__':
-    target_port = args.port
-
-    if target_port:
-        # Porta singola (es. py bridge.py --port 7777)
-        run_server(make_app(target_port), target_port)
+    tp = args.port
+    if tp:
+        run_server(make_app(tp), tp)
     else:
-        # Entrambe le porte in thread separati
-        print('=' * 52)
-        print('  PropHedge Bridge v6.0')
-        print('  Porta 7777  PROP   (MT5)')
-        print('  Porta 7778  PERS   (MT4 EA polling + MT5)')
-        print('=' * 52)
+        print('='*52)
+        print('  PropHedge Bridge v7.0')
+        print('  7777  PROP  (MT5 Python)')
+        print('  7778  PERS  (MT4 EA polling / MT5)')
+        print('='*52)
         t = threading.Thread(target=run_server, args=(make_app(7777), 7777), daemon=True)
         t.start()
         run_server(make_app(7778), 7778)
+
 `;
   var blob=new Blob([code],{type:'text/plain'});
   var url=URL.createObjectURL(blob);
@@ -10517,10 +10548,12 @@ void PollOrders()
       string idStr = StringSubstr(resp, vs, ve-vs);
       StringTrimLeft(idStr); StringTrimRight(idStr);
 
-      string sym  = JVal(resp, QQ+"symbol"+QQ+":");
-      string side = JVal(resp, QQ+"side"+QQ+":");
-      double vol  = StringToDouble(JVal(resp, QQ+"volume"+QQ+":"));
-      string cmt  = JVal(resp, QQ+"comment"+QQ+":");
+      string sym    = JVal(resp, QQ+"symbol"+QQ+":");
+      string side   = JVal(resp, QQ+"side"+QQ+":");
+      double vol    = StringToDouble(JVal(resp, QQ+"volume"+QQ+":"));
+      double slPips = StringToDouble(JVal(resp, QQ+"sl_pips"+QQ+":"));
+      double tpPips = StringToDouble(JVal(resp, QQ+"tp_pips"+QQ+":"));
+      string cmt    = JVal(resp, QQ+"comment"+QQ+":");
       if(StringLen(cmt)<1) cmt="PropHedge";
 
       string res = "";
@@ -11728,63 +11761,55 @@ function jrnlCreateNew(){
 
 
 async function jrnlOpenHedge(sessIdx, propDir){
-  var sess = jrnl.sessions[sessIdx];
+  var sess     = jrnl.sessions[sessIdx];
   if(!sess) return;
+  var sym      = sess.symbol || 'XAUUSD';
+  var lotProp  = parseFloat(sess.lotProp)  || 0.01;
+  var lotPers  = parseFloat(sess.lotPers)  || 0.01;
+  var sl       = parseFloat(sess.slPips)   || 0;
+  var tp       = parseFloat(sess.tpPips)   || 0;
+  var persDir  = propDir==='buy' ? 'sell' : 'buy';
+  var errEl    = document.getElementById('jHedgeErr_'+sessIdx);
+  function setErr(msg){ if(errEl){errEl.innerHTML=msg;errEl.style.display=msg?'block':'none';} }
 
-  var prop = null;
-  if(sess.linkedPropId && typeof props !== 'undefined')
-    prop = props.find(function(p){return p.id===sess.linkedPropId;});
-  if(!prop){ alert('Parametri sfida non trovati.'); return; }
+  setErr('<span style="color:var(--amber)">⏳ Verifica connessioni...</span>');
 
-  var sym     = document.getElementById('jSym_'+sessIdx)?.value || prop.asset || 'XAUUSD';
-  if(sym==='GOLD') sym='XAUUSD';
-  var lotProp = prop.lots || 0.01;
-  var lotPers = prop.lotPers || prop.lotsHedge || 0.01;
-  var sl      = prop.slPips || 100;
-  var tp      = prop.tpPips || 100;
-  var persDir = propDir==='buy' ? 'sell' : 'buy';
-
-  /* Applica regole 70% dal simulatore */
-  if(typeof _simCH1 !== 'undefined'){
-    if(_simCH1._above70Active && _simCH1._lotPersHalved > 0)
-      lotPers = _simCH1._lotPersHalved;
-    if(_simCH1._above70Loss && lotProp > 0.01)
-      lotProp = Math.floor(lotProp * 50) / 100;
+  async function pingConn(port){
+    try{
+      var r=await fetch('http://127.0.0.1:'+port+'/ping',{cache:'no-store'});
+      var j=await r.json();
+      return !!(j && (j.connected_login>0 || j.ea_alive));
+    }catch(e){ return false; }
   }
-
-  var res = document.getElementById('jHedgeResult_'+sessIdx);
-  if(res){ res.style.display='block'; res.style.background='rgba(251,191,36,.08)'; res.style.color='var(--amber)'; res.textContent='⏳ Apertura in corso...'; }
-
+  var propOk = await pingConn(7777);
+  var persOk = await pingConn(7778);
+  if(!propOk||!persOk){
+    setErr('❌ '+(propOk?'':'PROP (7777) ')+(persOk?'':'PERSONALE (7778) ')+' non connesso.<br>'
+      +'<span style="font-size:9px">Connetti entrambi dal tab Live Trading, poi riprova.</span>');
+    return;
+  }
+  setErr('<span style="color:var(--amber)">⏳ Invio PROP...</span>');
   try{
-    var [rProp, rPers] = await Promise.all([
-      fetch('http://127.0.0.1:7777/order',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({symbol:sym,volume:lotProp,side:propDir,sl:0,tp:0,comment:'PH_PROP_'+sess.name})}).then(r=>r.json()),
-      fetch('http://127.0.0.1:7778/order',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({symbol:sym,volume:lotPers,side:persDir,sl:0,tp:0,comment:'PH_PERS_'+sess.name})}).then(r=>r.json())
-    ]);
-
-    var okProp = rProp.retcode===10009||rProp.retcode===0;
-    var okPers = rPers.retcode===10009||rPers.retcode===0;
-
-    if(okProp && okPers){
-      if(res){ res.style.background='rgba(52,211,153,.1)'; res.style.color='var(--green)';
-        res.textContent='✅ PROP '+propDir.toUpperCase()+' '+lotProp+'lot #'+rProp.order+' · PERS '+persDir.toUpperCase()+' '+lotPers+'lot #'+rPers.order; }
-      /* Registra trade aperto per tracking chiusura */
-      if(!_openHedgeTrades) _openHedgeTrades=[];
-      _openHedgeTrades.push({
-        propTicket:rProp.order, persTicket:rPers.order,
-        sym:sym, dir:propDir, lotProp:lotProp, lotPers:lotPers,
-        sessIdx:sessIdx, linkedPropId:sess.linkedPropId,
-        day: _getSimCurrentDay(sess.linkedPropId)
-      });
+    var rP = await fetch('http://127.0.0.1:7777/order',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({symbol:sym,volume:lotProp,side:propDir,sl_pips:sl,tp_pips:tp,comment:'PH_PROP'})
+    }).then(function(r){return r.json();});
+    var okP = rP&&(rP.retcode===10009||rP.retcode===10008||rP.retcode===0||rP.order>0);
+    if(!okP){ setErr('❌ PROP fallita: '+(rP.comment||rP.retcode)); return; }
+    setErr('<span style="color:var(--amber)">⏳ Invio PERS...</span>');
+    var rS = await fetch('http://127.0.0.1:7778/order',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({symbol:sym,volume:lotPers,side:persDir,sl_pips:sl,tp_pips:tp,comment:'PH_PERS'})
+    }).then(function(r){return r.json();});
+    var okS = rS&&(rS.retcode===10009||rS.retcode===10008||rS.retcode===0||rS.order>0);
+    if(okP&&okS){
+      setErr('<span style="color:var(--green)">✅ PROP #'+rP.order+' '+propDir+' '+lotProp+'lot | PERS #'+rS.order+' '+persDir+' '+lotPers+'lot | SL '+sl+'pip TP '+tp+'pip</span>');
+      _bridgeRegisterTrade(rP.order,rS.order,sym,propDir,lotProp,lotPers);
     } else {
-      if(res){ res.style.background='rgba(248,113,113,.1)'; res.style.color='var(--red)';
-        res.textContent='❌ PROP: '+(okProp?'OK':JSON.stringify(rProp.comment||rProp.retcode))+' · PERS: '+(okPers?'OK':JSON.stringify(rPers.comment||rPers.retcode)); }
+      setErr('✅ PROP #'+rP.order+' | ❌ PERS: '+(rS.comment||rS.retcode));
     }
-  } catch(e){
-    if(res){ res.style.background='rgba(248,113,113,.1)'; res.style.color='var(--red)';
-      res.textContent='❌ Bridge non raggiungibile. Assicurati che bridge.py sia avviato.'; }
-  }
+    liveRefreshAll();
+  }catch(e){ setErr('❌ '+e.message); }
 }
 
 function _getSimCurrentDay(linkedPropId){
