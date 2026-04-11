@@ -7702,13 +7702,10 @@ function delPropSync(id){
 
 
   if(dashDetailId===id)dashDetailId=null;
-
-
-
+  try{localStorage.removeItem('ph_live_creds_'+id);}catch(e){}
+  try{localStorage.removeItem('ph_sim_'+id);}catch(e){}
+  if(typeof saveProps==='function')saveProps();
   render();
-
-
-
 }
 
 
@@ -7962,8 +7959,8 @@ function renderDash(){
       +'<div class="pc-top"><div class="pc-logo">'+logo+'</div>'
       +'<div><div class="pc-nm">'+p.name+'</div><div class="pc-mt">'+uF(p.size)+' DD '+p.maxDD+'% '+p.days+'gg '+(p.asset||'EUR/USD')+'</div></div></div>'
       +'<div class="pc-st">'
-      +'<div class="pst"><div class="pst-l">Lotti prop</div><div class="pst-v v-teal">'+c.propLots+'</div></div>'
-      +'<div class="pst"><div class="pst-l">Lotti pers.</div><div class="pst-v v-violet">'+c.hedgeLots+'</div></div>'
+      /* FIX sync 70% */
+      +(function(){var _ep=c.propLots,_eh=c.hedgeLots;if(typeof _simCH1!=='undefined'){if(_simCH1._above70Loss&&_ep>0.01)_ep=Math.floor(_ep*50)/100;if(_simCH1._above70Active&&_simCH1._lotPersHalved>0)_eh=_simCH1._lotPersHalved;}return '<div class="pst"><div class="pst-l">Lotti prop</div><div class="pst-v v-teal">'+_ep+'</div></div>'+'<div class="pst"><div class="pst-l">Lotti pers.</div><div class="pst-v v-violet">'+_eh+'</div></div>';})()
       +'<div class="pst"><div class="pst-l">Netto (B)</div><div class="pst-v '+nc+'">'+sgn(c.sB_net)+uF(c.sB_net)+'</div></div>'
       +'</div>'+pnlBadge
       +'<div style="margin-top:10px;display:flex;flex-direction:column;gap:4px">'+connBadge+posRows+'</div>'
@@ -8799,13 +8796,6 @@ var _bridge = {
   prop: { connected:false, server:'', login:0, platform:'mt5', account:null, positions:[], port:7777 },
   pers: { connected:false, server:'', login:0, platform:'mt4', account:null, positions:[], port:7778 }
 };
-/* Reset connessione ad ogni caricamento pagina */
-window.addEventListener('load', function(){
-  _bridge.prop.connected=false; _bridge.prop.account=null; _bridge.prop.login=0;
-  _bridge.pers.connected=false; _bridge.pers.account=null; _bridge.pers.login=0;
-  if(_bridgePollTimer){clearInterval(_bridgePollTimer);_bridgePollTimer=null;}
-});
-
 var _bridgePollTimer = null;
 var _bridgeClosedTrades = []; // trade chiusi già processati
 
@@ -8813,231 +8803,262 @@ function bridgeUrl(side){ return 'http://127.0.0.1:' + _bridge[side].port; }
 var BRIDGE_URL = 'http://127.0.0.1:7777'; // compat
 
 function renderLive(){
-  var sfide=(typeof props!=='undefined')?props:[];
-  var selId=_liveSfidaId||(sfide.length?sfide[0].id:null);
-  var sfida=sfide.find(function(p){return p.id===selId;})||null;
-  var pid=sfida?sfida.id:0;
-  var C={}; try{var _s=localStorage.getItem('ph_live_creds_'+pid);C=_s?JSON.parse(_s):{}}catch(e){}
-  var bp=_bridge.prop, bn=_bridge.pers;
+  /* Controlla versione bridge e mostra banner aggiornamento */
+  setTimeout(function(){
+    Promise.allSettled([
+      fetch('http://127.0.0.1:7777/ping',{cache:'no-store'}).then(r=>r.json()),
+      fetch('http://127.0.0.1:7778/ping',{cache:'no-store'}).then(r=>r.json())
+    ]).then(function(results){
+      var v7 = results[0].status==='fulfilled' ? (results[0].value.version||'0') : '0';
+      var v8 = results[1].status==='fulfilled' ? (results[1].value.version||'0') : '0';
+      var needUpdate = parseFloat(v7) < 8.0 || parseFloat(v8) < 8.0;
+      var oldBanner = document.getElementById('_bridgeUpdateBanner');
+      if(oldBanner) oldBanner.remove();
+      if(needUpdate){
+        var root = document.getElementById('liveRoot');
+        if(!root) return;
+        var banner = document.createElement('div');
+        banner.id = '_bridgeUpdateBanner';
+        banner.style.cssText = 'background:#dc2626;color:#fff;font-family:var(--fd);font-size:12px;font-weight:700;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;';
+        banner.innerHTML = '<span>⚠️ Stai usando bridge.py vecchio (v'+v7+'). Riscaricalo dal software. Serve la v6.0 per connettere entrambi i conti.</span>'
+          +'<div style="display:flex;gap:8px">'
+          +'<button onclick="liveDownloadGuide()" style="background:#fff;color:#dc2626;border:none;border-radius:6px;padding:6px 14px;font-weight:800;font-size:11px;cursor:pointer">⬇ Scarica bridge.py v6.0</button>'
+          +'<span style="font-size:10px;opacity:.8">Poi: chiudi il vecchio bridge → lancia il nuovo → riconnetti</span>'
+          +'</div>';
+        root.insertBefore(banner, root.firstChild);
+      }
+    }).catch(function(){});
+  }, 500);
+  /* Carica credenziali salvate */
+  function loadCreds(propId){
+    try{ var s=localStorage.getItem('ph_live_creds_'+propId); return s?JSON.parse(s):null; }catch(e){return null;}
+  }
 
-  var div=document.createElement('div');
-  div.id='liveRoot';
+  var sfide = (typeof props !== 'undefined') ? props : [];
+  var selId = _liveSfidaId || (sfide.length ? sfide[0].id : null);
+  var sfida = sfide.find(function(p){return p.id===selId;}) || null;
+  var creds = sfida ? (loadCreds(sfida.id)||{}) : {};
 
-  // Header
-  var hdr=document.createElement('div');
-  hdr.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 22px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between';
-  var statTxt=bp.connected&&bn.connected?'<span style="color:#34D399;font-size:11px;font-weight:700;font-family:var(--fd)">● Entrambi connessi</span>'
-    :(bp.connected||bn.connected)?'<span style="color:var(--amber);font-size:11px;font-family:var(--fd)">◐ Parzialmente connesso</span>'
-    :'<span style="color:var(--t3);font-size:11px">● Non connesso</span>';
-  hdr.innerHTML='<div><div style="font-size:15px;font-weight:800;color:var(--t)">Live Trading</div><div style="font-size:12px;color:var(--t3)">Collega prop e personale · Fai trading dal Journal</div></div>'+statTxt;
-  div.appendChild(hdr);
+  var bProp = _bridge.prop;
+  var bPers = _bridge.pers;
 
-  // Selezione sfida
-  if(sfide.length>1){
-    var sfidaBox=document.createElement('div');
-    sfidaBox.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px';
-    sfidaBox.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--t2);margin-bottom:10px">Quale sfida vuoi collegare?</div>';
-    var sfidaRow=document.createElement('div');
-    sfidaRow.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+  /* Stato connessione */
+  var statusHtml = (bProp.connected && bPers.connected)
+    ? '<div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;background:#34D399;box-shadow:0 0 6px #34D399"></div><span style="color:#34D399;font-size:11px;font-weight:700">Entrambi connessi — '+(sfida?sfida.name:'')+'</span></div>'
+    : '<div style="display:flex;align-items:center;gap:6px"><div style="width:9px;height:9px;border-radius:50%;background:var(--t3)"></div><span style="font-size:11px;color:var(--t3)">Non connesso</span></div>';
+
+  var html = '<div style="max-width:960px;padding-bottom:40px" id="liveRoot">';
+
+  /* HEADER */
+  html += '<div style="background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(52,211,153,.06));border:1px solid rgba(56,189,248,.2);border-radius:16px;padding:18px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px">'
+    +'<div style="font-size:28px">🔌</div>'
+    +'<div><div style="font-size:17px;font-weight:800;color:var(--t)">Live Trading — Connessione Conti</div>'
+    +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-top:2px">Collega prop e personale · Fai trading dal Journal</div></div>'
+    +'<div style="margin-left:auto">'+statusHtml+'</div>'
+    +'</div>';
+
+  /* SELEZIONA SFIDA */
+  if(sfide.length === 0){
+    html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;margin-bottom:20px">'
+      +'<div style="font-size:13px;color:var(--t3);font-family:var(--fd)">Nessuna sfida creata. Vai su <b>Nuova Sfida</b> per crearne una.</div>'
+      +'</div>';
+  } else {
+    html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:10px">Quale sfida vuoi collegare?</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">';
     sfide.forEach(function(p){
-      var active=(p.id===selId);
-      var btn=document.createElement('button');
-      btn.style.cssText='padding:8px 16px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:'+(active?'700':'400')+';border:'+(active?'2px solid var(--teal)':'1px solid var(--border2)')+';background:'+(active?'rgba(56,189,248,.12)':'var(--bg3)')+';color:'+(active?'var(--teal)':'var(--t2)');
-      btn.textContent=p.name;
-      btn.dataset.sfida=p.id;
-      sfidaRow.appendChild(btn);
+      var active = p.id === selId;
+      var hasCreds = !!loadCreds(p.id);
+      html += '<button onclick="liveSelectSfida('+p.id+')" style="padding:8px 16px;border-radius:8px;border:'+(active?'2px solid var(--teal)':'1px solid var(--border2)')+';background:'+(active?'rgba(56,189,248,.12)':'var(--bg3)')+';color:'+(active?'var(--teal)':'var(--t2)')+';font-size:12px;font-weight:'+(active?'700':'400')+';cursor:pointer">'
+        +p.name+(hasCreds?'<span style="margin-left:5px;font-size:9px;color:#34D399">●</span>':'')+'</button>';
     });
-    sfidaBox.appendChild(sfidaRow);
-    div.appendChild(sfidaBox);
+    html += '</div></div>';
   }
 
-  // Grid 2 card
-  var grid=document.createElement('div');
-  grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px';
+  /* FORM CONNESSIONE */
+  if(sfida){
+    var propSrv = creds.propServer||''; var propLog = creds.propLogin||''; var propPwd = creds.propPwd||'';
+    var persSrv = creds.persServer||''; var persLog = creds.persLogin||''; var persPwd = creds.persPwd||'';
+    var propPlat = creds.propPlat||'mt5'; var persPlat = creds.persPlat||'mt4';
 
-  function makeCard(side,labelName,mainColor,g1,g2,placeholder){
-    var b=(side==='prop')?bp:bn;
-    var plat=C[side+'Plat']||'mt5';
-    var login=C[side+'Login']||'';
-    var pwd=C[side+'Pwd']||'';
-    var srv=C[side+'Server']||'';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">';
 
-    var card=document.createElement('div');
-    card.style.cssText='background:var(--bg2);border:2px solid '+(b.connected?'#34D399':mainColor)+';border-radius:14px;padding:18px';
+    /* Card PROP */
+    html += '<div style="background:var(--bg2);border:2px solid '+(bProp.connected?'#34D399':'rgba(56,189,248,.4)')+';border-radius:12px;padding:16px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+      +'<div style="font-size:12px;font-weight:800;color:#38BDF8">🎯 PROP — '+sfida.name+'</div>'
+      +(bProp.connected?'<span style="font-size:10px;color:#34D399;font-weight:700">● Connesso</span>':'<span style="font-size:10px;color:var(--t3)">Non connesso</span>')
+      +'</div>'
+      +'<div style="margin-bottom:7px"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Piattaforma</div>'
+      +'<div style="display:flex;gap:5px">'
+      +['mt4','mt5','ctrader'].map(function(pl){var isSel=(propPlat===pl);return '<button onclick="liveSetPlat(this)" data-side="prop" data-plat="'+pl+'" data-pid="'+sfida.id+'" style="flex:1;padding:6px;border-radius:6px;border:'+(isSel?'2px solid #38BDF8':'1px solid var(--border2)')+';background:'+(isSel?'rgba(56,189,248,.12)':'var(--bg3)')+';color:'+(isSel?'#38BDF8':'var(--t3)')+';font-size:10px;font-weight:700;cursor:pointer">'+pl.toUpperCase()+'</button>';}).join('')
+      +'</div></div>'
+      +'<div style="margin-bottom:7px"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Server</div>'
+      +'<input id="lp_propSrv" value="'+propSrv+'" placeholder="es. FundedNext-Server3" oninput="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px">'
+      +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Login</div>'
+      +'<input id="lp_propLog" type="number" value="'+propLog+'" placeholder="123456" oninput="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Password</div>'
+      +'<div style="position:relative">'
+      +'<input id="lp_propPwd" type="password" value="'+propPwd+'" placeholder="••••••" oninput="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 32px 7px 10px;font-size:12px;outline:none">'
+      +'<button onclick="var f=document.getElementById(\'lp_propPwd\');f.type=f.type===\'password\'?\'text\':\'password\';this.textContent=f.type===\'password\'?\'👁\':\'🙈\'" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:var(--t3);padding:0;line-height:1">👁</button>'
+      +'</div></div>'
+      +'</div>'
+      +'<div id="lp_propErr" style="font-size:10px;color:var(--red);font-family:var(--fd);display:none;margin-bottom:6px"></div>'
+      +'</div>';
 
-    // Header card
-    var ch=document.createElement('div');
-    ch.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:14px';
-    var ct=document.createElement('div');
-    ct.style.cssText='font-size:13px;font-weight:800;color:'+mainColor;
-    ct.textContent=labelName;
-    var cs=document.createElement('span');
-    cs.style.cssText='font-size:10px;font-family:var(--fd)';
-    if(b.connected){cs.style.color='#34D399';cs.style.background='rgba(52,211,153,.1)';cs.style.border='1px solid rgba(52,211,153,.25)';cs.style.borderRadius='5px';cs.style.padding='3px 8px';cs.style.fontWeight='700';cs.textContent='● #'+b.login;}
-    else{cs.style.color='var(--t3)';cs.textContent='Non connesso';}
-    ch.appendChild(ct); ch.appendChild(cs); card.appendChild(ch);
+    /* Card PERSONALE */
+    html += '<div style="background:var(--bg2);border:2px solid '+(bPers.connected?'#34D399':'rgba(167,139,250,.4)')+';border-radius:12px;padding:16px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">'
+      +'<div style="font-size:12px;font-weight:800;color:#A78BFA">🛡️ PERSONALE</div>'
+      +(bPers.connected?'<span style="font-size:10px;color:#34D399;font-weight:700">● Connesso</span>':'<span style="font-size:10px;color:var(--t3)">Non connesso</span>')
+      +'</div>'
+      +'<div style="margin-bottom:7px"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Piattaforma</div>'
+      +'<div style="display:flex;gap:5px">'
+      +['mt4','mt5','ctrader'].map(function(pl){var isSel=(persPlat===pl);return '<button onclick="liveSetPlat(this)" data-side="pers" data-plat="'+pl+'" data-pid="'+sfida.id+'" style="flex:1;padding:6px;border-radius:6px;border:'+(isSel?'2px solid #A78BFA':'1px solid var(--border2)')+';background:'+(isSel?'rgba(167,139,250,.12)':'var(--bg3)')+';color:'+(isSel?'#A78BFA':'var(--t3)')+';font-size:10px;font-weight:700;cursor:pointer">'+pl.toUpperCase()+'</button>';}).join('')
+      +'</div></div>'
+      +'<div style="margin-bottom:7px"><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Server</div>'
+      +'<input id="lp_persSrv" value="'+persSrv+'" placeholder="es. TopFX-Live 13" oninput="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px">'
+      +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Login</div>'
+      +'<input id="lp_persLog" type="number" value="'+persLog+'" placeholder="123456" oninput="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 10px;font-size:12px;outline:none"></div>'
+      +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Password</div>'
+      +'<div style="position:relative">'
+      +'<input id="lp_persPwd" type="password" value="'+persPwd+'" placeholder="••••••" oninput="liveSaveCreds('+sfida.id+')" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:7px 32px 7px 10px;font-size:12px;outline:none">'
+      +'<button onclick="var f=document.getElementById(\'lp_persPwd\');f.type=f.type===\'password\'?\'text\':\'password\';this.textContent=f.type===\'password\'?\'👁\':\'🙈\'" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:var(--t3);padding:0;line-height:1">👁</button>'
+      +'</div></div>'
+      +'</div>'
+      +'<div id="lp_persErr" style="font-size:10px;color:var(--red);font-family:var(--fd);display:none;margin-bottom:6px"></div>'
+      +(persPlat==='mt4'
+        ?'<div style="background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.35);border-radius:10px;padding:12px;margin-bottom:8px">'
+        +'<div style="font-size:12px;font-weight:700;color:var(--amber);margin-bottom:6px">⚠️ MT4 richiede l\'EA PropHedge</div>'
+        +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:10px;line-height:1.7">'
+        +'Per collegare un conto MT4 personale devi installare il nostro Expert Advisor.<br>'
+        +'<b>Non serve su conti prop</b> — solo per il conto personale.'
+        +'</div>'
+        +'<div style="display:flex;gap:8px">'
+        +'<button onclick="liveTutorialOpenMT4()" style="flex:1;background:linear-gradient(135deg,#FBBF24,#f59e0b);border:none;border-radius:7px;color:#000;padding:8px;font-size:11px;font-weight:700;cursor:pointer">📖 Guida con audio</button>'
+        +'<button onclick="liveDownloadEA()" style="flex:1;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.3);border-radius:7px;color:#34D399;padding:8px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica EA</button>'
+        +'</div></div>'
+        :'')
+      +'</div>';
 
-    // Piattaforma
-    var pl=document.createElement('div');
-    pl.style.marginBottom='12px';
-    pl.innerHTML='<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Piattaforma</div>';
-    var plRow=document.createElement('div');
-    plRow.style.cssText='display:flex;gap:6px';
-    ['mt4','mt5','ctrader'].forEach(function(p){
-      var sel=(plat===p);
-      var b2=document.createElement('button');
-      b2.style.cssText='flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;border:'+(sel?'2px solid '+mainColor:'1px solid var(--border2)')+';background:'+(sel?'rgba(56,189,248,.08)':'var(--bg3)')+';color:'+(sel?mainColor:'var(--t3)');
-      b2.textContent=p==='ctrader'?'cTrader':p.toUpperCase();
-      b2.dataset.side=side; b2.dataset.plat=p; b2.dataset.pid=pid;
-      b2.className='plat-btn';
-      plRow.appendChild(b2);
-    });
-    pl.appendChild(plRow); card.appendChild(pl);
+    /* PULSANTE UNICO CONNETTI */
+    html += '<div style="margin-bottom:20px">'
+      /* Testa bridge prima di connettere */
+      +'<div id="bridgeTestResult" style="margin-bottom:12px"></div>'
+      +'<button onclick="liveBridgeTest()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t2);padding:9px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:12px">🔍 Verifica bridge attivo</button>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
+      +'<div>'
+      +'<button id="lpConnPropBtn" onclick="liveConnectSingle('+sfida.id+',\'prop\')" style="width:100%;background:linear-gradient(135deg,#0ea5e9,#38BDF8);border:none;border-radius:10px;color:#fff;padding:12px;font-size:13px;font-weight:800;cursor:pointer">🎯 Connetti PROP</button>'
+      +'<div id="lp_propErr" style="margin-top:5px;font-size:10px;color:var(--red);font-family:var(--fd);display:none"></div>'
+      +'</div>'
+      +'<div>'
+      +'<button id="lpConnPersBtn" onclick="liveConnectSingle('+sfida.id+',\'pers\')" style="width:100%;background:linear-gradient(135deg,#7c3aed,#A78BFA);border:none;border-radius:10px;color:#fff;padding:12px;font-size:13px;font-weight:800;cursor:pointer">🛡️ Connetti PERSONALE</button>'
+      +'<div id="lp_persErr" style="margin-top:5px;font-size:10px;color:var(--red);font-family:var(--fd);display:none"></div>'
+      +'</div>'
+      +'</div>'
 
-    // N° conto
-    var lbl1=document.createElement('div');
-    lbl1.style.marginBottom='10px';
-    lbl1.innerHTML='<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">N° Conto</div>';
-    var inp1=document.createElement('input');
-    inp1.type='number'; inp1.id='lp_'+side+'Log'; inp1.value=login; inp1.placeholder='123456789';
-    inp1.className='live-inp'; inp1.dataset.pid=pid;
-    inp1.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t);padding:9px 12px;font-size:13px;font-weight:700;outline:none;font-family:var(--fd);box-sizing:border-box';
-    lbl1.appendChild(inp1); card.appendChild(lbl1);
 
-    // Password
-    var lbl2=document.createElement('div');
-    lbl2.style.marginBottom='10px';
-    lbl2.innerHTML='<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Password</div>';
-    var pwdWrap=document.createElement('div');
-    pwdWrap.style.position='relative';
-    var inp2=document.createElement('input');
-    inp2.type='password'; inp2.id='lp_'+side+'Pwd'; inp2.value=pwd; inp2.placeholder='••••••••';
-    inp2.className='live-inp'; inp2.dataset.pid=pid;
-    inp2.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t);padding:9px 36px 9px 12px;font-size:13px;outline:none;box-sizing:border-box';
-    var eye=document.createElement('button');
-    eye.type='button'; eye.textContent='👁'; eye.className='pwd-toggle'; eye.dataset.target='lp_'+side+'Pwd';
-    eye.style.cssText='position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:var(--t3)';
-    pwdWrap.appendChild(inp2); pwdWrap.appendChild(eye);
-    lbl2.appendChild(pwdWrap); card.appendChild(lbl2);
-
-    // Server
-    var lbl3=document.createElement('div');
-    lbl3.style.marginBottom='14px';
-    lbl3.innerHTML='<div style="font-size:9px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Server</div>';
-    var inp3=document.createElement('input');
-    inp3.type='text'; inp3.id='lp_'+side+'Srv'; inp3.value=srv; inp3.placeholder=placeholder;
-    inp3.className='live-inp'; inp3.dataset.pid=pid;
-    inp3.style.cssText='width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t);padding:9px 12px;font-size:12px;outline:none;box-sizing:border-box';
-    lbl3.appendChild(inp3); card.appendChild(lbl3);
-
-    // Errore
-    var err=document.createElement('div');
-    err.id='lp_'+side+'Err';
-    err.style.cssText='font-size:10px;color:var(--red);font-family:var(--fd);display:none;margin-bottom:8px;line-height:1.6';
-    card.appendChild(err);
-
-    // Bottone connetti
-    var connBtn=document.createElement('button');
-    connBtn.id='lpConn'+(side==='prop'?'Prop':'Pers')+'Btn';
-    connBtn.className='conn-btn';
-    connBtn.dataset.side=side; connBtn.dataset.pid=pid;
-    connBtn.style.cssText='width:100%;padding:12px;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;color:#fff;background:'+(b.connected?'linear-gradient(135deg,#059669,#34D399)':'linear-gradient(135deg,'+g1+','+g2+')');
-    connBtn.textContent=b.connected?(side==='prop'?'✅ PROP Connessa':'✅ PERSONALE Connesso'):(side==='prop'?'🎯 Connetti PROP':'🛡️ Connetti PERSONALE');
-    card.appendChild(connBtn);
-
-    // Account info
-    if(b.connected&&b.account){
-      var acc=b.account;
-      var aGrid=document.createElement('div');
-      aGrid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px';
-      var pc=(acc.profit>=0)?'var(--green)':'var(--red)';
-      var ekv=(acc.equity>=(acc.balance||0))?'var(--green)':'var(--red)';
-      [['Balance','$'+parseFloat(acc.balance||0).toFixed(0),'var(--t)'],
-       ['Equity','$'+parseFloat(acc.equity||0).toFixed(0),ekv],
-       ['P&L',(acc.profit>=0?'+':'')+parseFloat(acc.profit||0).toFixed(2)+'$',pc],
-       ['Server',acc.server||'-','var(--t3)']].forEach(function(k){
-        var kcard=document.createElement('div');
-        kcard.style.cssText='background:var(--bg3);border-radius:7px;padding:8px;text-align:center';
-        kcard.innerHTML='<div style="font-size:16px;font-weight:800;color:'+k[2]+';font-family:var(--fh)">'+k[1]+'</div>'
-          +'<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.08em;margin-top:2px">'+k[0]+'</div>';
-        aGrid.appendChild(kcard);
-      });
-      card.appendChild(aGrid);
-    }
-    return card;
+      +'</div>';
   }
 
-  grid.appendChild(makeCard('prop','🎯 PROP — '+(sfida?sfida.name:'Sfida'),'#38BDF8','#0ea5e9','#38BDF8','FTMO-Server3'));
-  grid.appendChild(makeCard('pers','🛡️ PERSONALE','#A78BFA','#7c3aed','#A78BFA','Axi-US06-Live'));
-  div.appendChild(grid);
+  /* GUIDA SETUP BRIDGE */
+  /* GUIDA SETUP BRIDGE */
+  html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">'
 
-  // Download EA
-  var dlBox=document.createElement('div');
-  dlBox.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px';
-  dlBox.innerHTML='<div style="font-size:13px;font-weight:800;color:var(--t);margin-bottom:6px">⬇ Scarica Expert Advisor PropHedge</div>'
-    +'<div style="font-size:12px;color:var(--t2);line-height:1.8;margin-bottom:16px">Nessun programma esterno. L\'EA gira dentro MT4/MT5 e comunica direttamente con PropHedge.</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
-    +'<div style="background:var(--bg3);border:1px solid rgba(56,189,248,.25);border-radius:12px;padding:16px">'
-    +'<div style="font-size:11px;font-weight:700;color:#38BDF8;margin-bottom:4px">EA per MetaTrader 5</div>'
-    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-bottom:12px;line-height:1.7">prophedge_mt5.mq5 · Porta 7777 o 7778<br>Richiede MT5 build 2755+</div>'
-    +'<button class="dl-ea5" style="width:100%;background:linear-gradient(135deg,#0ea5e9,#38BDF8);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer">⬇ Scarica EA MT5</button>'
+    /* AVVISO: solo una volta */
+    +'<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:10px;padding:12px 16px;margin-bottom:16px">'
+    +'<div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:4px">✅ Il Bridge si configura UNA VOLTA SOLA — poi funziona per tutte le sfide</div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8">Hai <b>1 solo file</b>: questo software. Il bridge si scarica qui sotto con 1 clic.<br>👉 <b>Passo 1:</b> installa Python (1 volta sola) <b>Passo 2:</b> clicca Scarica Bridge <b>Passo 3:</b> lancia bridge.py</div>'
     +'</div>'
-    +'<div style="background:var(--bg3);border:1px solid rgba(167,139,250,.25);border-radius:12px;padding:16px">'
-    +'<div style="font-size:11px;font-weight:700;color:#A78BFA;margin-bottom:4px">EA per MetaTrader 4</div>'
-    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-bottom:12px;line-height:1.7">prophedge_mt4.mq4 · Porta 7777 o 7778<br>Richiede MT4 build 1090+</div>'
-    +'<button class="dl-ea4" style="width:100%;background:linear-gradient(135deg,#7c3aed,#A78BFA);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer">⬇ Scarica EA MT4</button>'
-    +'</div></div>';
-  div.appendChild(dlBox);
+    +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:14px">⚙️ Configurazione iniziale (una sola volta)</div>'
 
-  // Guida
-  var guida=document.createElement('div');
-  guida.style.cssText='background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px';
-  var guidaHdr=document.createElement('div');
-  guidaHdr.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:16px';
-  guidaHdr.innerHTML='<div style="font-size:13px;font-weight:800;color:var(--t)">📋 Come installare l\'EA</div>';
-  var tutBtn=document.createElement('button');
-  tutBtn.className='tut-btn';
-  tutBtn.style.cssText='background:linear-gradient(135deg,var(--amber),#f59e0b);border:none;border-radius:7px;color:#000;padding:7px 16px;font-size:11px;font-weight:700;cursor:pointer';
-  tutBtn.textContent='▶ Guida audio';
-  guidaHdr.appendChild(tutBtn);
-  guida.appendChild(guidaHdr);
-  [['1','Scarica l\'EA','Clicca i pulsanti sopra. MT5 per il PROP, MT4 o MT5 per il personale.'],
-   ['2','Copia in Experts','MT5: Strumenti → Apri cartella dati → MQL5 → Experts. MT4: ...→ MQL4 → Experts'],
-   ['3','Compila','Apri MetaEditor (F4) → trova PropHedge → tasto destro → Compila. 0 errori.'],
-   ['4','Trascina sul grafico','Doppio clic su PropHedge. Imposta BridgePort = 7777 per PROP, 7778 per PERSONALE.'],
-   ['5','Attiva AutoTrading','Pulsante Algo Trading in alto verde. Strumenti → Opzioni → Expert Advisors → Consenti DLL.'],
-   ['6','Connetti','Inserisci n° conto, password, server → clicca Connetti. Vedrai il conto verificato.']
-  ].forEach(function(s){
-    var row=document.createElement('div');
-    row.style.cssText='display:flex;align-items:flex-start;gap:12px;margin-bottom:12px';
-    var num=document.createElement('div');
-    num.style.cssText='width:24px;height:24px;border-radius:50%;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38BDF8;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0';
-    num.textContent=s[0];
-    var txt=document.createElement('div');
-    txt.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:3px">'+s[1]+'</div>'
-      +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8">'+s[2]+'</div>';
-    row.appendChild(num); row.appendChild(txt);
-    guida.appendChild(row);
-  });
-  div.appendChild(guida);
-
-  return div.outerHTML;
-}
-
-function step5(n,title,desc,extra){
-  return '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">'
-    +'<div style="width:26px;height:26px;border-radius:50%;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.3);color:#38BDF8;display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-size:12px;font-weight:800;flex-shrink:0">'+n+'</div>'
+    /* STEP 1: Python */
+    +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">'
+    +'<div style="width:28px;height:28px;border-radius:50%;background:#7F77DD;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">1</div>'
     +'<div style="flex:1">'
-    +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">'+title+'</div>'
-    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8;margin-bottom:'+(extra?"8":"0")+'px">'+desc+'</div>'
-    +(extra?'<div>'+extra+'</div>':"")
-    +'</div></div>';
-}
+    +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Installa Python <span style="font-size:10px;color:var(--amber);font-weight:400">⚠️ il motore del Bridge — senza di esso non funziona nulla</span></div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:8px;line-height:1.7">Clicca il pulsante → si apre il sito ufficiale → scarica → installa.</div>'
+    +'<div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap">'
+    +'<button onclick="window.open(\'https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe\',\'_blank\')" style="background:linear-gradient(135deg,#3b82f6,#6366f1);border:none;border-radius:8px;color:#fff;padding:8px 16px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">⬇ Scarica Python 3.12</button>'
+    +'<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:7px;padding:8px 12px;font-size:11px;color:var(--red);font-family:var(--fd);line-height:1.7">'
+    +'⚠️ Durante l\'installazione <b>DEVI spuntare</b>:<br><b style="font-size:12px">☑ Add Python to PATH</b><br><span style="font-size:10px">Se dimentichi questa spunta il Bridge non parte</span>'
+    +'</div></div></div></div>'
 
-function kpi(label,val,col){
-  return '<div style="background:var(--bg2);border-radius:7px;padding:8px;text-align:center">'
-    +'<div style="font-size:8px;color:var(--t3);font-family:var(--fd);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">'+label+'</div>'
-    +'<div style="font-size:14px;font-weight:800;font-family:var(--fh);color:'+col+'">'+val+'</div></div>';
+    /* STEP 2: Bridge */
+    +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">'
+    +'<div style="width:28px;height:28px;border-radius:50%;background:#7F77DD;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">2</div>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Scarica il Bridge</div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:8px">Il file che collega PropHedge ai tuoi conti MetaTrader.</div>'
+    +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-bottom:8px">📦 Il bridge è <b>già dentro questo software</b> — clicca per scaricarlo:</div>'
+    +'<button onclick="liveDownloadGuide()" style="width:100%;background:linear-gradient(135deg,#059669,#34D399);border:none;border-radius:10px;color:#fff;padding:14px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:6px;letter-spacing:.3px">⬇ Scarica Launcher — doppio clic e parte</button>'
+    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-align:center">Doppio clic su bridge.py → oppure apri cmd nella sua cartella e scrivi: py bridge.py</div>'
+    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:5px">Salvalo sul Desktop</div>'
+    +'</div></div>'
+
+    /* STEP 3: Componenti */
+    +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">'
+    +'<div style="width:28px;height:28px;border-radius:50%;background:#7F77DD;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">3</div>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Installa i componenti aggiuntivi <span style="font-size:10px;color:var(--t3);font-weight:400">(una volta sola, circa 1 minuto)</span></div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:6px">Apri il Prompt dei comandi: menu Start → cerca <b>cmd</b> → Invio. Poi copia e incolla:</div>'
+    +'<div style="background:#07091a;border:1px solid #2a2f55;border-radius:7px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
+    +'<code style="font-family:var(--fd);font-size:11px;color:#38BDF8;flex:1">py -m pip install flask flask-cors MetaTrader5</code>'
+    +'<button onclick="navigator.clipboard.writeText(\'py -m pip install flask flask-cors MetaTrader5\');this.textContent=\'✓\';setTimeout(()=>this.textContent=\'📋\',2000)" style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.3);border-radius:5px;color:#38BDF8;padding:5px 10px;font-size:10px;cursor:pointer;flex-shrink:0">📋 Copia</button>'
+    +'</div>'
+    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:5px">Premi Invio e aspetta che finisce. Vedrai "Successfully installed" alla fine.</div>'
+    +'</div></div>'
+
+    /* STEP 4: Avvia bridge — ogni giorno */
+    +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">'
+    +'<div style="width:28px;height:28px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">4</div>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Avvia il Bridge <span style="font-size:10px;color:var(--green);font-weight:400">← ogni volta che usi PropHedge</span></div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:6px">Apri cmd → scrivi <code style="color:var(--amber)">cd Desktop</code> → Invio → poi copia e incolla:</div>'
+    +'<div style="background:#07091a;border:1px solid #34D399;border-radius:7px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px">'
+    +'<code style="font-family:var(--fd);font-size:13px;color:#34D399;flex:1;font-weight:800">py bridge.py</code>'
+    +'<button onclick="navigator.clipboard.writeText(\'py bridge.py\');this.textContent=\'✓\';setTimeout(()=>this.textContent=\'📋\',2000)" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:5px;color:#34D399;padding:5px 10px;font-size:10px;cursor:pointer;flex-shrink:0">📋 Copia</button>'
+    +'</div>'
+    +'<div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:7px;padding:8px 12px;margin-top:8px;font-size:11px;color:var(--green);font-family:var(--fd);line-height:1.8">'
+    +'✅ Il bridge si avvia — gestisce automaticamente PROP (7777) e PERSONALE (7778).<br>✅ Per MT4: installa anche l\'EA PropHedge (1 clic dal software).<br>⚠️ Lascia bridge.py aperto durante il trading.'
+    +'</div></div></div>'
+
+    /* STEP 5: AutoTrading */
+    +'<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:16px">'
+    +'<div style="width:28px;height:28px;border-radius:50%;background:#1D9E75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">5</div>'
+    +'<div style="flex:1">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:6px">Attiva AutoTrading in MT4/MT5</div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.9">'
+    +'① Apri MT4/MT5 e accedi al conto<br>'
+    +'② Pulsante <b>Algo Trading</b> in alto → deve essere <b style="color:var(--green)">VERDE</b><br>'
+    +'③ <b>Strumenti → Opzioni → Expert Advisors</b> → togli la spunta a <b>"Disabilita trading tramite API Python"</b><br>'
+    +'④ Ripeti per <b>entrambi</b> i conti MetaTrader (prop e personale)'
+    +'</div></div></div>'
+
+    +'<div style="padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+    +'<button onclick="liveTutorialOpen()" style="background:linear-gradient(135deg,var(--amber),#f59e0b);border:none;border-radius:8px;color:#fff;padding:9px 18px;font-size:11px;font-weight:700;cursor:pointer">▶ Guida passo per passo con audio</button>'
+    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd)">La guida ti accompagna vocalmente in ogni passaggio</div>'
+    +'</div></div>'
+    +'<div id="liveTutModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:20px">'
+    +'<div style="background:#0c1030;border:1px solid #2a2f55;border-radius:16px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto">'
+    +'<div style="padding:16px 20px;border-bottom:1px solid #1e2241;display:flex;align-items:center;justify-content:space-between">'
+    +'<div style="font-size:14px;font-weight:800;color:var(--t)">📖 Guida Passo per Passo</div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button onclick="liveTutAudio()" id="tutAudioBtn" style="background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:7px;color:var(--amber);padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer">🔊 Audio ON</button>'
+    +'<button onclick="liveTutorialClose()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:7px;color:var(--red);padding:5px 12px;font-size:11px;cursor:pointer">✕ Chiudi</button>'
+    +'</div></div>'
+    +'<div id="tutProg" style="display:flex;gap:3px;padding:12px 20px 0"></div>'
+    +'<div id="tutContent" style="padding:20px;min-height:260px"></div>'
+    +'<div style="padding:12px 20px;border-top:1px solid #1e2241;display:flex;justify-content:space-between;align-items:center">'
+    +'<button id="tutBtnPrev" onclick="liveTutGo(-1)" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--t2);padding:8px 18px;font-size:12px;cursor:pointer">← Indietro</button>'
+    +'<span id="tutLbl" style="font-size:12px;color:var(--t3);font-family:var(--fd)"></span>'
+    +'<button id="tutBtnNext" onclick="liveTutGo(1)" style="background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:8px;color:#fff;padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer">Avanti →</button>'
+    +'</div></div></div>'
+    +'</div>';
+
+  return html;
 }
 
 var _liveSfidaId = null;
@@ -9118,9 +9139,9 @@ async function liveBridgeTest(){
   var p7777 = results[0].status==='fulfilled' && results[0].value==='ok';
   var p7778 = results[1].status==='fulfilled' && results[1].value==='ok';
 
-  var html = '<div style="font-size:11px;font-family:var(--fd);padding:10px 14px;border-radius:8px;border:1px solid '+(p7777&&p7778?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)')+';background:'+(p7777&&p7778?'rgba(52,211,153,.08)':'rgba(248,113,113,.06)')+'">';
+  var html = '<div style="font-size:11px;font-family:var(--fd);padding:10px 14px;border-radius:8px;border:1px solid '+(p7777?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)')+';background:'+(p7777&&p7778?'rgba(52,211,153,.08)':'rgba(248,113,113,.06)')+'">';
 
-  html += '<div style="font-weight:700;margin-bottom:6px;color:'+(p7777&&p7778?'var(--green)':'var(--red)')+'">'+(p7777&&p7778?'✅ Bridge attivo e funzionante':'❌ Problemi rilevati')+'</div>';
+  html += '<div style="font-weight:700;margin-bottom:6px;color:'+(p7777?'var(--green)':'var(--red)')+'">'+(p7777?'✅ Bridge PROP attivo':'❌ Bridge PROP non risponde')+'</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
   html += '<div style="padding:6px 10px;border-radius:6px;background:var(--bg3);color:'+(p7777?'var(--green)':'var(--red)');
   html += '">'+(p7777?'✅':'❌')+' Bridge PROP (7777)</div>';
@@ -9128,7 +9149,12 @@ async function liveBridgeTest(){
   html += '">'+(p7778?'✅':'❌')+' Bridge PERS (7778)</div>';
   html += '</div>';
 
-  if(!p7777||!p7778){
+  if(p7778){
+    html += '<div style="padding:5px 10px;border-radius:6px;background:var(--bg3);color:var(--green);margin-top:4px">✅ Bridge PERSONALE (7778) attivo — MT5 personale connesso</div>';
+  } else {
+    html += '<div style="padding:5px 10px;border-radius:6px;background:var(--bg3);color:var(--t3);margin-top:4px">ℹ️ Bridge PERSONALE (7778): non attivo — normale se usi MT4 con EA</div>';
+  }
+  if(!p7777){
     html += '<div style="margin-top:8px;color:var(--amber);font-size:10px">⚠️ Il bridge non risponde. Apri il Prompt dei comandi, vai sul Desktop (<code>cd Desktop</code>) e lancia: <b>py bridge.py</b></div>';
   }
   html += '</div>';
@@ -9136,70 +9162,125 @@ async function liveBridgeTest(){
 }
 
 async function liveConnectSingle(propId, side){
-  var isP=side==="prop";
-  var port=isP?7777:7778;
-  var errEl=document.getElementById(isP?"lp_propErr":"lp_persErr");
-  var btn=document.getElementById(isP?"lpConnPropBtn":"lpConnPersBtnBtn");
-  var btn2=document.getElementById("lpConn"+(isP?"Prop":"Pers")+"Btn");
-  var b=btn||btn2;
+  var isP = side === "prop";
+  var plat = isP ? (_bridge.prop.platform||"mt5") : (_bridge.pers.platform||"mt5");
+  var srv  = document.getElementById(isP?"lp_propSrv":"lp_persSrv")?.value.trim();
+  var log  = parseInt(document.getElementById(isP?"lp_propLog":"lp_persLog")?.value)||0;
+  var pwd  = document.getElementById(isP?"lp_propPwd":"lp_persPwd")?.value||"";
+  var errEl= document.getElementById(isP?"lp_propErr":"lp_persErr");
+  var btn  = document.getElementById(isP?"lpConnPropBtn":"lpConnPersBtn");
   if(errEl) errEl.style.display="none";
-  if(b){b.textContent="⏳ Connessione...";b.disabled=true;}
 
-  /* Leggi credenziali inserite dall'utente (per verifica) */
-  var login=parseInt(document.getElementById(isP?"lp_propLog":"lp_persLog")?.value||0);
-  var pwd=document.getElementById(isP?"lp_propPwd":"lp_persPwd")?.value||"";
-  var srv=document.getElementById(isP?"lp_propSrv":"lp_persSrv")?.value||"";
+  if(!srv||!log||!pwd){
+    if(errEl){errEl.textContent="⚠️ Compila server, login e password.";errEl.style.display="block";}
+    return;
+  }
 
-  /* Salva credenziali */
-  try{
-    var c=JSON.parse(localStorage.getItem("ph_live_creds_"+propId)||"{}");
-    if(isP){c.propLogin=login;c.propPwd=pwd;c.propServer=srv;}
-    else    {c.persLogin=login;c.persPwd=pwd;c.persServer=srv;}
-    localStorage.setItem("ph_live_creds_"+propId,JSON.stringify(c));
-  }catch(e){}
-
-  try{
-    var r=await fetch("http://127.0.0.1:"+port+"/account",{cache:"no-store"});
-    var acc=await r.json();
-    if(!acc||!acc.login) throw new Error("account vuoto");
-
-    /* Verifica che il conto corrisponda se l'utente ha inserito un numero */
-    if(login && parseInt(acc.login)!==login){
-      if(errEl){
-        errEl.innerHTML="⚠️ L'EA è connesso al conto <b>"+acc.login+"</b> ma hai inserito <b>"+login+"</b>.<br>"
-          +"Apri MT5/MT4 con il conto corretto e riprova.";
-        errEl.style.display="block";
+  /* MT4 — usa /connect esattamente come MT5, il bridge gestisce EA internamente */
+  if(plat === "mt4"){
+    if(btn){btn.textContent="⏳ Connessione MT4...";btn.disabled=true;}
+    var port = isP ? 7777 : 7778;
+    /* Salva credenziali */
+    try{var sv=JSON.parse(localStorage.getItem("ph_live_creds_"+propId)||"{}");
+      if(isP){sv.propServer=srv;sv.propLogin=log;}else{sv.persServer=srv;sv.persLogin=log;}
+      localStorage.setItem("ph_live_creds_"+propId,JSON.stringify(sv));
+    }catch(e2){}
+    try{
+      var r = await fetch("http://127.0.0.1:"+port+"/connect",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({login:log,password:pwd,server:srv,platform:"mt4"})
+      });
+      var d = await r.json();
+      if(d.ok){
+        var acc = d.account || {login:log,balance:0,equity:0,currency:'USD',server:srv};
+        _bridge[side].connected=true; _bridge[side].account=acc; _bridge[side].propId=propId;
+        if(_bridge.prop.connected&&_bridge.pers.connected){
+          try{localStorage.setItem('ph_bridge_conn','1');localStorage.setItem('ph_bridge_propId',String(propId));}catch(e){}
+        }
+        if(btn){btn.textContent=isP?"✅ PROP connessa":"✅ PERSONALE connesso";btn.style.background="linear-gradient(135deg,#059669,#34D399)";}
+        liveRenderAccount(side, acc);
+        if(!_bridgePollTimer)_bridgePollTimer=setInterval(liveRefreshAll,3000);
+        setTimeout(function(){var el=document.getElementById("liveRoot");if(el)el.outerHTML=renderLive();if(typeof renderJournal==="function")renderJournal();},100);
+        return;
+      } else {
+        _bridge[side].connected=false;
+        if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
+        var eMsg = d.error || "Errore sconosciuto";
+        if(typeof eMsg === "object") eMsg = eMsg.msg || JSON.stringify(eMsg);
+        if(errEl){errEl.innerHTML='❌ '+eMsg+'<br>'
+          +'<span style="font-size:10px;line-height:1.8">'
+          +'<b>Per MT4:</b> assicurati che l\'EA PropHedge sia sul grafico MT4 e che il bridge.py sia avviato.<br>'
+          +'<b>Per evitare l\'EA:</b> cambia piattaforma a <b>MT5</b> se il tuo broker Axi supporta MT5.'
+          +'</span>';
+          errEl.style.display="block";}
       }
-      if(b){b.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";b.disabled=false;}
-      return;
+    }catch(e){
+      _bridge[side].connected=false;
+      if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
+      if(errEl){errEl.innerHTML='❌ Bridge non raggiungibile su porta '+port+'.<br>'
+        +'<span style="font-size:10px">Avvia bridge.py prima di connetterti.</span>';
+        errEl.style.display="block";}
     }
+    return;
+  }
 
-    /* Connessione OK */
-    _bridge[side].connected=true;
-    _bridge[side].account=acc;
-    _bridge[side].login=acc.login;
-    _bridge[side].port=port;
-    _bridge[side].propId=propId;
-
-    if(_bridge.prop.connected&&_bridge.pers.connected){
-      if(_bridgePollTimer) clearInterval(_bridgePollTimer);
-      _bridgePollTimer=setInterval(liveRefreshAll,3000);
+  /* MT5 — connessione tramite Python bridge */
+  if(btn){btn.textContent="⏳ Connessione...";btn.disabled=true;}
+  var port = isP ? 7777 : 7778;
+  try{var saved=JSON.parse(localStorage.getItem("ph_live_creds_"+propId)||"{}");
+    if(isP){saved.propServer=srv;saved.propLogin=log;}else{saved.persServer=srv;saved.persLogin=log;}
+    localStorage.setItem("ph_live_creds_"+propId,JSON.stringify(saved));
+  }catch(e){}
+  try{
+    var r = await fetch("http://127.0.0.1:"+port+"/connect",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({login:log,password:pwd,server:srv,platform:plat})
+    });
+    var d = await r.json();
+    if(d.ok){
+      _bridge[side].connected=true;
+      _bridge[side].propId = propId;
+      if(btn){btn.textContent=isP?"✅ PROP connessa":"✅ PERSONALE connesso";btn.style.background="linear-gradient(135deg,#059669,#34D399)";}
+      if(_bridge.prop.connected&&_bridge.pers.connected){
+        if(_bridgePollTimer)clearInterval(_bridgePollTimer);
+        _bridgePollTimer=setInterval(liveRefreshAll,3000);
+        _bridge.prop.propId=propId; _bridge.pers.propId=propId;
+      }
+      await liveRefreshSide(side);
+      setTimeout(function(){
+        var el=document.getElementById("liveRoot");if(el)el.outerHTML=renderLive();
+        setTimeout(_bridgeRestoreGrids,50);
+        /* Aggiorna Journal se aperto */
+        if(typeof currentTab!=="undefined"&&currentTab==="journal"&&typeof renderJournal==="function") renderJournal();
+      },0);
+    } else {
+      _bridge[side].connected=false;
+      if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
+      var extraHelp="";
+      if(d.error&&(d.error.code===-10004||d.error.code===-10005)){
+        extraHelp="<br><b style=\"color:var(--amber)\">⚠️ Come risolvere:</b><br>1. Chiudi MT5 dalla tray<br>2. Riapri MT5 come Amministratore<br>3. Riapri cmd come Amministratore → py bridge.py<br>4. Riprova Connetti";
+      }
+      if(errEl){errEl.innerHTML="❌ "+(d.error?JSON.stringify(d.error):"Errore")+extraHelp;errEl.style.display="block";}
     }
-    await liveRefreshSide(side);
-    if(typeof currentTab!=="undefined"&&currentTab==="journal"&&typeof renderJournal==="function") renderJournal();
-    setTimeout(function(){var el=document.getElementById("liveRoot");if(el)el.outerHTML=renderLive();setTimeout(_bridgeRestoreGrids,50);},100);
-
   }catch(e){
     _bridge[side].connected=false;
-    if(b){b.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";b.disabled=false;}
+    if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
     if(errEl){
-      errEl.innerHTML="❌ EA non risponde sulla porta "+port+".<br>"
-        +"<span style=\"font-size:9px\">Controlla: EA è sul grafico? AutoTrading verde? DLL abilitata?<br>"
-        +"Se hai appena installato l'EA, riavvia MT5/MT4.</span>";
+      var errPort = isP ? 7777 : 7778;
+      var errCmd  = isP ? 'py bridge.py' : 'py bridge.py --port 7778';
+      errEl.innerHTML='❌ Bridge non risponde sulla porta '+errPort+'.<br>'
+        +'<span style="font-size:10px;line-height:1.8">'
+        +(isP
+          ?'Avvia il bridge: apri un cmd e scrivi <b>py bridge.py</b>'
+          :'Devi avviare un <b>secondo</b> bridge per il conto personale MT5:<br>'
+           +'Apri un <b>secondo cmd</b> e scrivi: <b>py bridge.py --port 7778</b><br>'
+           +'(Il primo bridge su 7777 gestisce il PROP, il secondo su 7778 il PERSONALE)'
+        )+'</span>';
       errEl.style.display="block";
     }
   }
 }
+
 async function liveConnectBoth(propId){
   var btn = document.getElementById('lpConnBtn');
   var gErr = document.getElementById('lp_globalErr');
@@ -9292,9 +9373,11 @@ function renderHedgePanel(calcLots){
     +'<div style="font-size:14px;font-weight:800;color:var(--t);margin-bottom:14px">⚡ APRI HEDGE</div>'
 
     /* Lotti calcolati */
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:12px">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:12px">'
     +'<div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Simbolo</label>'
     +'<input id="h_sym" value="'+sym+'" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;font-weight:700;margin-top:4px;outline:none"></div>'
+    +'<div><label style="font-size:9px;color:var(--amber);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Prezzo entrata <span style="font-weight:400;color:var(--t3)">(opz.)</span></label>'
+    +'<input id="h_price" type="number" step="0.001" placeholder="vuoto=mercato" style="width:100%;box-sizing:border-box;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);border-radius:7px;color:var(--amber);padding:8px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
     +'<div><label style="font-size:9px;color:#38BDF8;text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Lot PROP '+(loss70prop?'⚠️-50%':'')+'</label>'
     +'<input id="h_lotProp" type="number" value="'+lotProp+'" step="0.01" min="0.01" style="width:100%;box-sizing:border-box;background:rgba(56,189,248,.07);border:2px solid rgba(56,189,248,.3);border-radius:7px;color:#38BDF8;padding:8px 10px;font-size:13px;font-weight:800;margin-top:4px;outline:none"></div>'
     +'<div><label style="font-size:9px;color:#A78BFA;text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Lot PERS '+(s70&&s70._above70Active?'⚠️-50%':'')+'</label>'
@@ -9344,42 +9427,7 @@ function _bridgeRestoreGrids(){
   if(_bridge.pers.connected && _bridge.pers.account) liveRenderAccount('pers', _bridge.pers.account);
   var allPos = (_bridge.prop.positions||[]).concat(_bridge.pers.positions||[]);
   liveRenderAllPositions(allPos);
-  /* Auto-save credenziali */
-  var root = document.getElementById('liveRoot');
-  if(root) root.querySelectorAll('.live-inp').forEach(function(inp){
-    inp.addEventListener('input', function(){ liveSaveCreds(parseInt(inp.dataset.pid)||0); });
-  });
 }
-
-/* ── UNICO event listener sul documento per Live Trading ──
-   Sopravvive a qualsiasi sostituzione DOM ── */
-document.addEventListener('click', function(e){
-  var t = e.target;
-  if(!t) return;
-  /* Selezione sfida */
-  if(t.dataset && t.dataset.sfida){ liveSelectSfida(parseInt(t.dataset.sfida)); return; }
-  /* Piattaforma */
-  if(t.classList && t.classList.contains('plat-btn')){ liveSetPlat(t); return; }
-  /* Connetti */
-  if(t.classList && t.classList.contains('conn-btn')){
-    liveConnectSingle(parseInt(t.dataset.pid)||0, t.dataset.side); return;
-  }
-  /* Download EA */
-  if(t.classList && t.classList.contains('dl-ea5')){ liveDownloadEA5(); return; }
-  if(t.classList && t.classList.contains('dl-ea4')){ liveDownloadEA4(); return; }
-  /* Tutorial */
-  if(t.classList && t.classList.contains('tut-btn')){ liveTutorialOpen(); return; }
-  /* Mostra/nascondi password */
-  if(t.classList && t.classList.contains('pwd-toggle')){
-    var f = document.getElementById(t.dataset.target);
-    if(f){ f.type = f.type==='password'?'text':'password'; t.textContent = f.type==='password'?'👁':'🙈'; }
-    return;
-  }
-  /* Sfida selector buttons (ls-btn) */
-  if(t.classList && t.classList.contains('ls-btn') && t.dataset.sfida){
-    liveSelectSfida(parseInt(t.dataset.sfida)); return;
-  }
-});
 
 async function liveConnectSide(side){
   var b   = _bridge[side];
@@ -9524,51 +9572,72 @@ function liveRenderAllPositions(positions){
 }
 
 async function liveOpenHedge(propDir){
-  var sym      = document.getElementById('h_sym')?.value || 'XAUUSD';
-  var lotProp  = parseFloat(document.getElementById('h_lotProp')?.value) || 0.01;
-  var lotPers  = parseFloat(document.getElementById('h_lotPers')?.value) || 0.01;
-  var slPips   = parseFloat(document.getElementById('h_sl')?.value) || 100;
-  var tpPips   = parseFloat(document.getElementById('h_tp')?.value) || 100;
-  var persDir  = propDir==='buy' ? 'sell' : 'buy';
-  var res      = document.getElementById('hedgeResult');
+  var sym     = document.getElementById('h_sym')?.value || 'XAUUSD';
+  var lotProp = parseFloat(document.getElementById('h_lotProp')?.value) || 0.01;
+  var lotPers = parseFloat(document.getElementById('h_lotPers')?.value) || 0.01;
+  var slPips  = parseFloat(document.getElementById('h_sl')?.value)  || 0;
+  var tpPips  = parseFloat(document.getElementById('h_tp')?.value)  || 0;
+  var entryPx = parseFloat(document.getElementById('h_price')?.value) || 0;
+  var isLimit = entryPx > 0;
+  var persDir = propDir==='buy' ? 'sell' : 'buy';
+  var res     = document.getElementById('hedgeResult');
+  function setRes(bg,col,msg){ if(res){res.style.display='block';res.style.background=bg;res.style.color=col;res.innerHTML=msg;} }
 
-  /* Calcola prezzi SL/TP in punti (approssimazione) */
-  var pipVal   = sym.includes('XAU')||sym.includes('GOLD') ? 0.1 : 0.0001;
+  setRes('rgba(251,191,36,.08)','var(--amber)','⏳ Invio ordine PROP...');
+
+  /* Costruisce payload */
+  function payload(side, vol, cmt){
+    var p = {symbol:sym, volume:vol, side:side, sl_pips:slPips, tp_pips:tpPips, comment:cmt};
+    if(isLimit){ p.price = entryPx; p.order_type = (side==='buy')?'buylimit':'selllimit'; }
+    return p;
+  }
 
   try{
-    var [rProp, rPers] = await Promise.all([
-      fetch('http://127.0.0.1:7777/order',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({symbol:sym, volume:lotProp, side:propDir, sl:0, tp:0, comment:'PH_PROP'})
-      }).then(r=>r.json()),
-      fetch('http://127.0.0.1:7778/order',{
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({symbol:sym, volume:lotPers, side:persDir, sl:0, tp:0, comment:'PH_PERS'})
-      }).then(r=>r.json())
-    ]);
+    /* Invia PROP */
+    var rP = await fetch('http://127.0.0.1:7777/order',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload(propDir, lotProp, 'PH_PROP'))
+    }).then(function(r){return r.json();}).catch(function(e){return {retcode:-1,comment:'Bridge PROP non raggiungibile: '+e.message};});
 
-    var okProp = rProp.retcode===10009||rProp.retcode===0;
-    var okPers = rPers.retcode===10009||rPers.retcode===0;
+    var okP = rP && (rP.retcode===10009||rP.retcode===10008||rP.retcode===0||rP.order>0);
 
-    if(res){
-      res.style.display='block';
-      if(okProp && okPers){
-        res.style.background='rgba(52,211,153,.1)';res.style.color='var(--green)';
-        res.textContent='✅ Hedge aperto — PROP '+propDir.toUpperCase()+' '+lotProp+'lot #'+rProp.order+' · PERS '+persDir.toUpperCase()+' '+lotPers+'lot #'+rPers.order;
-        /* Registra nel simulatore come trade in corso */
-        _bridgeRegisterTrade(rProp.order, rPers.order, sym, propDir, lotProp, lotPers);
-      } else {
-        res.style.background='rgba(248,113,113,.1)';res.style.color='var(--red)';
-        res.textContent='❌ PROP: '+(okProp?'OK':'ERR '+rProp.comment)+' · PERS: '+(okPers?'OK':'ERR '+rPers.comment);
-      }
+    if(!okP){
+      /* Mostra errore PROP — include messaggi tipo "mercato chiuso" */
+      var errMsg = rP.comment || (rP.error && rP.error.msg) || JSON.stringify(rP);
+      setRes('rgba(248,113,113,.1)','var(--red)',
+        '❌ PROP non inviata: <b>'+errMsg+'</b><br>'
+        +'<span style="font-size:10px;opacity:.8">retcode: '+(rP.retcode||'?')+'</span>');
+      return;
+    }
+
+    setRes('rgba(251,191,36,.08)','var(--amber)','⏳ PROP ✅ #'+rP.order+' — Invio PERSONALE...');
+
+    /* Invia PERS */
+    var rS = await fetch('http://127.0.0.1:7778/order',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload(persDir, lotPers, 'PH_PERS'))
+    }).then(function(r){return r.json();}).catch(function(e){return {retcode:-1,comment:'Bridge PERS non raggiungibile: '+e.message};});
+
+    var okS = rS && (rS.retcode===10009||rS.retcode===10008||rS.retcode===0||rS.order>0);
+
+    if(okP && okS){
+      setRes('rgba(52,211,153,.1)','var(--green)',
+        (isLimit?'📌 LIMITE':'✅ MERCATO')+' PROP '+propDir.toUpperCase()+' '+lotProp+'lot'
+        +(isLimit?' @'+entryPx:'')+(rP.order?' #'+rP.order:'')+' | SL '+slPips+'pip TP '+tpPips+'pip<br>'
+        +(isLimit?'📌 LIMITE':'✅ MERCATO')+' PERS '+persDir.toUpperCase()+' '+lotPers+'lot'
+        +(isLimit?' @'+entryPx:'')+(rS.order?' #'+rS.order:''));
+      _bridgeRegisterTrade(rP.order||0, rS.order||0, sym, propDir, lotProp, lotPers);
+    } else {
+      var errS = rS.comment || (rS.error && rS.error.msg) || JSON.stringify(rS);
+      setRes('rgba(248,113,113,.1)','var(--red)',
+        '✅ PROP #'+(rP.order||'?')+' aperta | ❌ PERS fallita: <b>'+errS+'</b>');
     }
     liveRefreshAll();
   } catch(e){
-    if(res){res.style.display='block';res.style.background='rgba(248,113,113,.1)';res.style.color='var(--red)';res.textContent='❌ Bridge non raggiungibile. Controlla che entrambe le istanze siano avviate.';}
+    setRes('rgba(248,113,113,.1)','var(--red)','❌ Errore JS: '+e.message);
   }
 }
 
-/* ── Registro trade aperti per matching con trade chiusi ── */
 var _openHedgeTrades = []; /* [{propTicket, persTicket, sym, dir, day} */
 
 function _bridgeRegisterTrade(propTicket, persTicket, sym, dir, lotProp, lotPers){
@@ -9664,7 +9733,7 @@ async function liveClosePos(side, ticket){
 function liveDownloadBat(){
   /* PowerShell script — non bloccato dalle zone sicurezza Internet come i .bat
      L'utente fa tasto destro → "Esegui con PowerShell" */
-  var code = '# PropHedge Bridge Launcher\r\n# Tasto destro su questo file → Esegui con PowerShell\r\n\r\nWrite-Host "=========================================="\r\nWrite-Host " PropHedge Bridge - Avvio automatico"\r\nWrite-Host "=========================================="\r\nWrite-Host ""\r\n\r\n$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path\r\n$bridge = Join-Path $scriptDir "bridge.py"\r\n\r\nif (-not (Test-Path $bridge)) {\r\n    Write-Host "ERRORE: bridge.py non trovato nella stessa cartella!" -ForegroundColor Red\r\n    Write-Host "Assicurati che bridge.py e questo file siano nella stessa cartella."\r\n    Read-Host "Premi Invio per uscire"\r\n    exit\r\n}\r\n\r\nWrite-Host "Avvio Bridge PROP (porta 7777)..." -ForegroundColor Cyan\r\nStart-Process powershell -ArgumentList "-NoExit", "-Command", "cd \'$scriptDir\'; py bridge.py --port 7777" -WindowStyle Normal\r\n\r\nStart-Sleep -Seconds 2\r\n\r\nWrite-Host "Avvio Bridge PERSONALE (porta 7778)..." -ForegroundColor Magenta\r\nStart-Process powershell -ArgumentList "-NoExit", "-Command", "cd \'$scriptDir\'; py bridge.py --port 7778" -WindowStyle Normal\r\n\r\nStart-Sleep -Seconds 1\r\nWrite-Host ""\r\nWrite-Host "Entrambi i bridge sono avviati!" -ForegroundColor Green\r\nWrite-Host "Torna su PropHedge e connetti i conti."\r\nWrite-Host ""\r\nRead-Host "Premi Invio per chiudere questa finestra"\r\n';
+  var code = '# PropHedge Bridge Launcher\r\n# Tasto destro su questo file → Esegui con PowerShell\r\n\r\nWrite-Host "=========================================="\r\nWrite-Host " PropHedge Bridge - Avvio automatico"\r\nWrite-Host "=========================================="\r\nWrite-Host ""\r\n\r\n$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path\r\n$bridge = Join-Path $scriptDir "bridge.py"\r\n\r\nif (-not (Test-Path $bridge)) {\r\n    Write-Host "ERRORE: bridge.py non trovato nella stessa cartella!" -ForegroundColor Red\r\n    Write-Host "Assicurati che bridge.py e questo file siano nella stessa cartella."\r\n    Read-Host "Premi Invio per uscire"\r\n    exit\r\n}\r\n\r\nWrite-Host "Avvio Bridge PROP (porta 7777)..." -ForegroundColor Cyan\r\nStart-Process powershell -ArgumentList "-NoExit", "-Command", "cd \'$scriptDir\'; py bridge.py --port 7777" -WindowStyle Normal\r\n\r\nStart-Sleep -Seconds 2Write-Host \"\\r\\n[OK] Bridge PROP (7777) avviato!\\r\\nPer PERSONALE MT4: installa EA PropHedge su MT4 (gestisce porta 7778 automaticamente).\" -ForegroundColor Green\\r\\nart-Sleep -Seconds 1\r\nWrite-Host ""\r\nWrite-Host "Entrambi i bridge sono avviati!" -ForegroundColor Green\r\nWrite-Host "Torna su PropHedge e connetti i conti."\r\nWrite-Host ""\r\nRead-Host "Premi Invio per chiudere questa finestra"\r\n';
 
   var blob = new Blob([code], {type:'text/plain'});
   var url  = URL.createObjectURL(blob);
@@ -9803,7 +9872,7 @@ var _tutSteps=[
     <b style="color:#A78BFA">Scarica bridge.py e salvalo sul Desktop</b><br>
     <span style="font-size:11px">Quando il browser chiede dove salvarlo, scegli <b>Desktop</b></span>
   </div>
-  <button onclick="liveDownloadGuide()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#A78BFA);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">⬇ Scarica bridge.py</button>
+  <button onclick="liveDownloadGuide()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#A78BFA);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">⬇ Scarica bridge.py (PROP 7777)</button>
   <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:8px;padding:8px;font-size:11px;color:var(--green)">
     ✅ Mettilo sul Desktop — è più facile trovarlo dopo!
   </div>
@@ -10101,524 +10170,163 @@ var _tutSteps=[
 
 ];
 
-
-/* ══════════════════════════════════════════════════════
-   EA DOWNLOADS — MT5 (HTTP server) + MT4 (HTTP server)
-   Nessun Python, nessun bridge esterno
-   ══════════════════════════════════════════════════════ */
-
-
-
-function _mqlBuild(code){
-  var b=new Blob([code],{type:'text/plain'});
-  var u=URL.createObjectURL(b);
-  var a=document.createElement('a'); a.href=u; a.click();
-  URL.revokeObjectURL(u);
-  return a;
-}
-
-function liveDownloadEA5(){
-  var q='char34=CharToStr(34);';
-  // Build MQL5 code using array of lines joined - no internal quote escaping needed
-  var lines=[
-'//+------------------------------------------------------------------+',
-'//|  PropHedge Bridge EA v4.0  MetaTrader 5                         |',
-'//|  HTTP Server  BridgePort: 7777=PROP  7778=PERSONALE             |',
-'//+------------------------------------------------------------------+',
-'#property strict',
-'input int BridgePort=7777;',
-'int _srv=INVALID_HANDLE;',
-'int OnInit(){',
-'   _srv=SocketCreate();',
-'   if(_srv==INVALID_HANDLE){Alert("PropHedge: socket error");return(INIT_FAILED);}',
-'   if(!SocketBind(_srv,"127.0.0.1",(ushort)BridgePort)){',
-'      Alert("PropHedge: porta ",BridgePort," occupata");',
-'      SocketClose(_srv);return(INIT_FAILED);',
-'   }',
-'   if(!SocketListen(_srv,10)){SocketClose(_srv);return(INIT_FAILED);}',
-'   Print("PropHedge MT5 attivo porta ",BridgePort);',
-'   EventSetMillisecondTimer(50);',
-'   return(INIT_SUCCEEDED);',
-'}',
-'void OnDeinit(const int r){EventKillTimer();if(_srv!=INVALID_HANDLE){SocketClose(_srv);_srv=INVALID_HANDLE;}}',
-'void OnTimer(){',
-'   int cl=SocketAccept(_srv,1);if(cl==INVALID_HANDLE)return;',
-'   uchar buf[32768];uint n=SocketRead(cl,buf,32768,300);',
-'   if(n==0){SocketClose(cl);return;}',
-'   string req=CharArrayToString(buf,0,n,CP_UTF8);',
-'   string mth=StringSubstr(req,0,StringFind(req," "));',
-'   string rest=StringSubstr(req,StringLen(mth)+1);',
-'   string path=StringSubstr(rest,0,StringFind(rest," "));',
-'   string body="";int bp=StringFind(req,"\\r\\n\\r\\n");',
-'   if(bp>=0)body=StringSubstr(req,bp+4);',
-'   string cors="Access-Control-Allow-Origin: *\\r\\nAccess-Control-Allow-Methods: GET,POST,OPTIONS\\r\\nAccess-Control-Allow-Headers: Content-Type\\r\\n";',
-'   if(mth=="OPTIONS"){',
-'      string r0="HTTP/1.1 204 No Content\\r\\n"+cors+"Content-Length: 0\\r\\n\\r\\n";',
-'      uchar o0[];StringToCharArray(r0,o0,0,StringLen(r0));SocketSend(cl,o0,ArraySize(o0)-1);SocketClose(cl);return;',
-'   }',
-'   string json=PH_NotFound();',
-'   if(path=="/account")json=PH_Account();',
-'   else if(path=="/positions")json=PH_Positions();',
-'   else if(path=="/order"&&mth=="POST")json=PH_Order(body);',
-'   else if(path=="/close"&&mth=="POST")json=PH_Close(body);',
-'   string resp="HTTP/1.1 200 OK\\r\\n"+cors+"Content-Type: application/json\\r\\nContent-Length: "+IntegerToString(StringLen(json))+"\\r\\n\\r\\n"+json;',
-'   uchar o1[];StringToCharArray(resp,o1,0,StringLen(resp));SocketSend(cl,o1,ArraySize(o1)-1);SocketClose(cl);',
-'}',
-'string Q(string s){string q=CharToStr(34);return q+s+q;}',
-'string KV(string k,string v){return Q(k)+":"+v;}',
-'string KVS(string k,string v){return Q(k)+":"+Q(v);}',
-'string PH_NotFound(){return "{"+Q("error")+":"+Q("not found")+"}";}',
-'string PH_Account(){',
-'   return "{"+KV("login",IntegerToString((int)AccountInfoInteger(ACCOUNT_LOGIN)))',
-'         +","+KV("balance",DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE),2))',
-'         +","+KV("equity",DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY),2))',
-'         +","+KV("profit",DoubleToString(AccountInfoDouble(ACCOUNT_PROFIT),2))',
-'         +","+KVS("currency",AccountInfoString(ACCOUNT_CURRENCY))',
-'         +","+KVS("server",AccountInfoString(ACCOUNT_SERVER))',
-'         +","+KVS("company",AccountInfoString(ACCOUNT_COMPANY))+"}";',
-'}',
-'string PH_Positions(){',
-'   string j="[";int cnt=0;',
-'   for(int i=0;i<PositionsTotal();i++){',
-'      ulong tkt=PositionGetTicket(i);if(tkt==0)continue;',
-'      if(cnt>0)j+=",";cnt++;',
-'      j+="{"+KV("ticket",IntegerToString((long)tkt))',
-'        +","+KVS("symbol",PositionGetString(POSITION_SYMBOL))',
-'        +","+KV("type",IntegerToString((int)PositionGetInteger(POSITION_TYPE)))',
-'        +","+KV("volume",DoubleToString(PositionGetDouble(POSITION_VOLUME),2))',
-'        +","+KV("profit",DoubleToString(PositionGetDouble(POSITION_PROFIT),2))+"}";',
-'   }',
-'   return j+"]";',
-'}',
-'string PH_Get(string json,string key){',
-'   string k=Q(key)+":";int p=StringFind(json,k);if(p<0)return "";',
-'   p+=StringLen(k);',
-'   if(StringGetCharacter(json,p)==34){p++;int e=StringFind(json,CharToStr(34),p);return e<0?"":StringSubstr(json,p,e-p);}',
-'   int e=p;while(e<StringLen(json)){ushort c=StringGetCharacter(json,e);if(c==44||c==125||c==32)break;e++;}',
-'   return StringSubstr(json,p,e-p);',
-'}',
-'string PH_Order(string body){',
-'   string sym=PH_Get(body,"symbol");if(sym=="")sym=_Symbol;',
-'   string side=PH_Get(body,"side");',
-'   double vol=StringToDouble(PH_Get(body,"volume"));if(vol<=0)vol=0.01;',
-'   double slP=StringToDouble(PH_Get(body,"sl_pips"));',
-'   double tpP=StringToDouble(PH_Get(body,"tp_pips"));',
-'   int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);',
-'   double pt=SymbolInfoDouble(sym,SYMBOL_POINT);',
-'   double pip=(dg==5||dg==3)?pt*10:pt;',
-'   MqlTick tick;SymbolInfoTick(sym,tick);',
-'   bool buy=(side=="buy");',
-'   double price=buy?tick.ask:tick.bid;',
-'   double sl=slP>0?(buy?price-slP*pip:price+slP*pip):0;',
-'   double tp=tpP>0?(buy?price+tpP*pip:price-tpP*pip):0;',
-'   MqlTradeRequest req={};MqlTradeResult res={};',
-'   req.action=TRADE_ACTION_DEAL;req.symbol=sym;req.volume=vol;',
-'   req.type=buy?ORDER_TYPE_BUY:ORDER_TYPE_SELL;',
-'   req.price=price;req.sl=sl;req.tp=tp;req.deviation=20;req.magic=234000;req.comment="PropHedge";',
-'   req.type_time=ORDER_TIME_GTC;req.type_filling=ORDER_FILLING_IOC;',
-'   OrderSend(req,res);',
-'   return "{"+KV("ok",res.retcode==10009?"true":"false")',
-'         +","+KV("retcode",IntegerToString(res.retcode))',
-'         +","+KV("ticket",IntegerToString((long)res.order))+"}";',
-'}',
-'string PH_Close(string body){',
-'   ulong tkt=(ulong)StringToInteger(PH_Get(body,"ticket"));',
-'   if(!PositionSelectByTicket(tkt))return "{"+KV("ok","false")+"}";',
-'   string sym=PositionGetString(POSITION_SYMBOL);',
-'   double vol=PositionGetDouble(POSITION_VOLUME);',
-'   long ptype=(long)PositionGetInteger(POSITION_TYPE);',
-'   MqlTick tick;SymbolInfoTick(sym,tick);',
-'   MqlTradeRequest req={};MqlTradeResult res={};',
-'   req.action=TRADE_ACTION_DEAL;req.symbol=sym;req.volume=vol;',
-'   req.type=ptype==0?ORDER_TYPE_SELL:ORDER_TYPE_BUY;',
-'   req.price=ptype==0?tick.bid:tick.ask;',
-'   req.position=tkt;req.deviation=20;req.magic=234000;req.comment="PropHedge close";',
-'   req.type_time=ORDER_TIME_GTC;req.type_filling=ORDER_FILLING_IOC;',
-'   OrderSend(req,res);',
-'   return "{"+KV("ok",res.retcode==10009?"true":"false")+"}";',
-'}'
-  ];
-  var a=_mqlBuild(lines.join('\n'));
-  a.download='prophedge_mt5.mq5';
-}
-
-function liveDownloadEA4(){
-  var lines=[
-'//+------------------------------------------------------------------+',
-'//|  PropHedge Bridge EA v4.0  MetaTrader 4                         |',
-'//|  File bridge  BridgePort: 7777=PROP  7778=PERSONALE             |',
-'//+------------------------------------------------------------------+',
-'#property strict',
-'extern int BridgePort=7778;',
-'string _acc,_pos,_cmd,_resp;',
-'int OnInit(){',
-'   _acc ="ph_acc_"+IntegerToString(BridgePort)+".txt";',
-'   _pos ="ph_pos_"+IntegerToString(BridgePort)+".txt";',
-'   _cmd ="ph_cmd_"+IntegerToString(BridgePort)+".txt";',
-'   _resp="ph_resp_"+IntegerToString(BridgePort)+".txt";',
-'   WriteAccount();WritePositions();',
-'   Print("PropHedge MT4 attivo porta ",BridgePort," account=",AccountNumber());',
-'   EventSetMillisecondTimer(300);',
-'   return(INIT_SUCCEEDED);',
-'}',
-'void OnDeinit(const int r){EventKillTimer();FileDelete(_acc);FileDelete(_pos);}',
-'void OnTimer(){',
-'   WriteAccount();WritePositions();',
-'   if(!FileIsExist(_cmd))return;',
-'   int fh=FileOpen(_cmd,FILE_READ|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);',
-'   if(fh==INVALID_HANDLE)return;',
-'   string cmd="";while(!FileIsEnding(fh))cmd+=FileReadString(fh);',
-'   FileClose(fh);FileDelete(_cmd);',
-'   if(StringLen(cmd)<3)return;',
-'   string result="";',
-'   if(StringFind(cmd,"order")>=0)result=PH_Order(cmd);',
-'   else if(StringFind(cmd,"close")>=0)result=PH_Close(cmd);',
-'   if(result!=""){',
-'      int fw=FileOpen(_resp,FILE_WRITE|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);',
-'      if(fw!=INVALID_HANDLE){FileWriteString(fw,result);FileClose(fw);}',
-'   }',
-'}',
-'string Q(string s){string q=CharToStr(34);return q+s+q;}',
-'string KV(string k,string v){return Q(k)+":"+v;}',
-'string KVS(string k,string v){return Q(k)+":"+Q(v);}',
-'void WriteAccount(){',
-'   int fh=FileOpen(_acc,FILE_WRITE|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);',
-'   if(fh==INVALID_HANDLE)return;',
-'   FileWriteString(fh,"{"+KV("login",IntegerToString(AccountNumber()))',
-'     +","+KV("balance",DoubleToString(AccountBalance(),2))',
-'     +","+KV("equity",DoubleToString(AccountEquity(),2))',
-'     +","+KV("profit",DoubleToString(AccountProfit(),2))',
-'     +","+KVS("currency",AccountCurrency())',
-'     +","+KVS("server",AccountServer())+"}");',
-'   FileClose(fh);',
-'}',
-'void WritePositions(){',
-'   int fh=FileOpen(_pos,FILE_WRITE|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);',
-'   if(fh==INVALID_HANDLE)return;',
-'   string j="[";bool first=true;',
-'   for(int i=0;i<OrdersTotal();i++){',
-'      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES))continue;',
-'      if(OrderType()>1)continue;',
-'      if(!first)j+=",";first=false;',
-'      j+="{"+KV("ticket",IntegerToString(OrderTicket()))',
-'        +","+KVS("symbol",OrderSymbol())',
-'        +","+KV("type",IntegerToString(OrderType()))',
-'        +","+KV("volume",DoubleToString(OrderLots(),2))',
-'        +","+KV("profit",DoubleToString(OrderProfit(),2))+"}";',
-'   }',
-'   FileWriteString(fh,j+"]");FileClose(fh);',
-'}',
-'string PH_Get(string json,string key){',
-'   string k=Q(key)+":";int p=StringFind(json,k);if(p<0)return "";',
-'   p+=StringLen(k);',
-'   if(StringGetCharacter(json,p)==34){p++;int e=StringFind(json,CharToStr(34),p);return e<0?"":StringSubstr(json,p,e-p);}',
-'   int e=p;while(e<StringLen(json)){ushort c=StringGetCharacter(json,e);if(c==44||c==125||c==32)break;e++;}',
-'   return StringSubstr(json,p,e-p);',
-'}',
-'string PH_Order(string body){',
-'   string sym=PH_Get(body,"symbol");if(sym=="")sym=Symbol();',
-'   string side=PH_Get(body,"side");',
-'   double vol=StringToDouble(PH_Get(body,"volume"));if(vol<=0)vol=0.01;',
-'   double slP=StringToDouble(PH_Get(body,"sl_pips"));',
-'   double tpP=StringToDouble(PH_Get(body,"tp_pips"));',
-'   int dg=(int)MarketInfo(sym,MODE_DIGITS);',
-'   double pt=MarketInfo(sym,MODE_POINT);',
-'   double pip=(dg==5||dg==3)?pt*10:pt;',
-'   bool buy=(side=="buy");',
-'   double price=buy?MarketInfo(sym,MODE_ASK):MarketInfo(sym,MODE_BID);',
-'   double sl=slP>0?(buy?price-slP*pip:price+slP*pip):0;',
-'   double tp=tpP>0?(buy?price+tpP*pip:price-tpP*pip):0;',
-'   int ticket=OrderSend(sym,buy?OP_BUY:OP_SELL,vol,price,20,sl,tp,"PropHedge",234000,0,clrBlue);',
-'   if(ticket>0)return "{"+KV("ok","true")+","+KV("ticket",IntegerToString(ticket))+"}";',
-'   return "{"+KV("ok","false")+","+KV("error",IntegerToString(GetLastError()))+"}";',
-'}',
-'string PH_Close(string body){',
-'   int ticket=(int)StringToInteger(PH_Get(body,"ticket"));',
-'   if(!OrderSelect(ticket,SELECT_BY_TICKET))return "{"+KV("ok","false")+"}";',
-'   double price=OrderType()==OP_BUY?MarketInfo(OrderSymbol(),MODE_BID):MarketInfo(OrderSymbol(),MODE_ASK);',
-'   bool ok=OrderClose(ticket,OrderLots(),price,20,clrRed);',
-'   return "{"+KV("ok",ok?"true":"false")+"}";',
-'}'
-  ];
-  var a=_mqlBuild(lines.join('\n'));
-  a.download='prophedge_mt4.mq4';
-}
-
-function liveTutorialOpenMT4(){
-  _tutStep = 7;
-  var m = document.getElementById('liveTutModal');
-  if(m){ m.style.display='flex'; _liveTutRender(); }
-}
-
-function liveTutorialOpen(){
-  _tutStep=0;
-  var m=document.getElementById('liveTutModal');
-  if(m){m.style.display='flex';_liveTutRender();}
-}
-function liveTutorialClose(){
-  if(window.speechSynthesis) window.speechSynthesis.cancel();
-  var m=document.getElementById('liveTutModal');
-  if(m) m.style.display='none';
-}
-function liveTutAudio(){
-  _tutAudioOn=!_tutAudioOn;
-  var btn=document.getElementById('tutAudioBtn');
-  if(btn) btn.textContent=_tutAudioOn?'🔊 Audio ON':'🔇 Audio OFF';
-  if(!_tutAudioOn && window.speechSynthesis) window.speechSynthesis.cancel();
-}
-function _liveTutSpeak(text){
-  if(!_tutAudioOn||!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  var u=new SpeechSynthesisUtterance(text);
-  u.lang='it-IT'; u.rate=0.95; u.pitch=1.0;
-  var voices=window.speechSynthesis.getVoices();
-  var v=voices.find(function(x){return x.lang.startsWith('it');});
-  if(v) u.voice=v;
-  window.speechSynthesis.speak(u);
-}
-function _liveTutRender(){
-  var s=_tutSteps[_tutStep], total=_tutSteps.length;
-  var pg=document.getElementById('tutProg');
-  if(pg){
-    pg.innerHTML='';
-    for(var i=0;i<total;i++){
-      var d=document.createElement('div');
-      d.style.cssText='flex:1;height:4px;border-radius:2px;margin-right:2px;background:'+(i<_tutStep?'#34D399':i===_tutStep?'#7F77DD':'rgba(255,255,255,.1)');
-      pg.appendChild(d);
-    }
-  }
-  var ct=document.getElementById('tutContent');
-  if(ct) ct.innerHTML='<div style="font-size:14px;font-weight:800;color:var(--t);margin-bottom:14px">'+s.title+'</div>'+s.html;
-  var lb=document.getElementById('tutLbl');
-  if(lb) lb.textContent='Passo '+(_tutStep+1)+' di '+total;
-  var bp=document.getElementById('tutBtnPrev'),bn=document.getElementById('tutBtnNext');
-  if(bp) bp.disabled=_tutStep===0;
-  if(bn){
-    bn.textContent=_tutStep===total-1?'✓ Fine':'Avanti →';
-    bn.style.background=_tutStep===total-1?'linear-gradient(135deg,#059669,#34D399)':'linear-gradient(135deg,var(--violet2),var(--teal2))';
-  }
-  setTimeout(function(){_liveTutSpeak(s.audio);},400);
-}
-function liveTutGo(dir){
-  var total=_tutSteps.length;
-  if(dir===1&&_tutStep===total-1){liveTutorialClose();return;}
-  _tutStep=Math.max(0,Math.min(total-1,_tutStep+dir));
-  _liveTutRender();
-}
-if(window.speechSynthesis) window.speechSynthesis.getVoices();
-
 function liveDownloadGuide(){
-  var code = `# PropHedge Bridge v3.0
-# NESSUNA CONFIGURAZIONE — si collega automaticamente a MT4/MT5 aperto
-# Avvio: py bridge.py
-# Requisiti (una volta sola): py -m pip install flask flask-cors MetaTrader5
+  var code="# PropHedge Bridge v8.0 \u2014 Auto-installante\n# Avvio: python bridge.py   oppure   py bridge.py\n# Installa tutto da solo al primo avvio.\n\nimport sys, subprocess, os\n\n# \u2500\u2500 Auto-installa dipendenze \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ndef _install(pkg):\n    print(f\"  Installazione {pkg}...\")\n    subprocess.run([sys.executable, \"-m\", \"pip\", \"install\", pkg, \"-q\",\n                    \"--disable-pip-version-check\"], check=False)\n\nfor _pkg, _imp in [(\"flask\",\"flask\"), (\"flask-cors\",\"flask_cors\"), (\"MetaTrader5\",\"MetaTrader5\")]:\n    try: __import__(_imp)\n    except ImportError: _install(_pkg)\n\n# \u2500\u2500 Imports \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nimport time, threading, json as _json, argparse\nfrom flask import Flask, request, jsonify\nfrom flask_cors import CORS\ntry:\n    import MetaTrader5 as _mt5\nexcept ImportError:\n    _mt5 = None\n\n# \u2500\u2500 Stato globale per porta 7778 (EA MT4) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n_ea_last   = 0\n_ea_acc    = {}\n_ea_pos    = []\n_pending   = []\n_plock     = threading.Lock()\n\ndef _pip(sym):\n    s = sym.upper()\n    if any(x in s for x in [\"XAU\",\"GOLD\"]): return 0.1\n    if \"JPY\" in s: return 0.01\n    if any(x in s for x in [\"NAS\",\"US30\",\"US500\",\"GER\",\"DAX\",\"SPX\"]): return 1.0\n    return 0.0001\n\ndef _sltp(sym, side, price, sl_pips, tp_pips):\n    p = _pip(sym)\n    if side == \"buy\":\n        sl = round(price - sl_pips*p, 5) if sl_pips else 0.0\n        tp = round(price + tp_pips*p, 5) if tp_pips else 0.0\n    else:\n        sl = round(price + sl_pips*p, 5) if sl_pips else 0.0\n        tp = round(price - tp_pips*p, 5) if tp_pips else 0.0\n    return sl, tp\n\ndef _find(mt5, sym):\n    for s in [sym, sym+\".a\", sym+\".b\", sym+\"m\"]:\n        t = mt5.symbol_info_tick(s)\n        if t: mt5.symbol_select(s, True); return s, t\n    mt5.symbol_select(sym, True); time.sleep(0.3)\n    t = mt5.symbol_info_tick(sym)\n    return (sym, t) if t else (None, None)\n\ndef _body():\n    try:\n        d = request.get_json(force=True, silent=True)\n        if d: return d\n        raw = request.data.decode(\"utf-8\",\"ignore\").strip()\n        if raw: return _json.loads(raw)\n    except: pass\n    return {}\n\ndef make_app(port):\n    label = \"PROP\" if port == 7777 else \"PERS\"\n    _login = [0]\n    mt5 = _mt5\n\n    app = Flask(f\"ph_{port}\")\n    CORS(app, resources={r\"/*\": {\"origins\": \"*\"}})\n\n    @app.after_request\n    def _cors(r):\n        r.headers[\"Access-Control-Allow-Origin\"] = \"*\"\n        r.headers[\"Access-Control-Allow-Headers\"] = \"Content-Type\"\n        r.headers[\"Access-Control-Allow-Methods\"] = \"GET,POST,OPTIONS\"\n        return r\n\n    @app.route(\"/<path:p>\", methods=[\"OPTIONS\"])\n    def _opt(p): return \"\", 204\n\n    @app.route(\"/ping\")\n    def ping():\n        ea = port==7778 and (time.time()-_ea_last)<12\n        return jsonify({\"ok\":True,\"version\":\"8.0\",\"port\":port,\"label\":label,\n                        \"connected_login\":_login[0],\"ea_alive\":ea})\n\n    @app.route(\"/connect\", methods=[\"POST\"])\n    def connect():\n        global _ea_last, _ea_acc\n        d = _body()\n        if not d: return jsonify({\"ok\":False,\"error\":\"Dati mancanti\"})\n        login = int(d.get(\"login\",0))\n        plat  = d.get(\"platform\",\"mt5\").lower()\n        # MT4: connetti subito con le credenziali fornite\n        # L'EA manda il heartbeat in background \u2014 non blocchiamo la connessione\n        if plat == \"mt4\":\n            # Se l'EA ha gi\u00e0 mandato un heartbeat, usa quei dati\n            if _ea_acc.get(\"login\") and (time.time()-_ea_last)<30:\n                _login[0] = int(_ea_acc[\"login\"])\n                print(f\"[{label}:{port}] MT4 EA gia connessa login={_login[0]}\")\n                return jsonify({\"ok\":True,\"error\":None,\"account\":_ea_acc.copy()})\n            # Altrimenti: connetti con le credenziali fornite, l'EA arriva dopo\n            _login[0] = login\n            fake_acc = {\"login\":login,\"balance\":0,\"equity\":0,\n                        \"currency\":\"USD\",\"server\":d.get(\"server\",\"MT4\")}\n            print(f\"[{label}:{port}] MT4 connessione ottimistica login={login}\")\n            return jsonify({\"ok\":True,\"error\":None,\"account\":fake_acc})\n        # MT5: Python diretto\n        if not mt5: return jsonify({\"ok\":False,\"error\":\"MetaTrader5 non installato. Riavvia bridge.py.\"})\n        try:\n            mt5.initialize()\n            acc = mt5.account_info()\n            if acc and acc.login==login:\n                _login[0]=login; return jsonify({\"ok\":True,\"error\":None})\n            ok = mt5.login(login=login,password=d.get(\"password\",\"\"),server=d.get(\"server\",\"\"))\n            if ok: _login[0]=login; print(f\"[{label}:{port}] MT5 login={login}\"); return jsonify({\"ok\":True,\"error\":None})\n            err=mt5.last_error()\n            return jsonify({\"ok\":False,\"error\":{\"code\":err[0],\"msg\":err[1]}})\n        except Exception as e:\n            return jsonify({\"ok\":False,\"error\":str(e)})\n\n    @app.route(\"/account\")\n    def account():\n        global _ea_last, _ea_acc\n        if request.args.get(\"from_ea\")==\"1\":\n            b=_body()\n            if b and b.get(\"login\"): _ea_acc=b; _ea_last=time.time(); _login[0]=int(b[\"login\"])\n            return jsonify({\"ok\":True})\n        if port==7778 and (time.time()-_ea_last)<12 and _ea_acc.get(\"login\"):\n            return jsonify(_ea_acc)\n        if mt5:\n            try:\n                i=mt5.account_info()\n                if i: return jsonify({k:(float(v) if hasattr(v,\"real\") else v) for k,v in i._asdict().items()})\n            except: pass\n        return jsonify({})\n\n    @app.route(\"/positions\")\n    def positions():\n        global _ea_pos, _ea_last\n        if request.args.get(\"from_ea\")==\"1\":\n            b=_body()\n            if isinstance(b,list): _ea_pos=b\n            _ea_last=time.time()\n            return jsonify({\"ok\":True})\n        if port==7778 and (time.time()-_ea_last)<12: return jsonify(_ea_pos)\n        if mt5:\n            try:\n                pos=mt5.positions_get() or []\n                return jsonify([{k:(float(v) if hasattr(v,\"real\") else v) for k,v in p._asdict().items()} for p in pos])\n            except: pass\n        return jsonify([])\n\n    @app.route(\"/order\", methods=[\"POST\"])\n    def order():\n        d=_body()\n        if not d: return jsonify({\"retcode\":-1,\"comment\":\"Dati mancanti\"})\n        if not _login[0]: return jsonify({\"retcode\":-1,\"comment\":f\"{label} non connesso\"})\n        sym=d.get(\"symbol\",\"\"); side=d.get(\"side\",\"buy\").lower()\n        vol=round(float(d.get(\"volume\",0.01)),2)\n        sl_pips=float(d.get(\"sl_pips\",0)); tp_pips=float(d.get(\"tp_pips\",0))\n        cmt=d.get(\"comment\",\"PropHedge\")\n        # MT4 via EA\n        if port==7778 and (time.time()-_ea_last)<12:\n            oid=int(time.time()*1000)\n            with _plock: _pending.append({\"id\":oid,\"symbol\":sym,\"side\":side,\"volume\":vol,\n                                           \"sl_pips\":sl_pips,\"tp_pips\":tp_pips,\"comment\":cmt})\n            deadline=time.time()+10\n            while time.time()<deadline:\n                time.sleep(0.2)\n                with _plock:\n                    done=[o for o in _pending if o.get(\"id\")==oid and o.get(\"done\")]\n                if done: return jsonify(done[0].get(\"result\",{}))\n            return jsonify({\"retcode\":-1,\"comment\":\"EA timeout 10s\"})\n        # MT5\n        if not mt5: return jsonify({\"retcode\":-1,\"comment\":\"MT5 non disponibile\"})\n        try:\n            sym2,tick=_find(mt5,sym)\n            if not sym2: return jsonify({\"retcode\":-1,\"comment\":f\"Simbolo {sym} non trovato\"})\n            entry_price = float(d.get(\"price\", 0))\n            order_type  = d.get(\"order_type\", \"market\").lower()\n            is_lim      = entry_price > 0 and \"limit\" in order_type\n            price       = entry_price if is_lim else (tick.ask if side==\"buy\" else tick.bid)\n            sl,tp       = _sltp(sym2, side, price, sl_pips, tp_pips)\n            if is_lim:\n                otype  = mt5.ORDER_TYPE_BUY_LIMIT  if side==\"buy\" else mt5.ORDER_TYPE_SELL_LIMIT\n                action = mt5.TRADE_ACTION_PENDING\n            else:\n                otype  = mt5.ORDER_TYPE_BUY if side==\"buy\" else mt5.ORDER_TYPE_SELL\n                action = mt5.TRADE_ACTION_DEAL\n            base={\"action\":action,\"symbol\":sym2,\"volume\":vol,\n                  \"type\":otype,\"price\":price,\"sl\":sl,\"tp\":tp,\n                  \"deviation\":20,\"magic\":234000,\"comment\":cmt,\"type_time\":mt5.ORDER_TIME_GTC}\n            r=None\n            if is_lim:\n                r=mt5.order_send(base)  # ordini pendenti non usano type_filling\n            else:\n                for fill in [mt5.ORDER_FILLING_IOC,mt5.ORDER_FILLING_FOK,mt5.ORDER_FILLING_RETURN]:\n                    r=mt5.order_send(dict(base,type_filling=fill))\n                    if r and r.retcode in (10009,10008,0): break\n                    if r and r.retcode not in (10030,10014): break\n            if not r: return jsonify({\"retcode\":-1,\"comment\":\"order_send None\"})\n            print(f\"[{label}:{port}] {side} {vol}lot {sym2} SL={sl:.5f} TP={tp:.5f} -> #{r.order}\")\n            return jsonify({k:(float(v) if hasattr(v,\"real\") else v) for k,v in r._asdict().items()})\n        except Exception as e:\n            return jsonify({\"retcode\":-1,\"comment\":str(e)})\n\n    @app.route(\"/pending\")\n    def pending():\n        global _ea_last\n        _ea_last=time.time()\n        with _plock: out=[o for o in _pending if not o.get(\"done\")]\n        return jsonify(out)\n\n    @app.route(\"/pending/result\", methods=[\"POST\"])\n    def pending_result():\n        d=_body()\n        with _plock:\n            for o in _pending:\n                if o.get(\"id\")==d.get(\"id\"): o[\"done\"]=True; o[\"result\"]=d.get(\"result\",{}); break\n        return jsonify({\"ok\":True})\n\n    @app.route(\"/close\", methods=[\"POST\"])\n    def close():\n        d=_body(); ticket=int(d.get(\"ticket\",0))\n        if port==7778 and (time.time()-_ea_last)<12:\n            oid=int(time.time()*1000)\n            with _plock: _pending.append({\"id\":oid,\"action\":\"close\",\"ticket\":ticket})\n            deadline=time.time()+10\n            while time.time()<deadline:\n                time.sleep(0.2)\n                with _plock:\n                    done=[o for o in _pending if o.get(\"id\")==oid and o.get(\"done\")]\n                if done: return jsonify(done[0].get(\"result\",{}))\n            return jsonify({\"retcode\":-1,\"comment\":\"timeout\"})\n        if mt5:\n            try:\n                pos=mt5.positions_get(ticket=ticket)\n                if not pos: return jsonify({\"retcode\":-1,\"comment\":\"Non trovata\"})\n                p=pos[0]; t=mt5.symbol_info_tick(p.symbol)\n                price=t.bid if p.type==0 else t.ask\n                r=mt5.order_send({\"action\":mt5.TRADE_ACTION_DEAL,\"symbol\":p.symbol,\"volume\":p.volume,\n                    \"type\":mt5.ORDER_TYPE_SELL if p.type==0 else mt5.ORDER_TYPE_BUY,\n                    \"position\":ticket,\"price\":price,\"deviation\":20,\"magic\":234000,\n                    \"comment\":\"close\",\"type_time\":mt5.ORDER_TIME_GTC,\n                    \"type_filling\":mt5.ORDER_FILLING_IOC})\n                return jsonify({k:(float(v) if hasattr(v,\"real\") else v) for k,v in r._asdict().items()})\n            except Exception as e: return jsonify({\"retcode\":-1,\"comment\":str(e)})\n        return jsonify({\"retcode\":-1,\"comment\":\"Non disponibile\"})\n\n    @app.route(\"/history\")\n    def history():\n        if mt5:\n            try:\n                tk=int(request.args.get(\"ticket\",0))\n                deals=mt5.history_deals_get(position=tk) or []\n                return jsonify({\"profit\":sum(x.profit for x in deals),\"ticket\":tk})\n            except: pass\n        return jsonify({\"profit\":0,\"ticket\":0})\n\n    return app\n\ndef _run(app, port):\n    lbl=\"PROP\" if port==7777 else \"PERS\"\n    try:\n        print(f\"  [{lbl}] http://127.0.0.1:{port}\")\n        app.run(host=\"0.0.0.0\",port=port,debug=False,use_reloader=False)\n    except OSError as e:\n        if \"10048\" in str(e) or \"in use\" in str(e).lower(): print(f\"  [WARN] Porta {port} gia occupata\")\n        else: print(f\"  [ERR] {e}\")\n\nif __name__ == \"__main__\":\n    p = argparse.ArgumentParser(add_help=False)\n    p.add_argument(\"--port\",type=int,default=0)\n    args,_ = p.parse_known_args()\n    print(\"=\"*50)\n    print(\"  PropHedge Bridge v8.0\")\n    print(\"=\"*50)\n    if args.port:\n        _run(make_app(args.port), args.port)\n    else:\n        print(\"  Porta 7777  PROP  (MT5)\")\n        print(\"  Porta 7778  PERS  (MT4 EA / MT5)\")\n        print(\"=\"*50)\n        t=threading.Thread(target=_run,args=(make_app(7777),7777),daemon=True)\n        t.start()\n        _run(make_app(7778),7778)\n";
+  var blob=new Blob([code],{type:"text/plain"});
+  var a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download="bridge.py"; a.click(); URL.revokeObjectURL(a.href);
+  setTimeout(function(){alert("✅ bridge.py scaricato!\n\nDoppio clic su bridge.py\noppure: apri cmd nella cartella → py bridge.py\n\nPoi torna qui e connetti.");},400);
+}
 
-import threading
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-import MetaTrader5 as mt5
+function liveDownloadEA(){
+  var code = `//+------------------------------------------------------------------+
+//| PropHedge EA v7.0                                                |
+//+------------------------------------------------------------------+
+#property strict
 
-def connect_mt5(login, password, server):
-    """
-    Connette a MT4/MT5 in tutti i modi possibili.
-    Strategia a 4 tentativi — funziona su qualsiasi PC.
-    """
-    import os, glob, subprocess, time
+input int InpPort = 7778;
 
-    MT5_PATH = r"C:\Program Files\MetaTrader 5\terminal64.exe"
+string g_url;
+string q;
 
-    # Tentativo 1: initialize con credenziali dirette (metodo più affidabile)
-    print(f"  [T1] initialize con credenziali dirette...")
-    mt5.shutdown()
-    ok = mt5.initialize(
-        path=MT5_PATH if os.path.exists(MT5_PATH) else None,
-        login=int(login),
-        password=password,
-        server=server,
-        timeout=30000
-    )
-    print(f"  [T1] result={ok}, error={mt5.last_error()}")
-    if ok:
-        info = mt5.account_info()
-        print(f"  Connesso: {info.login if info else login}")
-        return True, None
-    mt5.shutdown()
-    time.sleep(1)
+int OnInit()
+{
+   q     = CharToStr(34);
+   g_url = "http://127.0.0.1:" + IntegerToString(InpPort);
+   EventSetTimer(1);
+   Print("PropHedge EA v7.0 — ", g_url);
+   return(INIT_SUCCEEDED);
+}
+void OnDeinit(const int r) { EventKillTimer(); }
+void OnTimer()              { Heartbeat(); Poll(); }
 
-    # Tentativo 2: initialize senza path poi login separato
-    print(f"  [T2] initialize senza path...")
-    ok = mt5.initialize(login=int(login), password=password, server=server, timeout=30000)
-    print(f"  [T2] result={ok}, error={mt5.last_error()}")
-    if ok:
-        info = mt5.account_info()
-        print(f"  Connesso: {info.login if info else login}")
-        return True, None
-    mt5.shutdown()
-    time.sleep(1)
+void Heartbeat()
+{
+   string s = "{";
+   s += q+"login"+q    +":"+IntegerToString(AccountNumber())+",";
+   s += q+"balance"+q  +":"+DoubleToStr(AccountBalance(),2)+",";
+   s += q+"equity"+q   +":"+DoubleToStr(AccountEquity(),2)+",";
+   s += q+"currency"+q +":"+q+AccountCurrency()+q+",";
+   s += q+"server"+q   +":"+q+AccountServer()+q;
+   s += "}";
+   Post("/account?from_ea=1", s);
 
-    # Tentativo 3: initialize vuoto poi login
-    print(f"  [T3] initialize vuoto...")
-    ok = mt5.initialize(timeout=30000)
-    print(f"  [T3] init={ok}, error={mt5.last_error()}")
-    if ok:
-        ok2 = mt5.login(int(login), password=password, server=server)
-        print(f"  [T3] login={ok2}, error={mt5.last_error()}")
-        if ok2:
-            return True, None
-    mt5.shutdown()
+   string p = "[";
+   for(int i=0;i<OrdersTotal();i++)
+   {
+      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
+      if(i>0) p+=",";
+      p+="{";
+      p+=q+"ticket"+q+":"+IntegerToString(OrderTicket())+",";
+      p+=q+"symbol"+q+":"+q+OrderSymbol()+q+",";
+      p+=q+"type"+q+":"+IntegerToString(OrderType())+",";
+      p+=q+"volume"+q+":"+DoubleToStr(OrderLots(),2)+",";
+      p+=q+"profit"+q+":"+DoubleToStr(OrderProfit(),2);
+      p+="}";
+   }
+   p+="]";
+   Post("/positions?from_ea=1", p);
+}
 
-    # Tentativo 2: trova il terminale con glob su tutto il PC
-    for exe in ['terminal64.exe', 'terminal.exe']:
-        roots = [
-            r"C:\Program Files",
-            r"C:\Program Files (x86)",
-            r"D:\Program Files",
-            os.path.join(os.environ.get("APPDATA",""), "MetaQuotes", "Terminal"),
-            os.path.join(os.environ.get("LOCALAPPDATA",""), "Programs"),
-        ]
-        for root in roots:
-            if not root or not os.path.isdir(root): continue
-            for path in glob.glob(os.path.join(root, "**", exe), recursive=True):
-                try:
-                    mt5.shutdown()
-                    if mt5.initialize(path=path):
-                        ok = mt5.login(int(login), password=password, server=server)
-                        if ok:
-                            print(f"  Connesso via {path}")
-                            return True, None
-                        mt5.shutdown()
-                except Exception as e:
-                    print(f"  {path}: {e}")
-                    continue
+void Poll()
+{
+   string resp = Get("/pending");
+   if(StringLen(resp)<5) return;
+   int from=0;
+   while(true)
+   {
+      string idkey = q+"id"+q+":";
+      int pi = StringFind(resp,idkey,from);
+      if(pi<0) break;
+      int s=pi+StringLen(idkey);
+      int e=StringFind(resp,",",s);
+      int b=StringFind(resp,"}",s);
+      if(e<0||(b>=0&&b<e)) e=b;
+      if(e<0) break;
+      string id=StringSubstr(resp,s,e-s);
+      StringTrimLeft(id); StringTrimRight(id);
 
-    # Tentativo 3: avvia MT5 dal registro di Windows e riprova
-    try:
-        import winreg
-        reg_paths = [
-            r"SOFTWARE\Classes\mt5\shell\open\command",
-            r"SOFTWARE\MetaQuotes Software Corp.\MetaTrader 5",
-        ]
-        for reg_path in reg_paths:
-            try:
-                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_path)
-                val, _ = winreg.QueryValueEx(key, "")
-                exe_path = val.split('"')[1] if '"' in val else val.split()[0]
-                if os.path.exists(exe_path):
-                    subprocess.Popen([exe_path])
-                    time.sleep(4)
-                    if mt5.initialize():
-                        ok = mt5.login(int(login), password=password, server=server)
-                        if ok: return True, None
-                    mt5.shutdown()
-            except: pass
-    except: pass
+      string sym  = Val(resp,q+"symbol"+q+":");
+      string side = Val(resp,q+"side"+q+":");
+      double vol  = StrToDouble(Val(resp,q+"volume"+q+":"));
+      double slp  = StrToDouble(Val(resp,q+"sl_pips"+q+":"));
+      double tpp  = StrToDouble(Val(resp,q+"tp_pips"+q+":"));
+      string cmt  = Val(resp,q+"comment"+q+":");
+      if(StringLen(cmt)<1) cmt="PropHedge";
 
-    err = mt5.last_error()
-    return False, {"code": err[0], "msg": "Impossibile connettersi a MetaTrader. Assicurati che sia aperto e che AutoTrading sia attivo (pulsante verde in alto). Errore: " + str(err[1])}
+      string res="";
+      if(StringLen(sym)>0 && vol>0.0)
+      {
+         int cmd=(side=="buy")?OP_BUY:OP_SELL;
+         double prc=(cmd==OP_BUY)?MarketInfo(sym,MODE_ASK):MarketInfo(sym,MODE_BID);
+         double pip=0.0001;
+         if(StringFind(sym,"XAU")>=0||StringFind(sym,"GOLD")>=0) pip=0.1;
+         else if(StringFind(sym,"JPY")>=0) pip=0.01;
+         double sl=0,tp=0;
+         if(slp>0) sl=(cmd==OP_BUY)?prc-slp*pip:prc+slp*pip;
+         if(tpp>0) tp=(cmd==OP_BUY)?prc+tpp*pip:prc-tpp*pip;
+         int tk=OrderSend(sym,cmd,vol,prc,3,sl,tp,cmt,0,0,(cmd==OP_BUY)?clrGreen:clrRed);
+         if(tk>0)
+         {
+            Print("PropHedge #",tk," ",sym," ",side," ",DoubleToStr(vol,2),"lot SL=",DoubleToStr(sl,5)," TP=",DoubleToStr(tp,5));
+            res="{"+q+"retcode"+q+":0,"+q+"order"+q+":"+IntegerToString(tk)+","+q+"comment"+q+":"+q+"OK"+q+"}";
+         }
+         else
+         {
+            int err=GetLastError();
+            Print("PropHedge errore ",err," ",sym);
+            res="{"+q+"retcode"+q+":"+IntegerToString(err)+","+q+"comment"+q+":"+q+"err"+IntegerToString(err)+q+"}";
+         }
+      }
+      else res="{"+q+"retcode"+q+":-1,"+q+"comment"+q+":"+q+"dati mancanti"+q+"}";
 
-def create_app():
-    app = Flask(__name__)
-    CORS(app, resources={r"/*": {"origins": "*"}})
+      Post("/pending/result","{"+q+"id"+q+":"+id+","+q+"result"+q+":"+res+"}");
+      from=pi+5;
+   }
+}
 
-    @app.after_request
-    def add_cors(r):
-        r.headers["Access-Control-Allow-Origin"] = "*"
-        r.headers["Access-Control-Allow-Headers"] = "Content-Type"
-        r.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
-        return r
+string Val(string json,string key)
+{
+   int ki=StringFind(json,key);
+   if(ki<0) return("");
+   int s=ki+StringLen(key);
+   bool isq=(StringGetChar(json,s)==34);
+   if(isq) s++;
+   int e=s;
+   while(e<StringLen(json))
+   {
+      int c=StringGetChar(json,e);
+      if(isq&&c==34) break;
+      if(!isq&&(c==44||c==125)) break;
+      e++;
+   }
+   return(StringSubstr(json,s,e-s));
+}
 
-    @app.route("/<path:p>", methods=["OPTIONS"])
-    def opt(p): return "", 204
+string Get(string ep)
+{
+   string h="Content-Type: application/json"+CharToStr(13)+CharToStr(10);
+   uchar post[],res[]; string rh;
+   int code=WebRequest("GET",g_url+ep,h,3000,post,res,rh);
+   if(code<0){if(GetLastError()==4060)Print("Abilita WebRequest per ",g_url," in MT4 Opzioni");return("");}
+   return(CharArrayToString(res));
+}
 
-    @app.route("/connect", methods=["POST"])
-    def connect():
-        d = request.json
-        ok, err = connect_mt5(int(d["login"]), d["password"], d["server"])
-        return jsonify({"ok": ok, "error": err})
+string Post(string ep,string body)
+{
+   string h="Content-Type: application/json"+CharToStr(13)+CharToStr(10);
+   uchar post[],res[]; string rh;
+   StringToCharArray(body,post,0,StringLen(body));
+   ArrayResize(post,ArraySize(post)-1);
+   int code=WebRequest("POST",g_url+ep,h,3000,post,res,rh);
+   if(code<0) return("");
+   return(CharArrayToString(res));
+}
 
-    @app.route("/account")
-    def account():
-        info = mt5.account_info()
-        if not info: return jsonify({})
-        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in info._asdict().items()})
-
-    @app.route("/positions")
-    def positions():
-        pos = mt5.positions_get() or []
-        return jsonify([{k:(float(v) if hasattr(v,"real") else v) for k,v in p._asdict().items()} for p in pos])
-
-    @app.route("/history")
-    def history():
-        ticket = int(request.args.get("ticket", 0))
-        deals = mt5.history_deals_get(position=ticket) or []
-        return jsonify({"profit": sum(d.profit for d in deals), "ticket": ticket})
-
-    @app.route("/order", methods=["POST"])
-    def order():
-        d = request.json
-        sym = d["symbol"]
-        tick = mt5.symbol_info_tick(sym)
-        side = d.get("side", "buy")
-        price = tick.ask if side == "buy" else tick.bid
-        req = {
-            "action": mt5.TRADE_ACTION_DEAL, "symbol": sym,
-            "volume": float(d["volume"]),
-            "type": mt5.ORDER_TYPE_BUY if side == "buy" else mt5.ORDER_TYPE_SELL,
-            "price": price, "sl": float(d.get("sl", 0)), "tp": float(d.get("tp", 0)),
-            "deviation": 10, "magic": 234000,
-            "comment": d.get("comment", "PropHedge"),
-            "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": mt5.ORDER_FILLING_IOC,
-        }
-        r = mt5.order_send(req)
-        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
-
-    @app.route("/modify", methods=["POST"])
-    def modify():
-        d = request.json
-        req = {"action": mt5.TRADE_ACTION_SLTP, "position": int(d["ticket"]),
-               "sl": float(d["sl"]), "tp": float(d["tp"])}
-        r = mt5.order_send(req)
-        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
-
-    @app.route("/close", methods=["POST"])
-    def close():
-        ticket = int(request.json["ticket"])
-        pos = mt5.positions_get(ticket=ticket)
-        if not pos: return jsonify({"retcode": -1, "comment": "Not found"})
-        p = pos[0]
-        tick = mt5.symbol_info_tick(p.symbol)
-        price = tick.bid if p.type == 0 else tick.ask
-        req = {
-            "action": mt5.TRADE_ACTION_DEAL, "symbol": p.symbol, "volume": p.volume,
-            "type": mt5.ORDER_TYPE_SELL if p.type == 0 else mt5.ORDER_TYPE_BUY,
-            "position": ticket, "price": price, "deviation": 10, "magic": 234000,
-            "comment": "PropHedge close",
-            "type_time": mt5.ORDER_TIME_GTC, "type_filling": mt5.ORDER_FILLING_IOC,
-        }
-        r = mt5.order_send(req)
-        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
-
-    return app
-
-def run(port):
-    create_app().run(host="127.0.0.1", port=port, debug=False, use_reloader=False)
-
-if __name__ == "__main__":
-    print("=" * 50)
-    print("  PropHedge Bridge v3.0")
-    print("  Porta 7777 (PROP)      attiva")
-    print("  Porta 7778 (PERSONALE) attiva")
-    print("=" * 50)
-    print("  Lascia questa finestra aperta.")
-    print("  Torna su PropHedge e clicca Connetti.")
-    t = threading.Thread(target=run, args=(7777,), daemon=True)
-    t.start()
-    run(7778)
 `;
   var blob=new Blob([code],{type:'text/plain'});
   var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');a.href=url;a.download='bridge.py';a.click();
+  var a=document.createElement('a');a.href=url;a.download='prophedge_mt4.mq4';a.click();
   URL.revokeObjectURL(url);
 }
 function renderEADownload(){
@@ -11446,11 +11154,10 @@ function jrnlRenderEmpty(){return'<div style="display:flex;flex-direction:column
 function jrnlRenderSidebar(){
 
 
-var html='<div class="jsb"><div class="jsb-hd"><span>Sfide</span><button class="jsb-new" onclick="jrnlShowNewForm()">+ Nuova</button></div>' + 
-'<div style="padding: 10px; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--border);">' +
-'<button class="btn-p" onclick="phHedgeTrade(\'buy\', \'sell\')" style="width:100%; justify-content:center; background:linear-gradient(135deg,#00ff88,#00c466); color:#000; font-weight:bold;">BUY PROP / SELL PERS</button>' +
-'<button class="btn-p" onclick="phHedgeTrade(\'sell\', \'buy\')" style="width:100%; justify-content:center; background:linear-gradient(135deg,#F87171,#d42040); color:#fff; font-weight:bold;">SELL PROP / BUY PERS</button>' +
-'</div>';
+
+  var html='<div class="jsb"><div class="jsb-hd"><span>Sfide</span><button class="jsb-new" onclick="jrnlShowNewForm()">+ Nuova</button></div>';
+
+
 
   jrnl.sessions.forEach(function(s,i){
 
@@ -11540,8 +11247,8 @@ function jrnlRenderMain(){
       /* Parametri calcolati */
       +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">'
       +[
-        ['Lotti PROP',  lotProp+' lot', '#38BDF8'],
-        ['Lotti PERS',  lotPers+' lot', '#A78BFA'],
+        ['Lotti PROP',  lotProp+' lot'+((_simCH1&&_simCH1._above70Loss)?' ⚠':''), '#38BDF8'],
+        ['Lotti PERS',  lotPers+' lot'+((_simCH1&&_simCH1._above70Active)?' ⚡':''), '#A78BFA'],
         ['SL / TP',     sl+' / '+tp+' pip', 'var(--amber)'],
         ['Asset',       sym, 'var(--teal)']
       ].map(function(k){
@@ -11551,10 +11258,12 @@ function jrnlRenderMain(){
       }).join('')
       +'</div>'
 
-      /* Simbolo editabile */
-      +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">'
-      +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);white-space:nowrap">Simbolo broker:</div>'
-      +'<input id="jSym_'+i+'" value="'+sym+'" placeholder="XAUUSD" style="width:120px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--t);padding:5px 8px;font-size:11px;font-weight:700;outline:none">'
+      /* Simbolo + Prezzo opzionale */
+      +'<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;flex-wrap:wrap">'
+      +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:3px">Simbolo broker</div>'
+      +'<input id="jSym_'+i+'" value="'+sym+'" style="width:110px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--t);padding:6px 8px;font-size:12px;font-weight:700;outline:none"></div>'
+      +'<div><div style="font-size:9px;color:var(--amber);font-family:var(--fd);margin-bottom:3px">Prezzo entrata <span style="opacity:.6">(vuoto=mercato)</span></div>'
+      +'<input id="jPrice_'+i+'" type="number" step="0.001" placeholder="es. 3285.50" style="width:130px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);border-radius:6px;color:var(--amber);padding:6px 8px;font-size:12px;font-weight:700;outline:none"></div>'
       +'</div>'
 
       /* Pulsanti APRI HEDGE */
@@ -11748,68 +11457,92 @@ function jrnlCreateNew(){
 async function jrnlOpenHedge(sessIdx, propDir){
   var sess = jrnl.sessions[sessIdx];
   if(!sess) return;
-  var prop = typeof props!=="undefined" ? props.find(function(p){return p.id===sess.linkedPropId;}) : null;
 
-  /* Controlla connessione */
-  if(!_bridge.prop.connected || !_bridge.pers.connected){
-    var res = document.getElementById("jHedgeResult_"+sessIdx);
-    if(res){ res.style.display="block"; res.style.background="rgba(248,113,113,.1)"; res.style.color="var(--red)";
-      res.textContent="❌ Connetti entrambi i conti in Live Trading prima di fare trading."; }
-    return;
+  /* ── Parametri DALLA PROP collegata + regola 70% dal simulatore ── */
+  var prop    = (typeof props !== 'undefined' && sess.linkedPropId)
+                ? props.find(function(p){return p.id===sess.linkedPropId;}) : null;
+  var asset   = (prop&&prop.asset)||sess.asset||'GOLD';
+  var sym     = document.getElementById('jSym_'+sessIdx)?.value.trim()
+                || ((asset==='GOLD'||asset==='XAU')?'XAUUSD':asset);
+  var lotProp = parseFloat((prop&&prop.lots)||sess.lotProp||0.01);
+  var lotPers = parseFloat((prop&&(prop.lotPers||prop.lotsHedge))||sess.lotPers||0.01);
+  var sl      = parseFloat((prop&&prop.slPips)||sess.slPips||0);
+  var tp      = parseFloat((prop&&prop.tpPips)||sess.tpPips||0);
+
+  /* Applica regola 70% dal simulatore in tempo reale */
+  if(typeof _simCH1 !== 'undefined'){
+    if(_simCH1._above70Active && _simCH1._lotPersHalved > 0)
+      lotPers = _simCH1._lotPersHalved;
+    if(_simCH1._above70Loss && lotProp > 0.01)
+      lotProp = Math.floor(lotProp * 50) / 100;
   }
 
-  /* Parametri dal calcolatore */
-  var sym = (document.getElementById("jSym_"+sessIdx)?.value || (prop&&prop.asset) || "XAUUSD").replace("/","");
-  var lotProp = prop ? (prop.lots || 0.01) : 0.01;
-  var lotPers = prop ? (prop.lotPers || prop.lotsHedge || 0.01) : 0.01;
-  var slPips  = prop ? (prop.slPips || 100) : 100;
-  var tpPips  = prop ? (prop.tpPips || 100) : 100;
+  /* Prezzo entrata opzionale (ordine limite) */
+  var entryPx = parseFloat(document.getElementById('jPrice_'+sessIdx)?.value) || 0;
+  var isLimit = entryPx > 0;
 
-  /* Applica regola 70% profit — dimezza lotti personale */
-  if(typeof _simCH1!=="undefined" && _simCH1._above70Profit)
-    lotPers = Math.floor(lotPers * 50) / 100;
-  /* Applica regola 70% loss — dimezza lotti prop */
-  if(typeof _simCH1!=="undefined" && _simCH1._above70Loss)
-    lotProp = Math.floor(lotProp * 50) / 100;
+  var persDir = propDir==='buy' ? 'sell' : 'buy';
+  var resEl   = document.getElementById('jHedgeResult_'+sessIdx);
+  function setRes(bg, col, msg){
+    if(resEl){resEl.style.display='block';resEl.style.background=bg;resEl.style.color=col;resEl.innerHTML=msg;}
+  }
 
-  var propSide = propDir==="buy" ? "buy" : "sell";
-  var persSide = propDir==="buy" ? "sell" : "buy";
+  setRes('rgba(251,191,36,.08)','var(--amber)',
+    '⏳ '+(isLimit?'Invio ordine LIMITE @'+entryPx:'Invio ordine a mercato')+'...<br>'
+    +'<span style="font-size:10px">PROP: '+propDir.toUpperCase()+' '+lotProp+'lot | '
+    +'PERS: '+persDir.toUpperCase()+' '+lotPers+'lot | SL '+sl+'pip TP '+tp+'pip</span>');
 
-  var res = document.getElementById("jHedgeResult_"+sessIdx);
-  if(res){ res.style.display="block"; res.style.background="rgba(251,191,36,.08)"; res.style.color="var(--amber)";
-    res.innerHTML="⏳ Invio ordini in corso... PROP "+propSide.toUpperCase()+" "+lotProp+" lot · PERS "+persSide.toUpperCase()+" "+lotPers+" lot · SL "+slPips+"pip · TP "+tpPips+"pip"; }
+  function mkPayload(side, vol, cmt){
+    var p = {symbol:sym, volume:vol, side:side, sl_pips:sl, tp_pips:tp, comment:cmt};
+    if(isLimit){ p.price=entryPx; p.order_type=(side==='buy'?'buylimit':'selllimit'); }
+    return p;
+  }
 
-  var propPayload = JSON.stringify({ symbol:sym, side:propSide, volume:lotProp, sl_pips:slPips, tp_pips:tpPips, comment:"PropHedge PROP" });
-  var persPayload = JSON.stringify({ symbol:sym, side:persSide, volume:lotPers, sl_pips:slPips, tp_pips:tpPips, comment:"PropHedge PERS" });
+  try{
+    /* Invia PROP prima */
+    var rP = await fetch('http://127.0.0.1:7777/order',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(mkPayload(propDir, lotProp, 'PH_PROP'))
+    }).then(function(r){return r.json();})
+    .catch(function(e){return {retcode:-1,comment:'Bridge PROP non raggiungibile: '+e.message};});
 
-  var propOk=false, persOk=false, propTicket=0, persTicket=0;
-  var propErr="", persErr="";
-
-  /* Invia a entrambi gli EA in parallelo */
-  var results = await Promise.allSettled([
-    fetch("http://127.0.0.1:7777/order",{method:"POST",headers:{"Content-Type":"application/json"},body:propPayload})
-      .then(function(r){return r.json();}).then(function(d){ propOk=d.ok; propTicket=d.ticket||0; if(!d.ok) propErr="retcode="+d.retcode; }),
-    fetch("http://127.0.0.1:7778/order",{method:"POST",headers:{"Content-Type":"application/json"},body:persPayload})
-      .then(function(r){return r.json();}).then(function(d){ persOk=d.ok; persTicket=d.ticket||0; if(!d.ok) persErr="retcode="+d.retcode; })
-  ]);
-
-  /* Mostra risultato */
-  if(res){
-    if(propOk && persOk){
-      res.style.background="rgba(52,211,153,.1)"; res.style.color="var(--green)";
-      res.innerHTML="✅ Hedge aperto!<br>"
-        +"<b>PROP</b> "+propSide.toUpperCase()+" "+lotProp+"lot · ticket #"+propTicket+"<br>"
-        +"<b>PERS</b> "+persSide.toUpperCase()+" "+lotPers+"lot · ticket #"+persTicket+"<br>"
-        +"<span style=\"font-size:10px;opacity:.7\">SL "+slPips+"pip · TP "+tpPips+"pip · "+sym+"</span>";
-    } else {
-      res.style.background="rgba(248,113,113,.1)"; res.style.color="var(--red)";
-      res.innerHTML="❌ Errore ordini:"+(propOk?"":"<br>PROP: "+propErr)+(persOk?"":"<br>PERS: "+persErr);
+    var okP = rP&&(rP.retcode===10009||rP.retcode===10008||rP.retcode===0||rP.order>0);
+    if(!okP){
+      setRes('rgba(248,113,113,.1)','var(--red)',
+        '❌ PROP non inviata: <b>'+(rP.comment||rP.retcode)+'</b><br>'
+        +'<span style="font-size:10px">Controlla che bridge.py sia avviato e PROP sia connessa.</span>');
+      return;
     }
-  }
 
-  /* Aggiorna posizioni dopo 500ms */
-  setTimeout(liveRefreshAll, 500);
+    /* Invia PERS */
+    var rS = await fetch('http://127.0.0.1:7778/order',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(mkPayload(persDir, lotPers, 'PH_PERS'))
+    }).then(function(r){return r.json();})
+    .catch(function(e){return {retcode:-1,comment:'Bridge PERS non raggiungibile: '+e.message};});
+
+    var okS = rS&&(rS.retcode===10009||rS.retcode===10008||rS.retcode===0||rS.order>0);
+
+    if(okP && okS){
+      setRes('rgba(52,211,153,.1)','var(--green)',
+        (isLimit?'📌 LIMITE @'+entryPx:'✅ MERCATO')
+        +' | PROP '+propDir.toUpperCase()+' '+lotProp+'lot #'+(rP.order||'?')
+        +' | PERS '+persDir.toUpperCase()+' '+lotPers+'lot #'+(rS.order||'?')
+        +'<br><span style="font-size:10px">SL '+sl+'pip  TP '+tp+'pip  Sym: '+sym+'</span>');
+      _bridgeRegisterTrade(rP.order||0, rS.order||0, sym, propDir, lotProp, lotPers);
+      /* Pulisci campo prezzo dopo ordine */
+      var px=document.getElementById('jPrice_'+sessIdx); if(px) px.value='';
+    } else {
+      setRes('rgba(248,113,113,.1)','var(--red)',
+        '✅ PROP #'+(rP.order||'?')+' aperta | ❌ PERS: '
+        +'<b>'+(rS.comment||rS.retcode||JSON.stringify(rS))+'</b>');
+    }
+    liveRefreshAll();
+  } catch(e){
+    setRes('rgba(248,113,113,.1)','var(--red)','❌ Errore JS: '+e.message);
+  }
 }
+
 function _getSimCurrentDay(linkedPropId){
   /* Trova il primo giorno vuoto nel simulatore della sfida */
   if(typeof _simCH1 !== 'undefined' && _simCH1.data){
@@ -12076,7 +11809,8 @@ function jrnlDelete(i){
     try{ localStorage.removeItem('ph_live_creds_'+linkedId); } catch(e){}
     try{ localStorage.removeItem('ph_sim_'+linkedId); } catch(e){}
     /* Aggiorna dashboard */
-    if(typeof render === 'function') render();
+    if(typeof saveProps==='function')saveProps();
+    if(typeof render==='function')render();
   }
   renderJournal();
 }
@@ -17781,65 +17515,19 @@ window.addEventListener('DOMContentLoaded',function(){
     if(!event.data||event.data.type!=='ctrader_callback')return;
   });
 
-// --- INIZIO FUNZIONI BRIDGE EA MT4/MT5 ---
-  window.phHedgeTrade = function(propSide, persSide) {
-    var calc = null;
-    try { 
-      calc = JSON.parse(localStorage.getItem('calcChallenge')); 
-    } catch(e) {
-      console.error("Errore lettura calcChallenge", e);
-    }
-    
-    if(!calc || calc.prop2 === undefined || calc.personal === undefined) {
-      alert("Dati calcolatore mancanti. Calcola prima i lotti dalla schermata sfida.");
-      return;
-    }
-    
-    var payloadProp = { port: 7777, side: propSide, volume: calc.prop2, sl_pips: calc.sl || 0, tp_pips: calc.tp || 0 };
-    var payloadPers = { port: 7778, side: persSide, volume: calc.personal, sl_pips: calc.sl || 0, tp_pips: calc.tp || 0 };
-    
-    phSendToEA(payloadProp);
-    phSendToEA(payloadPers);
-  };
-
-  window.phSendToEA = function(payload) {
-    try {
-      var ws = new WebSocket('ws://127.0.0.1:' + payload.port);
-      ws.onopen = function() {
-        ws.send(JSON.stringify(payload));
-        console.log('Ordine inviato alla porta ' + payload.port, payload);
-      };
-      ws.onerror = function() {
-        alert("Errore invio ordine (Porta " + payload.port + "). Assicurati che il Bridge locale sia attivo.");
-      };
-    } catch(e) {
-      console.error("Errore WebSocket", e);
-    }
-  };
-  // --- FINE FUNZIONI BRIDGE ---
-
-  var urlParams = new URLSearchParams(window.location.search);
-  var authCode = urlParams.get('code');
-  if(authCode){
-    var jPending = null;
-    try { jPending = JSON.parse(localStorage.getItem('ph_jconn_pending') || 'null'); } catch(e) {}
-    if(jPending){ goTab('journal', document.getElementById('tabJournal')); }
+  var urlParams=new URLSearchParams(window.location.search);
+  var authCode=urlParams.get('code');
+  if(authCode){var jPending=null;try{jPending=JSON.parse(localStorage.getItem('ph_jconn_pending')||'null');}catch(e){}
+    if(jPending){goTab('journal',document.getElementById('tabJournal'));}
   }
 
   render();
 
-  function checkNet(){
-    var w = document.getElementById('netWarn');
-    if(w){
-      if(!navigator.onLine || window._sbLoadError) w.style.display = 'block';
-      else w.style.display = 'none';
-    }
-  }
-  checkNet();
-  window.addEventListener('online', checkNet);
-  window.addEventListener('offline', checkNet);
+  function checkNet(){var w=document.getElementById('netWarn');if(w){if(!navigator.onLine||window._sbLoadError)w.style.display='block';else w.style.display='none';}}
+  checkNet();window.addEventListener('online',checkNet);window.addEventListener('offline',checkNet);
 
 });
+
 </script>
 
 <script type="text/javascript">
@@ -17851,6 +17539,7 @@ function googleTranslateElementInit() {
   }, 'google_translate_element');
 }
 </script>
+
 <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
