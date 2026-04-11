@@ -9337,35 +9337,42 @@ function _bridgeRestoreGrids(){
   if(_bridge.pers.connected && _bridge.pers.account) liveRenderAccount('pers', _bridge.pers.account);
   var allPos = (_bridge.prop.positions||[]).concat(_bridge.pers.positions||[]);
   liveRenderAllPositions(allPos);
-
-  /* Event delegation per i nuovi bottoni data-* */
-  var root = document.getElementById('liveRoot');
-  if(!root) return;
-  root.addEventListener('click', function(e){
-    var t = e.target;
-    /* Selezione sfida */
-    if(t.dataset.sfida){ liveSelectSfida(parseInt(t.dataset.sfida)); return; }
-    /* Piattaforma */
-    if(t.classList.contains('plat-btn')){ liveSetPlat(t); return; }
-    /* Connetti */
-    if(t.classList.contains('conn-btn')){ liveConnectSingle(parseInt(t.dataset.pid),t.dataset.side); return; }
-    /* Download EA */
-    if(t.classList.contains('dl-ea5')){ liveDownloadEA5(); return; }
-    if(t.classList.contains('dl-ea4')){ liveDownloadEA4(); return; }
-    /* Tutorial */
-    if(t.classList.contains('tut-btn')){ liveTutorialOpen(); return; }
-    /* Mostra/nascondi password */
-    if(t.classList.contains('pwd-toggle')){
-      var f=document.getElementById(t.dataset.target);
-      if(f){ f.type=f.type==='password'?'text':'password'; t.textContent=f.type==='password'?'👁':'🙈'; }
-      return;
-    }
-  });
   /* Auto-save credenziali */
-  root.querySelectorAll('.live-inp').forEach(function(inp){
-    inp.addEventListener('input', function(){ liveSaveCreds(parseInt(inp.dataset.pid)); });
+  var root = document.getElementById('liveRoot');
+  if(root) root.querySelectorAll('.live-inp').forEach(function(inp){
+    inp.addEventListener('input', function(){ liveSaveCreds(parseInt(inp.dataset.pid)||0); });
   });
 }
+
+/* ── UNICO event listener sul documento per Live Trading ──
+   Sopravvive a qualsiasi sostituzione DOM ── */
+document.addEventListener('click', function(e){
+  var t = e.target;
+  if(!t) return;
+  /* Selezione sfida */
+  if(t.dataset && t.dataset.sfida){ liveSelectSfida(parseInt(t.dataset.sfida)); return; }
+  /* Piattaforma */
+  if(t.classList && t.classList.contains('plat-btn')){ liveSetPlat(t); return; }
+  /* Connetti */
+  if(t.classList && t.classList.contains('conn-btn')){
+    liveConnectSingle(parseInt(t.dataset.pid)||0, t.dataset.side); return;
+  }
+  /* Download EA */
+  if(t.classList && t.classList.contains('dl-ea5')){ liveDownloadEA5(); return; }
+  if(t.classList && t.classList.contains('dl-ea4')){ liveDownloadEA4(); return; }
+  /* Tutorial */
+  if(t.classList && t.classList.contains('tut-btn')){ liveTutorialOpen(); return; }
+  /* Mostra/nascondi password */
+  if(t.classList && t.classList.contains('pwd-toggle')){
+    var f = document.getElementById(t.dataset.target);
+    if(f){ f.type = f.type==='password'?'text':'password'; t.textContent = f.type==='password'?'👁':'🙈'; }
+    return;
+  }
+  /* Sfida selector buttons (ls-btn) */
+  if(t.classList && t.classList.contains('ls-btn') && t.dataset.sfida){
+    liveSelectSfida(parseInt(t.dataset.sfida)); return;
+  }
+});
 
 async function liveConnectSide(side){
   var b   = _bridge[side];
@@ -10094,252 +10101,222 @@ var _tutSteps=[
    ══════════════════════════════════════════════════════ */
 
 function liveDownloadEA5(){
-  var mql = '';
-  mql += '//+------------------------------------------------------------------+\n';
-  mql += '//|  PropHedge Bridge EA — MetaTrader 5                              |\n';
-  mql += '//|  HTTP Server — Zero config, zero bridge esterno                  |\n';
-  mql += '//|  Porta 7777 = conto PROP  |  Porta 7778 = conto PERSONALE        |\n';
-  mql += '//+------------------------------------------------------------------+\n';
-  mql += '#property copyright "PropHedge"\n';
-  mql += '#property version   "2.0"\n';
-  mql += '#property strict\n\n';
-  mql += 'input int    BridgePort = 7777;   // 7777=PROP | 7778=PERSONALE\n\n';
-  mql += 'SOCKET64 _srv = INVALID_HANDLE64;\n\n';
-  mql += 'int OnInit(){\n';
-  mql += '  _srv = SocketCreate();\n';
-  mql += '  if(_srv==INVALID_HANDLE64){ Alert("PropHedge: socket error"); return INIT_FAILED; }\n';
-  mql += '  if(!SocketBind(_srv,"0.0.0.0",BridgePort)){ Alert("PropHedge: bind error porta ",BridgePort); SocketClose(_srv); return INIT_FAILED; }\n';
-  mql += '  if(!SocketListen(_srv,5)){ Alert("PropHedge: listen error"); SocketClose(_srv); return INIT_FAILED; }\n';
-  mql += '  Print("PropHedge Bridge MT5 attivo su porta ",BridgePort," account=",AccountInfoInteger(ACCOUNT_LOGIN));\n';
-  mql += '  EventSetMillisecondTimer(50);\n';
-  mql += '  return INIT_SUCCEEDED;\n';
-  mql += '}\n\n';
-  mql += 'void OnDeinit(const int r){ EventKillTimer(); if(_srv!=INVALID_HANDLE64) SocketClose(_srv); }\n\n';
-  mql += 'void OnTimer(){\n';
-  mql += '  SOCKET64 cl=SocketAccept(_srv,1); if(cl==INVALID_HANDLE64) return;\n';
-  mql += '  uchar buf[16384]; uint n=SocketRead(cl,buf,16384,200);\n';
-  mql += '  if(n==0){ SocketClose(cl); return; }\n';
-  mql += '  string req=CharArrayToString(buf,0,n);\n';
-  mql += '  string mth=StringSubstr(req,0,StringFind(req," "));\n';
-  mql += '  string pf=StringSubstr(req,StringLen(mth)+1);\n';
-  mql += '  string path=StringSubstr(pf,0,StringFind(pf," "));\n';
-  mql += '  string body="";\n';
-  mql += '  int bs=StringFind(req,"\\r\\n\\r\\n"); if(bs>=0) body=StringSubstr(req,bs+4);\n';
-  mql += '  if(mth=="OPTIONS"){\n';
-  mql += '    string r="HTTP/1.1 204 No Content\\r\\nAccess-Control-Allow-Origin: *\\r\\nAccess-Control-Allow-Methods: GET,POST,OPTIONS\\r\\nAccess-Control-Allow-Headers: Content-Type\\r\\nContent-Length: 0\\r\\n\\r\\n";\n';
-  mql += '    uchar o[]; StringToCharArray(r,o,0,StringLen(r)); SocketSend(cl,o,ArraySize(o)); SocketClose(cl); return;\n';
-  mql += '  }\n';
-  mql += '  string json="{\\\"error\\\":\\\"not found\\\"}";\n';
-  mql += '  if(path=="/account") json=PH_Account();\n';
-  mql += '  else if(path=="/positions") json=PH_Positions();\n';
-  mql += '  else if(path=="/order"&&mth=="POST") json=PH_Order(body);\n';
-  mql += '  else if(path=="/close"&&mth=="POST") json=PH_Close(body);\n';
-  mql += '  string hdr="HTTP/1.1 200 OK\\r\\nContent-Type: application/json\\r\\nAccess-Control-Allow-Origin: *\\r\\nContent-Length: "+IntegerToString(StringLen(json))+"\\r\\n\\r\\n";\n';
-  mql += '  string full=hdr+json;\n';
-  mql += '  uchar o[]; StringToCharArray(full,o,0,StringLen(full)); SocketSend(cl,o,ArraySize(o)); SocketClose(cl);\n';
-  mql += '}\n\n';
-  mql += 'string PH_Account(){\n';
-  mql += '  return "{\\\"login\\\":"+IntegerToString(AccountInfoInteger(ACCOUNT_LOGIN))+\n';
-  mql += '    ",\\\"balance\\\":"+DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE),2)+\n';
-  mql += '    ",\\\"equity\\\":"+DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY),2)+\n';
-  mql += '    ",\\\"profit\\\":"+DoubleToString(AccountInfoDouble(ACCOUNT_PROFIT),2)+\n';
-  mql += '    ",\\\"currency\\\":\\\""+AccountInfoString(ACCOUNT_CURRENCY)+"\\\""+\n';
-  mql += '    ",\\\"company\\\":\\\""+AccountInfoString(ACCOUNT_COMPANY)+"\\\""+\n';
-  mql += '    ",\\\"server\\\":\\\""+AccountInfoString(ACCOUNT_SERVER)+"\\\"}";\n';
-  mql += '}\n\n';
-  mql += 'string PH_Positions(){\n';
-  mql += '  string j="[";\n';
-  mql += '  for(int i=0;i<PositionsTotal();i++){\n';
-  mql += '    ulong t=PositionGetTicket(i); if(t==0) continue;\n';
-  mql += '    if(i>0) j+=",";\n';
-  mql += '    j+="{\\\"ticket\\\":"+IntegerToString(t)+\n';
-  mql += '      ",\\\"symbol\\\":\\\""+PositionGetString(POSITION_SYMBOL)+"\\\""+\n';
-  mql += '      ",\\\"type\\\":"+IntegerToString(PositionGetInteger(POSITION_TYPE))+\n';
-  mql += '      ",\\\"volume\\\":"+DoubleToString(PositionGetDouble(POSITION_VOLUME),2)+\n';
-  mql += '      ",\\\"price_open\\\":"+DoubleToString(PositionGetDouble(POSITION_PRICE_OPEN),5)+\n';
-  mql += '      ",\\\"sl\\\":"+DoubleToString(PositionGetDouble(POSITION_SL),5)+\n';
-  mql += '      ",\\\"tp\\\":"+DoubleToString(PositionGetDouble(POSITION_TP),5)+\n';
-  mql += '      ",\\\"profit\\\":"+DoubleToString(PositionGetDouble(POSITION_PROFIT),2)+"}";\n';
-  mql += '  }\n';
-  mql += '  return j+"]";\n';
-  mql += '}\n\n';
-  mql += 'string PH_JsonGet(string json,string key){\n';
-  mql += '  string k="\\""+key+"\\":";\n';
-  mql += '  int p=StringFind(json,k); if(p<0) return "";\n';
-  mql += '  p+=StringLen(k);\n';
-  mql += '  if(StringGetCharacter(json,p)==\'"\'){\n';
-  mql += '    p++; int e=StringFind(json,"\\"",p);\n';
-  mql += '    return e<0?"":StringSubstr(json,p,e-p);\n';
-  mql += '  }\n';
-  mql += '  int e=p;\n';
-  mql += '  while(e<StringLen(json)){ ushort c=StringGetCharacter(json,e); if(c==\',\'||c==\'}\'||c==\' \'||c==\'\\r\'||c==\'\\n\') break; e++; }\n';
-  mql += '  return StringSubstr(json,p,e-p);\n';
-  mql += '}\n\n';
-  mql += 'string PH_Order(string body){\n';
-  mql += '  string sym=PH_JsonGet(body,"symbol"); if(sym=="") sym=_Symbol;\n';
-  mql += '  string side=PH_JsonGet(body,"side");\n';
-  mql += '  double vol=StringToDouble(PH_JsonGet(body,"volume")); if(vol<=0) vol=0.01;\n';
-  mql += '  double slPips=StringToDouble(PH_JsonGet(body,"sl_pips"));\n';
-  mql += '  double tpPips=StringToDouble(PH_JsonGet(body,"tp_pips"));\n';
-  mql += '  string cmt=PH_JsonGet(body,"comment"); if(cmt=="") cmt="PropHedge";\n';
-  mql += '  int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);\n';
-  mql += '  double pt=SymbolInfoDouble(sym,SYMBOL_POINT);\n';
-  mql += '  double pip=(dg==5||dg==3||dg==2)?pt*10:pt;\n';
-  mql += '  MqlTick tick; SymbolInfoTick(sym,tick);\n';
-  mql += '  bool buy=(side=="buy");\n';
-  mql += '  double price=buy?tick.ask:tick.bid;\n';
-  mql += '  double sl=slPips>0?(buy?price-slPips*pip:price+slPips*pip):0;\n';
-  mql += '  double tp=tpPips>0?(buy?price+tpPips*pip:price-tpPips*pip):0;\n';
-  mql += '  MqlTradeRequest req={}; MqlTradeResult res={};\n';
-  mql += '  req.action=TRADE_ACTION_DEAL; req.symbol=sym; req.volume=vol;\n';
-  mql += '  req.type=buy?ORDER_TYPE_BUY:ORDER_TYPE_SELL;\n';
-  mql += '  req.price=price; req.sl=sl; req.tp=tp;\n';
-  mql += '  req.deviation=20; req.magic=234000; req.comment=cmt;\n';
-  mql += '  req.type_time=ORDER_TIME_GTC; req.type_filling=ORDER_FILLING_IOC;\n';
-  mql += '  OrderSend(req,res);\n';
-  mql += '  Print("PropHedge ordine: ",sym," ",side," ",vol," lot | retcode=",res.retcode," ticket=",res.order);\n';
-  mql += '  return "{\\\"ok\\\":"+(res.retcode==10009?"true":"false")+\n';
-  mql += '    ",\\\"retcode\\\":"+IntegerToString(res.retcode)+\n';
-  mql += '    ",\\\"ticket\\\":"+IntegerToString(res.order)+\n';
-  mql += '    ",\\\"volume\\\":"+DoubleToString(res.volume,2)+\n';
-  mql += '    ",\\\"price\\\":"+DoubleToString(res.price,5)+"}";\n';
-  mql += '}\n\n';
-  mql += 'string PH_Close(string body){\n';
-  mql += '  ulong ticket=(ulong)StringToInteger(PH_JsonGet(body,"ticket"));\n';
-  mql += '  if(!PositionSelectByTicket(ticket)) return "{\\\"ok\\\":false,\\\"error\\\":\\\"not found\\\"}";\n';
-  mql += '  string sym=PositionGetString(POSITION_SYMBOL);\n';
-  mql += '  double vol=PositionGetDouble(POSITION_VOLUME);\n';
-  mql += '  ENUM_POSITION_TYPE type=(ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);\n';
-  mql += '  MqlTick tick; SymbolInfoTick(sym,tick);\n';
-  mql += '  MqlTradeRequest req={}; MqlTradeResult res={};\n';
-  mql += '  req.action=TRADE_ACTION_DEAL; req.symbol=sym; req.volume=vol;\n';
-  mql += '  req.type=(type==POSITION_TYPE_BUY)?ORDER_TYPE_SELL:ORDER_TYPE_BUY;\n';
-  mql += '  req.price=(type==POSITION_TYPE_BUY)?tick.bid:tick.ask;\n';
-  mql += '  req.position=ticket; req.deviation=20; req.magic=234000;\n';
-  mql += '  req.comment="PropHedge close";\n';
-  mql += '  req.type_time=ORDER_TIME_GTC; req.type_filling=ORDER_FILLING_IOC;\n';
-  mql += '  OrderSend(req,res);\n';
-  mql += '  return "{\\\"ok\\\":"+(res.retcode==10009?"true":"false")+",\\\"retcode\\\":"+IntegerToString(res.retcode)+"}";\n';
-  mql += '}\n';
-  var b=new Blob([mql],{type:'text/plain'});
+  var code=`//+------------------------------------------------------------------+
+//|  PropHedge Bridge EA v3.0 — MetaTrader 5                        |
+//|  HTTP Server — nessun programma esterno                         |
+//|  BridgePort: 7777=PROP  7778=PERSONALE                          |
+//+------------------------------------------------------------------+
+#property strict
+input int BridgePort = 7777;
+
+int _srv = INVALID_HANDLE;
+
+int OnInit(){
+   _srv = SocketCreate();
+   if(_srv==INVALID_HANDLE){ Alert("PropHedge: socket error"); return(INIT_FAILED); }
+   if(!SocketBind(_srv,"127.0.0.1",(ushort)BridgePort)){
+      Alert("PropHedge: porta ",BridgePort," occupata. Cambia BridgePort.");
+      SocketClose(_srv); return(INIT_FAILED);
+   }
+   if(!SocketListen(_srv,10)){ SocketClose(_srv); return(INIT_FAILED); }
+   Print("PropHedge MT5 attivo porta ",BridgePort," | account=",AccountInfoInteger(ACCOUNT_LOGIN));
+   EventSetMillisecondTimer(50);
+   return(INIT_SUCCEEDED);
+}
+void OnDeinit(const int r){
+   EventKillTimer();
+   if(_srv!=INVALID_HANDLE){ SocketClose(_srv); _srv=INVALID_HANDLE; }
+}
+void OnTimer(){
+   int cl=SocketAccept(_srv,1);
+   if(cl==INVALID_HANDLE) return;
+   uchar buf[32768]; uint n=SocketRead(cl,buf,32768,300);
+   if(n==0){ SocketClose(cl); return; }
+   string req=CharArrayToString(buf,0,n,CP_UTF8);
+   string mth=StringSubstr(req,0,StringFind(req," "));
+   string rest=StringSubstr(req,StringLen(mth)+1);
+   string path=StringSubstr(rest,0,StringFind(rest," "));
+   string body=""; int bp=StringFind(req,"\r\n\r\n");
+   if(bp>=0) body=StringSubstr(req,bp+4);
+   string cors="Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: GET,POST,OPTIONS\r\nAccess-Control-Allow-Headers: Content-Type\r\n";
+   if(mth=="OPTIONS"){
+      string r0="HTTP/1.1 204 No Content\r\n"+cors+"Content-Length: 0\r\n\r\n";
+      uchar out0[]; StringToCharArray(r0,out0,0,StringLen(r0)); SocketSend(cl,out0,ArraySize(out0)-1); SocketClose(cl); return;
+   }
+   string json="{\"error\":\"not found\"}";
+   if(path=="/account") json=PH_Account();
+   else if(path=="/positions") json=PH_Positions();
+   else if(path=="/order" && mth=="POST") json=PH_Order(body);
+   else if(path=="/close" && mth=="POST") json=PH_Close(body);
+   string resp="HTTP/1.1 200 OK\r\n"+cors+"Content-Type: application/json\r\nContent-Length: "+IntegerToString(StringLen(json))+"\r\n\r\n"+json;
+   uchar out1[]; StringToCharArray(resp,out1,0,StringLen(resp)); SocketSend(cl,out1,ArraySize(out1)-1); SocketClose(cl);
+}
+string PH_Account(){
+   return "{\"login\":"+IntegerToString((int)AccountInfoInteger(ACCOUNT_LOGIN))
+         +",\"balance\":"+DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE),2)
+         +",\"equity\":"+DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY),2)
+         +",\"profit\":"+DoubleToString(AccountInfoDouble(ACCOUNT_PROFIT),2)
+         +",\"currency\":\""+AccountInfoString(ACCOUNT_CURRENCY)+"\""
+         +",\"server\":\""+AccountInfoString(ACCOUNT_SERVER)+"\""
+         +",\"company\":\""+AccountInfoString(ACCOUNT_COMPANY)+"\"" +"}";
+}
+string PH_Positions(){
+   string j="["; int cnt=0;
+   for(int i=0;i<PositionsTotal();i++){
+      ulong t=PositionGetTicket(i); if(t==0) continue;
+      if(cnt>0) j+=","; cnt++;
+      j+="{\"ticket\":"+IntegerToString((long)t)
+        +",\"symbol\":\""+PositionGetString(POSITION_SYMBOL)+"\""
+        +",\"type\":"+IntegerToString((int)PositionGetInteger(POSITION_TYPE))
+        +",\"volume\":"+DoubleToString(PositionGetDouble(POSITION_VOLUME),2)
+        +",\"profit\":"+DoubleToString(PositionGetDouble(POSITION_PROFIT),2)+"}";
+   }
+   return j+"]";
+}
+string PH_Get(string json,string key){
+   string k="\""+key+"\":"; int p=StringFind(json,k); if(p<0) return "";
+   p+=StringLen(k);
+   if(StringGetCharacter(json,p)==34){ p++; int e=StringFind(json,"\"",p); return e<0?"":StringSubstr(json,p,e-p); }
+   int e=p; while(e<StringLen(json)){ushort c=StringGetCharacter(json,e);if(c==44||c==125||c==32)break;e++;} return StringSubstr(json,p,e-p);
+}
+string PH_Order(string body){
+   string sym=PH_Get(body,"symbol"); if(sym=="") sym=_Symbol;
+   string side=PH_Get(body,"side");
+   double vol=StringToDouble(PH_Get(body,"volume")); if(vol<=0) vol=0.01;
+   double slP=StringToDouble(PH_Get(body,"sl_pips"));
+   double tpP=StringToDouble(PH_Get(body,"tp_pips"));
+   int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
+   double pt=SymbolInfoDouble(sym,SYMBOL_POINT);
+   double pip=(dg==5||dg==3)?pt*10:pt;
+   MqlTick tick; SymbolInfoTick(sym,tick);
+   bool buy=(side=="buy");
+   double price=buy?tick.ask:tick.bid;
+   double sl=slP>0?(buy?price-slP*pip:price+slP*pip):0;
+   double tp=tpP>0?(buy?price+tpP*pip:price-tpP*pip):0;
+   MqlTradeRequest req={}; MqlTradeResult res={};
+   req.action=TRADE_ACTION_DEAL; req.symbol=sym; req.volume=vol;
+   req.type=buy?ORDER_TYPE_BUY:ORDER_TYPE_SELL;
+   req.price=price; req.sl=sl; req.tp=tp;
+   req.deviation=20; req.magic=234000; req.comment="PropHedge";
+   req.type_time=ORDER_TIME_GTC; req.type_filling=ORDER_FILLING_IOC;
+   OrderSend(req,res);
+   return "{\"ok\":"+(res.retcode==10009?"true":"false")+",\"retcode\":"+IntegerToString(res.retcode)+",\"ticket\":"+IntegerToString((long)res.order)+"}";
+}
+string PH_Close(string body){
+   ulong ticket=(ulong)StringToInteger(PH_Get(body,"ticket"));
+   if(!PositionSelectByTicket(ticket)) return "{\"ok\":false}";
+   string sym=PositionGetString(POSITION_SYMBOL);
+   double vol=PositionGetDouble(POSITION_VOLUME);
+   ENUM_POSITION_TYPE type=(ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+   MqlTick tick; SymbolInfoTick(sym,tick);
+   MqlTradeRequest req={}; MqlTradeResult res={};
+   req.action=TRADE_ACTION_DEAL; req.symbol=sym; req.volume=vol;
+   req.type=(type==POSITION_TYPE_BUY)?ORDER_TYPE_SELL:ORDER_TYPE_BUY;
+   req.price=(type==POSITION_TYPE_BUY)?tick.bid:tick.ask;
+   req.position=ticket; req.deviation=20; req.magic=234000; req.comment="PropHedge close";
+   req.type_time=ORDER_TIME_GTC; req.type_filling=ORDER_FILLING_IOC;
+   OrderSend(req,res);
+   return "{\"ok\":"+(res.retcode==10009?"true":"false")+"}";
+}`;
+  var b=new Blob([code],{type:'text/plain'});
   var u=URL.createObjectURL(b);
   var a=document.createElement('a'); a.href=u; a.download='prophedge_mt5.mq5'; a.click();
   URL.revokeObjectURL(u);
 }
 
 function liveDownloadEA4(){
-  var mql = '';
-  mql += '//+------------------------------------------------------------------+\n';
-  mql += '//|  PropHedge Bridge EA — MetaTrader 4                              |\n';
-  mql += '//|  HTTP Server — Zero config, zero bridge esterno                  |\n';
-  mql += '//|  Porta 7777 = conto PROP  |  Porta 7778 = conto PERSONALE        |\n';
-  mql += '//+------------------------------------------------------------------+\n';
-  mql += '#property copyright "PropHedge"\n';
-  mql += '#property version   "2.0"\n';
-  mql += '#property strict\n\n';
-  mql += 'extern int BridgePort = 7778;  // 7777=PROP | 7778=PERSONALE\n\n';
-  mql += 'int _srv = INVALID_HANDLE;\n\n';
-  mql += 'int OnInit(){\n';
-  mql += '  _srv = SocketCreate();\n';
-  mql += '  if(_srv==INVALID_HANDLE){ Alert("PropHedge: socket error"); return INIT_FAILED; }\n';
-  mql += '  if(!SocketBind(_srv,"0.0.0.0",BridgePort)){ Alert("PropHedge: bind error porta ",BridgePort); SocketClose(_srv); return INIT_FAILED; }\n';
-  mql += '  if(!SocketListen(_srv,5)){ Alert("PropHedge: listen error"); SocketClose(_srv); return INIT_FAILED; }\n';
-  mql += '  Print("PropHedge Bridge MT4 attivo su porta ",BridgePort," account=",AccountNumber());\n';
-  mql += '  EventSetMillisecondTimer(50);\n';
-  mql += '  return INIT_SUCCEEDED;\n';
-  mql += '}\n\n';
-  mql += 'void OnDeinit(const int r){ EventKillTimer(); if(_srv!=INVALID_HANDLE) SocketClose(_srv); }\n\n';
-  mql += 'void OnTimer(){\n';
-  mql += '  int cl=SocketAccept(_srv,1); if(cl==INVALID_HANDLE) return;\n';
-  mql += '  uchar buf[16384]; uint n=SocketRead(cl,buf,16384,200);\n';
-  mql += '  if(n==0){ SocketClose(cl); return; }\n';
-  mql += '  string req=CharArrayToString(buf,0,n);\n';
-  mql += '  string mth=StringSubstr(req,0,StringFind(req," "));\n';
-  mql += '  string pf=StringSubstr(req,StringLen(mth)+1);\n';
-  mql += '  string path=StringSubstr(pf,0,StringFind(pf," "));\n';
-  mql += '  string body="";\n';
-  mql += '  int bs=StringFind(req,"\\r\\n\\r\\n"); if(bs>=0) body=StringSubstr(req,bs+4);\n';
-  mql += '  if(mth=="OPTIONS"){\n';
-  mql += '    string r="HTTP/1.1 204 No Content\\r\\nAccess-Control-Allow-Origin: *\\r\\nAccess-Control-Allow-Methods: GET,POST,OPTIONS\\r\\nAccess-Control-Allow-Headers: Content-Type\\r\\nContent-Length: 0\\r\\n\\r\\n";\n';
-  mql += '    uchar o[]; StringToCharArray(r,o,0,StringLen(r)); SocketSend(cl,o,ArraySize(o)); SocketClose(cl); return;\n';
-  mql += '  }\n';
-  mql += '  string json="{\\\"error\\\":\\\"not found\\\"}";\n';
-  mql += '  if(path=="/account") json=PH_Account();\n';
-  mql += '  else if(path=="/positions") json=PH_Positions();\n';
-  mql += '  else if(path=="/order"&&mth=="POST") json=PH_Order(body);\n';
-  mql += '  else if(path=="/close"&&mth=="POST") json=PH_Close(body);\n';
-  mql += '  string hdr="HTTP/1.1 200 OK\\r\\nContent-Type: application/json\\r\\nAccess-Control-Allow-Origin: *\\r\\nContent-Length: "+IntegerToString(StringLen(json))+"\\r\\n\\r\\n";\n';
-  mql += '  string full=hdr+json;\n';
-  mql += '  uchar o[]; StringToCharArray(full,o,0,StringLen(full)); SocketSend(cl,o,ArraySize(o)); SocketClose(cl);\n';
-  mql += '}\n\n';
-  mql += 'string PH_Account(){\n';
-  mql += '  return "{\\\"login\\\":"+IntegerToString(AccountNumber())+\n';
-  mql += '    ",\\\"balance\\\":"+DoubleToString(AccountBalance(),2)+\n';
-  mql += '    ",\\\"equity\\\":"+DoubleToString(AccountEquity(),2)+\n';
-  mql += '    ",\\\"profit\\\":"+DoubleToString(AccountProfit(),2)+\n';
-  mql += '    ",\\\"currency\\\":\\\""+AccountCurrency()+"\\\""+\n';
-  mql += '    ",\\\"company\\\":\\\""+AccountCompany()+"\\\""+\n';
-  mql += '    ",\\\"server\\\":\\\""+AccountServer()+"\\\"}";\n';
-  mql += '}\n\n';
-  mql += 'string PH_Positions(){\n';
-  mql += '  string j="[";\n';
-  mql += '  bool first=true;\n';
-  mql += '  for(int i=0;i<OrdersTotal();i++){\n';
-  mql += '    if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;\n';
-  mql += '    if(OrderType()>1) continue;\n';
-  mql += '    if(!first) j+=",";\n';
-  mql += '    first=false;\n';
-  mql += '    j+="{\\\"ticket\\\":"+IntegerToString(OrderTicket())+\n';
-  mql += '      ",\\\"symbol\\\":\\\""+OrderSymbol()+"\\\""+\n';
-  mql += '      ",\\\"type\\\":"+IntegerToString(OrderType())+\n';
-  mql += '      ",\\\"volume\\\":"+DoubleToString(OrderLots(),2)+\n';
-  mql += '      ",\\\"price_open\\\":"+DoubleToString(OrderOpenPrice(),5)+\n';
-  mql += '      ",\\\"sl\\\":"+DoubleToString(OrderStopLoss(),5)+\n';
-  mql += '      ",\\\"tp\\\":"+DoubleToString(OrderTakeProfit(),5)+\n';
-  mql += '      ",\\\"profit\\\":"+DoubleToString(OrderProfit(),2)+"}";\n';
-  mql += '  }\n';
-  mql += '  return j+"]";\n';
-  mql += '}\n\n';
-  mql += 'string PH_JsonGet(string json,string key){\n';
-  mql += '  string k="\\""+key+"\\":";\n';
-  mql += '  int p=StringFind(json,k); if(p<0) return "";\n';
-  mql += '  p+=StringLen(k);\n';
-  mql += '  if(StringGetCharacter(json,p)==\'"\'){\n';
-  mql += '    p++; int e=StringFind(json,"\\"",p);\n';
-  mql += '    return e<0?"":StringSubstr(json,p,e-p);\n';
-  mql += '  }\n';
-  mql += '  int e=p;\n';
-  mql += '  while(e<StringLen(json)){ ushort c=StringGetCharacter(json,e); if(c==\',\'||c==\'}\'||c==\' \'||c==\'\\r\'||c==\'\\n\') break; e++; }\n';
-  mql += '  return StringSubstr(json,p,e-p);\n';
-  mql += '}\n\n';
-  mql += 'string PH_Order(string body){\n';
-  mql += '  string sym=PH_JsonGet(body,"symbol"); if(sym=="") sym=Symbol();\n';
-  mql += '  string side=PH_JsonGet(body,"side");\n';
-  mql += '  double vol=StringToDouble(PH_JsonGet(body,"volume")); if(vol<=0) vol=0.01;\n';
-  mql += '  double slPips=StringToDouble(PH_JsonGet(body,"sl_pips"));\n';
-  mql += '  double tpPips=StringToDouble(PH_JsonGet(body,"tp_pips"));\n';
-  mql += '  string cmt=PH_JsonGet(body,"comment"); if(cmt=="") cmt="PropHedge";\n';
-  mql += '  int dg=(int)MarketInfo(sym,MODE_DIGITS);\n';
-  mql += '  double pt=MarketInfo(sym,MODE_POINT);\n';
-  mql += '  double pip=(dg==5||dg==3||dg==2)?pt*10:pt;\n';
-  mql += '  bool buy=(side=="buy");\n';
-  mql += '  double price=buy?MarketInfo(sym,MODE_ASK):MarketInfo(sym,MODE_BID);\n';
-  mql += '  double sl=slPips>0?(buy?price-slPips*pip:price+slPips*pip):0;\n';
-  mql += '  double tp=tpPips>0?(buy?price+tpPips*pip:price-tpPips*pip):0;\n';
-  mql += '  int cmd=buy?OP_BUY:OP_SELL;\n';
-  mql += '  int ticket=OrderSend(sym,cmd,vol,price,20,sl,tp,cmt,234000,0,clrBlue);\n';
-  mql += '  Print("PropHedge ordine: ",sym," ",side," ",vol," lot | ticket=",ticket);\n';
-  mql += '  if(ticket>0) return "{\\\"ok\\\":true,\\\"ticket\\\":"+IntegerToString(ticket)+",\\\"volume\\\":"+DoubleToString(vol,2)+"}";\n';
-  mql += '  return "{\\\"ok\\\":false,\\\"error\\\":"+IntegerToString(GetLastError())+"}";\n';
-  mql += '}\n\n';
-  mql += 'string PH_Close(string body){\n';
-  mql += '  int ticket=(int)StringToInteger(PH_JsonGet(body,"ticket"));\n';
-  mql += '  if(!OrderSelect(ticket,SELECT_BY_TICKET)) return "{\\\"ok\\\":false,\\\"error\\\":\\\"not found\\\"}";\n';
-  mql += '  double price=OrderType()==OP_BUY?MarketInfo(OrderSymbol(),MODE_BID):MarketInfo(OrderSymbol(),MODE_ASK);\n';
-  mql += '  bool ok=OrderClose(ticket,OrderLots(),price,20,clrRed);\n';
-  mql += '  return "{\\\"ok\\\":"+(ok?"true":"false")+"}";\n';
-  mql += '}\n';
-  var b=new Blob([mql],{type:'text/plain'});
+  var code=`//+------------------------------------------------------------------+
+//|  PropHedge Bridge EA v3.0 — MetaTrader 4                        |
+//|  Comunicazione file — nessun programma esterno                  |
+//|  BridgePort: 7777=PROP  7778=PERSONALE                          |
+//+------------------------------------------------------------------+
+#property strict
+extern int BridgePort = 7778;
+string _acc,_pos,_cmd,_resp;
+int OnInit(){
+   _acc  = "ph_acc_" +IntegerToString(BridgePort)+".txt";
+   _pos  = "ph_pos_" +IntegerToString(BridgePort)+".txt";
+   _cmd  = "ph_cmd_" +IntegerToString(BridgePort)+".txt";
+   _resp = "ph_resp_"+IntegerToString(BridgePort)+".txt";
+   WriteAccount(); WritePositions();
+   Print("PropHedge MT4 attivo porta ",BridgePort," | account=",AccountNumber());
+   EventSetMillisecondTimer(300);
+   return(INIT_SUCCEEDED);
+}
+void OnDeinit(const int r){ EventKillTimer(); FileDelete(_acc); FileDelete(_pos); }
+void OnTimer(){
+   WriteAccount(); WritePositions();
+   if(!FileIsExist(_cmd)) return;
+   int fh=FileOpen(_cmd,FILE_READ|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);
+   if(fh==INVALID_HANDLE) return;
+   string cmd=""; while(!FileIsEnding(fh)) cmd+=FileReadString(fh); FileClose(fh); FileDelete(_cmd);
+   if(StringLen(cmd)<3) return;
+   string result="";
+   if(StringFind(cmd,"\"order\"")>=0)  result=PH_Order(cmd);
+   else if(StringFind(cmd,"\"close\"")>=0) result=PH_Close(cmd);
+   if(result!=""){
+      int fw=FileOpen(_resp,FILE_WRITE|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);
+      if(fw!=INVALID_HANDLE){ FileWriteString(fw,result); FileClose(fw); }
+   }
+}
+void WriteAccount(){
+   int fh=FileOpen(_acc,FILE_WRITE|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);
+   if(fh==INVALID_HANDLE) return;
+   FileWriteString(fh,"{\"login\":"+IntegerToString(AccountNumber())
+     +",\"balance\":"+DoubleToString(AccountBalance(),2)
+     +",\"equity\":"+DoubleToString(AccountEquity(),2)
+     +",\"profit\":"+DoubleToString(AccountProfit(),2)
+     +",\"currency\":\""+AccountCurrency()+"\""
+     +",\"server\":\""+AccountServer()+"\""+"}");
+   FileClose(fh);
+}
+void WritePositions(){
+   int fh=FileOpen(_pos,FILE_WRITE|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);
+   if(fh==INVALID_HANDLE) return;
+   string j="["; bool first=true;
+   for(int i=0;i<OrdersTotal();i++){
+      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
+      if(OrderType()>1) continue;
+      if(!first) j+=","; first=false;
+      j+="{\"ticket\":"+IntegerToString(OrderTicket())
+        +",\"symbol\":\""+OrderSymbol()+"\""
+        +",\"type\":"+IntegerToString(OrderType())
+        +",\"volume\":"+DoubleToString(OrderLots(),2)
+        +",\"profit\":"+DoubleToString(OrderProfit(),2)+"}";
+   }
+   FileWriteString(fh,j+"]"); FileClose(fh);
+}
+string PH_Get(string json,string key){
+   string k="\""+key+"\":"; int p=StringFind(json,k); if(p<0) return "";
+   p+=StringLen(k);
+   if(StringGetCharacter(json,p)==34){ p++; int e=StringFind(json,"\"",p); return e<0?"":StringSubstr(json,p,e-p); }
+   int e=p; while(e<StringLen(json)){ushort c=StringGetCharacter(json,e);if(c==44||c==125||c==32)break;e++;} return StringSubstr(json,p,e-p);
+}
+string PH_Order(string body){
+   string sym=PH_Get(body,"symbol"); if(sym=="") sym=Symbol();
+   string side=PH_Get(body,"side");
+   double vol=StringToDouble(PH_Get(body,"volume")); if(vol<=0) vol=0.01;
+   double slP=StringToDouble(PH_Get(body,"sl_pips"));
+   double tpP=StringToDouble(PH_Get(body,"tp_pips"));
+   int dg=(int)MarketInfo(sym,MODE_DIGITS);
+   double pt=MarketInfo(sym,MODE_POINT);
+   double pip=(dg==5||dg==3)?pt*10:pt;
+   bool buy=(side=="buy");
+   double price=buy?MarketInfo(sym,MODE_ASK):MarketInfo(sym,MODE_BID);
+   double sl=slP>0?(buy?price-slP*pip:price+slP*pip):0;
+   double tp=tpP>0?(buy?price+tpP*pip:price-tpP*pip):0;
+   int ticket=OrderSend(sym,buy?OP_BUY:OP_SELL,vol,price,20,sl,tp,"PropHedge",234000,0,clrBlue);
+   if(ticket>0) return "{\"ok\":true,\"ticket\":"+IntegerToString(ticket)+"}";
+   return "{\"ok\":false,\"error\":"+IntegerToString(GetLastError())+"}";
+}
+string PH_Close(string body){
+   int ticket=(int)StringToInteger(PH_Get(body,"ticket"));
+   if(!OrderSelect(ticket,SELECT_BY_TICKET)) return "{\"ok\":false}";
+   double price=OrderType()==OP_BUY?MarketInfo(OrderSymbol(),MODE_BID):MarketInfo(OrderSymbol(),MODE_ASK);
+   bool ok=OrderClose(ticket,OrderLots(),price,20,clrRed);
+   return "{\"ok\":"+(ok?"true":"false")+"}";
+}`;
+  var b=new Blob([code],{type:'text/plain'});
   var u=URL.createObjectURL(b);
   var a=document.createElement('a'); a.href=u; a.download='prophedge_mt4.mq4'; a.click();
   URL.revokeObjectURL(u);
