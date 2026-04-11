@@ -8799,6 +8799,13 @@ var _bridge = {
   prop: { connected:false, server:'', login:0, platform:'mt5', account:null, positions:[], port:7777 },
   pers: { connected:false, server:'', login:0, platform:'mt4', account:null, positions:[], port:7778 }
 };
+/* Reset connessione ad ogni caricamento pagina */
+window.addEventListener('load', function(){
+  _bridge.prop.connected=false; _bridge.prop.account=null; _bridge.prop.login=0;
+  _bridge.pers.connected=false; _bridge.pers.account=null; _bridge.pers.login=0;
+  if(_bridgePollTimer){clearInterval(_bridgePollTimer);_bridgePollTimer=null;}
+});
+
 var _bridgePollTimer = null;
 var _bridgeClosedTrades = []; // trade chiusi già processati
 
@@ -10100,226 +10107,241 @@ var _tutSteps=[
    Nessun Python, nessun bridge esterno
    ══════════════════════════════════════════════════════ */
 
-function liveDownloadEA5(){
-  var code=`//+------------------------------------------------------------------+
-//|  PropHedge Bridge EA v3.0 — MetaTrader 5                        |
-//|  HTTP Server — nessun programma esterno                         |
-//|  BridgePort: 7777=PROP  7778=PERSONALE                          |
-//+------------------------------------------------------------------+
-#property strict
-input int BridgePort = 7777;
 
-int _srv = INVALID_HANDLE;
 
-int OnInit(){
-   _srv = SocketCreate();
-   if(_srv==INVALID_HANDLE){ Alert("PropHedge: socket error"); return(INIT_FAILED); }
-   if(!SocketBind(_srv,"127.0.0.1",(ushort)BridgePort)){
-      Alert("PropHedge: porta ",BridgePort," occupata. Cambia BridgePort.");
-      SocketClose(_srv); return(INIT_FAILED);
-   }
-   if(!SocketListen(_srv,10)){ SocketClose(_srv); return(INIT_FAILED); }
-   Print("PropHedge MT5 attivo porta ",BridgePort," | account=",AccountInfoInteger(ACCOUNT_LOGIN));
-   EventSetMillisecondTimer(50);
-   return(INIT_SUCCEEDED);
-}
-void OnDeinit(const int r){
-   EventKillTimer();
-   if(_srv!=INVALID_HANDLE){ SocketClose(_srv); _srv=INVALID_HANDLE; }
-}
-void OnTimer(){
-   int cl=SocketAccept(_srv,1);
-   if(cl==INVALID_HANDLE) return;
-   uchar buf[32768]; uint n=SocketRead(cl,buf,32768,300);
-   if(n==0){ SocketClose(cl); return; }
-   string req=CharArrayToString(buf,0,n,CP_UTF8);
-   string mth=StringSubstr(req,0,StringFind(req," "));
-   string rest=StringSubstr(req,StringLen(mth)+1);
-   string path=StringSubstr(rest,0,StringFind(rest," "));
-   string body=""; int bp=StringFind(req,"\r\n\r\n");
-   if(bp>=0) body=StringSubstr(req,bp+4);
-   string cors="Access-Control-Allow-Origin: *\r\nAccess-Control-Allow-Methods: GET,POST,OPTIONS\r\nAccess-Control-Allow-Headers: Content-Type\r\n";
-   if(mth=="OPTIONS"){
-      string r0="HTTP/1.1 204 No Content\r\n"+cors+"Content-Length: 0\r\n\r\n";
-      uchar out0[]; StringToCharArray(r0,out0,0,StringLen(r0)); SocketSend(cl,out0,ArraySize(out0)-1); SocketClose(cl); return;
-   }
-   string json="{\"error\":\"not found\"}";
-   if(path=="/account") json=PH_Account();
-   else if(path=="/positions") json=PH_Positions();
-   else if(path=="/order" && mth=="POST") json=PH_Order(body);
-   else if(path=="/close" && mth=="POST") json=PH_Close(body);
-   string resp="HTTP/1.1 200 OK\r\n"+cors+"Content-Type: application/json\r\nContent-Length: "+IntegerToString(StringLen(json))+"\r\n\r\n"+json;
-   uchar out1[]; StringToCharArray(resp,out1,0,StringLen(resp)); SocketSend(cl,out1,ArraySize(out1)-1); SocketClose(cl);
-}
-string PH_Account(){
-   return "{\"login\":"+IntegerToString((int)AccountInfoInteger(ACCOUNT_LOGIN))
-         +",\"balance\":"+DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE),2)
-         +",\"equity\":"+DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY),2)
-         +",\"profit\":"+DoubleToString(AccountInfoDouble(ACCOUNT_PROFIT),2)
-         +",\"currency\":\""+AccountInfoString(ACCOUNT_CURRENCY)+"\""
-         +",\"server\":\""+AccountInfoString(ACCOUNT_SERVER)+"\""
-         +",\"company\":\""+AccountInfoString(ACCOUNT_COMPANY)+"\"" +"}";
-}
-string PH_Positions(){
-   string j="["; int cnt=0;
-   for(int i=0;i<PositionsTotal();i++){
-      ulong t=PositionGetTicket(i); if(t==0) continue;
-      if(cnt>0) j+=","; cnt++;
-      j+="{\"ticket\":"+IntegerToString((long)t)
-        +",\"symbol\":\""+PositionGetString(POSITION_SYMBOL)+"\""
-        +",\"type\":"+IntegerToString((int)PositionGetInteger(POSITION_TYPE))
-        +",\"volume\":"+DoubleToString(PositionGetDouble(POSITION_VOLUME),2)
-        +",\"profit\":"+DoubleToString(PositionGetDouble(POSITION_PROFIT),2)+"}";
-   }
-   return j+"]";
-}
-string PH_Get(string json,string key){
-   string k="\""+key+"\":"; int p=StringFind(json,k); if(p<0) return "";
-   p+=StringLen(k);
-   if(StringGetCharacter(json,p)==34){ p++; int e=StringFind(json,"\"",p); return e<0?"":StringSubstr(json,p,e-p); }
-   int e=p; while(e<StringLen(json)){ushort c=StringGetCharacter(json,e);if(c==44||c==125||c==32)break;e++;} return StringSubstr(json,p,e-p);
-}
-string PH_Order(string body){
-   string sym=PH_Get(body,"symbol"); if(sym=="") sym=_Symbol;
-   string side=PH_Get(body,"side");
-   double vol=StringToDouble(PH_Get(body,"volume")); if(vol<=0) vol=0.01;
-   double slP=StringToDouble(PH_Get(body,"sl_pips"));
-   double tpP=StringToDouble(PH_Get(body,"tp_pips"));
-   int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);
-   double pt=SymbolInfoDouble(sym,SYMBOL_POINT);
-   double pip=(dg==5||dg==3)?pt*10:pt;
-   MqlTick tick; SymbolInfoTick(sym,tick);
-   bool buy=(side=="buy");
-   double price=buy?tick.ask:tick.bid;
-   double sl=slP>0?(buy?price-slP*pip:price+slP*pip):0;
-   double tp=tpP>0?(buy?price+tpP*pip:price-tpP*pip):0;
-   MqlTradeRequest req={}; MqlTradeResult res={};
-   req.action=TRADE_ACTION_DEAL; req.symbol=sym; req.volume=vol;
-   req.type=buy?ORDER_TYPE_BUY:ORDER_TYPE_SELL;
-   req.price=price; req.sl=sl; req.tp=tp;
-   req.deviation=20; req.magic=234000; req.comment="PropHedge";
-   req.type_time=ORDER_TIME_GTC; req.type_filling=ORDER_FILLING_IOC;
-   OrderSend(req,res);
-   return "{\"ok\":"+(res.retcode==10009?"true":"false")+",\"retcode\":"+IntegerToString(res.retcode)+",\"ticket\":"+IntegerToString((long)res.order)+"}";
-}
-string PH_Close(string body){
-   ulong ticket=(ulong)StringToInteger(PH_Get(body,"ticket"));
-   if(!PositionSelectByTicket(ticket)) return "{\"ok\":false}";
-   string sym=PositionGetString(POSITION_SYMBOL);
-   double vol=PositionGetDouble(POSITION_VOLUME);
-   ENUM_POSITION_TYPE type=(ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
-   MqlTick tick; SymbolInfoTick(sym,tick);
-   MqlTradeRequest req={}; MqlTradeResult res={};
-   req.action=TRADE_ACTION_DEAL; req.symbol=sym; req.volume=vol;
-   req.type=(type==POSITION_TYPE_BUY)?ORDER_TYPE_SELL:ORDER_TYPE_BUY;
-   req.price=(type==POSITION_TYPE_BUY)?tick.bid:tick.ask;
-   req.position=ticket; req.deviation=20; req.magic=234000; req.comment="PropHedge close";
-   req.type_time=ORDER_TIME_GTC; req.type_filling=ORDER_FILLING_IOC;
-   OrderSend(req,res);
-   return "{\"ok\":"+(res.retcode==10009?"true":"false")+"}";
-}`;
+function _mqlBuild(code){
   var b=new Blob([code],{type:'text/plain'});
   var u=URL.createObjectURL(b);
-  var a=document.createElement('a'); a.href=u; a.download='prophedge_mt5.mq5'; a.click();
+  var a=document.createElement('a'); a.href=u; a.click();
   URL.revokeObjectURL(u);
+  return a;
+}
+
+function liveDownloadEA5(){
+  var q='char34=CharToStr(34);';
+  // Build MQL5 code using array of lines joined - no internal quote escaping needed
+  var lines=[
+'//+------------------------------------------------------------------+',
+'//|  PropHedge Bridge EA v4.0  MetaTrader 5                         |',
+'//|  HTTP Server  BridgePort: 7777=PROP  7778=PERSONALE             |',
+'//+------------------------------------------------------------------+',
+'#property strict',
+'input int BridgePort=7777;',
+'int _srv=INVALID_HANDLE;',
+'int OnInit(){',
+'   _srv=SocketCreate();',
+'   if(_srv==INVALID_HANDLE){Alert("PropHedge: socket error");return(INIT_FAILED);}',
+'   if(!SocketBind(_srv,"127.0.0.1",(ushort)BridgePort)){',
+'      Alert("PropHedge: porta ",BridgePort," occupata");',
+'      SocketClose(_srv);return(INIT_FAILED);',
+'   }',
+'   if(!SocketListen(_srv,10)){SocketClose(_srv);return(INIT_FAILED);}',
+'   Print("PropHedge MT5 attivo porta ",BridgePort);',
+'   EventSetMillisecondTimer(50);',
+'   return(INIT_SUCCEEDED);',
+'}',
+'void OnDeinit(const int r){EventKillTimer();if(_srv!=INVALID_HANDLE){SocketClose(_srv);_srv=INVALID_HANDLE;}}',
+'void OnTimer(){',
+'   int cl=SocketAccept(_srv,1);if(cl==INVALID_HANDLE)return;',
+'   uchar buf[32768];uint n=SocketRead(cl,buf,32768,300);',
+'   if(n==0){SocketClose(cl);return;}',
+'   string req=CharArrayToString(buf,0,n,CP_UTF8);',
+'   string mth=StringSubstr(req,0,StringFind(req," "));',
+'   string rest=StringSubstr(req,StringLen(mth)+1);',
+'   string path=StringSubstr(rest,0,StringFind(rest," "));',
+'   string body="";int bp=StringFind(req,"\\r\\n\\r\\n");',
+'   if(bp>=0)body=StringSubstr(req,bp+4);',
+'   string cors="Access-Control-Allow-Origin: *\\r\\nAccess-Control-Allow-Methods: GET,POST,OPTIONS\\r\\nAccess-Control-Allow-Headers: Content-Type\\r\\n";',
+'   if(mth=="OPTIONS"){',
+'      string r0="HTTP/1.1 204 No Content\\r\\n"+cors+"Content-Length: 0\\r\\n\\r\\n";',
+'      uchar o0[];StringToCharArray(r0,o0,0,StringLen(r0));SocketSend(cl,o0,ArraySize(o0)-1);SocketClose(cl);return;',
+'   }',
+'   string json=PH_NotFound();',
+'   if(path=="/account")json=PH_Account();',
+'   else if(path=="/positions")json=PH_Positions();',
+'   else if(path=="/order"&&mth=="POST")json=PH_Order(body);',
+'   else if(path=="/close"&&mth=="POST")json=PH_Close(body);',
+'   string resp="HTTP/1.1 200 OK\\r\\n"+cors+"Content-Type: application/json\\r\\nContent-Length: "+IntegerToString(StringLen(json))+"\\r\\n\\r\\n"+json;',
+'   uchar o1[];StringToCharArray(resp,o1,0,StringLen(resp));SocketSend(cl,o1,ArraySize(o1)-1);SocketClose(cl);',
+'}',
+'string Q(string s){string q=CharToStr(34);return q+s+q;}',
+'string KV(string k,string v){return Q(k)+":"+v;}',
+'string KVS(string k,string v){return Q(k)+":"+Q(v);}',
+'string PH_NotFound(){return "{"+Q("error")+":"+Q("not found")+"}";}',
+'string PH_Account(){',
+'   return "{"+KV("login",IntegerToString((int)AccountInfoInteger(ACCOUNT_LOGIN)))',
+'         +","+KV("balance",DoubleToString(AccountInfoDouble(ACCOUNT_BALANCE),2))',
+'         +","+KV("equity",DoubleToString(AccountInfoDouble(ACCOUNT_EQUITY),2))',
+'         +","+KV("profit",DoubleToString(AccountInfoDouble(ACCOUNT_PROFIT),2))',
+'         +","+KVS("currency",AccountInfoString(ACCOUNT_CURRENCY))',
+'         +","+KVS("server",AccountInfoString(ACCOUNT_SERVER))',
+'         +","+KVS("company",AccountInfoString(ACCOUNT_COMPANY))+"}";',
+'}',
+'string PH_Positions(){',
+'   string j="[";int cnt=0;',
+'   for(int i=0;i<PositionsTotal();i++){',
+'      ulong tkt=PositionGetTicket(i);if(tkt==0)continue;',
+'      if(cnt>0)j+=",";cnt++;',
+'      j+="{"+KV("ticket",IntegerToString((long)tkt))',
+'        +","+KVS("symbol",PositionGetString(POSITION_SYMBOL))',
+'        +","+KV("type",IntegerToString((int)PositionGetInteger(POSITION_TYPE)))',
+'        +","+KV("volume",DoubleToString(PositionGetDouble(POSITION_VOLUME),2))',
+'        +","+KV("profit",DoubleToString(PositionGetDouble(POSITION_PROFIT),2))+"}";',
+'   }',
+'   return j+"]";',
+'}',
+'string PH_Get(string json,string key){',
+'   string k=Q(key)+":";int p=StringFind(json,k);if(p<0)return "";',
+'   p+=StringLen(k);',
+'   if(StringGetCharacter(json,p)==34){p++;int e=StringFind(json,CharToStr(34),p);return e<0?"":StringSubstr(json,p,e-p);}',
+'   int e=p;while(e<StringLen(json)){ushort c=StringGetCharacter(json,e);if(c==44||c==125||c==32)break;e++;}',
+'   return StringSubstr(json,p,e-p);',
+'}',
+'string PH_Order(string body){',
+'   string sym=PH_Get(body,"symbol");if(sym=="")sym=_Symbol;',
+'   string side=PH_Get(body,"side");',
+'   double vol=StringToDouble(PH_Get(body,"volume"));if(vol<=0)vol=0.01;',
+'   double slP=StringToDouble(PH_Get(body,"sl_pips"));',
+'   double tpP=StringToDouble(PH_Get(body,"tp_pips"));',
+'   int dg=(int)SymbolInfoInteger(sym,SYMBOL_DIGITS);',
+'   double pt=SymbolInfoDouble(sym,SYMBOL_POINT);',
+'   double pip=(dg==5||dg==3)?pt*10:pt;',
+'   MqlTick tick;SymbolInfoTick(sym,tick);',
+'   bool buy=(side=="buy");',
+'   double price=buy?tick.ask:tick.bid;',
+'   double sl=slP>0?(buy?price-slP*pip:price+slP*pip):0;',
+'   double tp=tpP>0?(buy?price+tpP*pip:price-tpP*pip):0;',
+'   MqlTradeRequest req={};MqlTradeResult res={};',
+'   req.action=TRADE_ACTION_DEAL;req.symbol=sym;req.volume=vol;',
+'   req.type=buy?ORDER_TYPE_BUY:ORDER_TYPE_SELL;',
+'   req.price=price;req.sl=sl;req.tp=tp;req.deviation=20;req.magic=234000;req.comment="PropHedge";',
+'   req.type_time=ORDER_TIME_GTC;req.type_filling=ORDER_FILLING_IOC;',
+'   OrderSend(req,res);',
+'   return "{"+KV("ok",res.retcode==10009?"true":"false")',
+'         +","+KV("retcode",IntegerToString(res.retcode))',
+'         +","+KV("ticket",IntegerToString((long)res.order))+"}";',
+'}',
+'string PH_Close(string body){',
+'   ulong tkt=(ulong)StringToInteger(PH_Get(body,"ticket"));',
+'   if(!PositionSelectByTicket(tkt))return "{"+KV("ok","false")+"}";',
+'   string sym=PositionGetString(POSITION_SYMBOL);',
+'   double vol=PositionGetDouble(POSITION_VOLUME);',
+'   long ptype=(long)PositionGetInteger(POSITION_TYPE);',
+'   MqlTick tick;SymbolInfoTick(sym,tick);',
+'   MqlTradeRequest req={};MqlTradeResult res={};',
+'   req.action=TRADE_ACTION_DEAL;req.symbol=sym;req.volume=vol;',
+'   req.type=ptype==0?ORDER_TYPE_SELL:ORDER_TYPE_BUY;',
+'   req.price=ptype==0?tick.bid:tick.ask;',
+'   req.position=tkt;req.deviation=20;req.magic=234000;req.comment="PropHedge close";',
+'   req.type_time=ORDER_TIME_GTC;req.type_filling=ORDER_FILLING_IOC;',
+'   OrderSend(req,res);',
+'   return "{"+KV("ok",res.retcode==10009?"true":"false")+"}";',
+'}'
+  ];
+  var a=_mqlBuild(lines.join('\n'));
+  a.download='prophedge_mt5.mq5';
 }
 
 function liveDownloadEA4(){
-  var code=`//+------------------------------------------------------------------+
-//|  PropHedge Bridge EA v3.0 — MetaTrader 4                        |
-//|  Comunicazione file — nessun programma esterno                  |
-//|  BridgePort: 7777=PROP  7778=PERSONALE                          |
-//+------------------------------------------------------------------+
-#property strict
-extern int BridgePort = 7778;
-string _acc,_pos,_cmd,_resp;
-int OnInit(){
-   _acc  = "ph_acc_" +IntegerToString(BridgePort)+".txt";
-   _pos  = "ph_pos_" +IntegerToString(BridgePort)+".txt";
-   _cmd  = "ph_cmd_" +IntegerToString(BridgePort)+".txt";
-   _resp = "ph_resp_"+IntegerToString(BridgePort)+".txt";
-   WriteAccount(); WritePositions();
-   Print("PropHedge MT4 attivo porta ",BridgePort," | account=",AccountNumber());
-   EventSetMillisecondTimer(300);
-   return(INIT_SUCCEEDED);
-}
-void OnDeinit(const int r){ EventKillTimer(); FileDelete(_acc); FileDelete(_pos); }
-void OnTimer(){
-   WriteAccount(); WritePositions();
-   if(!FileIsExist(_cmd)) return;
-   int fh=FileOpen(_cmd,FILE_READ|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);
-   if(fh==INVALID_HANDLE) return;
-   string cmd=""; while(!FileIsEnding(fh)) cmd+=FileReadString(fh); FileClose(fh); FileDelete(_cmd);
-   if(StringLen(cmd)<3) return;
-   string result="";
-   if(StringFind(cmd,"\"order\"")>=0)  result=PH_Order(cmd);
-   else if(StringFind(cmd,"\"close\"")>=0) result=PH_Close(cmd);
-   if(result!=""){
-      int fw=FileOpen(_resp,FILE_WRITE|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);
-      if(fw!=INVALID_HANDLE){ FileWriteString(fw,result); FileClose(fw); }
-   }
-}
-void WriteAccount(){
-   int fh=FileOpen(_acc,FILE_WRITE|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);
-   if(fh==INVALID_HANDLE) return;
-   FileWriteString(fh,"{\"login\":"+IntegerToString(AccountNumber())
-     +",\"balance\":"+DoubleToString(AccountBalance(),2)
-     +",\"equity\":"+DoubleToString(AccountEquity(),2)
-     +",\"profit\":"+DoubleToString(AccountProfit(),2)
-     +",\"currency\":\""+AccountCurrency()+"\""
-     +",\"server\":\""+AccountServer()+"\""+"}");
-   FileClose(fh);
-}
-void WritePositions(){
-   int fh=FileOpen(_pos,FILE_WRITE|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);
-   if(fh==INVALID_HANDLE) return;
-   string j="["; bool first=true;
-   for(int i=0;i<OrdersTotal();i++){
-      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
-      if(OrderType()>1) continue;
-      if(!first) j+=","; first=false;
-      j+="{\"ticket\":"+IntegerToString(OrderTicket())
-        +",\"symbol\":\""+OrderSymbol()+"\""
-        +",\"type\":"+IntegerToString(OrderType())
-        +",\"volume\":"+DoubleToString(OrderLots(),2)
-        +",\"profit\":"+DoubleToString(OrderProfit(),2)+"}";
-   }
-   FileWriteString(fh,j+"]"); FileClose(fh);
-}
-string PH_Get(string json,string key){
-   string k="\""+key+"\":"; int p=StringFind(json,k); if(p<0) return "";
-   p+=StringLen(k);
-   if(StringGetCharacter(json,p)==34){ p++; int e=StringFind(json,"\"",p); return e<0?"":StringSubstr(json,p,e-p); }
-   int e=p; while(e<StringLen(json)){ushort c=StringGetCharacter(json,e);if(c==44||c==125||c==32)break;e++;} return StringSubstr(json,p,e-p);
-}
-string PH_Order(string body){
-   string sym=PH_Get(body,"symbol"); if(sym=="") sym=Symbol();
-   string side=PH_Get(body,"side");
-   double vol=StringToDouble(PH_Get(body,"volume")); if(vol<=0) vol=0.01;
-   double slP=StringToDouble(PH_Get(body,"sl_pips"));
-   double tpP=StringToDouble(PH_Get(body,"tp_pips"));
-   int dg=(int)MarketInfo(sym,MODE_DIGITS);
-   double pt=MarketInfo(sym,MODE_POINT);
-   double pip=(dg==5||dg==3)?pt*10:pt;
-   bool buy=(side=="buy");
-   double price=buy?MarketInfo(sym,MODE_ASK):MarketInfo(sym,MODE_BID);
-   double sl=slP>0?(buy?price-slP*pip:price+slP*pip):0;
-   double tp=tpP>0?(buy?price+tpP*pip:price-tpP*pip):0;
-   int ticket=OrderSend(sym,buy?OP_BUY:OP_SELL,vol,price,20,sl,tp,"PropHedge",234000,0,clrBlue);
-   if(ticket>0) return "{\"ok\":true,\"ticket\":"+IntegerToString(ticket)+"}";
-   return "{\"ok\":false,\"error\":"+IntegerToString(GetLastError())+"}";
-}
-string PH_Close(string body){
-   int ticket=(int)StringToInteger(PH_Get(body,"ticket"));
-   if(!OrderSelect(ticket,SELECT_BY_TICKET)) return "{\"ok\":false}";
-   double price=OrderType()==OP_BUY?MarketInfo(OrderSymbol(),MODE_BID):MarketInfo(OrderSymbol(),MODE_ASK);
-   bool ok=OrderClose(ticket,OrderLots(),price,20,clrRed);
-   return "{\"ok\":"+(ok?"true":"false")+"}";
-}`;
-  var b=new Blob([code],{type:'text/plain'});
-  var u=URL.createObjectURL(b);
-  var a=document.createElement('a'); a.href=u; a.download='prophedge_mt4.mq4'; a.click();
-  URL.revokeObjectURL(u);
+  var lines=[
+'//+------------------------------------------------------------------+',
+'//|  PropHedge Bridge EA v4.0  MetaTrader 4                         |',
+'//|  File bridge  BridgePort: 7777=PROP  7778=PERSONALE             |',
+'//+------------------------------------------------------------------+',
+'#property strict',
+'extern int BridgePort=7778;',
+'string _acc,_pos,_cmd,_resp;',
+'int OnInit(){',
+'   _acc ="ph_acc_"+IntegerToString(BridgePort)+".txt";',
+'   _pos ="ph_pos_"+IntegerToString(BridgePort)+".txt";',
+'   _cmd ="ph_cmd_"+IntegerToString(BridgePort)+".txt";',
+'   _resp="ph_resp_"+IntegerToString(BridgePort)+".txt";',
+'   WriteAccount();WritePositions();',
+'   Print("PropHedge MT4 attivo porta ",BridgePort," account=",AccountNumber());',
+'   EventSetMillisecondTimer(300);',
+'   return(INIT_SUCCEEDED);',
+'}',
+'void OnDeinit(const int r){EventKillTimer();FileDelete(_acc);FileDelete(_pos);}',
+'void OnTimer(){',
+'   WriteAccount();WritePositions();',
+'   if(!FileIsExist(_cmd))return;',
+'   int fh=FileOpen(_cmd,FILE_READ|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);',
+'   if(fh==INVALID_HANDLE)return;',
+'   string cmd="";while(!FileIsEnding(fh))cmd+=FileReadString(fh);',
+'   FileClose(fh);FileDelete(_cmd);',
+'   if(StringLen(cmd)<3)return;',
+'   string result="";',
+'   if(StringFind(cmd,"order")>=0)result=PH_Order(cmd);',
+'   else if(StringFind(cmd,"close")>=0)result=PH_Close(cmd);',
+'   if(result!=""){',
+'      int fw=FileOpen(_resp,FILE_WRITE|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);',
+'      if(fw!=INVALID_HANDLE){FileWriteString(fw,result);FileClose(fw);}',
+'   }',
+'}',
+'string Q(string s){string q=CharToStr(34);return q+s+q;}',
+'string KV(string k,string v){return Q(k)+":"+v;}',
+'string KVS(string k,string v){return Q(k)+":"+Q(v);}',
+'void WriteAccount(){',
+'   int fh=FileOpen(_acc,FILE_WRITE|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);',
+'   if(fh==INVALID_HANDLE)return;',
+'   FileWriteString(fh,"{"+KV("login",IntegerToString(AccountNumber()))',
+'     +","+KV("balance",DoubleToString(AccountBalance(),2))',
+'     +","+KV("equity",DoubleToString(AccountEquity(),2))',
+'     +","+KV("profit",DoubleToString(AccountProfit(),2))',
+'     +","+KVS("currency",AccountCurrency())',
+'     +","+KVS("server",AccountServer())+"}");',
+'   FileClose(fh);',
+'}',
+'void WritePositions(){',
+'   int fh=FileOpen(_pos,FILE_WRITE|FILE_TXT|FILE_SHARE_READ|FILE_SHARE_WRITE);',
+'   if(fh==INVALID_HANDLE)return;',
+'   string j="[";bool first=true;',
+'   for(int i=0;i<OrdersTotal();i++){',
+'      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES))continue;',
+'      if(OrderType()>1)continue;',
+'      if(!first)j+=",";first=false;',
+'      j+="{"+KV("ticket",IntegerToString(OrderTicket()))',
+'        +","+KVS("symbol",OrderSymbol())',
+'        +","+KV("type",IntegerToString(OrderType()))',
+'        +","+KV("volume",DoubleToString(OrderLots(),2))',
+'        +","+KV("profit",DoubleToString(OrderProfit(),2))+"}";',
+'   }',
+'   FileWriteString(fh,j+"]");FileClose(fh);',
+'}',
+'string PH_Get(string json,string key){',
+'   string k=Q(key)+":";int p=StringFind(json,k);if(p<0)return "";',
+'   p+=StringLen(k);',
+'   if(StringGetCharacter(json,p)==34){p++;int e=StringFind(json,CharToStr(34),p);return e<0?"":StringSubstr(json,p,e-p);}',
+'   int e=p;while(e<StringLen(json)){ushort c=StringGetCharacter(json,e);if(c==44||c==125||c==32)break;e++;}',
+'   return StringSubstr(json,p,e-p);',
+'}',
+'string PH_Order(string body){',
+'   string sym=PH_Get(body,"symbol");if(sym=="")sym=Symbol();',
+'   string side=PH_Get(body,"side");',
+'   double vol=StringToDouble(PH_Get(body,"volume"));if(vol<=0)vol=0.01;',
+'   double slP=StringToDouble(PH_Get(body,"sl_pips"));',
+'   double tpP=StringToDouble(PH_Get(body,"tp_pips"));',
+'   int dg=(int)MarketInfo(sym,MODE_DIGITS);',
+'   double pt=MarketInfo(sym,MODE_POINT);',
+'   double pip=(dg==5||dg==3)?pt*10:pt;',
+'   bool buy=(side=="buy");',
+'   double price=buy?MarketInfo(sym,MODE_ASK):MarketInfo(sym,MODE_BID);',
+'   double sl=slP>0?(buy?price-slP*pip:price+slP*pip):0;',
+'   double tp=tpP>0?(buy?price+tpP*pip:price-tpP*pip):0;',
+'   int ticket=OrderSend(sym,buy?OP_BUY:OP_SELL,vol,price,20,sl,tp,"PropHedge",234000,0,clrBlue);',
+'   if(ticket>0)return "{"+KV("ok","true")+","+KV("ticket",IntegerToString(ticket))+"}";',
+'   return "{"+KV("ok","false")+","+KV("error",IntegerToString(GetLastError()))+"}";',
+'}',
+'string PH_Close(string body){',
+'   int ticket=(int)StringToInteger(PH_Get(body,"ticket"));',
+'   if(!OrderSelect(ticket,SELECT_BY_TICKET))return "{"+KV("ok","false")+"}";',
+'   double price=OrderType()==OP_BUY?MarketInfo(OrderSymbol(),MODE_BID):MarketInfo(OrderSymbol(),MODE_ASK);',
+'   bool ok=OrderClose(ticket,OrderLots(),price,20,clrRed);',
+'   return "{"+KV("ok",ok?"true":"false")+"}";',
+'}'
+  ];
+  var a=_mqlBuild(lines.join('\n'));
+  a.download='prophedge_mt4.mq4';
 }
 
 function liveTutorialOpenMT4(){
