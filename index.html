@@ -11446,10 +11446,11 @@ function jrnlRenderEmpty(){return'<div style="display:flex;flex-direction:column
 function jrnlRenderSidebar(){
 
 
-
-  var html='<div class="jsb"><div class="jsb-hd"><span>Sfide</span><button class="jsb-new" onclick="jrnlShowNewForm()">+ Nuova</button></div>';
-
-
+var html='<div class="jsb"><div class="jsb-hd"><span>Sfide</span><button class="jsb-new" onclick="jrnlShowNewForm()">+ Nuova</button></div>' + 
+'<div style="padding: 10px; display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid var(--border);">' +
+'<button class="btn-p" onclick="phHedgeTrade(\'buy\', \'sell\')" style="width:100%; justify-content:center; background:linear-gradient(135deg,#00ff88,#00c466); color:#000; font-weight:bold;">BUY PROP / SELL PERS</button>' +
+'<button class="btn-p" onclick="phHedgeTrade(\'sell\', \'buy\')" style="width:100%; justify-content:center; background:linear-gradient(135deg,#F87171,#d42040); color:#fff; font-weight:bold;">SELL PROP / BUY PERS</button>' +
+'</div>';
 
   jrnl.sessions.forEach(function(s,i){
 
@@ -17780,19 +17781,65 @@ window.addEventListener('DOMContentLoaded',function(){
     if(!event.data||event.data.type!=='ctrader_callback')return;
   });
 
-  var urlParams=new URLSearchParams(window.location.search);
-  var authCode=urlParams.get('code');
-  if(authCode){var jPending=null;try{jPending=JSON.parse(localStorage.getItem('ph_jconn_pending')||'null');}catch(e){}
-    if(jPending){goTab('journal',document.getElementById('tabJournal'));}
+// --- INIZIO FUNZIONI BRIDGE EA MT4/MT5 ---
+  window.phHedgeTrade = function(propSide, persSide) {
+    var calc = null;
+    try { 
+      calc = JSON.parse(localStorage.getItem('calcChallenge')); 
+    } catch(e) {
+      console.error("Errore lettura calcChallenge", e);
+    }
+    
+    if(!calc || calc.prop2 === undefined || calc.personal === undefined) {
+      alert("Dati calcolatore mancanti. Calcola prima i lotti dalla schermata sfida.");
+      return;
+    }
+    
+    var payloadProp = { port: 7777, side: propSide, volume: calc.prop2, sl_pips: calc.sl || 0, tp_pips: calc.tp || 0 };
+    var payloadPers = { port: 7778, side: persSide, volume: calc.personal, sl_pips: calc.sl || 0, tp_pips: calc.tp || 0 };
+    
+    phSendToEA(payloadProp);
+    phSendToEA(payloadPers);
+  };
+
+  window.phSendToEA = function(payload) {
+    try {
+      var ws = new WebSocket('ws://127.0.0.1:' + payload.port);
+      ws.onopen = function() {
+        ws.send(JSON.stringify(payload));
+        console.log('Ordine inviato alla porta ' + payload.port, payload);
+      };
+      ws.onerror = function() {
+        alert("Errore invio ordine (Porta " + payload.port + "). Assicurati che il Bridge locale sia attivo.");
+      };
+    } catch(e) {
+      console.error("Errore WebSocket", e);
+    }
+  };
+  // --- FINE FUNZIONI BRIDGE ---
+
+  var urlParams = new URLSearchParams(window.location.search);
+  var authCode = urlParams.get('code');
+  if(authCode){
+    var jPending = null;
+    try { jPending = JSON.parse(localStorage.getItem('ph_jconn_pending') || 'null'); } catch(e) {}
+    if(jPending){ goTab('journal', document.getElementById('tabJournal')); }
   }
 
   render();
 
-  function checkNet(){var w=document.getElementById('netWarn');if(w){if(!navigator.onLine||window._sbLoadError)w.style.display='block';else w.style.display='none';}}
-  checkNet();window.addEventListener('online',checkNet);window.addEventListener('offline',checkNet);
+  function checkNet(){
+    var w = document.getElementById('netWarn');
+    if(w){
+      if(!navigator.onLine || window._sbLoadError) w.style.display = 'block';
+      else w.style.display = 'none';
+    }
+  }
+  checkNet();
+  window.addEventListener('online', checkNet);
+  window.addEventListener('offline', checkNet);
 
 });
-
 </script>
 
 <script type="text/javascript">
@@ -17804,7 +17851,6 @@ function googleTranslateElementInit() {
   }, 'google_translate_element');
 }
 </script>
-
 <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </body>
