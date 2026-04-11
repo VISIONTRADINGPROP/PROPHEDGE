@@ -4590,61 +4590,12 @@ function doRegisterFree(){
 
 
 var AFF={
-
-
-
-  'FundedElite':{url:'https://fundedelite.com',aff:''},
-
-
-
-  'FTMO':{url:'https://ftmo.com',aff:''},
-
-
-
-  'FTUK':{url:'https://ftuk.com/?ref=1124',aff:''},
-
-
-
-  'City Traders Imperium':{url:'https://citytradersimperium.com',aff:''},
-
-
-
-  'Funded Trading Plus':{url:'https://fundedtradingplus.com',aff:''},
-
-
-
-  'OANDA':{url:'https://oanda.com',aff:''},
-
-
-
-  'IC Markets':{url:'https://icmarkets.com',aff:''},
-
-
-
-  'Pepperstone':{url:'https://pepperstone.com',aff:''},
-
-
-
-  'XTB':{url:'https://xtb.com',aff:''},
-
-
-
-  'IG Group':{url:'https://ig.com',aff:''},
-
-
-
-  'Axi':{url:'https://www.axi.com/int/live-account?promocode=4740120',aff:''},
-
-
-
-  'Exness':{url:'https://exness.com',aff:''},
-
-
-
-  'FP Markets':{url:'https://fpmarkets.com',aff:''}
-
-
-
+  'FundedElite':  {url:'https://fundedelite.com',                                            aff:''},
+  'FTMO':         {url:'https://trader.ftmo.oanda.com/?affiliates=jBQuRQOpcgjJjRDepMFl',    aff:''},
+  'FTUK':         {url:'https://ftuk.com/?ref=1124',                                         aff:''},
+  'The5ers':      {url:'https://www.the5ers.com/?afmc=19dh',                                 aff:''},
+  'FundingPips':  {url:'https://app.fundingpips.com/register?ref=3060E5C8',                  aff:''},
+  'Axi':          {url:'https://www.axi.com/int/live-account?promocode=4740120',              aff:''}
 };
 
 
@@ -4738,61 +4689,12 @@ var BRANDS=[
 
 
 var BOT_ALL=[
-
-
-
-  {name:'FundedElite',domain:'fundedelite.com',info:'DD 8% · Payout 80%',type:'prop'},
-
-
-
-  {name:'FTMO',domain:'ftmo.com',info:'DD 10% · Payout 80%',type:'prop'},
-
-
-
-  {name:'FTUK',domain:'ftuk.com',info:'DD 8% · Payout 80%',type:'prop'},
-
-
-
-  {name:'City Traders Imp.',domain:'citytradersimperium.com',info:'DD 10% · Payout 80%',type:'prop'},
-
-
-
-  {name:'Funded Trading Plus',domain:'fundedtradingplus.com',info:'DD 10% · Payout 90%',type:'prop'},
-
-
-
-  {name:'OANDA',domain:'oanda.com',info:'Forex · API REST',type:'broker'},
-
-
-
-  {name:'IC Markets',domain:'icmarkets.com',info:'ECN · Spread bassi',type:'broker'},
-
-
-
-  {name:'Pepperstone',domain:'pepperstone.com',info:'Forex e CFD',type:'broker'},
-
-
-
-  {name:'XTB',domain:'xtb.com',info:'Quotato in borsa',type:'broker'},
-
-
-
-  {name:'IG Group',domain:'ig.com',info:'Spread betting e CFD',type:'broker'},
-
-
-
-  {name:'Axi',domain:'axi.com',info:'Forex e CFD',type:'broker'},
-
-
-
-  {name:'Exness',domain:'exness.com',info:'Crypto e Forex',type:'broker'},
-
-
-
-  {name:'FP Markets',domain:'fpmarkets.com',info:'ECN e STP',type:'broker'}
-
-
-
+  {name:'FundedElite',  domain:'fundedelite.com',              info:'DD 8% · Payout 80%',  type:'prop'},
+  {name:'FTMO',         domain:'ftmo.com',                     info:'DD 10% · Payout 80%', type:'prop'},
+  {name:'FTUK',         domain:'ftuk.com',                     info:'DD 8% · Payout 80%',  type:'prop'},
+  {name:'The5ers',      domain:'the5ers.com',                   info:'DD 6% · Payout 50%',  type:'prop'},
+  {name:'FundingPips',  domain:'app.fundingpips.com',          info:'Payout fino 90%',      type:'prop'},
+  {name:'Axi',          domain:'axi.com',                      info:'Broker ECN · MT4/MT5', type:'broker'}
 ];
 
 
@@ -8372,24 +8274,25 @@ function renderCalc(){
 // ═══════════════════════════════════════════════════════════════
 var SC = [
   // ── PROP FIRM ──
-  {id:'p1',cat:'prop',n:'FundedElite',d:'fundedelite.com',pct:20,code:'VISIONTRADING',desc:'20% su tutti i piani · payout 80% garantito',stars:4.7,rev:1240,col:'#c9a84c',url:'https://fundedelite.com',exp:Date.now()+5.12*864e5},
-  {id:'p2',cat:'prop',n:'FTMO',d:'ftmo.com',pct:10,code:'FTMO10',desc:'10% challenge + rimborso se passi al primo tentativo',stars:4.8,rev:8900,col:'#00c4a7',url:'https://ftmo.com',exp:Date.now()+11.3*864e5},
-  {id:'p3',cat:'prop',n:'FTUK',d:'ftuk.com',pct:20,code:'VISION20',desc:'20% off · DD 8% · nessun obiettivo giorni',stars:4.5,rev:3200,col:'#4f6ef7',url:'https://ftuk.com/?ref=1124',exp:Date.now()+1.6*864e5},
-  {id:'p4',cat:'prop',n:'FXIFY',d:'fxify.com',pct:15,code:'VISION15',desc:'15% prima challenge · scalabile fino a $4M',stars:4.3,rev:1800,col:'#8b5cf6',url:'https://fxify.com',exp:Date.now()+7.1*864e5},
-  {id:'p5',cat:'prop',n:'FundedNext',d:'fundednext.com',pct:25,code:'VISIONFN25',desc:'25% esclusivo · payout fino a 95% · Express phase',stars:4.6,rev:2400,col:'#7c3aed',url:'https://fundednext.com',exp:Date.now()+3.35*864e5},
-  {id:'p6',cat:'prop',n:'Blue Guardian',d:'blueguardian.com',pct:10,code:'BLUEVISION',desc:'10% off · payout 85% · consistenza flessibile',stars:4.5,rev:740,col:'#3b82f6',url:'https://blueguardian.com',exp:Date.now()+6.75*864e5},
-  {id:'p7',cat:'prop',n:'Goat Funded',d:'goatfundedtrader.com',pct:15,code:'GOATVISION',desc:'15% esclusivo VisionTrading · instant funding opzione',stars:4.4,rev:960,col:'#10b981',url:'https://goatfundedtrader.com',exp:Date.now()+9.0*864e5},
-  {id:'p8',cat:'prop',n:'E8 Funding',d:'e8funding.com',pct:20,code:'E8VISION20',desc:'20% off · scalabile a $400k · trailing DD',stars:4.2,rev:1100,col:'#f59e0b',url:'https://e8funding.com',exp:Date.now()+15*864e5},
+  {id:'p1',cat:'prop',n:'FundedElite',d:'fundedelite.com',pct:20,code:'VISIONTRADING',
+   desc:'20% su tutti i piani · payout 80% garantito',stars:4.7,rev:1240,col:'#c9a84c',
+   url:'https://fundedelite.com',exp:Date.now()+5.12*864e5},
+  {id:'p2',cat:'prop',n:'FTMO',d:'ftmo.com',pct:10,code:'',
+   desc:'La prop firm più conosciuta · payout 80% · rimborso se passi al 1° tentativo',stars:4.8,rev:8900,col:'#00c4a7',
+   url:'https://trader.ftmo.oanda.com/?affiliates=jBQuRQOpcgjJjRDepMFl',exp:Date.now()+11.3*864e5},
+  {id:'p3',cat:'prop',n:'FTUK',d:'ftuk.com',pct:20,code:'',
+   desc:'20% off · DD 8% · nessun obiettivo giorni',stars:4.5,rev:3200,col:'#4f6ef7',
+   url:'https://ftuk.com/?ref=1124',exp:Date.now()+1.6*864e5},
+  {id:'p4',cat:'prop',n:'The5ers',d:'the5ers.com',pct:15,code:'',
+   desc:'Prop firm con approccio conservativo · crescita organica',stars:4.4,rev:2100,col:'#f5a623',
+   url:'https://www.the5ers.com/?afmc=19dh',exp:Date.now()+8.0*864e5},
+  {id:'p5',cat:'prop',n:'FundingPips',d:'app.fundingpips.com',pct:10,code:'',
+   desc:'Payout fino al 90% · challenge flessibili',stars:4.3,rev:1500,col:'#6366f1',
+   url:'https://app.fundingpips.com/register?ref=3060E5C8',exp:Date.now()+6.0*864e5},
   // ── BROKER ──
-  {id:'b1',cat:'broker',n:'IC Markets',d:'icmarkets.com',pct:0,code:'ICVISION',desc:'Raw spread da 0.0 pip · ECN puro · conto VIP Raw',stars:4.8,rev:15000,col:'#1e40af',url:'https://icmarkets.com',exp:Date.now()+30*864e5},
-  {id:'b2',cat:'broker',n:'Pepperstone',d:'pepperstone.com',pct:20,code:'PEPPER20',desc:'20% cashback costi trading · 3 mesi garantiti',stars:4.7,rev:12000,col:'#059669',url:'https://pepperstone.com',exp:Date.now()+14.2*864e5},
-  {id:'b3',cat:'broker',n:'XTB',d:'xtb.com',pct:0,code:'XTBVISION',desc:'Zero commissioni + formazione PRO inclusa',stars:4.5,rev:9800,col:'#2563eb',url:'https://xtb.com',exp:Date.now()+21*864e5},
-  {id:'b4',cat:'broker',n:'OANDA',d:'oanda.com',pct:10,code:'OANDAVIS10',desc:'10% spread ridotto garantito · 3 mesi',stars:4.4,rev:6700,col:'#dc2626',url:'https://oanda.com',exp:Date.now()+18.5*864e5},
-  {id:'b5',cat:'broker',n:'IG Group',d:'ig.com',pct:0,code:'IGVISION',desc:'CFD premium · supporto dedicato · 17.000 mercati',stars:4.6,rev:18000,col:'#1e3a8a',url:'https://ig.com',exp:Date.now()+25*864e5},
-  // ── CASINO ──
-  {id:'c1',cat:'casino',n:'LeoVegas',d:'leovegas.com',pct:0,code:'LEO200',desc:'Bonus benvenuto €200 + 20 free spins immediati',stars:4.3,rev:5400,col:'#d97706',url:'https://leovegas.com',exp:Date.now()+4.4*864e5},
-  {id:'c2',cat:'casino',n:'Betsson',d:'betsson.com',pct:100,code:'VISION100',desc:'100% match primo deposito fino a €100',stars:4.2,rev:3100,col:'#b91c1c',url:'https://betsson.com',exp:Date.now()+10*864e5},
-  {id:'c3',cat:'casino',n:'22Bet',d:'22bet.com',pct:122,code:'22VISION',desc:'122% bonus deposito fino a €300 · pagamento rapido',stars:4.0,rev:2200,col:'#ef4444',url:'https://22bet.com',exp:Date.now()+2.25*864e5}
+  {id:'b1',cat:'broker',n:'Axi',d:'axi.com',pct:0,code:'',
+   desc:'Broker ECN regolamentato · MT4 e MT5 · spread bassi',stars:4.6,rev:5400,col:'#e63946',
+   url:'https://www.axi.com/int/live-account?promocode=4740120',exp:Date.now()+30*864e5}
 ];
 
 var _scf='all',_scs='',_scTimers=[];
@@ -17527,6 +17430,174 @@ window.addEventListener('DOMContentLoaded',function(){
   checkNet();window.addEventListener('online',checkNet);window.addEventListener('offline',checkNet);
 
 });
+
+/* ── POPUP OFFERTA SETTIMANA ── */
+(function(){
+  var PROMOS = [
+    {name:'FundedElite', domain:'fundedelite.com', pct:25, code:'VISIONTRADING',
+     url:'https://fundedelite.com',
+     col:'#60a5fa', facts:['Payout 80%','DD 8%','Rimborso 1° tentativo']},
+    {name:'FTMO', domain:'ftmo.com', pct:10, code:'',
+     url:'https://trader.ftmo.oanda.com/?affiliates=jBQuRQOpcgjJjRDepMFl',
+     col:'#60a5fa', facts:['Payout 80%','DD 10%','200k+ trader']},
+    {name:'FTUK', domain:'ftuk.com', pct:20, code:'',
+     url:'https://ftuk.com/?ref=1124',
+     col:'#60a5fa', facts:['Payout 80%','DD 8%','No time limit']},
+    {name:'The5ers', domain:'the5ers.com', pct:15, code:'',
+     url:'https://www.the5ers.com/?afmc=19dh',
+     col:'#60a5fa', facts:['Payout 50%','DD 6%','Crescita organica']},
+    {name:'FundingPips', domain:'app.fundingpips.com', pct:10, code:'',
+     url:'https://app.fundingpips.com/register?ref=3060E5C8',
+     col:'#60a5fa', facts:['Payout 90%','Challenge flessibili','Scaling illimitato']}
+  ];
+  var best = PROMOS.slice().sort(function(a,b){return b.pct-a.pct;})[0];
+  var ID = '_promo4';
+
+  function beep(){
+    try{
+      var ctx = new (window.AudioContext||window.webkitAudioContext)();
+      var o=ctx.createOscillator();
+      var g=ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value=880;
+      o.type='sine';
+      g.gain.setValueAtTime(0,ctx.currentTime);
+      g.gain.linearRampToValueAtTime(0.18,ctx.currentTime+0.01);
+      g.gain.linearRampToValueAtTime(0,ctx.currentTime+0.22);
+      o.start(ctx.currentTime);
+      o.stop(ctx.currentTime+0.25);
+    }catch(e){}
+  }
+
+  function close(){
+    var el=document.getElementById(ID);
+    if(el){
+      el.style.opacity='0';
+      el.style.transform='translateY(14px)';
+      setTimeout(function(){el.parentNode&&el.parentNode.removeChild(el);},300);
+    }
+    try{localStorage.setItem('_pd4',String(Date.now()));}catch(e){}
+  }
+
+  function build(p){
+    if(document.getElementById(ID)) return;
+    var d=document.createElement('div');
+    d.id=ID;
+    d.style.cssText='position:fixed;bottom:76px;left:14px;z-index:99999;width:210px;'
+      +'background:#080e1c;border-radius:16px;overflow:hidden;'
+      +'border:1px solid rgba(96,165,250,0.2);'
+      +'opacity:0;transform:translateY(16px);'
+      +'transition:opacity .35s ease,transform .35s ease;'
+      +'font-family:system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,0.5)';
+
+    /* Top stripe */
+    var stripe=document.createElement('div');
+    stripe.style.cssText='background:linear-gradient(90deg,rgba(96,165,250,0.15),rgba(96,165,250,0.05));'
+      +'padding:8px 12px;display:flex;align-items:center;justify-content:space-between;'
+      +'border-bottom:1px solid rgba(96,165,250,0.12)';
+    var lbl=document.createElement('div');
+    lbl.style.cssText='display:flex;align-items:center;gap:5px';
+    var dot=document.createElement('span');
+    dot.style.cssText='width:6px;height:6px;border-radius:50%;background:#60a5fa;display:inline-block;'
+      +'animation:_pulse 1.5s ease infinite';
+    var ltxt=document.createElement('span');
+    ltxt.textContent='Offerta settimana';
+    ltxt.style.cssText='font-size:10px;color:rgba(147,197,253,0.8);font-weight:600;letter-spacing:.04em';
+    lbl.appendChild(dot); lbl.appendChild(ltxt);
+    var xb=document.createElement('button');
+    xb.textContent='×';
+    xb.style.cssText='background:none;border:none;color:rgba(147,197,253,0.35);'
+      +'font-size:16px;cursor:pointer;padding:0;line-height:1';
+    xb.onclick=close;
+    stripe.appendChild(lbl); stripe.appendChild(xb);
+
+    /* Logo */
+    var logoArea=document.createElement('div');
+    logoArea.style.cssText='padding:12px 14px 8px;display:flex;align-items:center;gap:10px';
+    var img=document.createElement('img');
+    img.src='https://www.google.com/s2/favicons?domain='+p.domain+'&sz=32';
+    img.style.cssText='width:26px;height:26px;border-radius:6px;flex-shrink:0';
+    img.onerror=function(){this.style.display='none';};
+    var nameEl=document.createElement('div');
+    nameEl.textContent=p.name;
+    nameEl.style.cssText='font-size:15px;font-weight:700;color:rgba(255,255,255,0.9)';
+    logoArea.appendChild(img); logoArea.appendChild(nameEl);
+
+    /* Sconto */
+    var discRow=document.createElement('div');
+    discRow.style.cssText='padding:2px 14px 10px;display:flex;align-items:baseline;gap:8px';
+    var pctEl=document.createElement('div');
+    pctEl.textContent='-'+p.pct+'%';
+    pctEl.style.cssText='font-size:38px;font-weight:900;color:#4ade80;line-height:1;letter-spacing:-1.5px';
+    var subEl=document.createElement('div');
+    subEl.textContent='di sconto';
+    subEl.style.cssText='font-size:12px;color:rgba(255,255,255,0.35);padding-bottom:4px';
+    discRow.appendChild(pctEl); discRow.appendChild(subEl);
+
+    /* Code */
+    if(p.code){
+      var codeBox=document.createElement('div');
+      codeBox.style.cssText='margin:0 14px 10px;background:rgba(74,222,128,0.08);'
+        +'border:1px solid rgba(74,222,128,0.2);border-radius:7px;padding:6px 10px;'
+        +'display:flex;align-items:center;gap:6px';
+      var ck=document.createElement('span');
+      ck.textContent='✓';
+      ck.style.cssText='color:#4ade80;font-weight:700;font-size:12px';
+      var ct=document.createElement('span');
+      ct.textContent='Codice: '+p.code;
+      ct.style.cssText='font-size:11px;color:#4ade80;font-weight:600;letter-spacing:.04em;font-family:monospace';
+      codeBox.appendChild(ck); codeBox.appendChild(ct);
+      d.appendChild(stripe); d.appendChild(logoArea); d.appendChild(discRow); d.appendChild(codeBox);
+    } else {
+      d.appendChild(stripe); d.appendChild(logoArea); d.appendChild(discRow);
+    }
+
+    /* Facts */
+    var facts=document.createElement('div');
+    facts.style.cssText='padding:0 14px 12px;display:flex;flex-direction:column;gap:4px';
+    p.facts.forEach(function(f){
+      var r=document.createElement('div');
+      r.style.cssText='display:flex;align-items:center;gap:6px';
+      var dot2=document.createElement('div');
+      dot2.style.cssText='width:3px;height:3px;border-radius:50%;background:rgba(96,165,250,0.5);flex-shrink:0';
+      var t=document.createElement('span');
+      t.textContent=f;
+      t.style.cssText='font-size:10px;color:rgba(255,255,255,0.4)';
+      r.appendChild(dot2); r.appendChild(t);
+      facts.appendChild(r);
+    });
+    d.appendChild(facts);
+
+    /* CTA */
+    var foot=document.createElement('div');
+    foot.style.cssText='padding:0 10px 10px';
+    var btn=document.createElement('button');
+    btn.textContent='Scopri offerta →';
+    btn.style.cssText='width:100%;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.25);'
+      +'border-radius:9px;padding:9px;color:#93c5fd;font-size:12px;font-weight:700;cursor:pointer';
+    btn.onmouseenter=function(){this.style.background='rgba(96,165,250,0.2)';};
+    btn.onmouseleave=function(){this.style.background='rgba(96,165,250,0.12)';};
+    btn.onclick=function(){window.open(p.url,'_blank');};
+    foot.appendChild(btn);
+    d.appendChild(foot);
+
+    /* Pulse animation */
+    var st=document.createElement('style');
+    st.textContent='@keyframes _pulse{0%,100%{opacity:1}50%{opacity:.3}}';
+    d.appendChild(st);
+
+    document.body.appendChild(d);
+    setTimeout(function(){d.style.opacity='1';d.style.transform='none';},50);
+    beep();
+  }
+
+  window.addEventListener('load',function(){
+    try{
+      var t=parseInt(localStorage.getItem('_pd4')||'0');
+      if(Date.now()-t>30*60*1000) setTimeout(function(){build(best);},4000);
+    }catch(e){}
+  });
+})();
 
 </script>
 
