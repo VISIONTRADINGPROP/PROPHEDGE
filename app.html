@@ -4589,14 +4589,7 @@ function doRegisterFree(){
 
 
 
-var AFF={
-  'FundedElite':  {url:'https://fundedelite.com',                                            aff:''},
-  'FTMO':         {url:'https://trader.ftmo.oanda.com/?affiliates=jBQuRQOpcgjJjRDepMFl',    aff:''},
-  'FTUK':         {url:'https://ftuk.com/?ref=1124',                                         aff:''},
-  'The5ers':      {url:'https://www.the5ers.com/?afmc=19dh',                                 aff:''},
-  'FundingPips':  {url:'https://app.fundingpips.com/register?ref=3060E5C8',                  aff:''},
-  'Axi':          {url:'https://www.axi.com/int/live-account?promocode=4740120',              aff:''}
-};
+var AFF={'FundedElite':{url:'https://fundedelite.com',aff:''},'FTMO':{url:'https://trader.ftmo.oanda.com/?affiliates=jBQuRQOpcgjJjRDepMFl',aff:''},'FTUK':{url:'https://ftuk.com/?ref=1124',aff:''},'The5ers':{url:'https://www.the5ers.com/?afmc=19dh',aff:''},'FundingPips':{url:'https://app.fundingpips.com/register?ref=3060E5C8',aff:''},'Axi':{url:'https://www.axi.com/int/live-account?promocode=4740120',aff:''}};
 
 
 
@@ -4689,14 +4682,13 @@ var BRANDS=[
 
 
 var BOT_ALL=[
-  {name:'FundedElite',  domain:'fundedelite.com',              info:'DD 8% · Payout 80%',  type:'prop'},
-  {name:'FTMO',         domain:'ftmo.com',                     info:'DD 10% · Payout 80%', type:'prop'},
-  {name:'FTUK',         domain:'ftuk.com',                     info:'DD 8% · Payout 80%',  type:'prop'},
-  {name:'The5ers',      domain:'the5ers.com',                   info:'DD 6% · Payout 50%',  type:'prop'},
-  {name:'FundingPips',  domain:'app.fundingpips.com',          info:'Payout fino 90%',      type:'prop'},
-  {name:'Axi',          domain:'axi.com',                      info:'Broker ECN · MT4/MT5', type:'broker'}
+  {name:'FundedElite',domain:'fundedelite.com',info:'Payout 80%',type:'prop'},
+  {name:'FTMO',domain:'ftmo.com',info:'Payout 80%',type:'prop'},
+  {name:'FTUK',domain:'ftuk.com',info:'Payout 80%',type:'prop'},
+  {name:'The5ers',domain:'the5ers.com',info:'Payout 50%',type:'prop'},
+  {name:'FundingPips',domain:'app.fundingpips.com',info:'Payout 90%',type:'prop'},
+  {name:'Axi',domain:'axi.com',info:'MT4/MT5',type:'broker'}
 ];
-
 
 
 
@@ -7604,8 +7596,6 @@ function delPropSync(id){
 
 
   if(dashDetailId===id)dashDetailId=null;
-  try{localStorage.removeItem('ph_live_creds_'+id);}catch(e){}
-  try{localStorage.removeItem('ph_sim_'+id);}catch(e){}
   if(typeof saveProps==='function')saveProps();
   render();
 }
@@ -7861,8 +7851,8 @@ function renderDash(){
       +'<div class="pc-top"><div class="pc-logo">'+logo+'</div>'
       +'<div><div class="pc-nm">'+p.name+'</div><div class="pc-mt">'+uF(p.size)+' DD '+p.maxDD+'% '+p.days+'gg '+(p.asset||'EUR/USD')+'</div></div></div>'
       +'<div class="pc-st">'
-      /* FIX sync 70% */
-      +(function(){var _ep=c.propLots,_eh=c.hedgeLots;if(typeof _simCH1!=='undefined'){if(_simCH1._above70Loss&&_ep>0.01)_ep=Math.floor(_ep*50)/100;if(_simCH1._above70Active&&_simCH1._lotPersHalved>0)_eh=_simCH1._lotPersHalved;}return '<div class="pst"><div class="pst-l">Lotti prop</div><div class="pst-v v-teal">'+_ep+'</div></div>'+'<div class="pst"><div class="pst-l">Lotti pers.</div><div class="pst-v v-violet">'+_eh+'</div></div>';})()
+      +'<div class="pst"><div class="pst-l">Lotti prop</div><div class="pst-v v-teal">'+c.propLots+'</div></div>'
+      +'<div class="pst"><div class="pst-l">Lotti pers.</div><div class="pst-v v-violet">'+c.hedgeLots+'</div></div>'
       +'<div class="pst"><div class="pst-l">Netto (B)</div><div class="pst-v '+nc+'">'+sgn(c.sB_net)+uF(c.sB_net)+'</div></div>'
       +'</div>'+pnlBadge
       +'<div style="margin-top:10px;display:flex;flex-direction:column;gap:4px">'+connBadge+posRows+'</div>'
@@ -8274,25 +8264,24 @@ function renderCalc(){
 // ═══════════════════════════════════════════════════════════════
 var SC = [
   // ── PROP FIRM ──
-  {id:'p1',cat:'prop',n:'FundedElite',d:'fundedelite.com',pct:20,code:'VISIONTRADING',
-   desc:'20% su tutti i piani · payout 80% garantito',stars:4.7,rev:1240,col:'#c9a84c',
-   url:'https://fundedelite.com',exp:Date.now()+5.12*864e5},
-  {id:'p2',cat:'prop',n:'FTMO',d:'ftmo.com',pct:10,code:'',
-   desc:'La prop firm più conosciuta · payout 80% · rimborso se passi al 1° tentativo',stars:4.8,rev:8900,col:'#00c4a7',
-   url:'https://trader.ftmo.oanda.com/?affiliates=jBQuRQOpcgjJjRDepMFl',exp:Date.now()+11.3*864e5},
-  {id:'p3',cat:'prop',n:'FTUK',d:'ftuk.com',pct:20,code:'',
-   desc:'20% off · DD 8% · nessun obiettivo giorni',stars:4.5,rev:3200,col:'#4f6ef7',
-   url:'https://ftuk.com/?ref=1124',exp:Date.now()+1.6*864e5},
-  {id:'p4',cat:'prop',n:'The5ers',d:'the5ers.com',pct:15,code:'',
-   desc:'Prop firm con approccio conservativo · crescita organica',stars:4.4,rev:2100,col:'#f5a623',
-   url:'https://www.the5ers.com/?afmc=19dh',exp:Date.now()+8.0*864e5},
-  {id:'p5',cat:'prop',n:'FundingPips',d:'app.fundingpips.com',pct:10,code:'',
-   desc:'Payout fino al 90% · challenge flessibili',stars:4.3,rev:1500,col:'#6366f1',
-   url:'https://app.fundingpips.com/register?ref=3060E5C8',exp:Date.now()+6.0*864e5},
+  {id:'p1',cat:'prop',n:'FundedElite',d:'fundedelite.com',pct:20,code:'VISIONTRADING',desc:'20% su tutti i piani · payout 80% garantito',stars:4.7,rev:1240,col:'#c9a84c',url:'https://fundedelite.com',exp:Date.now()+5.12*864e5},
+  {id:'p2',cat:'prop',n:'FTMO',d:'ftmo.com',pct:10,code:'FTMO10',desc:'10% challenge + rimborso se passi al primo tentativo',stars:4.8,rev:8900,col:'#00c4a7',url:'https://ftmo.com',exp:Date.now()+11.3*864e5},
+  {id:'p3',cat:'prop',n:'FTUK',d:'ftuk.com',pct:20,code:'VISION20',desc:'20% off · DD 8% · nessun obiettivo giorni',stars:4.5,rev:3200,col:'#4f6ef7',url:'https://ftuk.com/?ref=1124',exp:Date.now()+1.6*864e5},
+  {id:'p4',cat:'prop',n:'FXIFY',d:'fxify.com',pct:15,code:'VISION15',desc:'15% prima challenge · scalabile fino a $4M',stars:4.3,rev:1800,col:'#8b5cf6',url:'https://fxify.com',exp:Date.now()+7.1*864e5},
+  {id:'p5',cat:'prop',n:'FundedNext',d:'fundednext.com',pct:25,code:'VISIONFN25',desc:'25% esclusivo · payout fino a 95% · Express phase',stars:4.6,rev:2400,col:'#7c3aed',url:'https://fundednext.com',exp:Date.now()+3.35*864e5},
+  {id:'p6',cat:'prop',n:'Blue Guardian',d:'blueguardian.com',pct:10,code:'BLUEVISION',desc:'10% off · payout 85% · consistenza flessibile',stars:4.5,rev:740,col:'#3b82f6',url:'https://blueguardian.com',exp:Date.now()+6.75*864e5},
+  {id:'p7',cat:'prop',n:'Goat Funded',d:'goatfundedtrader.com',pct:15,code:'GOATVISION',desc:'15% esclusivo VisionTrading · instant funding opzione',stars:4.4,rev:960,col:'#10b981',url:'https://goatfundedtrader.com',exp:Date.now()+9.0*864e5},
+  {id:'p8',cat:'prop',n:'E8 Funding',d:'e8funding.com',pct:20,code:'E8VISION20',desc:'20% off · scalabile a $400k · trailing DD',stars:4.2,rev:1100,col:'#f59e0b',url:'https://e8funding.com',exp:Date.now()+15*864e5},
   // ── BROKER ──
-  {id:'b1',cat:'broker',n:'Axi',d:'axi.com',pct:0,code:'',
-   desc:'Broker ECN regolamentato · MT4 e MT5 · spread bassi',stars:4.6,rev:5400,col:'#e63946',
-   url:'https://www.axi.com/int/live-account?promocode=4740120',exp:Date.now()+30*864e5}
+  {id:'b1',cat:'broker',n:'IC Markets',d:'icmarkets.com',pct:0,code:'ICVISION',desc:'Raw spread da 0.0 pip · ECN puro · conto VIP Raw',stars:4.8,rev:15000,col:'#1e40af',url:'https://icmarkets.com',exp:Date.now()+30*864e5},
+  {id:'b2',cat:'broker',n:'Pepperstone',d:'pepperstone.com',pct:20,code:'PEPPER20',desc:'20% cashback costi trading · 3 mesi garantiti',stars:4.7,rev:12000,col:'#059669',url:'https://pepperstone.com',exp:Date.now()+14.2*864e5},
+  {id:'b3',cat:'broker',n:'XTB',d:'xtb.com',pct:0,code:'XTBVISION',desc:'Zero commissioni + formazione PRO inclusa',stars:4.5,rev:9800,col:'#2563eb',url:'https://xtb.com',exp:Date.now()+21*864e5},
+  {id:'b4',cat:'broker',n:'OANDA',d:'oanda.com',pct:10,code:'OANDAVIS10',desc:'10% spread ridotto garantito · 3 mesi',stars:4.4,rev:6700,col:'#dc2626',url:'https://oanda.com',exp:Date.now()+18.5*864e5},
+  {id:'b5',cat:'broker',n:'IG Group',d:'ig.com',pct:0,code:'IGVISION',desc:'CFD premium · supporto dedicato · 17.000 mercati',stars:4.6,rev:18000,col:'#1e3a8a',url:'https://ig.com',exp:Date.now()+25*864e5},
+  // ── CASINO ──
+  {id:'c1',cat:'casino',n:'LeoVegas',d:'leovegas.com',pct:0,code:'LEO200',desc:'Bonus benvenuto €200 + 20 free spins immediati',stars:4.3,rev:5400,col:'#d97706',url:'https://leovegas.com',exp:Date.now()+4.4*864e5},
+  {id:'c2',cat:'casino',n:'Betsson',d:'betsson.com',pct:100,code:'VISION100',desc:'100% match primo deposito fino a €100',stars:4.2,rev:3100,col:'#b91c1c',url:'https://betsson.com',exp:Date.now()+10*864e5},
+  {id:'c3',cat:'casino',n:'22Bet',d:'22bet.com',pct:122,code:'22VISION',desc:'122% bonus deposito fino a €300 · pagamento rapido',stars:4.0,rev:2200,col:'#ef4444',url:'https://22bet.com',exp:Date.now()+2.25*864e5}
 ];
 
 var _scf='all',_scs='',_scTimers=[];
@@ -8309,143 +8298,11 @@ function _cd(exp){
 function _stars(n){var s='';for(var i=0;i<5;i++)s+='<span style="color:'+(i<Math.round(n)?'#00ff88':'#1c1f3a')+'">★</span>';return s;}
 
 function renderSconti(){
-  // ── Featured grid (top 6 by pct, fallback by expiry) ──
-  var feat=SC.slice().sort(function(a,b){return (b.pct||0)-(a.pct||0);}).slice(0,6);
-  var fg='';
-  feat.forEach(function(s){
-    fg+='<div class="sc-feat-card" onclick="scGo(null,\''+s.id+'\',\''+s.code+'\',\''+s.url+'\')" title="'+s.n+' — '+s.code+'">'
-      +(s.pct>0?'<div class="sc-feat-pct">-'+s.pct+'%</div>':'')
-      +'<img class="sc-feat-logo" src="'+logoUrl(s.d)+'" '
-      +'onerror="logoErr(this,s.d,s.n[0])" '
-      +'alt="'+s.n+'">'
-      +'<div class="sc-feat-name" style="font-weight:800">'+s.n+'</div>'
-      +(s.code?'<div class="sc-feat-code">'+s.code+'</div>':'')
-      +'</div>';
-  });
-
-  // ── Filter pills ──
-  var cats=[{id:'all',lbl:'🏷️ Tutti'},{id:'prop',lbl:'🏆 Prop Firm'},{id:'broker',lbl:'🏦 Broker'},{id:'casino',lbl:'🎰 Casino'}];
-  var fp='<div class="sc-filters" id="scFilters">';
-  cats.forEach(function(c){
-    var on=_scf===c.id;
-    fp+='<button class="sc-pill '+(on?'sc-pill-all':'sc-pill-off')+'" onclick="scSetFilter(\''+c.id+'\')">'+c.lbl+'</button>';
-  });
-  fp+='</div>';
-
-  return '<div class="sc-wrap">'
-    // Hero
-    +'<div class="sc-hero"><div class="sc-hero-row">'
-    +'<div class="sc-hero-icon">🏷️</div>'
-    +'<div style="flex:1">'
-    +'<div class="sc-hero-title">Sconti &amp; Offerte Esclusive</div>'
-    +'<div class="sc-hero-sub">Codici esclusivi VisionTrading · Copia &amp; accedi con il tuo link affiliato · Timer live per ogni offerta</div>'
-    +'</div>'
-    +'<div class="sc-live"><div class="sc-live-dot"></div><span style="font-size:11px;font-weight:700;color:#38BDF8;font-family:Inter,sans-serif">'+SC.length+' offerte live</span></div>'
-    +'</div></div>'
-    // Search + filters
-    +'<div class="sc-search-row">'
-    +'<div class="sc-search-wrap">'
-    +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>'
-    +'<input class="sc-search" id="scSearch" type="text" placeholder="Cerca prop, broker o casino..." oninput="_scs=this.value;scRenderList()">'
-    +'</div>'
-    + fp
-    +'</div>'
-    // Featured
-    +'<div class="sc-feat"><div class="sc-feat-title">⭐ Migliori Offerte del Momento</div><div class="sc-feat-grid">'+fg+'</div></div>'
-    // List
-    +'<div id="scList"></div>'
-    +'</div>';
+  var b64='PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9Iml0Ij4KPGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij4KPG1ldGEgbmFtZT0idmlld3BvcnQiIGNvbnRlbnQ9IndpZHRoPWRldmljZS13aWR0aCxpbml0aWFsLXNjYWxlPTEuMCI+Cjx0aXRsZT5Qcm9wSGVkZ2UgU2NvbnRpPC90aXRsZT4KPHN0eWxlPgoqe21hcmdpbjowO3BhZGRpbmc6MDtib3gtc2l6aW5nOmJvcmRlci1ib3h9Cjpyb290ewogIC0tYmc6IzA1MGQxYTstLWJnMjojMGExNjI4Oy0tYmczOiMwZjFmMzg7CiAgLS1ib3JkZXI6cmdiYSgwLDIxMCwyNTUsMC4wOCk7LS1ib3JkZXIyOnJnYmEoMCwyMTAsMjU1LDAuMTUpOwogIC0tdDojZThmNGZmOy0tdDI6cmdiYSgyMzIsMjQ0LDI1NSwwLjY1KTstLXQzOnJnYmEoMjMyLDI0NCwyNTUsMC4zKTsKICAtLWN5YW46IzAwZDJmZjstLW9yYW5nZTojZjk3MzE2Oy0tZ3JlZW46IzRhZGU4MDstLWFtYmVyOiNmYmJmMjQ7LS1yZWQ6I2Y4NzE3MTsKICAtLWZkOidJbnRlcicsc3lzdGVtLXVpLHNhbnMtc2VyaWYKfQpib2R5e2JhY2tncm91bmQ6dmFyKC0tYmcpO2NvbG9yOnZhcigtLXQpO2ZvbnQtZmFtaWx5OnZhcigtLWZkKTttaW4taGVpZ2h0OjEwMHZoO21hcmdpbjowO3BhZGRpbmc6MDt3aWR0aDoxMDAlO292ZXJmbG93LXg6aGlkZGVufQovKiBCQU5ORVIgKi8KLnRvcC1iYW5uZXJ7YmFja2dyb3VuZDpsaW5lYXItZ3JhZGllbnQoOTBkZWcscmdiYSgwLDIxMCwyNTUsMC4wOCkscmdiYSgyNDksMTE1LDIyLDAuMDgpKTsKICBib3JkZXItYm90dG9tOjFweCBzb2xpZCB2YXIoLS1ib3JkZXIyKTtwYWRkaW5nOjdweCAyNHB4OwogIGRpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7anVzdGlmeS1jb250ZW50OmNlbnRlcjtnYXA6MTJweDsKICBmb250LXNpemU6MTJweDtjb2xvcjp2YXIoLS10Mil9Ci50b3AtYmFubmVyIHN0cm9uZ3tjb2xvcjp2YXIoLS1jeWFuKX0KLnRvcC1iYW5uZXIgYXtiYWNrZ3JvdW5kOnJnYmEoMCwyMTAsMjU1LDAuMTIpO2JvcmRlcjoxcHggc29saWQgcmdiYSgwLDIxMCwyNTUsMC4yNSk7CiAgYm9yZGVyLXJhZGl1czoyMHB4O3BhZGRpbmc6M3B4IDE0cHg7Zm9udC1zaXplOjExcHg7Y29sb3I6dmFyKC0tY3lhbik7dGV4dC1kZWNvcmF0aW9uOm5vbmV9Ci8qIEhFQURFUiAqLwouaGVhZGVye2JhY2tncm91bmQ6cmdiYSg1LDEzLDI2LDAuOTcpO2JhY2tkcm9wLWZpbHRlcjpibHVyKDEycHgpO3dpZHRoOjEwMCU7CiAgYm9yZGVyLWJvdHRvbToxcHggc29saWQgdmFyKC0tYm9yZGVyMik7cGFkZGluZzowIDE2cHg7CiAgZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6MThweDtoZWlnaHQ6NjRweDsKICBwb3NpdGlvbjpzdGlja3k7dG9wOjA7ei1pbmRleDoxMDB9Ci5sb2dvLWFyZWF7ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6MTBweDt3aGl0ZS1zcGFjZTpub3dyYXA7bWluLXdpZHRoOjB9Ci5sb2dvLWFyZWEgaW1ne3dpZHRoOjQwcHg7aGVpZ2h0OjQwcHg7Ym9yZGVyLXJhZGl1czoxMHB4O29iamVjdC1maXQ6Y29udGFpbjtkaXNwbGF5Om5vbmV9Ci5sb2dvLWFyZWEgLmxvZ28tZmFsbGJhY2t7Zm9udC1zaXplOjE1cHg7Zm9udC13ZWlnaHQ6OTAwO2xldHRlci1zcGFjaW5nOi4wNWVtOwogIGJhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjMDBkMmZmLCMwMDY2ZmYpOwogIC13ZWJraXQtYmFja2dyb3VuZC1jbGlwOnRleHQ7LXdlYmtpdC10ZXh0LWZpbGwtY29sb3I6dHJhbnNwYXJlbnR9Ci5sb2dvLXN1Yntmb250LXNpemU6MTBweDtmb250LXdlaWdodDo3MDA7Y29sb3I6dmFyKC0tb3JhbmdlKTtsZXR0ZXItc3BhY2luZzouMTVlbX0KLnNlYXJjaC1iYXJ7ZmxleDoxO21heC13aWR0aDozODBweDtwb3NpdGlvbjpyZWxhdGl2ZX0KLnNlYXJjaC1iYXIgaW5wdXR7d2lkdGg6MTAwJTtiYWNrZ3JvdW5kOnZhcigtLWJnMyk7Ym9yZGVyOjFweCBzb2xpZCB2YXIoLS1ib3JkZXIyKTsKICBib3JkZXItcmFkaXVzOjEwcHg7cGFkZGluZzo5cHggMTRweCA5cHggMzdweDtjb2xvcjp2YXIoLS10KTtmb250LXNpemU6MTNweDsKICBvdXRsaW5lOm5vbmU7dHJhbnNpdGlvbjpib3JkZXIgLjJzfQouc2VhcmNoLWJhciBpbnB1dDpmb2N1c3tib3JkZXItY29sb3I6dmFyKC0tY3lhbil9Ci5zZWFyY2gtYmFyIGlucHV0OjpwbGFjZWhvbGRlcntjb2xvcjp2YXIoLS10Myl9Ci5zaXtwb3NpdGlvbjphYnNvbHV0ZTtsZWZ0OjEycHg7dG9wOjUwJTt0cmFuc2Zvcm06dHJhbnNsYXRlWSgtNTAlKTtjb2xvcjp2YXIoLS10Myk7Zm9udC1zaXplOjEzcHh9Ci5odGFic3tkaXNwbGF5OmZsZXg7Z2FwOjRweH0KLmh0YWJ7cGFkZGluZzo2cHggMTZweDtib3JkZXItcmFkaXVzOjIwcHg7Zm9udC1zaXplOjEycHg7Zm9udC13ZWlnaHQ6NjAwO2N1cnNvcjpwb2ludGVyOwogIGJvcmRlcjoxcHggc29saWQgdmFyKC0tYm9yZGVyMik7Y29sb3I6dmFyKC0tdDMpO2JhY2tncm91bmQ6dHJhbnNwYXJlbnQ7dHJhbnNpdGlvbjphbGwgLjJzfQouaHRhYi5hY3RpdmV7YmFja2dyb3VuZDpsaW5lYXItZ3JhZGllbnQoMTM1ZGVnLCMwMGQyZmYsIzAwNjZmZik7Ym9yZGVyLWNvbG9yOnRyYW5zcGFyZW50OwogIGNvbG9yOiNmZmY7Ym94LXNoYWRvdzowIDAgMTRweCByZ2JhKDAsMjEwLDI1NSwwLjMpfQovKiBOQVYgKi8KLm5hdntib3JkZXItYm90dG9tOjFweCBzb2xpZCB2YXIoLS1ib3JkZXIpO3BhZGRpbmc6MCAxNnB4O2Rpc3BsYXk6ZmxleDtvdmVyZmxvdy14OmF1dG87c2Nyb2xsYmFyLXdpZHRoOm5vbmV9Ci5uYXY6Oi13ZWJraXQtc2Nyb2xsYmFye2Rpc3BsYXk6bm9uZX0KLm5pe3BhZGRpbmc6MTFweCAxMHB4O2ZvbnQtc2l6ZToxM3B4O2NvbG9yOnZhcigtLXQzKTtjdXJzb3I6cG9pbnRlcjsKICBib3JkZXItYm90dG9tOjJweCBzb2xpZCB0cmFuc3BhcmVudDt3aGl0ZS1zcGFjZTpub3dyYXA7dHJhbnNpdGlvbjphbGwgLjJzfQoubmk6aG92ZXJ7Y29sb3I6dmFyKC0tdCl9Ci5uaS5hY3RpdmV7Y29sb3I6dmFyKC0tY3lhbik7Ym9yZGVyLWJvdHRvbS1jb2xvcjp2YXIoLS1jeWFuKX0KLyogSEVSTyAqLwouaGVyb3tkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjFmciAzMDBweDtnYXA6MTRweDtwYWRkaW5nOjEycHggMjBweH0KQG1lZGlhKG1heC13aWR0aDo5MDBweCl7Lmhlcm97Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjFmcn19Ci5oZXJvLW1haW57YmFja2dyb3VuZDpsaW5lYXItZ3JhZGllbnQoMTM1ZGVnLHJnYmEoMCwyMTAsMjU1LDAuMDYpLHJnYmEoMCwxMDIsMjU1LDAuMDMpKTsKICBib3JkZXI6MXB4IHNvbGlkIHJnYmEoMCwyMTAsMjU1LDAuMTQpO2JvcmRlci1yYWRpdXM6MThweDtwYWRkaW5nOjE4cHggMjBweH0KLmhlcm8tbGFiZWx7Zm9udC1zaXplOjEwcHg7Zm9udC13ZWlnaHQ6NzAwO2xldHRlci1zcGFjaW5nOi4xZW07dGV4dC10cmFuc2Zvcm06dXBwZXJjYXNlOwogIGNvbG9yOnZhcigtLW9yYW5nZSk7bWFyZ2luLWJvdHRvbToxNHB4fQouaGVyby1jYXJkc3tkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOnJlcGVhdCgzLDFmcik7Z2FwOjlweH0KQG1lZGlhKG1heC13aWR0aDo2MDBweCl7Lmhlcm8tY2FyZHN7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOnJlcGVhdCgyLDFmcil9fQouaGN7YmFja2dyb3VuZDpsaW5lYXItZ3JhZGllbnQoMTM1ZGVnLCMwZDFmNGEsIzFhMTA0MCk7Ym9yZGVyOjFweCBzb2xpZCByZ2JhKDk5LDEwMiwyNDEsMC4yKTtib3JkZXItcmFkaXVzOjEycHg7CiAgcGFkZGluZzoxMXB4O2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjlweDtjdXJzb3I6cG9pbnRlcjt0cmFuc2l0aW9uOmFsbCAuMjJzfQouaGM6aG92ZXJ7Ym9yZGVyLWNvbG9yOnZhcigtLWN5YW4pO3RyYW5zZm9ybTp0cmFuc2xhdGVZKC0ycHgpOwogIGJveC1zaGFkb3c6MCA4cHggMjRweCByZ2JhKDAsMCwwLDAuNCksMCAwIDEwcHggcmdiYSgwLDIxMCwyNTUsMC4wOCl9Ci5oYyBpbWd7d2lkdGg6MzRweDtoZWlnaHQ6MzRweDtib3JkZXItcmFkaXVzOjhweDtvYmplY3QtZml0OmNvbnRhaW47YmFja2dyb3VuZDp2YXIoLS1iZzMpO2ZsZXgtc2hyaW5rOjB9Ci5oYy1pbmZve2ZsZXg6MTttaW4td2lkdGg6MH0KLmhjLW5hbWV7Zm9udC1zaXplOjEycHg7Zm9udC13ZWlnaHQ6NzAwO3doaXRlLXNwYWNlOm5vd3JhcDtvdmVyZmxvdzpoaWRkZW47dGV4dC1vdmVyZmxvdzplbGxpcHNpc30KLmhjLXN0YXJze2ZvbnQtc2l6ZToxMHB4O2NvbG9yOnZhcigtLWFtYmVyKX0KLm9mZi1iYWRnZXtiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzBkOTI2OCwjMDY1ZjQ2KTtjb2xvcjojZmZmOwogIGZvbnQtc2l6ZToxMHB4O2ZvbnQtd2VpZ2h0OjgwMDtwYWRkaW5nOjNweCA4cHg7Ym9yZGVyLXJhZGl1czo2cHg7ZmxleC1zaHJpbms6MH0KLmhlcm8tc2lkZXtiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcscmdiYSg5OSwxMDIsMjQxLDAuMSkscmdiYSg1NiwxODksMjQ4LDAuMDUpKTsKICBib3JkZXI6MXB4IHNvbGlkIHJnYmEoMjQ5LDExNSwyMiwwLjE2KTtib3JkZXItcmFkaXVzOjE4cHg7cGFkZGluZzoxOHB4IDIwcHh9Ci5ocy1sYmx7Zm9udC1zaXplOjEwcHg7Zm9udC13ZWlnaHQ6NzAwO2xldHRlci1zcGFjaW5nOi4xZW07dGV4dC10cmFuc2Zvcm06dXBwZXJjYXNlOwogIGNvbG9yOnZhcigtLW9yYW5nZSk7bWFyZ2luLWJvdHRvbToxMnB4fQouaHNye2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjEwcHg7cGFkZGluZzo4cHggMDtib3JkZXItYm90dG9tOjFweCBzb2xpZCB2YXIoLS1ib3JkZXIpfQouaHNyOmxhc3QtY2hpbGR7Ym9yZGVyOm5vbmV9Ci5oc3IgaW1ne3dpZHRoOjI4cHg7aGVpZ2h0OjI4cHg7Ym9yZGVyLXJhZGl1czo3cHg7YmFja2dyb3VuZDp2YXIoLS1iZzMpfQouaHNyLW5hbWV7ZmxleDoxO2ZvbnQtc2l6ZToxMnB4O2ZvbnQtd2VpZ2h0OjcwMH0KLmhzci1zdGFyc3tmb250LXNpemU6OXB4O2NvbG9yOnZhcigtLWFtYmVyKX0KLmhzci1iYWRnZXtiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzBkOTI2OCwjMDY1ZjQ2KTtjb2xvcjojZmZmOwogIGZvbnQtc2l6ZToxMHB4O2ZvbnQtd2VpZ2h0OjgwMDtwYWRkaW5nOjJweCA4cHg7Ym9yZGVyLXJhZGl1czo1cHh9Ci8qIEZJTFRFUiBCQVIgKi8KLmZpbHRlci1iYXJ7cGFkZGluZzoxMHB4IDE2cHg7ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6OHB4O2ZsZXgtd3JhcDp3cmFwOwogIGJvcmRlci1ib3R0b206MXB4IHNvbGlkIHZhcigtLWJvcmRlcil9Ci5mcGlsbHtwYWRkaW5nOjdweCAxNnB4O2JvcmRlci1yYWRpdXM6MjBweDtmb250LXNpemU6MTJweDtmb250LXdlaWdodDo2MDA7Y3Vyc29yOnBvaW50ZXI7CiAgYm9yZGVyOjFweCBzb2xpZCB2YXIoLS1ib3JkZXIyKTtjb2xvcjp2YXIoLS10Mik7YmFja2dyb3VuZDp0cmFuc3BhcmVudDt0cmFuc2l0aW9uOmFsbCAuMnN9Ci5mcGlsbC5hY3RpdmV7YmFja2dyb3VuZDpyZ2JhKDAsMjEwLDI1NSwwLjEpO2JvcmRlci1jb2xvcjp2YXIoLS1jeWFuKTtjb2xvcjp2YXIoLS1jeWFuKX0KLmxpdmUtaW5mb3ttYXJnaW4tbGVmdDphdXRvO2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjZweDtmb250LXNpemU6MTFweDtjb2xvcjp2YXIoLS10Myl9Ci5sZG90e3dpZHRoOjdweDtoZWlnaHQ6N3B4O2JvcmRlci1yYWRpdXM6NTAlO2JhY2tncm91bmQ6IzEwYjk4MTsKICBib3gtc2hhZG93OjAgMCA2cHggIzEwYjk4MTthbmltYXRpb246cHUgMS41cyBlYXNlIGluZmluaXRlfQpAa2V5ZnJhbWVzIHB1ezAlLDEwMCV7b3BhY2l0eToxfTUwJXtvcGFjaXR5Oi4zfX0KLyogVEFCTEUgKi8KLnRhYmxlLXdyYXB7cGFkZGluZzowIDhweCA0MHB4fQoudGh7ZGlzcGxheTpncmlkO2dyaWQtdGVtcGxhdGUtY29sdW1uczoyMzBweCAxMzBweCA5MHB4IDEwMHB4IDFmciAxMTBweCAxNDBweCAxNjBweCAxMDBweDsKICBwYWRkaW5nOjEwcHggMTRweDtmb250LXNpemU6MTBweDtmb250LXdlaWdodDo3MDA7bGV0dGVyLXNwYWNpbmc6LjA3ZW07CiAgdGV4dC10cmFuc2Zvcm06dXBwZXJjYXNlO2NvbG9yOnZhcigtLXQzKTtib3JkZXItYm90dG9tOjFweCBzb2xpZCB2YXIoLS1ib3JkZXIpfQpAbWVkaWEobWF4LXdpZHRoOjEyMDBweCl7LnRoe2Rpc3BsYXk6bm9uZX19Ci50cntkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOjIzMHB4IDEzMHB4IDkwcHggMTAwcHggMWZyIDExMHB4IDE0MHB4IDE2MHB4IDEwMHB4OwogIGJhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjMGQxZjRhIDAlLCMxYTEwNDAgMTAwJSk7Ym9yZGVyOjFweCBzb2xpZCByZ2JhKDk5LDEwMiwyNDEsMC4yKTtib3JkZXItcmFkaXVzOjE2cHg7CiAgbWFyZ2luLWJvdHRvbTo5cHg7b3ZlcmZsb3c6aGlkZGVuO3RyYW5zaXRpb246YWxsIC4yMnM7YWxpZ24taXRlbXM6Y2VudGVyO2N1cnNvcjpwb2ludGVyfQoudHI6aG92ZXJ7Ym9yZGVyLWNvbG9yOnJnYmEoMCwyMTAsMjU1LDAuMjgpOwogIGJveC1zaGFkb3c6MCA2cHggMjhweCByZ2JhKDAsMCwwLDAuMzUpLDAgMCAxNHB4IHJnYmEoMCwyMTAsMjU1LDAuMDUpfQpAbWVkaWEobWF4LXdpZHRoOjEyMDBweCl7LnRye2dyaWQtdGVtcGxhdGUtY29sdW1uczoxZnJ9fQouY29se3BhZGRpbmc6MTNweCAxMnB4O2JvcmRlci1yaWdodDoxcHggc29saWQgdmFyKC0tYm9yZGVyKX0KLmNvbDpsYXN0LWNoaWxke2JvcmRlci1yaWdodDpub25lfQpAbWVkaWEobWF4LXdpZHRoOjEyMDBweCl7LmNvbHtib3JkZXItcmlnaHQ6bm9uZTtib3JkZXItYm90dG9tOjFweCBzb2xpZCB2YXIoLS1ib3JkZXIpfS5jb2w6bGFzdC1jaGlsZHtib3JkZXItYm90dG9tOm5vbmV9fQovKiBmaXJtICovCi5maXJtLXJvd3tkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDoxMXB4fQouZmlybS1sb2dve3dpZHRoOjQ0cHg7aGVpZ2h0OjQ0cHg7Ym9yZGVyLXJhZGl1czoxMXB4O29iamVjdC1maXQ6Y29udGFpbjtiYWNrZ3JvdW5kOnZhcigtLWJnMyk7ZmxleC1zaHJpbms6MH0KLmZpcm0tbmFtZXtmb250LXNpemU6MTRweDtmb250LXdlaWdodDo3MDB9Ci5maXJtLWZhdntjb2xvcjp2YXIoLS10Myk7Zm9udC1zaXplOjEzcHg7Y3Vyc29yOnBvaW50ZXI7bWFyZ2luLWxlZnQ6M3B4fQouZmlybS1mYXYub257Y29sb3I6dmFyKC0tcmVkKX0KLmZpcm0tdGFne2ZvbnQtc2l6ZTo5cHg7Zm9udC13ZWlnaHQ6NjAwO3BhZGRpbmc6MnB4IDdweDtib3JkZXItcmFkaXVzOjRweDsKICBiYWNrZ3JvdW5kOnJnYmEoMCwyMTAsMjU1LDAuMDcpO2JvcmRlcjoxcHggc29saWQgcmdiYSgwLDIxMCwyNTUsMC4xNCk7CiAgY29sb3I6dmFyKC0tY3lhbik7bWFyZ2luLXRvcDozcHg7ZGlzcGxheTppbmxpbmUtYmxvY2t9Ci8qIHJhbmsgKi8KLnJhbmstbntmb250LXNpemU6MjBweDtmb250LXdlaWdodDo5MDA7CiAgYmFja2dyb3VuZDpsaW5lYXItZ3JhZGllbnQoMTM1ZGVnLCMwMGQyZmYsIzAwNjZmZik7CiAgLXdlYmtpdC1iYWNrZ3JvdW5kLWNsaXA6dGV4dDstd2Via2l0LXRleHQtZmlsbC1jb2xvcjp0cmFuc3BhcmVudH0KLnN0e2ZvbnQtc2l6ZToxMXB4O2NvbG9yOnZhcigtLWFtYmVyKX0KLnJldntmb250LXNpemU6MTBweDtjb2xvcjp2YXIoLS10Myl9Ci8qIGNvdW50cnkgKi8KLmNme2ZvbnQtc2l6ZToyNnB4O2xpbmUtaGVpZ2h0OjE7bWFyZ2luLWJvdHRvbToycHh9Ci5jY3tmb250LXNpemU6MTFweDtjb2xvcjp2YXIoLS10Mik7Zm9udC13ZWlnaHQ6NzAwfQovKiB5ZWFycyBjaXJjbGUgKi8KLnNlZy13cmFwe2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7anVzdGlmeS1jb250ZW50OmNlbnRlcn0KLyogYXNzZXRzICovCi5hdGFnc3tkaXNwbGF5OmZsZXg7ZmxleC13cmFwOndyYXA7Z2FwOjRweH0KLmF0e2ZvbnQtc2l6ZToxMHB4O2ZvbnQtd2VpZ2h0OjYwMDtwYWRkaW5nOjNweCA4cHg7Ym9yZGVyLXJhZGl1czo1cHg7CiAgYmFja2dyb3VuZDpyZ2JhKDAsMjEwLDI1NSwwLjA2KTtib3JkZXI6MXB4IHNvbGlkIHJnYmEoMCwyMTAsMjU1LDAuMSk7Y29sb3I6dmFyKC0tdDIpfQovKiBwbGF0Zm9ybXMgKi8KLnBsYXRze2Rpc3BsYXk6ZmxleDtnYXA6NXB4O2ZsZXgtd3JhcDp3cmFwfQoucGl7d2lkdGg6MzRweDtoZWlnaHQ6MzBweDtib3JkZXItcmFkaXVzOjdweDtkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyOwogIGp1c3RpZnktY29udGVudDpjZW50ZXI7Zm9udC1zaXplOjEwcHg7Zm9udC13ZWlnaHQ6ODAwO3Bvc2l0aW9uOnJlbGF0aXZlO292ZXJmbG93OmhpZGRlbn0KLnBpLW10NHtiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzFhNmZkNCwjMGY0ZmE4KTtjb2xvcjojZmZmO2JvcmRlcjoxcHggc29saWQgIzI2ODBlOH0KLnBpLW10NXtiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzBlYTVlOSwjMDM2OWExKTtjb2xvcjojZmZmO2JvcmRlcjoxcHggc29saWQgIzM4YmRmOH0KLnBpLWN0e2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjOGI1Y2Y2LCM2ZDI4ZDkpO2NvbG9yOiNmZmY7Ym9yZGVyOjFweCBzb2xpZCAjYTc4YmZhfQoucGktd2Vie2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjMGQ5MjY4LCMwNjVmNDYpO2NvbG9yOiNmZmY7Ym9yZGVyOjFweCBzb2xpZCAjMzRkMzk5fQoucGktYXBwe2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjZjk3MzE2LCNlYTZjMGEpO2NvbG9yOiNmZmY7Ym9yZGVyOjFweCBzb2xpZCAjZmI5MjNjfQovKiBhbGxvYyAqLwouYWxsb2MtYW10e2ZvbnQtc2l6ZToxNHB4O2ZvbnQtd2VpZ2h0OjcwMDttYXJnaW4tYm90dG9tOjVweH0KLmFiYXJ7aGVpZ2h0OjNweDtiYWNrZ3JvdW5kOnJnYmEoMjU1LDI1NSwyNTUsMC4wNyk7Ym9yZGVyLXJhZGl1czoycHg7b3ZlcmZsb3c6aGlkZGVufQouYWZpbGx7aGVpZ2h0OjEwMCU7YmFja2dyb3VuZDpsaW5lYXItZ3JhZGllbnQoOTBkZWcsIzAwZDJmZiwjMDA2NmZmKTtib3JkZXItcmFkaXVzOjJweH0KLyogcHJvbW8gKi8KLnByb21vLWNlbGx7dGV4dC1hbGlnbjpjZW50ZXJ9Ci5wYmFkZ2V7YmFja2dyb3VuZDpsaW5lYXItZ3JhZGllbnQoMTM1ZGVnLCMxMGI5ODEsIzA1OTY2OSk7Y29sb3I6I2ZmZjsKICBmb250LXNpemU6MTNweDtmb250LXdlaWdodDo5MDA7cGFkZGluZzo1cHggMTJweDtib3JkZXItcmFkaXVzOjhweDtkaXNwbGF5OmlubGluZS1ibG9jazttYXJnaW4tYm90dG9tOjRweH0KLnBjb2Rle2ZvbnQtc2l6ZToxMHB4O2NvbG9yOnZhcigtLXQzKTtsZXR0ZXItc3BhY2luZzouMDVlbTttYXJnaW4tYm90dG9tOjVweDtmb250LWZhbWlseTptb25vc3BhY2V9Ci5wdGltZXJ7Zm9udC1zaXplOjExcHg7Zm9udC13ZWlnaHQ6NzAwO2ZvbnQtZmFtaWx5Om1vbm9zcGFjZTtwYWRkaW5nOjNweCA4cHg7CiAgYm9yZGVyLXJhZGl1czo1cHg7YmFja2dyb3VuZDpyZ2JhKDI1NSwyNTUsMjU1LDAuMDQpfQoucHRpbWVyLnVyZ2VudHtjb2xvcjojZmJiZjI0O2JhY2tncm91bmQ6cmdiYSgyNTEsMTkxLDM2LDAuMTIpO3RleHQtc2hhZG93OjAgMCA4cHggcmdiYSgyNTEsMTkxLDM2LDAuNCk7Zm9udC13ZWlnaHQ6NzAwfQoucHRpbWVyLm5vcm17Y29sb3I6I2UyZThmMDtmb250LXdlaWdodDo3MDB9Ci8qIGFjdGlvbiAqLwouYnRuLWdve3BhZGRpbmc6OXB4IDE2cHg7Ym9yZGVyLXJhZGl1czo4cHg7Ym9yZGVyOjFweCBzb2xpZCByZ2JhKDAsMjEwLDI1NSwwLjIyKTsKICBjb2xvcjp2YXIoLS1jeWFuKTtmb250LXNpemU6MTJweDtmb250LXdlaWdodDo2MDA7Y3Vyc29yOnBvaW50ZXI7YmFja2dyb3VuZDp0cmFuc3BhcmVudDsKICB0cmFuc2l0aW9uOmFsbCAuMnM7d2lkdGg6MTAwJX0KLmJ0bi1nbzpob3ZlcntiYWNrZ3JvdW5kOnJnYmEoMCwyMTAsMjU1LDAuMSk7Ym9yZGVyLWNvbG9yOnZhcigtLWN5YW4pfQovKiB0b2FzdCAqLwoudG9hc3R7cG9zaXRpb246Zml4ZWQ7Ym90dG9tOjIwcHg7bGVmdDo1MCU7dHJhbnNmb3JtOnRyYW5zbGF0ZVgoLTUwJSk7CiAgYmFja2dyb3VuZDojMTBiOTgxO2NvbG9yOiNmZmY7cGFkZGluZzo5cHggMjBweDtib3JkZXItcmFkaXVzOjIwcHg7CiAgZm9udC1zaXplOjEzcHg7Zm9udC13ZWlnaHQ6NzAwO3otaW5kZXg6OTk5OTsKICBvcGFjaXR5OjA7dHJhbnNpdGlvbjpvcGFjaXR5IC4zcztwb2ludGVyLWV2ZW50czpub25lfQoudG9hc3Quc2hvd3tvcGFjaXR5OjF9Ci8qIHBvcHVwIG1pbmkgKi8KI21pbmlQb3B7cG9zaXRpb246Zml4ZWQ7Ym90dG9tOjc0cHg7bGVmdDoxNnB4O3otaW5kZXg6OTk5OTsKICBiYWNrZ3JvdW5kOnJnYmEoNSwxMywyNiwwLjk3KTtib3JkZXI6MXB4IHNvbGlkIHJnYmEoMCwyMTAsMjU1LDAuMik7CiAgYm9yZGVyLXJhZGl1czoxNHB4O3BhZGRpbmc6MTFweCAxM3B4O3dpZHRoOjE3OHB4OwogIGJveC1zaGFkb3c6MCAxNHB4IDQwcHggcmdiYSgwLDAsMCwwLjYpOwogIG9wYWNpdHk6MDt0cmFuc2Zvcm06dHJhbnNsYXRlWSgxNHB4KTsKICB0cmFuc2l0aW9uOm9wYWNpdHkgLjMycyBlYXNlLHRyYW5zZm9ybSAuMzJzIGVhc2U7ZGlzcGxheTpub25lfQojbWluaVBvcC5zaG93e29wYWNpdHk6MTt0cmFuc2Zvcm06bm9uZX0KLm1wLWhkcntkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2p1c3RpZnktY29udGVudDpzcGFjZS1iZXR3ZWVuO21hcmdpbi1ib3R0b206OXB4fQoubXAtbGJse2ZvbnQtc2l6ZTo5cHg7Y29sb3I6cmdiYSgwLDIxMCwyNTUsMC42KTt0ZXh0LXRyYW5zZm9ybTp1cHBlcmNhc2U7bGV0dGVyLXNwYWNpbmc6LjA3ZW07Zm9udC13ZWlnaHQ6NjAwO2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjRweH0KLm1wLWxkb3R7d2lkdGg6NnB4O2hlaWdodDo2cHg7Ym9yZGVyLXJhZGl1czo1MCU7YmFja2dyb3VuZDp2YXIoLS1jeWFuKTthbmltYXRpb246cHUgMS4zcyBlYXNlIGluZmluaXRlfQoubXAteHtiYWNrZ3JvdW5kOm5vbmU7Ym9yZGVyOm5vbmU7Y29sb3I6dmFyKC0tdDMpO2ZvbnQtc2l6ZToxNnB4O2N1cnNvcjpwb2ludGVyO3BhZGRpbmc6MDtsaW5lLWhlaWdodDoxfQoubXAtYm9keXtkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDo5cHg7bWFyZ2luLWJvdHRvbTo5cHh9Ci5tcC1ib2R5IGltZ3t3aWR0aDozMnB4O2hlaWdodDozMnB4O2JvcmRlci1yYWRpdXM6OHB4O2JhY2tncm91bmQ6dmFyKC0tYmczKX0KLm1wLW5hbWV7Zm9udC1zaXplOjEycHg7Zm9udC13ZWlnaHQ6NzAwfQoubXAtcGN0e2ZvbnQtc2l6ZToyMHB4O2ZvbnQtd2VpZ2h0OjkwMDtjb2xvcjp2YXIoLS1ncmVlbik7bGV0dGVyLXNwYWNpbmc6LTFweDtsaW5lLWhlaWdodDoxfQoubXAtYnRue3dpZHRoOjEwMCU7YmFja2dyb3VuZDpyZ2JhKDAsMjEwLDI1NSwwLjA4KTtib3JkZXI6MXB4IHNvbGlkIHJnYmEoMCwyMTAsMjU1LDAuMjIpOwogIGJvcmRlci1yYWRpdXM6OHB4O3BhZGRpbmc6N3B4O2NvbG9yOnZhcigtLWN5YW4pO2ZvbnQtc2l6ZToxMXB4O2ZvbnQtd2VpZ2h0OjcwMDtjdXJzb3I6cG9pbnRlcn0KPC9zdHlsZT4KPC9oZWFkPgo8Ym9keT4KCjxkaXYgY2xhc3M9InRvcC1iYW5uZXIiPgogIDxzcGFuPkNvZGljZSBlc2NsdXNpdm88L3NwYW4+CiAgPHN0cm9uZz5WSVNJT05UUkFESU5HPC9zdHJvbmc+CiAgPHNwYW4+4oCUIDI1JSBzdSBGdW5kZWRFbGl0ZTwvc3Bhbj4KICA8YSBocmVmPSJodHRwczovL2Z1bmRlZGVsaXRlLmNvbSIgdGFyZ2V0PSJfYmxhbmsiPlVzYSBvcmEg4oaSPC9hPgo8L2Rpdj4KCjxkaXYgY2xhc3M9ImhlYWRlciI+CiAgPGRpdiBjbGFzcz0ibG9nby1hcmVhIj4KICAgIDxpbWcgaWQ9InVzZXJMb2dvSW1nIiBhbHQ9IkxvZ28iPgogICAgPGRpdj4KICAgICAgPGRpdiBjbGFzcz0ibG9nby1mYWxsYmFjayIgaWQ9ImxvZ29UZXh0Ij5QUk9QSEVER0U8L2Rpdj4KICAgICAgPGRpdiBjbGFzcz0ibG9nby1zdWIiPlNDT05USTwvZGl2PgogICAgPC9kaXY+CiAgPC9kaXY+CiAgPGRpdiBjbGFzcz0ic2VhcmNoLWJhciI+CiAgICA8c3BhbiBjbGFzcz0ic2kiPvCflI08L3NwYW4+CiAgICA8aW5wdXQgaWQ9InNlYXJjaElucHV0IiBwbGFjZWhvbGRlcj0iQ2VyY2EgcHJvcCBvIGJyb2tlci4uLiIgb25pbnB1dD0iZG9TZWFyY2godGhpcy52YWx1ZSkiPgogIDwvZGl2PgogIDxkaXYgY2xhc3M9Imh0YWJzIj4KICAgIDxidXR0b24gY2xhc3M9Imh0YWIgYWN0aXZlIiBvbmNsaWNrPSJzZXRUeXBlKHRoaXMsJ2FsbCcpIj5UdXR0aTwvYnV0dG9uPgogICAgPGJ1dHRvbiBjbGFzcz0iaHRhYiIgb25jbGljaz0ic2V0VHlwZSh0aGlzLCdmb3JleCcpIj5Gb3JleDwvYnV0dG9uPgogICAgPGJ1dHRvbiBjbGFzcz0iaHRhYiIgb25jbGljaz0ic2V0VHlwZSh0aGlzLCdmdXR1cmVzJykiPkZ1dHVyZXM8L2J1dHRvbj4KICAgIDxidXR0b24gY2xhc3M9Imh0YWIiIG9uY2xpY2s9InNldFR5cGUodGhpcywnY3J5cHRvJykiPkNyeXB0bzwvYnV0dG9uPgogICAgPGJ1dHRvbiBjbGFzcz0iaHRhYiIgb25jbGljaz0ic2V0VHlwZSh0aGlzLCdjZmQnKSI+Q0ZEPC9idXR0b24+CiAgICA8YnV0dG9uIGNsYXNzPSJodGFiIiBvbmNsaWNrPSJzZXRUeXBlKHRoaXMsJ2Nhc2lubycpIj5DYXNpbm88L2J1dHRvbj4KICA8L2Rpdj4KPC9kaXY+Cgo8ZGl2IGNsYXNzPSJuYXYiPgogIDxkaXYgY2xhc3M9Im5pIGFjdGl2ZSIgb25jbGljaz0ic2V0TmF2KHRoaXMsJ2hvbWUnKSI+SG9tZTwvZGl2PgogIDxkaXYgY2xhc3M9Im5pIiBvbmNsaWNrPSJzZXROYXYodGhpcywnb2ZmZXJ0ZScpIj5PZmZlcnRlPC9kaXY+CiAgPGRpdiBjbGFzcz0ibmkiIG9uY2xpY2s9InNldE5hdih0aGlzLCdjaGFsbGVuZ2VzJykiPkNoYWxsZW5nZXM8L2Rpdj4KICA8ZGl2IGNsYXNzPSJuaSIgb25jbGljaz0ic2V0TmF2KHRoaXMsJ2Jlc3RzZWxsZXJzJykiPkJlc3QgU2VsbGVyczwvZGl2PgogIDxkaXYgY2xhc3M9Im5pIiBvbmNsaWNrPSJzZXROYXYodGhpcywncmVjZW5zaW9uaScpIj5SZWNlbnNpb25pPC9kaXY+CiAgPGRpdiBjbGFzcz0ibmkiIG9uY2xpY2s9InNldE5hdih0aGlzLCdyZWdvbGUnKSI+UmVnb2xlIFByb3A8L2Rpdj4KICA8ZGl2IGNsYXNzPSJuaSIgb25jbGljaz0ic2V0TmF2KHRoaXMsJ2Jyb2tlcicpIj5Ccm9rZXI8L2Rpdj4KPC9kaXY+CjxkaXYgaWQ9Im5hdkNvbnRlbnQiIHN0eWxlPSJkaXNwbGF5Om5vbmUiPjwvZGl2PgoKPGRpdiBjbGFzcz0iaGVybyIgaWQ9Imhlcm9TZWN0aW9uIj4KICA8ZGl2IGNsYXNzPSJoZXJvLW1haW4iPgogICAgPGRpdiBjbGFzcz0iaGVyby1sYWJlbCI+8J+UpSBPZmZlcnRlIEVzY2x1c2l2ZSBkZWwgTW9tZW50bzwvZGl2PgogICAgPGRpdiBjbGFzcz0iaGVyby1jYXJkcyIgaWQ9Imhlcm9DYXJkcyI+PC9kaXY+CiAgPC9kaXY+CiAgPGRpdiBjbGFzcz0iaGVyby1zaWRlIj4KICAgIDxkaXYgY2xhc3M9ImhzLWxibCI+8J+PhiBUb3AgUHJvcCBwZXIgUmF0aW5nPC9kaXY+CiAgICA8ZGl2IGlkPSJoZXJvU2lkZSI+PC9kaXY+CiAgPC9kaXY+CjwvZGl2PgoKPGRpdiBjbGFzcz0iZmlsdGVyLWJhciIgaWQ9ImZpbHRlckJhciI+CiAgPGJ1dHRvbiBjbGFzcz0iZnBpbGwgYWN0aXZlIiBvbmNsaWNrPSJzZXRDYXQodGhpcywnYWxsJykiPvCfj7cgVHV0dGk8L2J1dHRvbj4KICA8YnV0dG9uIGNsYXNzPSJmcGlsbCIgb25jbGljaz0ic2V0Q2F0KHRoaXMsJ3Byb3AnKSI+8J+PhiBQcm9wIEZpcm08L2J1dHRvbj4KICA8YnV0dG9uIGNsYXNzPSJmcGlsbCIgb25jbGljaz0ic2V0Q2F0KHRoaXMsJ2Jyb2tlcicpIj7wn5K8IEJyb2tlcjwvYnV0dG9uPgogIDxidXR0b24gY2xhc3M9ImZwaWxsIiBvbmNsaWNrPSJzZXRDYXQodGhpcywnY2FzaW5vJykiPvCfjrAgQ2FzaW5vPC9idXR0b24+CiAgPGRpdiBjbGFzcz0ibGl2ZS1pbmZvIj48c3BhbiBjbGFzcz0ibGRvdCI+PC9zcGFuPkxpdmUgRGF0YSDCtyBhZ2dpb3JuYXRvIG9yYTwvZGl2Pgo8L2Rpdj4KCjxkaXYgY2xhc3M9InRhYmxlLXdyYXAiIGlkPSJ0YWJsZVNlY3Rpb24iPgogIDxkaXYgY2xhc3M9InRoIj4KICAgIDxkaXY+RklSTUE8L2Rpdj48ZGl2PlJBTksgLyBSRUNFTlNJT05JPC9kaXY+PGRpdj5QQUVTRTwvZGl2PgogICAgPGRpdj5BTk5JIEFUVC48L2Rpdj48ZGl2PkFTU0VUPC9kaXY+PGRpdj5QSUFUVEFGT1JNRTwvZGl2PgogICAgPGRpdj5NQVggQUxMT0NBWklPTkU8L2Rpdj48ZGl2PlBST01PPC9kaXY+PGRpdj5BWklPTkU8L2Rpdj4KICA8L2Rpdj4KICA8ZGl2IGlkPSJ0YWJsZUJvZHkiPjwvZGl2Pgo8L2Rpdj4KCjxkaXYgY2xhc3M9InRvYXN0IiBpZD0idG9hc3QiPuKchSBDb2RpY2UgY29waWF0byE8L2Rpdj4KCjxkaXYgaWQ9Im1pbmlQb3AiPgogIDxkaXYgY2xhc3M9Im1wLWhkciI+CiAgICA8ZGl2IGNsYXNzPSJtcC1sYmwiPjxzcGFuIGNsYXNzPSJtcC1sZG90Ij48L3NwYW4+T2ZmZXJ0YSBzZXR0aW1hbmE8L2Rpdj4KICAgIDxidXR0b24gY2xhc3M9Im1wLXgiIG9uY2xpY2s9ImNsb3NlUG9wKCkiPsOXPC9idXR0b24+CiAgPC9kaXY+CiAgPGRpdiBjbGFzcz0ibXAtYm9keSI+CiAgICA8aW1nIGlkPSJtcExvZ28iIHNyYz0iIiBhbHQ9IiI+CiAgICA8ZGl2PjxkaXYgaWQ9Im1wTmFtZSIgY2xhc3M9Im1wLW5hbWUiPjwvZGl2PjxkaXYgaWQ9Im1wUGN0IiBjbGFzcz0ibXAtcGN0Ij48L2Rpdj48L2Rpdj4KICA8L2Rpdj4KICA8YnV0dG9uIGNsYXNzPSJtcC1idG4iIG9uY2xpY2s9ImdvVXJsKF9iZXN0LnVybCxfYmVzdC5jb2RlKSI+U2NvcHJpIG9mZmVydGEg4oaSPC9idXR0b24+CjwvZGl2PgoKPHNjcmlwdD4KdmFyIERBVEEgPSBbCiAge2lkOidmZScsICBjYXQ6J3Byb3AnLCAgbmFtZTonRnVuZGVkRWxpdGUnLCBkb21haW46J2Z1bmRlZGVsaXRlLmNvbScsCiAgIHR5cGVzOlsnZm9yZXgnLCdjZmQnXSwgcmFuazo0LjcsIHJldmlld3M6MTI0MCwgY291bnRyeTonR0InLCBmbGFnOifwn4es8J+HpycsIHllYXJzOjMsCiAgIGFzc2V0czpbJ0ZvcmV4JywnSW5kaWNpJywnTWV0YWxsaScsJ0NyeXB0byddLCBwbGF0czpbJ01UNCcsJ01UNSddLAogICBtYXhBbGxvYzonJDQwMEsnLCBhbGxvY1BjdDo0MCwgcGN0OjI1LCBjb2RlOidWSVNJT05UUkFESU5HJywKICAgdXJsOidodHRwczovL2Z1bmRlZGVsaXRlLmNvbScsIGV4cERheXM6NX0sCiAge2lkOidmdG1vJywgY2F0Oidwcm9wJywgbmFtZTonRlRNTycsIGRvbWFpbjonZnRtby5jb20nLAogICB0eXBlczpbJ2ZvcmV4JywnY3J5cHRvJywnY2ZkJ10sIHJhbms6NC44LCByZXZpZXdzOjg5MDAsIGNvdW50cnk6J0NaJywgZmxhZzon8J+HqPCfh78nLCB5ZWFyczoxMCwKICAgYXNzZXRzOlsnRm9yZXgnLCdJbmRpY2knLCdDcnlwdG8nLCdDb21tb2RpdHknXSwgcGxhdHM6WydNVDQnLCdNVDUnLCdjVCddLAogICBtYXhBbGxvYzonJDJNJywgYWxsb2NQY3Q6OTAsIHBjdDoxMCwgY29kZTonJywKICAgdXJsOidodHRwczovL3RyYWRlci5mdG1vLm9hbmRhLmNvbS8/YWZmaWxpYXRlcz1qQlF1UlFPcGNnakpqUkRlcE1GbCcsIGV4cERheXM6MTF9LAogIHtpZDonZnR1aycsIGNhdDoncHJvcCcsIG5hbWU6J0ZUVUsnLCBkb21haW46J2Z0dWsuY29tJywKICAgdHlwZXM6Wydmb3JleCcsJ2NmZCddLCByYW5rOjQuNSwgcmV2aWV3czozMjAwLCBjb3VudHJ5OidHQicsIGZsYWc6J/Cfh6zwn4enJywgeWVhcnM6NCwKICAgYXNzZXRzOlsnRm9yZXgnLCdJbmRpY2knLCdDcnlwdG8nXSwgcGxhdHM6WydNVDQnLCdNVDUnXSwKICAgbWF4QWxsb2M6JyQyLjVNJywgYWxsb2NQY3Q6OTUsIHBjdDoyMCwgY29kZTonJywKICAgdXJsOidodHRwczovL2Z0dWsuY29tLz9yZWY9MTEyNCcsIGV4cERheXM6Mn0sCiAge2lkOic1ZXJzJywgY2F0Oidwcm9wJywgbmFtZTonVGhlNWVycycsIGRvbWFpbjondGhlNWVycy5jb20nLAogICB0eXBlczpbJ2ZvcmV4JywnZnV0dXJlcycsJ2NyeXB0byddLCByYW5rOjQuNCwgcmV2aWV3czoyMTAwLCBjb3VudHJ5OidJTCcsIGZsYWc6J/Cfh67wn4exJywgeWVhcnM6MTAsCiAgIGFzc2V0czpbJ0ZvcmV4JywnRnV0dXJlcycsJ0NyeXB0bycsJ0VuZXJnaWEnXSwgcGxhdHM6WydNVDQnLCdNVDUnXSwKICAgbWF4QWxsb2M6JyQ1OTcuNUsnLCBhbGxvY1BjdDo2MCwgcGN0OjE1LCBjb2RlOicnLAogICB1cmw6J2h0dHBzOi8vd3d3LnRoZTVlcnMuY29tLz9hZm1jPTE5ZGgnLCBleHBEYXlzOjh9LAogIHtpZDonZnBzJywgY2F0Oidwcm9wJywgbmFtZTonRnVuZGluZ1BpcHMnLCBkb21haW46J2FwcC5mdW5kaW5ncGlwcy5jb20nLAogICB0eXBlczpbJ2ZvcmV4JywnZnV0dXJlcycsJ2NyeXB0bycsJ2NmZCddLCByYW5rOjQuMywgcmV2aWV3czoxNTAwLCBjb3VudHJ5OidBRScsIGZsYWc6J/Cfh6bwn4eqJywgeWVhcnM6MywKICAgYXNzZXRzOlsnRm9yZXgnLCdGdXR1cmVzJywnQ3J5cHRvJywnTWV0YWxsaSddLCBwbGF0czpbJ01UNCcsJ01UNScsJ2NUJ10sCiAgIG1heEFsbG9jOickMzAwSycsIGFsbG9jUGN0OjMwLCBwY3Q6MTAsIGNvZGU6JycsCiAgIHVybDonaHR0cHM6Ly9hcHAuZnVuZGluZ3BpcHMuY29tL3JlZ2lzdGVyP3JlZj0zMDYwRTVDOCcsIGV4cERheXM6Nn0sCiAge2lkOidheGknLCBjYXQ6J2Jyb2tlcicsIG5hbWU6J0F4aScsIGRvbWFpbjonYXhpLmNvbScsCiAgIHR5cGVzOlsnZm9yZXgnLCdjZmQnXSwgcmFuazo0LjYsIHJldmlld3M6NTQwMCwgY291bnRyeTonQVUnLCBmbGFnOifwn4em8J+HuicsIHllYXJzOjE1LAogICBhc3NldHM6WydGb3JleCcsJ0NGRCcsJ0NyeXB0bycsJ0F6aW9uaSddLCBwbGF0czpbJ01UNCcsJ01UNSddLAogICBtYXhBbGxvYzonTi9BJywgYWxsb2NQY3Q6MCwgcGN0OjAsIGNvZGU6JzQ3NDAxMjAnLAogICB1cmw6J2h0dHBzOi8vd3d3LmF4aS5jb20vaW50L2xpdmUtYWNjb3VudD9wcm9tb2NvZGU9NDc0MDEyMCcsIGV4cERheXM6MzB9LAogIHtpZDonYmMxJywgY2F0OidjYXNpbm8nLCBuYW1lOidCQy5HYW1lJywgZG9tYWluOidiYy5nYW1lJywKICAgdHlwZXM6WydjYXNpbm8nXSwgcmFuazo0LjUsIHJldmlld3M6MzEwMCwgY291bnRyeTonQ1cnLCBmbGFnOifwn4eo8J+HvCcsIHllYXJzOjYsCiAgIGFzc2V0czpbJ1Nsb3RzJywnTGl2ZSBDYXNpbm8nLCdTcG9ydCcsJ0NyeXB0byddLCBwbGF0czpbJ1dlYicsJ0FwcCddLAogICBtYXhBbGxvYzonTi9BJywgYWxsb2NQY3Q6MCwgcGN0OjE1LCBjb2RlOidWSVNJT05CQycsCiAgIHVybDonaHR0cHM6Ly9iYy5nYW1lJywgZXhwRGF5czoxMH0sCiAge2lkOidzdGFrZScsIGNhdDonY2FzaW5vJywgbmFtZTonU3Rha2UnLCBkb21haW46J3N0YWtlLmNvbScsCiAgIHR5cGVzOlsnY2FzaW5vJ10sIHJhbms6NC42LCByZXZpZXdzOjgyMDAsIGNvdW50cnk6J0NXJywgZmxhZzon8J+HqPCfh7wnLCB5ZWFyczo4LAogICBhc3NldHM6WydTbG90cycsJ0xpdmUgQ2FzaW5vJywnU3BvcnQgQmV0JywnQ3Jhc2gnXSwgcGxhdHM6WydXZWInLCdBcHAnXSwKICAgbWF4QWxsb2M6J04vQScsIGFsbG9jUGN0OjAsIHBjdDoxMCwgY29kZTonJywKICAgdXJsOidodHRwczovL3N0YWtlLmNvbScsIGV4cERheXM6MTV9Cl07Cgp2YXIgX2NhdD0nYWxsJywgX3NlYXJjaD0nJywgX3R5cGU9J2FsbCc7CnZhciBfZmF2cyA9IChmdW5jdGlvbigpeyB0cnl7cmV0dXJuIEpTT04ucGFyc2UobG9jYWxTdG9yYWdlLmdldEl0ZW0oJ3BoX2ZhdnMzJyl8fCdbXScpO31jYXRjaChlKXtyZXR1cm4gW107fSB9KSgpOwp2YXIgX2Jlc3QgPSBEQVRBLnNsaWNlKCkuc29ydChmdW5jdGlvbihhLGIpe3JldHVybiBiLnBjdC1hLnBjdDt9KVswXTsKCmZ1bmN0aW9uIGxvZ28oZCl7IHJldHVybiAnaHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS9zMi9mYXZpY29ucz9kb21haW49JytkKycmc3o9NjQnOyB9CmZ1bmN0aW9uIHN0YXJzKHIpeyB2YXIgcz0nJzsgZm9yKHZhciBpPTE7aTw9NTtpKyspIHMrPWk8PU1hdGguZmxvb3Iocik/J+KYhSc6J+KYhic7IHJldHVybiBzOyB9CgovKiBDb3BpYSBjb2RpY2UgKyBhcHJpIGxpbmsgKi8KZnVuY3Rpb24gZ29VcmwodXJsLCBjb2RlKXsKICBpZihjb2RlKXsKICAgIHRyeXsgbmF2aWdhdG9yLmNsaXBib2FyZC53cml0ZVRleHQoY29kZSk7IH1jYXRjaChlKXt9CiAgICB2YXIgdD1kb2N1bWVudC5nZXRFbGVtZW50QnlJZCgndG9hc3QnKTsKICAgIHQudGV4dENvbnRlbnQ9J+KchSBDb2RpY2UgJytjb2RlKycgY29waWF0byEnOwogICAgdC5jbGFzc0xpc3QuYWRkKCdzaG93Jyk7CiAgICBzZXRUaW1lb3V0KGZ1bmN0aW9uKCl7IHQuY2xhc3NMaXN0LnJlbW92ZSgnc2hvdycpOyB9LCAyNTAwKTsKICB9CiAgc2V0VGltZW91dChmdW5jdGlvbigpeyB3aW5kb3cub3Blbih1cmwsJ19ibGFuaycpOyB9LCBjb2RlPzMwMDowKTsKfQoKLyogQ2VyY2hpbyBzZWdtZW50YXRvIDI0IHF1YWRyYXRpbmkgKi8KZnVuY3Rpb24gc2VnQ2lyY2xlKHllYXJzKXsKICB2YXIgdG90YWw9MjQsIGN4PTI2LCBjeT0yNiwgcj0yMSwgdz00LjU7CiAgdmFyIHBhcnRzPVsnPHN2ZyB3aWR0aD0iNTIiIGhlaWdodD0iNTIiIHZpZXdCb3g9IjAgMCA1MiA1MiI+J107CiAgZm9yKHZhciBpPTA7aTx0b3RhbDtpKyspewogICAgdmFyIGFuZz0oaS90b3RhbCkqTWF0aC5QSSoyLU1hdGguUEkvMjsKICAgIHZhciB4PShjeCtyKk1hdGguY29zKGFuZykpLnRvRml4ZWQoMSk7CiAgICB2YXIgeT0oY3krcipNYXRoLnNpbihhbmcpKS50b0ZpeGVkKDEpOwogICAgdmFyIGRlZz0oKGFuZyoxODAvTWF0aC5QSSkpLnRvRml4ZWQoMSk7CiAgICB2YXIgYWN0aXZlPWk8TWF0aC5taW4oeWVhcnMsdG90YWwpOwogICAgdmFyIGZjPWFjdGl2ZT8nIzAwZDJmZic6J3JnYmEoMjU1LDI1NSwyNTUsMC4wOCknOwogICAgdmFyIHhvPShwYXJzZUZsb2F0KHgpLXcvMikudG9GaXhlZCgxKTsKICAgIHZhciB5bz0ocGFyc2VGbG9hdCh5KS13LzIpLnRvRml4ZWQoMSk7CiAgICBwYXJ0cy5wdXNoKFsnPHJlY3QgeD0iJyx4bywnIiB5PSInLHlvLCciIHdpZHRoPSInLHcsJyIgaGVpZ2h0PSInLHcsJyIgcng9IjEiIGZpbGw9IicsZmMsJyIgdHJhbnNmb3JtPSJyb3RhdGUoJyxkZWcsJyAnLHgsJyAnLHksJykiLz4nXS5qb2luKCcnKSk7CiAgfQogIHBhcnRzLnB1c2goWyc8dGV4dCB4PSIyNiIgeT0iMzAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMTEiIGZvbnQtd2VpZ2h0PSI4MDAiIGZvbnQtZmFtaWx5PSJJbnRlcixzeXN0ZW0tdWkiIGZpbGw9IiNlOGY0ZmYiPicseWVhcnMsJzwvdGV4dD4nXS5qb2luKCcnKSk7CiAgcGFydHMucHVzaCgnPC9zdmc+Jyk7CiAgcmV0dXJuIHBhcnRzLmpvaW4oJycpOwp9CgpmdW5jdGlvbiB0aW1lcihkYXlzLCBpZCl7CiAgLyogQ2FsY29sYSBpbCB0aW1lc3RhbXAgZGkgc2NhZGVuemEgZGEgYWRlc3NvICovCiAgdmFyIGV4cFRzID0gRGF0ZS5ub3coKSArIGRheXMqMjQqNjAqNjAqMTAwMDsKICB2YXIgdGlkID0gJ3Rtcl8nK2lkOwogIC8qIEFnZ2lvcm5hIGlsIHRpbWVyIG9nbmkgbWludXRvICovCiAgc2V0VGltZW91dChmdW5jdGlvbiB0aWNrKCl7CiAgICB2YXIgZWw9ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQodGlkKTsKICAgIGlmKCFlbClyZXR1cm47CiAgICB2YXIgZGlmZj1leHBUcy1EYXRlLm5vdygpOwogICAgaWYoZGlmZjw9MCl7ZWwudGV4dENvbnRlbnQ9J+KPsSBTY2FkdXRvJztlbC5jbGFzc05hbWU9J3B0aW1lciB1cmdlbnQnO3JldHVybjt9CiAgICB2YXIgdGc9TWF0aC5mbG9vcihkaWZmLzg2NGU1KTsKICAgIHZhciB0aD1NYXRoLmZsb29yKChkaWZmJTg2NGU1KS8zNmU1KTsKICAgIHZhciB0bT1NYXRoLmZsb29yKChkaWZmJTM2ZTUpLzZlNCk7CiAgICB2YXIgdHh0LCB1cmdlbnQ7CiAgICBpZih0Zz49Mil7dHh0PSfij7EgU2NhZGUgdHJhICcrdGcrJ2cnO3VyZ2VudD1mYWxzZTt9CiAgICBlbHNlIGlmKHRnPj0xKXt0eHQ9J+KPsSBTY2FkZSB0cmEgMWcgJyt0aCsnaCc7dXJnZW50PWZhbHNlO30KICAgIGVsc2UgaWYodGg+PTEpe3R4dD0n4o+xICcrdGgrJ2ggJyt0bSsnbSc7dXJnZW50PXRydWU7fQogICAgZWxzZXt0eHQ9J+KPsSAnK3RtKycgbWludXRpISc7dXJnZW50PXRydWU7fQogICAgZWwudGV4dENvbnRlbnQ9dHh0OwogICAgZWwuY2xhc3NOYW1lPSdwdGltZXIgJysodXJnZW50Pyd1cmdlbnQnOidub3JtJyk7CiAgICBzZXRUaW1lb3V0KHRpY2ssNjAwMDApOwogIH0sMCk7CiAgdmFyIHVyZ2VudDA9ZGF5czw9MTsKICByZXR1cm4gJzxkaXYgaWQ9IicrdGlkKyciIGNsYXNzPSJwdGltZXIgJysodXJnZW50MD8ndXJnZW50Jzonbm9ybScpKyciPuKPsSBDYXJpY2FtZW50by4uLjwvZGl2Pic7Cn0KCmZ1bmN0aW9uIGJ1aWxkSGVyb0NhcmRzKCl7CiAgdmFyIGl0ZW1zID0gREFUQS5zbGljZSgpLnNvcnQoZnVuY3Rpb24oYSxiKXtyZXR1cm4gYi5wY3QtYS5wY3Q7fSkuc2xpY2UoMCw2KTsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnaGVyb0NhcmRzJykuaW5uZXJIVE1MID0gaXRlbXMubWFwKGZ1bmN0aW9uKGQpewogICAgcmV0dXJuICc8ZGl2IGNsYXNzPSJoYyIgb25jbGljaz0iZ29VcmwoXCcnK2QudXJsKydcJyxcJycrZC5jb2RlKydcJykiPicKICAgICAgKyc8aW1nIHNyYz0iJytsb2dvKGQuZG9tYWluKSsnIiBvbmVycm9yPSJ0aGlzLnN0eWxlLmRpc3BsYXk9XCdub25lXCciIGFsdD0iJytkLm5hbWUrJyI+JwogICAgICArJzxkaXYgY2xhc3M9ImhjLWluZm8iPjxkaXYgY2xhc3M9ImhjLW5hbWUiPicrZC5uYW1lKyc8L2Rpdj48ZGl2IGNsYXNzPSJoYy1zdGFycyI+JytzdGFycyhkLnJhbmspKyc8L2Rpdj48L2Rpdj4nCiAgICAgICsoZC5wY3Q+MD8nPGRpdiBjbGFzcz0ib2ZmLWJhZGdlIj4nK2QucGN0KyclPC9kaXY+JzonJykKICAgICAgKyc8L2Rpdj4nOwogIH0pLmpvaW4oJycpOwp9CgpmdW5jdGlvbiBidWlsZEhlcm9TaWRlKCl7CiAgdmFyIHRvcCA9IERBVEEuZmlsdGVyKGZ1bmN0aW9uKGQpe3JldHVybiBkLmNhdD09PSdwcm9wJzt9KQogICAgLnNsaWNlKCkuc29ydChmdW5jdGlvbihhLGIpe3JldHVybiBiLnJhbmstYS5yYW5rO30pLnNsaWNlKDAsMyk7CiAgdmFyIHRyID0gWyfwn6WHJywn8J+liCcsJ/CfpYknXTsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnaGVyb1NpZGUnKS5pbm5lckhUTUwgPSB0b3AubWFwKGZ1bmN0aW9uKGQsaSl7CiAgICByZXR1cm4gJzxkaXYgY2xhc3M9ImhzciIgb25jbGljaz0iZ29VcmwoXCcnK2QudXJsKydcJyxcJycrZC5jb2RlKydcJykiIHN0eWxlPSJjdXJzb3I6cG9pbnRlciI+JwogICAgICArJzxzcGFuIHN0eWxlPSJmb250LXNpemU6MTZweCI+Jyt0cltpXSsnPC9zcGFuPicKICAgICAgKyc8aW1nIHNyYz0iJytsb2dvKGQuZG9tYWluKSsnIiBvbmVycm9yPSJ0aGlzLnN0eWxlLmRpc3BsYXk9XCdub25lXCciIGFsdD0iJytkLm5hbWUrJyI+JwogICAgICArJzxkaXYgc3R5bGU9ImZsZXg6MSI+PGRpdiBjbGFzcz0iaHNyLW5hbWUiPicrZC5uYW1lKyc8L2Rpdj48ZGl2IGNsYXNzPSJoc3Itc3RhcnMiPicrc3RhcnMoZC5yYW5rKSsnPC9kaXY+PC9kaXY+JwogICAgICArKGQucGN0PjA/JzxkaXYgY2xhc3M9Imhzci1iYWRnZSI+JytkLnBjdCsnJTwvZGl2Pic6JycpCiAgICAgICsnPC9kaXY+JzsKICB9KS5qb2luKCcnKTsKfQoKZnVuY3Rpb24gYnVpbGRSb3coZCl7CiAgdmFyIGZhdiA9IF9mYXZzLmluZGV4T2YoZC5pZCk+PTA7CiAgcmV0dXJuICc8ZGl2IGNsYXNzPSJ0ciIgb25jbGljaz0iZ29VcmwoXCcnK2QudXJsKydcJyxcJycrZC5jb2RlKydcJykiPicKICAgIC8vIDEgRmlybQogICAgKyc8ZGl2IGNsYXNzPSJjb2wiPjxkaXYgY2xhc3M9ImZpcm0tcm93Ij4nCiAgICArJzxpbWcgY2xhc3M9ImZpcm0tbG9nbyIgc3JjPSInK2xvZ28oZC5kb21haW4pKyciIG9uZXJyb3I9InRoaXMuc3R5bGUuZGlzcGxheT1cJ25vbmVcJyIgYWx0PSInK2QubmFtZSsnIj4nCiAgICArJzxkaXY+JwogICAgKyc8ZGl2IHN0eWxlPSJkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDo1cHgiPicKICAgICsnPHNwYW4gY2xhc3M9ImZpcm0tbmFtZSI+JytkLm5hbWUrJzwvc3Bhbj4nCiAgICArJzxzcGFuIGNsYXNzPSJmaXJtLWZhdicrKGZhdj8nIG9uJzonJykrJyIgb25jbGljaz0idG9nZ2xlRmF2KGV2ZW50LFwnJytkLmlkKydcJykiPuKZoTwvc3Bhbj4nCiAgICArJzwvZGl2PicKICAgICsnPHNwYW4gY2xhc3M9ImZpcm0tdGFnIj4nK2QuY2F0LnRvVXBwZXJDYXNlKCkrJzwvc3Bhbj4nCiAgICArJzwvZGl2PjwvZGl2PjwvZGl2PicKICAgIC8vIDIgUmFuawogICAgKyc8ZGl2IGNsYXNzPSJjb2wiPjxkaXYgY2xhc3M9InJhbmstbiI+JytkLnJhbmsrJzwvZGl2PicKICAgICsnPGRpdiBjbGFzcz0ic3QiPicrc3RhcnMoZC5yYW5rKSsnPC9kaXY+JwogICAgKyc8ZGl2IGNsYXNzPSJyZXYiPicrZC5yZXZpZXdzLnRvTG9jYWxlU3RyaW5nKCkrJyByZWNlbnMuPC9kaXY+PC9kaXY+JwogICAgLy8gMyBDb3VudHJ5CiAgICArJzxkaXYgY2xhc3M9ImNvbCIgc3R5bGU9InRleHQtYWxpZ246Y2VudGVyIj4nCiAgICArJzxpbWcgc3JjPSJodHRwczovL2ZsYWdjZG4uY29tLzQweDMwLycrZC5jb3VudHJ5LnRvTG93ZXJDYXNlKCkrJy5wbmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIyNCIgc3R5bGU9ImJvcmRlci1yYWRpdXM6NHB4O2Rpc3BsYXk6YmxvY2s7bWFyZ2luOjAgYXV0byA0cHgiIG9uZXJyb3I9Il9oaSh0aGlzKSI+JwogICAgKyc8ZGl2IGNsYXNzPSJjYyI+JytkLmNvdW50cnkrJzwvZGl2PjwvZGl2PicKICAgIC8vIDQgWWVhcnMKICAgICsnPGRpdiBjbGFzcz0iY29sIj48ZGl2IGNsYXNzPSJzZWctd3JhcCI+JytzZWdDaXJjbGUoZC55ZWFycykrJzwvZGl2PjwvZGl2PicKICAgIC8vIDUgQXNzZXRzCiAgICArJzxkaXYgY2xhc3M9ImNvbCI+PGRpdiBjbGFzcz0iYXRhZ3MiPicKICAgICtkLmFzc2V0cy5tYXAoZnVuY3Rpb24oYSl7cmV0dXJuICc8c3BhbiBjbGFzcz0iYXQiPicrYSsnPC9zcGFuPic7fSkuam9pbignJykKICAgICsnPC9kaXY+PC9kaXY+JwogICAgLy8gNiBQbGF0Zm9ybXMKICAgICsnPGRpdiBjbGFzcz0iY29sIj48ZGl2IGNsYXNzPSJwbGF0cyI+JwogICAgK2QucGxhdHMubWFwKGZ1bmN0aW9uKHApeyAgdmFyIGljb25zPXsnTVQ0JzonZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTWpnaUlHaGxhV2RvZEQwaU1qZ2lJSFpwWlhkQ2IzZzlJakFnTUNBeU9DQXlPQ0krUEhKbFkzUWdkMmxrZEdnOUlqSTRJaUJvWldsbmFIUTlJakk0SWlCeWVEMGlOaUlnWm1sc2JEMGlJekUxTmpWRE1DSXZQangwWlhoMElIZzlJakUwSWlCNVBTSXhPU0lnZEdWNGRDMWhibU5vYjNJOUltMXBaR1JzWlNJZ1ptOXVkQzF6YVhwbFBTSXhNQ0lnWm05dWRDMTNaV2xuYUhROUlqa3dNQ0lnWm05dWRDMW1ZVzFwYkhrOUlrRnlhV0ZzTEhOaGJuTXRjMlZ5YVdZaUlHWnBiR3c5SWlObVptWWlQazFVTkR3dmRHVjRkRDQ4TDNOMlp6ND0nLCdNVDUnOidkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUIzYVdSMGFEMGlNamdpSUdobGFXZG9kRDBpTWpnaUlIWnBaWGRDYjNnOUlqQWdNQ0F5T0NBeU9DSStQSEpsWTNRZ2QybGtkR2c5SWpJNElpQm9aV2xuYUhROUlqSTRJaUJ5ZUQwaU5pSWdabWxzYkQwaUl6QXlPRGhFTVNJdlBqeDBaWGgwSUhnOUlqRTBJaUI1UFNJeE9TSWdkR1Y0ZEMxaGJtTm9iM0k5SW0xcFpHUnNaU0lnWm05dWRDMXphWHBsUFNJeE1DSWdabTl1ZEMxM1pXbG5hSFE5SWprd01DSWdabTl1ZEMxbVlXMXBiSGs5SWtGeWFXRnNMSE5oYm5NdGMyVnlhV1lpSUdacGJHdzlJaU5tWm1ZaVBrMVVOVHd2ZEdWNGRENDhMM04yWno0PScsJ2NUJzonZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTWpnaUlHaGxhV2RvZEQwaU1qZ2lJSFpwWlhkQ2IzZzlJakFnTUNBeU9DQXlPQ0krUEhKbFkzUWdkMmxrZEdnOUlqSTRJaUJvWldsbmFIUTlJakk0SWlCeWVEMGlOaUlnWm1sc2JEMGlJell5TURCRlFTSXZQanh3WVhSb0lHUTlJazB4T1NBeE5HRTJJRFlnTUNBeElERXROaTAySWlCemRISnZhMlU5SWlObVptWWlJSE4wY205clpTMTNhV1IwYUQwaU1pNDFJaUJtYVd4c1BTSnViMjVsSWlCemRISnZhMlV0YkdsdVpXTmhjRDBpY205MWJtUWlMejQ4WTJseVkyeGxJR040UFNJeE9TSWdZM2s5SWpFMElpQnlQU0l5SWlCbWFXeHNQU0lqTURCRk5VWkdJaTgrUEM5emRtYysnLCdXZWInOidkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUIzYVdSMGFEMGlNamdpSUdobGFXZG9kRDBpTWpnaUlIWnBaWGRDYjNnOUlqQWdNQ0F5T0NBeU9DSStQSEpsWTNRZ2QybGtkR2c5SWpJNElpQm9aV2xuYUhROUlqSTRJaUJ5ZUQwaU5pSWdabWxzYkQwaUl6QXdOemsyUWlJdlBqeGphWEpqYkdVZ1kzZzlJakUwSWlCamVUMGlNVFFpSUhJOUlqY2lJSE4wY205clpUMGlJMlptWmlJZ2MzUnliMnRsTFhkcFpIUm9QU0l4TGpnaUlHWnBiR3c5SW01dmJtVWlMejQ4Y0dGMGFDQmtQU0pOTVRRZ04yTXRNaUF5TFRJZ01UQWdNQ0F4TkUweE5DQTNZeklnTWlBeUlERXdJREFnTVRSTk55QXhOR2d4TkNJZ2MzUnliMnRsUFNJalptWm1JaUJ6ZEhKdmEyVXRkMmxrZEdnOUlqRXVOQ0l2UGp3dmMzWm5QZz09JywnQXBwJzonZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCM2FXUjBhRDBpTWpnaUlHaGxhV2RvZEQwaU1qZ2lJSFpwWlhkQ2IzZzlJakFnTUNBeU9DQXlPQ0krUEhKbFkzUWdkMmxrZEdnOUlqSTRJaUJvWldsbmFIUTlJakk0SWlCeWVEMGlOaUlnWm1sc2JEMGlJMFUyTlRFd01DSXZQanh5WldOMElIZzlJamtpSUhrOUlqVWlJSGRwWkhSb1BTSXhNQ0lnYUdWcFoyaDBQU0l4T0NJZ2NuZzlJaklpSUhOMGNtOXJaVDBpSTJabVppSWdjM1J5YjJ0bExYZHBaSFJvUFNJeExqZ2lJR1pwYkd3OUltNXZibVVpTHo0OFkybHlZMnhsSUdONFBTSXhOQ0lnWTNrOUlqRTVJaUJ5UFNJeExqSWlJR1pwYkd3OUlpTm1abVlpTHo0OEwzTjJaejQ9J307ICB2YXIgc3JjPWljb25zW3BdOyAgaWYoc3JjKSByZXR1cm4gJzxkaXYgY2xhc3M9InBpIj48aW1nIHNyYz0iJytzcmMrJyIgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBzdHlsZT0iYm9yZGVyLXJhZGl1czo3cHgiIHRpdGxlPSInK3ArJyI+PC9kaXY+JzsgIHJldHVybiAnPGRpdiBjbGFzcz0icGkiIHN0eWxlPSJiYWNrZ3JvdW5kOiMxYTIwNDA7Zm9udC1zaXplOjlweDtmb250LXdlaWdodDo4MDA7Y29sb3I6Izk0YTNiOCI+JytwKyc8L2Rpdj4nO30pLmpvaW4oJycpCiAgICArJzwvZGl2PjwvZGl2PicKICAgIC8vIDcgTWF4IEFsbG9jCiAgICArJzxkaXYgY2xhc3M9ImNvbCI+PGRpdiBjbGFzcz0iYWxsb2MtYW10Ij4nK2QubWF4QWxsb2MrJzwvZGl2PicKICAgICsoZC5hbGxvY1BjdD4wPyc8ZGl2IGNsYXNzPSJhYmFyIj48ZGl2IGNsYXNzPSJhZmlsbCIgc3R5bGU9IndpZHRoOicrZC5hbGxvY1BjdCsnJSI+PC9kaXY+PC9kaXY+JzonJykKICAgICsnPC9kaXY+JwogICAgLy8gOCBQcm9tbwogICAgKyc8ZGl2IGNsYXNzPSJjb2wgcHJvbW8tY2VsbCI+JwogICAgKyhkLnBjdD4wPyc8ZGl2IGNsYXNzPSJwYmFkZ2UiPicrZC5wY3QrJyUgT0ZGPC9kaXY+JzonPGRpdiBzdHlsZT0iZm9udC1zaXplOjExcHg7Y29sb3I6dmFyKC0tdDMpIj5MaW5rIGRpcmV0dG88L2Rpdj4nKQogICAgKyhkLmNvZGU/JzxkaXYgY2xhc3M9InBjb2RlIj4nK2QuY29kZSsnPC9kaXY+JzonJykKICAgICt0aW1lcihkLmV4cERheXMsZC5pZCkrJzwvZGl2PicKICAgIC8vIDkgQWN0aW9uCiAgICArJzxkaXYgY2xhc3M9ImNvbCI+JwogICAgKyc8YnV0dG9uIGNsYXNzPSJidG4tZ28iIG9uY2xpY2s9ImV2ZW50LnN0b3BQcm9wYWdhdGlvbigpO2dvVXJsKFwnJytkLnVybCsnXCcsXCcnK2QuY29kZSsnXCcpIj5WYWkgYWwgc2l0bzwvYnV0dG9uPicKICAgICsnPC9kaXY+PC9kaXY+JzsKfQoKZnVuY3Rpb24gX3NlY0hkcihsYWJlbCl7CiAgcmV0dXJuICc8ZGl2IHN0eWxlPSJkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDoxMnB4O3BhZGRpbmc6MjBweCAwIDhweCI+JwogICAgKyc8ZGl2IHN0eWxlPSJoZWlnaHQ6MXB4O2ZsZXg6MTtiYWNrZ3JvdW5kOnJnYmEoOTksMTAyLDI0MSwwLjIpIj48L2Rpdj4nCiAgICArJzxzcGFuIHN0eWxlPSJmb250LXNpemU6MTFweDtmb250LXdlaWdodDo4MDA7bGV0dGVyLXNwYWNpbmc6LjEyZW07dGV4dC10cmFuc2Zvcm06dXBwZXJjYXNlOycKICAgICsnY29sb3I6cmdiYSg5OSwxMDIsMjQxLDAuNyk7d2hpdGUtc3BhY2U6bm93cmFwO3BhZGRpbmc6NHB4IDE0cHg7JwogICAgKydiYWNrZ3JvdW5kOnJnYmEoOTksMTAyLDI0MSwwLjA4KTtib3JkZXI6MXB4IHNvbGlkIHJnYmEoOTksMTAyLDI0MSwwLjE1KTtib3JkZXItcmFkaXVzOjIwcHgiPicrbGFiZWwrJzwvc3Bhbj4nCiAgICArJzxkaXYgc3R5bGU9ImhlaWdodDoxcHg7ZmxleDoxO2JhY2tncm91bmQ6cmdiYSg5OSwxMDIsMjQxLDAuMikiPjwvZGl2PicKICAgICsnPC9kaXY+JzsKfQpmdW5jdGlvbiByZW5kZXJUYWJsZSgpewogIHZhciBhbGxJdGVtcz1EQVRBLmZpbHRlcihmdW5jdGlvbihkKXsKICAgIGlmKF9jYXQhPT0nYWxsJyYmZC5jYXQhPT1fY2F0KXJldHVybiBmYWxzZTsKICAgIGlmKF90eXBlIT09J2FsbCcmJighZC50eXBlc3x8ZC50eXBlcy5pbmRleE9mKF90eXBlKTwwKSlyZXR1cm4gZmFsc2U7CiAgICBpZihfc2VhcmNoJiZkLm5hbWUudG9Mb3dlckNhc2UoKS5pbmRleE9mKF9zZWFyY2gpPDApcmV0dXJuIGZhbHNlOwogICAgcmV0dXJuIHRydWU7CiAgfSk7CiAgaWYoIWFsbEl0ZW1zLmxlbmd0aCl7CiAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgndGFibGVCb2R5JykuaW5uZXJIVE1MPSc8ZGl2IHN0eWxlPSJwYWRkaW5nOjUwcHg7dGV4dC1hbGlnbjpjZW50ZXI7Y29sb3I6dmFyKC0tdDMpIj5OZXNzdW4gcmlzdWx0YXRvPC9kaXY+JzsKICAgIHJldHVybjsKICB9CiAgdmFyIHByb3BzICAgPSBhbGxJdGVtcy5maWx0ZXIoZnVuY3Rpb24oZCl7cmV0dXJuIGQuY2F0PT09J3Byb3AnO30pOwogIHZhciBicm9rZXJzID0gYWxsSXRlbXMuZmlsdGVyKGZ1bmN0aW9uKGQpe3JldHVybiBkLmNhdD09PSdicm9rZXInO30pOwogIHZhciBjYXNpbm9zID0gYWxsSXRlbXMuZmlsdGVyKGZ1bmN0aW9uKGQpe3JldHVybiBkLmNhdD09PSdjYXNpbm8nO30pOwogIHZhciBvdXQ9Jyc7CiAgaWYocHJvcHMubGVuZ3RoKXsKICAgIGlmKF9jYXQ9PT0nYWxsJykgb3V0Kz1fc2VjSGRyKCfwn4+GICBQcm9wIEZpcm0nKTsKICAgIG91dCs9cHJvcHMubWFwKGJ1aWxkUm93KS5qb2luKCcnKTsKICB9CiAgaWYoYnJva2Vycy5sZW5ndGgpewogICAgaWYoX2NhdD09PSdhbGwnKSBvdXQrPV9zZWNIZHIoJ/CfkrwgIEJyb2tlcicpOwogICAgb3V0Kz1icm9rZXJzLm1hcChidWlsZFJvdykuam9pbignJyk7CiAgfQogIGlmKGNhc2lub3MubGVuZ3RoKXsKICAgIGlmKF9jYXQ9PT0nYWxsJykgb3V0Kz1fc2VjSGRyKCfwn46wICBDYXNpbm8nKTsKICAgIG91dCs9Y2FzaW5vcy5tYXAoYnVpbGRSb3cpLmpvaW4oJycpOwogIH0KICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgndGFibGVCb2R5JykuaW5uZXJIVE1MPW91dDsKfQoKZnVuY3Rpb24gZG9TZWFyY2gocSl7IF9zZWFyY2g9cS50b0xvd2VyQ2FzZSgpOyByZW5kZXJUYWJsZSgpOyB9CmZ1bmN0aW9uIHNldENhdChidG4sY2F0KXsKICBfY2F0PWNhdDsgX3R5cGU9J2FsbCc7CiAgZG9jdW1lbnQucXVlcnlTZWxlY3RvckFsbCgnLmZwaWxsJykuZm9yRWFjaChmdW5jdGlvbihwKXtwLmNsYXNzTGlzdC5yZW1vdmUoJ2FjdGl2ZScpO30pOwogIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJy5odGFiJykuZm9yRWFjaChmdW5jdGlvbih0KXt0LmNsYXNzTGlzdC5yZW1vdmUoJ2FjdGl2ZScpO30pOwogIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJy5odGFiJykuY2xhc3NMaXN0LmFkZCgnYWN0aXZlJyk7CiAgYnRuLmNsYXNzTGlzdC5hZGQoJ2FjdGl2ZScpOyByZW5kZXJUYWJsZSgpOwp9CmZ1bmN0aW9uIHNldFR5cGUoYnRuLHR5cGUpewogIF90eXBlPXR5cGU7CiAgZG9jdW1lbnQucXVlcnlTZWxlY3RvckFsbCgnLmh0YWInKS5mb3JFYWNoKGZ1bmN0aW9uKHQpe3QuY2xhc3NMaXN0LnJlbW92ZSgnYWN0aXZlJyk7fSk7CiAgYnRuLmNsYXNzTGlzdC5hZGQoJ2FjdGl2ZScpOyByZW5kZXJUYWJsZSgpOwp9CmZ1bmN0aW9uIHRvZ2dsZUZhdihlLGlkKXsKICBlLnN0b3BQcm9wYWdhdGlvbigpOwogIHZhciBpPV9mYXZzLmluZGV4T2YoaWQpOwogIGlmKGk+PTApIF9mYXZzLnNwbGljZShpLDEpOyBlbHNlIF9mYXZzLnB1c2goaWQpOwogIHRyeXtsb2NhbFN0b3JhZ2Uuc2V0SXRlbSgncGhfZmF2czMnLEpTT04uc3RyaW5naWZ5KF9mYXZzKSk7fWNhdGNoKGV4KXt9CiAgcmVuZGVyVGFibGUoKTsKfQoKLyogUG9wdXAgbWluaSAqLwpmdW5jdGlvbiBjbG9zZVBvcCgpewogIHZhciBwPWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdtaW5pUG9wJyk7CiAgcC5jbGFzc0xpc3QucmVtb3ZlKCdzaG93Jyk7CiAgc2V0VGltZW91dChmdW5jdGlvbigpe3Auc3R5bGUuZGlzcGxheT0nbm9uZSc7fSwzNTApOwogIHRyeXtsb2NhbFN0b3JhZ2Uuc2V0SXRlbSgnX3BocDMnLFN0cmluZyhEYXRlLm5vdygpKSk7fWNhdGNoKGUpe30KfQpmdW5jdGlvbiBzaG93UG9wKCl7CiAgdmFyIHA9ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ21pbmlQb3AnKTsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnbXBMb2dvJykuc3JjPWxvZ28oX2Jlc3QuZG9tYWluKTsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnbXBOYW1lJykudGV4dENvbnRlbnQ9X2Jlc3QubmFtZTsKICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnbXBQY3QnKS50ZXh0Q29udGVudD0nLScrX2Jlc3QucGN0KyclJzsKICBwLnN0eWxlLmRpc3BsYXk9J2Jsb2NrJzsKICBzZXRUaW1lb3V0KGZ1bmN0aW9uKCl7cC5jbGFzc0xpc3QuYWRkKCdzaG93Jyk7fSw1MCk7Cn0KCi8qIExvZ28gdXRlbnRlICovCihmdW5jdGlvbigpewogIHRyeXsKICAgIHZhciBzYXZlZD1sb2NhbFN0b3JhZ2UuZ2V0SXRlbSgncGhfdXNlcl9sb2dvJyk7CiAgICBpZihzYXZlZCl7CiAgICAgIHZhciBpbWc9ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3VzZXJMb2dvSW1nJyk7CiAgICAgIGltZy5zcmM9c2F2ZWQ7IGltZy5zdHlsZS5kaXNwbGF5PSdibG9jayc7CiAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdsb2dvVGV4dCcpLnN0eWxlLmRpc3BsYXk9J25vbmUnOwogICAgfQogIH1jYXRjaChlKXt9Cn0pKCk7CgovKiBJbml0ICovCmJ1aWxkSGVyb0NhcmRzKCk7CmJ1aWxkSGVyb1NpZGUoKTsKcmVuZGVyVGFibGUoKTsKCi8qIFBvcHVwIGRvcG8gcHJpbWEgaW50ZXJhemlvbmUgKi8KdmFyIF9zaG93bj1mYWxzZTsKZnVuY3Rpb24gX29uSSgpewogIGlmKF9zaG93bikgcmV0dXJuOwogIGRvY3VtZW50LnJlbW92ZUV2ZW50TGlzdGVuZXIoJ2NsaWNrJyxfb25JLHRydWUpOwogIGRvY3VtZW50LnJlbW92ZUV2ZW50TGlzdGVuZXIoJ3Njcm9sbCcsX29uSSx0cnVlKTsKICB0cnl7CiAgICB2YXIgdD1wYXJzZUludChsb2NhbFN0b3JhZ2UuZ2V0SXRlbSgnX3BocDMnKXx8JzAnKTsKICAgIGlmKERhdGUubm93KCktdD4zMCo2MCoxMDAwKXsgX3Nob3duPXRydWU7IHNldFRpbWVvdXQoc2hvd1BvcCwzMDAwKTsgfQogIH1jYXRjaChlKXt9Cn0KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignY2xpY2snLF9vbkksdHJ1ZSk7CmRvY3VtZW50LmFkZEV2ZW50TGlzdGVuZXIoJ3Njcm9sbCcsX29uSSx0cnVlKTsKCi8qIOKUgOKUgCBOQVYgRlVOWklPTkFOVEUg4pSA4pSAICovCnZhciBfY3VycmVudE5hdj0naG9tZSc7CmZ1bmN0aW9uIF9oaShlbCl7ZWwuc3R5bGUuZGlzcGxheT0ibm9uZSI7fQpmdW5jdGlvbiBfbmF2R28oZWwpewogIHZhciB1cmw9ZWwuZ2V0QXR0cmlidXRlKCdkYXRhLXVybCcpOwogIHZhciBjb2RlPWVsLmdldEF0dHJpYnV0ZSgnZGF0YS1jb2RlJyk7CiAgZ29VcmwodXJsLGNvZGV8fCcnKTsKfQpmdW5jdGlvbiBzZXROYXYoZWwsIHBhZ2UpewogIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJy5uaScpLmZvckVhY2goZnVuY3Rpb24obil7bi5jbGFzc0xpc3QucmVtb3ZlKCdhY3RpdmUnKTt9KTsKICBlbC5jbGFzc0xpc3QuYWRkKCdhY3RpdmUnKTsKICBfY3VycmVudE5hdj1wYWdlOwogIHJlbmRlck5hdigpOwp9CmZ1bmN0aW9uIG1rQ2FyZChkKXsKICByZXR1cm4gJzxkaXYgc3R5bGU9ImJhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjMGQxZjRhLCMxYTEwNDApO2JvcmRlcjoxcHggc29saWQgcmdiYSg5OSwxMDIsMjQxLDAuMjIpO2JvcmRlci1yYWRpdXM6MTZweDtwYWRkaW5nOjE4cHg7Y3Vyc29yOnBvaW50ZXIiIGRhdGEtdXJsPSInK2QudXJsKyciIGRhdGEtY29kZT0iJysoZC5jb2RlfHwnJykrJyIgb25jbGljaz0iX25hdkdvKHRoaXMpIj4nCiAgICArJzxkaXYgc3R5bGU9ImRpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjEycHg7bWFyZ2luLWJvdHRvbToxMnB4Ij4nCiAgICArJzxpbWcgc3JjPSInK2xvZ28oZC5kb21haW4pKyciIHN0eWxlPSJ3aWR0aDo0MHB4O2hlaWdodDo0MHB4O2JvcmRlci1yYWRpdXM6MTBweCIgb25lcnJvcj0iX2hpKHRoaXMpIj4nCiAgICArJzxkaXY+PGRpdiBzdHlsZT0iZm9udC1zaXplOjE1cHg7Zm9udC13ZWlnaHQ6ODAwIj4nK2QubmFtZSsnPC9kaXY+JwogICAgKyc8ZGl2IHN0eWxlPSJmb250LXNpemU6MTBweDtjb2xvcjp2YXIoLS10MykiPicrZC5jYXQudG9VcHBlckNhc2UoKSsnPC9kaXY+PC9kaXY+JwogICAgKyhkLnBjdD4wPyc8ZGl2IHN0eWxlPSJtYXJnaW4tbGVmdDphdXRvO2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjMGQ5MjY4LCMwNjVmNDYpO2NvbG9yOiNmZmY7Zm9udC1zaXplOjE4cHg7Zm9udC13ZWlnaHQ6OTAwO3BhZGRpbmc6NXB4IDEzcHg7Ym9yZGVyLXJhZGl1czo5cHgiPicrZC5wY3QrJyU8L2Rpdj4nOicnKQogICAgKyc8L2Rpdj4nCiAgICArKGQuY29kZT8nPGRpdiBzdHlsZT0iYmFja2dyb3VuZDpyZ2JhKDAsMjEwLDI1NSwwLjA3KTtib3JkZXI6MXB4IGRhc2hlZCByZ2JhKDAsMjEwLDI1NSwwLjI1KTtib3JkZXItcmFkaXVzOjhweDtwYWRkaW5nOjdweDtmb250LWZhbWlseTptb25vc3BhY2U7Zm9udC1zaXplOjEycHg7Y29sb3I6dmFyKC0tY3lhbik7dGV4dC1hbGlnbjpjZW50ZXI7bWFyZ2luLWJvdHRvbTo4cHgiPicrZC5jb2RlKyc8L2Rpdj4nOicnKQogICAgKyc8ZGl2IHN0eWxlPSJmb250LXNpemU6MTFweDtjb2xvcjp2YXIoLS10MykiPuKPsSBTY2FkZSB0cmEgJytkLmV4cERheXMrJ2c8L2Rpdj4nCiAgICArJzwvZGl2Pic7Cn0KZnVuY3Rpb24gcmVuZGVyTmF2KCl7CiAgdmFyIHdyYXA9ZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ25hdkNvbnRlbnQnKTsKICBpZighd3JhcClyZXR1cm47CiAgdmFyIGhzPWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdoZXJvU2VjdGlvbicpOwogIHZhciBmYj1kb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZmlsdGVyQmFyJyk7CiAgdmFyIHRzPWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCd0YWJsZVNlY3Rpb24nKTsKICBpZihfY3VycmVudE5hdj09PSdob21lJyl7CiAgICB3cmFwLnN0eWxlLmRpc3BsYXk9J25vbmUnOwogICAgaWYoaHMpaHMuc3R5bGUuZGlzcGxheT0nJztpZihmYilmYi5zdHlsZS5kaXNwbGF5PScnO2lmKHRzKXRzLnN0eWxlLmRpc3BsYXk9Jyc7CiAgICByZXR1cm47CiAgfQogIGlmKGhzKWhzLnN0eWxlLmRpc3BsYXk9J25vbmUnO2lmKGZiKWZiLnN0eWxlLmRpc3BsYXk9J25vbmUnO2lmKHRzKXRzLnN0eWxlLmRpc3BsYXk9J25vbmUnOwogIHdyYXAuc3R5bGUuZGlzcGxheT0nYmxvY2snOwogIHZhciBoPScnOwogIGlmKF9jdXJyZW50TmF2PT09J29mZmVydGUnKXsKICAgIGg9JzxkaXYgc3R5bGU9InBhZGRpbmc6MjBweCI+JwogICAgICsnPGgyIHN0eWxlPSJmb250LXNpemU6MTdweDtmb250LXdlaWdodDo4MDA7bWFyZ2luLWJvdHRvbToxNHB4O2NvbG9yOnZhcigtLWN5YW4pIj7wn5SlIFR1dHRlIGxlIE9mZmVydGUgQXR0aXZlPC9oMj4nCiAgICAgKyc8ZGl2IHN0eWxlPSJkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOnJlcGVhdChhdXRvLWZpbGwsbWlubWF4KDI2MHB4LDFmcikpO2dhcDoxMnB4Ij4nCiAgICAgK0RBVEEuZmlsdGVyKGZ1bmN0aW9uKGQpe3JldHVybiBkLnBjdD4wO30pLnNvcnQoZnVuY3Rpb24oYSxiKXtyZXR1cm4gYi5wY3QtYS5wY3Q7fSkubWFwKG1rQ2FyZCkuam9pbignJykKICAgICArJzwvZGl2PjwvZGl2Pic7CiAgfSBlbHNlIGlmKF9jdXJyZW50TmF2PT09J2NoYWxsZW5nZXMnKXsKICAgIGg9JzxkaXYgc3R5bGU9InBhZGRpbmc6MjBweCI+JwogICAgICsnPGgyIHN0eWxlPSJmb250LXNpemU6MTdweDtmb250LXdlaWdodDo4MDA7bWFyZ2luLWJvdHRvbToxNHB4O2NvbG9yOnZhcigtLWN5YW4pIj7imqEgQ2hhbGxlbmdlcyBEaXNwb25pYmlsaTwvaDI+JwogICAgICsnPGRpdiBzdHlsZT0iZGlzcGxheTpncmlkO2dyaWQtdGVtcGxhdGUtY29sdW1uczpyZXBlYXQoYXV0by1maWxsLG1pbm1heCgyODBweCwxZnIpKTtnYXA6MTJweCI+JwogICAgICtEQVRBLmZpbHRlcihmdW5jdGlvbihkKXtyZXR1cm4gZC5jYXQ9PT0ncHJvcCc7fSkubWFwKGZ1bmN0aW9uKGQpewogICAgICAgcmV0dXJuICc8ZGl2IHN0eWxlPSJiYWNrZ3JvdW5kOmxpbmVhci1ncmFkaWVudCgxMzVkZWcsIzBkMWY0YSwjMWExMDQwKTtib3JkZXI6MXB4IHNvbGlkIHJnYmEoOTksMTAyLDI0MSwwLjIpO2JvcmRlci1yYWRpdXM6MTRweDtwYWRkaW5nOjE4cHg7Y3Vyc29yOnBvaW50ZXIiIGRhdGEtdXJsPSInK2QudXJsKyciIGRhdGEtY29kZT0iJysoZC5jb2RlfHwnJykrJyIgb25jbGljaz0iX25hdkdvKHRoaXMpIj4nCiAgICAgICAgICsnPGRpdiBzdHlsZT0iZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6MTBweDttYXJnaW4tYm90dG9tOjEycHgiPjxpbWcgc3JjPSInK2xvZ28oZC5kb21haW4pKyciIHN0eWxlPSJ3aWR0aDozNHB4O2hlaWdodDozNHB4O2JvcmRlci1yYWRpdXM6OHB4IiBvbmVycm9yPSJfaGkodGhpcykiPjxkaXYgc3R5bGU9ImZvbnQtc2l6ZToxNHB4O2ZvbnQtd2VpZ2h0OjgwMCI+JytkLm5hbWUrJzwvZGl2PicKICAgICAgICAgKyhkLnBjdD4wPyc8ZGl2IHN0eWxlPSJtYXJnaW4tbGVmdDphdXRvO2JhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjMGQ5MjY4LCMwNjVmNDYpO2NvbG9yOiNmZmY7Zm9udC1zaXplOjEzcHg7Zm9udC13ZWlnaHQ6ODAwO3BhZGRpbmc6M3B4IDEwcHg7Ym9yZGVyLXJhZGl1czo3cHgiPi0nK2QucGN0KyclPC9kaXY+JzonJykKICAgICAgICAgKyc8L2Rpdj4nCiAgICAgICAgICsnPGRpdiBzdHlsZT0iZGlzcGxheTpncmlkO2dyaWQtdGVtcGxhdGUtY29sdW1uczoxZnIgMWZyO2dhcDo3cHg7Zm9udC1zaXplOjEycHgiPicKICAgICAgICAgKyc8ZGl2IHN0eWxlPSJiYWNrZ3JvdW5kOnJnYmEoMCwwLDAsMC4zKTtib3JkZXItcmFkaXVzOjdweDtwYWRkaW5nOjhweCI+PGRpdiBzdHlsZT0iY29sb3I6dmFyKC0tdDMpO2ZvbnQtc2l6ZToxMHB4O21hcmdpbi1ib3R0b206MnB4Ij5NQVggQUxMT0M8L2Rpdj48ZGl2IHN0eWxlPSJmb250LXdlaWdodDo3MDA7Y29sb3I6dmFyKC0tY3lhbikiPicrZC5tYXhBbGxvYysnPC9kaXY+PC9kaXY+JwogICAgICAgICArJzxkaXYgc3R5bGU9ImJhY2tncm91bmQ6cmdiYSgwLDAsMCwwLjMpO2JvcmRlci1yYWRpdXM6N3B4O3BhZGRpbmc6OHB4Ij48ZGl2IHN0eWxlPSJjb2xvcjp2YXIoLS10Myk7Zm9udC1zaXplOjEwcHg7bWFyZ2luLWJvdHRvbToycHgiPkFOTkk8L2Rpdj48ZGl2IHN0eWxlPSJmb250LXdlaWdodDo3MDAiPicrZC55ZWFycysnKzwvZGl2PjwvZGl2PicKICAgICAgICAgKyc8ZGl2IHN0eWxlPSJiYWNrZ3JvdW5kOnJnYmEoMCwwLDAsMC4zKTtib3JkZXItcmFkaXVzOjdweDtwYWRkaW5nOjhweDtncmlkLWNvbHVtbjoxLy0xIj48ZGl2IHN0eWxlPSJjb2xvcjp2YXIoLS10Myk7Zm9udC1zaXplOjEwcHg7bWFyZ2luLWJvdHRvbTo1cHgiPkFTU0VUPC9kaXY+PGRpdiBzdHlsZT0iZGlzcGxheTpmbGV4O2ZsZXgtd3JhcDp3cmFwO2dhcDo0cHgiPicKICAgICAgICAgK2QuYXNzZXRzLm1hcChmdW5jdGlvbihhKXtyZXR1cm4gJzxzcGFuIHN0eWxlPSJiYWNrZ3JvdW5kOnJnYmEoOTksMTAyLDI0MSwwLjE1KTtib3JkZXItcmFkaXVzOjVweDtwYWRkaW5nOjJweCA3cHg7Zm9udC1zaXplOjEwcHgiPicrYSsnPC9zcGFuPic7fSkuam9pbignJykKICAgICAgICAgKyc8L2Rpdj48L2Rpdj48L2Rpdj48L2Rpdj4nOwogICAgIH0pLmpvaW4oJycpKyc8L2Rpdj48L2Rpdj4nOwogIH0gZWxzZSBpZihfY3VycmVudE5hdj09PSdiZXN0c2VsbGVycycpewogICAgdmFyIHNydD1EQVRBLmZpbHRlcihmdW5jdGlvbihkKXtyZXR1cm4gZC5jYXQ9PT0ncHJvcCc7fSkuc2xpY2UoKS5zb3J0KGZ1bmN0aW9uKGEsYil7cmV0dXJuIGIucmFuay1hLnJhbms7fSk7CiAgICBoPSc8ZGl2IHN0eWxlPSJwYWRkaW5nOjIwcHgiPjxoMiBzdHlsZT0iZm9udC1zaXplOjE3cHg7Zm9udC13ZWlnaHQ6ODAwO21hcmdpbi1ib3R0b206MTRweDtjb2xvcjp2YXIoLS1hbWJlcikiPvCfj4YgQmVzdCBTZWxsZXJzPC9oMj4nOwogICAgc3J0LmZvckVhY2goZnVuY3Rpb24oZCxpKXsKICAgICAgaCs9JzxkaXYgc3R5bGU9ImJhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjMGQxZjRhLCMxYTEwNDApO2JvcmRlcjoxcHggc29saWQgcmdiYSg5OSwxMDIsMjQxLDAuMik7Ym9yZGVyLXJhZGl1czoxM3B4O3BhZGRpbmc6MTVweDttYXJnaW4tYm90dG9tOjlweDtkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2dhcDoxNHB4O2N1cnNvcjpwb2ludGVyIiBkYXRhLXVybD0iJytkLnVybCsnIiBkYXRhLWNvZGU9IicrKGQuY29kZXx8JycpKyciIG9uY2xpY2s9Il9uYXZHbyh0aGlzKSI+JwogICAgICAgICsnPGRpdiBzdHlsZT0iZm9udC1zaXplOjI2cHg7Zm9udC13ZWlnaHQ6OTAwO2NvbG9yOnZhcigtLWFtYmVyKTttaW4td2lkdGg6MzZweDt0ZXh0LWFsaWduOmNlbnRlciI+IycrKGkrMSkrJzwvZGl2PicKICAgICAgICArJzxpbWcgc3JjPSInK2xvZ28oZC5kb21haW4pKyciIHN0eWxlPSJ3aWR0aDo0MHB4O2hlaWdodDo0MHB4O2JvcmRlci1yYWRpdXM6MTBweCIgb25lcnJvcj0iX2hpKHRoaXMpIj4nCiAgICAgICAgKyc8ZGl2IHN0eWxlPSJmbGV4OjEiPjxkaXYgc3R5bGU9ImZvbnQtc2l6ZToxNXB4O2ZvbnQtd2VpZ2h0OjgwMCI+JytkLm5hbWUrJzwvZGl2PicKICAgICAgICArJzxkaXYgc3R5bGU9ImZvbnQtc2l6ZToxMXB4O2NvbG9yOnZhcigtLWFtYmVyKSI+JytzdGFycyhkLnJhbmspKycgJytkLnJhbmsrJyAoJytkLnJldmlld3MudG9Mb2NhbGVTdHJpbmcoKSsnKTwvZGl2PjwvZGl2PicKICAgICAgICArKGQucGN0PjA/JzxkaXYgc3R5bGU9ImJhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjMGQ5MjY4LCMwNjVmNDYpO2NvbG9yOiNmZmY7Zm9udC1zaXplOjE1cHg7Zm9udC13ZWlnaHQ6OTAwO3BhZGRpbmc6NXB4IDEycHg7Ym9yZGVyLXJhZGl1czo4cHgiPicrZC5wY3QrJyU8L2Rpdj4nOicnKQogICAgICAgICsnPC9kaXY+JzsKICAgIH0pOwogICAgaCs9JzwvZGl2Pic7CiAgfSBlbHNlIGlmKF9jdXJyZW50TmF2PT09J3JlY2Vuc2lvbmknKXsKICAgIGg9JzxkaXYgc3R5bGU9InBhZGRpbmc6MjBweCI+PGgyIHN0eWxlPSJmb250LXNpemU6MTdweDtmb250LXdlaWdodDo4MDA7bWFyZ2luLWJvdHRvbTo2cHg7Y29sb3I6dmFyKC0tY3lhbikiPuKtkCBSZWNlbnNpb25pIFZlcmlmaWNhdGU8L2gyPicKICAgICArJzxwIHN0eWxlPSJmb250LXNpemU6MTJweDtjb2xvcjp2YXIoLS10Myk7bWFyZ2luLWJvdHRvbToxNnB4Ij5Gb250ZTogVHJ1c3RwaWxvdCDCtyByZWNlbnNpb25pIHJlYWxpPC9wPicKICAgICArJzxkaXYgc3R5bGU9ImRpc3BsYXk6Z3JpZDtncmlkLXRlbXBsYXRlLWNvbHVtbnM6cmVwZWF0KGF1dG8tZmlsbCxtaW5tYXgoMjUwcHgsMWZyKSk7Z2FwOjEycHgiPicKICAgICArREFUQS5tYXAoZnVuY3Rpb24oZCl7CiAgICAgICB2YXIgdHA9e0Z1bmRlZEVsaXRlOidodHRwczovL3d3dy50cnVzdHBpbG90LmNvbS9yZXZpZXcvZnVuZGVkZWxpdGUuY29tJyxGVE1POidodHRwczovL3d3dy50cnVzdHBpbG90LmNvbS9yZXZpZXcvZnRtby5jb20nLEZUVUs6J2h0dHBzOi8vd3d3LnRydXN0cGlsb3QuY29tL3Jldmlldy9mdHVrLmNvbScsVGhlNWVyczonaHR0cHM6Ly93d3cudHJ1c3RwaWxvdC5jb20vcmV2aWV3L3RoZTVlcnMuY29tJyxGdW5kaW5nUGlwczonaHR0cHM6Ly93d3cudHJ1c3RwaWxvdC5jb20vcmV2aWV3L2Z1bmRpbmdwaXBzLmNvbScsQXhpOidodHRwczovL3d3dy50cnVzdHBpbG90LmNvbS9yZXZpZXcvYXhpLmNvbSd9W2QubmFtZV18fCdodHRwczovL3d3dy50cnVzdHBpbG90LmNvbS9zZWFyY2g/cXVlcnk9JytlbmNvZGVVUklDb21wb25lbnQoZC5uYW1lKTsKICAgICAgIHJldHVybiAnPGRpdiBzdHlsZT0iYmFja2dyb3VuZDpsaW5lYXItZ3JhZGllbnQoMTM1ZGVnLCMwZDFmNGEsIzFhMTA0MCk7Ym9yZGVyOjFweCBzb2xpZCByZ2JhKDk5LDEwMiwyNDEsMC4yKTtib3JkZXItcmFkaXVzOjE0cHg7cGFkZGluZzoxNnB4Ij4nCiAgICAgICAgICsnPGRpdiBzdHlsZT0iZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6MTBweDttYXJnaW4tYm90dG9tOjEwcHgiPjxpbWcgc3JjPSInK2xvZ28oZC5kb21haW4pKyciIHN0eWxlPSJ3aWR0aDozMnB4O2hlaWdodDozMnB4O2JvcmRlci1yYWRpdXM6OHB4IiBvbmVycm9yPSJfaGkodGhpcykiPjxkaXY+PGRpdiBzdHlsZT0iZm9udC1zaXplOjEzcHg7Zm9udC13ZWlnaHQ6ODAwIj4nK2QubmFtZSsnPC9kaXY+PGRpdiBzdHlsZT0iZm9udC1zaXplOjExcHg7Y29sb3I6dmFyKC0tYW1iZXIpIj4nK3N0YXJzKGQucmFuaykrJyAnK2QucmFuaysnPC9kaXY+PC9kaXY+PC9kaXY+JwogICAgICAgICArJzxkaXYgc3R5bGU9ImZvbnQtc2l6ZToxMXB4O2NvbG9yOnZhcigtLXQzKTttYXJnaW4tYm90dG9tOjExcHgiPicrZC5yZXZpZXdzLnRvTG9jYWxlU3RyaW5nKCkrJyByZWNlbnNpb25pIHZlcmlmaWNhdGU8L2Rpdj4nCiAgICAgICAgICsnPGEgaHJlZj0iJyt0cCsnIiB0YXJnZXQ9Il9ibGFuayIgc3R5bGU9ImRpc3BsYXk6YmxvY2s7dGV4dC1hbGlnbjpjZW50ZXI7YmFja2dyb3VuZDpyZ2JhKDAsMjEwLDI1NSwwLjA4KTtib3JkZXI6MXB4IHNvbGlkIHJnYmEoMCwyMTAsMjU1LDAuMik7Ym9yZGVyLXJhZGl1czo4cHg7cGFkZGluZzo4cHg7Y29sb3I6dmFyKC0tY3lhbik7Zm9udC1zaXplOjExcHg7Zm9udC13ZWlnaHQ6NzAwO3RleHQtZGVjb3JhdGlvbjpub25lIj5MZWdnaSBzdSBUcnVzdHBpbG90IOKYhTwvYT4nCiAgICAgICAgICsnPC9kaXY+JzsKICAgICB9KS5qb2luKCcnKSsnPC9kaXY+PC9kaXY+JzsKICB9IGVsc2UgaWYoX2N1cnJlbnROYXY9PT0ncmVnb2xlJyl7CiAgICBoPSc8ZGl2IHN0eWxlPSJwYWRkaW5nOjIwcHgiPjxoMiBzdHlsZT0iZm9udC1zaXplOjE3cHg7Zm9udC13ZWlnaHQ6ODAwO21hcmdpbi1ib3R0b206MTRweDtjb2xvcjp2YXIoLS1jeWFuKSI+8J+TiyBSZWdvbGUgUHJvcCBGaXJtPC9oMj4nCiAgICAgKyc8ZGl2IHN0eWxlPSJkaXNwbGF5OmdyaWQ7Z3JpZC10ZW1wbGF0ZS1jb2x1bW5zOnJlcGVhdChhdXRvLWZpbGwsbWlubWF4KDI4MHB4LDFmcikpO2dhcDoxMnB4Ij4nCiAgICAgK0RBVEEuZmlsdGVyKGZ1bmN0aW9uKGQpe3JldHVybiBkLmNhdD09PSdwcm9wJzt9KS5tYXAoZnVuY3Rpb24oZCl7CiAgICAgICByZXR1cm4gJzxkaXYgc3R5bGU9ImJhY2tncm91bmQ6bGluZWFyLWdyYWRpZW50KDEzNWRlZywjMGQxZjRhLCMxYTEwNDApO2JvcmRlcjoxcHggc29saWQgcmdiYSg5OSwxMDIsMjQxLDAuMik7Ym9yZGVyLXJhZGl1czoxNHB4O3BhZGRpbmc6MThweCI+JwogICAgICAgICArJzxkaXYgc3R5bGU9ImRpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjEwcHg7bWFyZ2luLWJvdHRvbToxM3B4Ij48aW1nIHNyYz0iJytsb2dvKGQuZG9tYWluKSsnIiBzdHlsZT0id2lkdGg6MzJweDtoZWlnaHQ6MzJweDtib3JkZXItcmFkaXVzOjhweCIgb25lcnJvcj0iX2hpKHRoaXMpIj48ZGl2IHN0eWxlPSJmb250LXNpemU6MTRweDtmb250LXdlaWdodDo4MDAiPicrZC5uYW1lKyc8L2Rpdj48L2Rpdj4nCiAgICAgICAgICsnPGRpdiBzdHlsZT0iZGlzcGxheTpmbGV4O2ZsZXgtZGlyZWN0aW9uOmNvbHVtbjtnYXA6NnB4O2ZvbnQtc2l6ZToxMnB4O21hcmdpbi1ib3R0b206MTJweCI+JwogICAgICAgICArJzxkaXYgc3R5bGU9ImRpc3BsYXk6ZmxleDtqdXN0aWZ5LWNvbnRlbnQ6c3BhY2UtYmV0d2VlbjtwYWRkaW5nOjZweCAxMHB4O2JhY2tncm91bmQ6cmdiYSgwLDAsMCwwLjMpO2JvcmRlci1yYWRpdXM6N3B4Ij48c3BhbiBzdHlsZT0iY29sb3I6dmFyKC0tdDMpIj5Bc3NldDwvc3Bhbj48c3BhbiBzdHlsZT0iZm9udC13ZWlnaHQ6NjAwIj4nK2QuYXNzZXRzLnNsaWNlKDAsMikuam9pbignLCAnKSsnPC9zcGFuPjwvZGl2PicKICAgICAgICAgKyc8ZGl2IHN0eWxlPSJkaXNwbGF5OmZsZXg7anVzdGlmeS1jb250ZW50OnNwYWNlLWJldHdlZW47cGFkZGluZzo2cHggMTBweDtiYWNrZ3JvdW5kOnJnYmEoMCwwLDAsMC4zKTtib3JkZXItcmFkaXVzOjdweCI+PHNwYW4gc3R5bGU9ImNvbG9yOnZhcigtLXQzKSI+UGlhdHRhZm9ybWU8L3NwYW4+PHNwYW4gc3R5bGU9ImZvbnQtd2VpZ2h0OjYwMCI+JytkLnBsYXRzLmpvaW4oJywgJykrJzwvc3Bhbj48L2Rpdj4nCiAgICAgICAgICsnPGRpdiBzdHlsZT0iZGlzcGxheTpmbGV4O2p1c3RpZnktY29udGVudDpzcGFjZS1iZXR3ZWVuO3BhZGRpbmc6NnB4IDEwcHg7YmFja2dyb3VuZDpyZ2JhKDAsMCwwLDAuMyk7Ym9yZGVyLXJhZGl1czo3cHgiPjxzcGFuIHN0eWxlPSJjb2xvcjp2YXIoLS10MykiPk1heCBBbGxvYzwvc3Bhbj48c3BhbiBzdHlsZT0iZm9udC13ZWlnaHQ6NzAwO2NvbG9yOnZhcigtLWN5YW4pIj4nK2QubWF4QWxsb2MrJzwvc3Bhbj48L2Rpdj4nCiAgICAgICAgICsnPGRpdiBzdHlsZT0iZGlzcGxheTpmbGV4O2p1c3RpZnktY29udGVudDpzcGFjZS1iZXR3ZWVuO3BhZGRpbmc6NnB4IDEwcHg7YmFja2dyb3VuZDpyZ2JhKDAsMCwwLDAuMyk7Ym9yZGVyLXJhZGl1czo3cHgiPjxzcGFuIHN0eWxlPSJjb2xvcjp2YXIoLS10MykiPlBhZXNlPC9zcGFuPjxzcGFuIHN0eWxlPSJmb250LXdlaWdodDo2MDAiPicrZC5mbGFnKycgJytkLmNvdW50cnkrJzwvc3Bhbj48L2Rpdj4nCiAgICAgICAgICsnPC9kaXY+JwogICAgICAgICArJzxhIGhyZWY9IicrZC51cmwrJyIgdGFyZ2V0PSJfYmxhbmsiIHN0eWxlPSJkaXNwbGF5OmJsb2NrO3RleHQtYWxpZ246Y2VudGVyO2JhY2tncm91bmQ6cmdiYSgwLDIxMCwyNTUsMC4wNyk7Ym9yZGVyOjFweCBzb2xpZCByZ2JhKDAsMjEwLDI1NSwwLjE4KTtib3JkZXItcmFkaXVzOjhweDtwYWRkaW5nOjhweDtjb2xvcjp2YXIoLS1jeWFuKTtmb250LXNpemU6MTFweDtmb250LXdlaWdodDo3MDA7dGV4dC1kZWNvcmF0aW9uOm5vbmUiPlZpc2l0YSBzaXRvIHVmZmljaWFsZSDihpI8L2E+JwogICAgICAgICArJzwvZGl2Pic7CiAgICAgfSkuam9pbignJykrJzwvZGl2PjwvZGl2Pic7CiAgfSBlbHNlIGlmKF9jdXJyZW50TmF2PT09J2Jyb2tlcicpewogICAgaWYoaHMpaHMuc3R5bGUuZGlzcGxheT0nJztpZihmYilmYi5zdHlsZS5kaXNwbGF5PScnO2lmKHRzKXRzLnN0eWxlLmRpc3BsYXk9Jyc7CiAgICB3cmFwLnN0eWxlLmRpc3BsYXk9J25vbmUnOwogICAgX2NhdD0nYnJva2VyJztyZW5kZXJUYWJsZSgpO3JldHVybjsKICB9CiAgd3JhcC5pbm5lckhUTUw9aDsKfQoKPC9zY3JpcHQ+CjwvYm9keT4KPC9odG1sPgo=';
+  var src='data:text/html;base64,'+b64;
+  return '<iframe src="'+src+'" style="width:100%;min-width:100%;height:calc(100vh - 60px);border:none;display:block;margin:0;padding:0" allowtransparency="true"></iframe>';
 }
-
-function scSetFilter(f){
-  _scf=f;
-  document.querySelectorAll('.sc-pill').forEach(function(b){b.className='sc-pill sc-pill-off';});
-  var btns=document.querySelectorAll('.sc-filters .sc-pill');
-  var idx={all:0,prop:1,broker:2,casino:3}[f]||0;
-  if(btns[idx]){btns[idx].className='sc-pill sc-pill-all';}
-  scRenderList();
-}
-
-function scRenderList(){
-  var q=(_scs||'').toLowerCase().trim();
-  var items=SC.filter(function(s){
-    if(_scf!=='all'&&s.cat!==_scf)return false;
-    if(q&&s.n.toLowerCase().indexOf(q)<0&&s.code.toLowerCase().indexOf(q)<0&&s.desc.toLowerCase().indexOf(q)<0)return false;
-    return true;
-  });
-  var box=document.getElementById('scList');
-  if(!box)return;
-  if(!items.length){
-    box.innerHTML='<div style="padding:60px;text-align:center;color:#6b7280;font-family:Inter,sans-serif;font-size:14px">Nessuna offerta trovata per "'+q+'"</div>';
-    return;
-  }
-  var secs=[
-    {cat:'prop',  title:'Prop Firm',       icon:'🏆',rgb:'0,229,204',col:'#38BDF8'},
-    {cat:'broker',title:'Broker',          icon:'🏦',rgb:'99,102,241',col:'#6366f1'},
-    {cat:'casino',title:'Casino & Gaming', icon:'🎰',rgb:'239,68,68', col:'#ef4444'}
-  ];
-  var shown=_scf==='all'?['prop','broker','casino']:[_scf];
-  var html='';
-  secs.forEach(function(sec){
-    if(shown.indexOf(sec.cat)<0)return;
-    var list=items.filter(function(s){return s.cat===sec.cat;});
-    if(!list.length)return;
-    html+='<div class="sc-section-hdr" style="background:linear-gradient(90deg,rgba('+sec.rgb+',.1),rgba('+sec.rgb+',.02));border-left:3px solid rgba('+sec.rgb+',.9)">'
-      +'<span style="font-size:17px">'+sec.icon+'</span>'
-      +'<span style="font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba('+sec.rgb+',.95);font-family:Inter,sans-serif">'+sec.title+'</span>'
-      +'<span style="margin-left:auto;font-size:11px;color:#4b5563;font-family:Inter,sans-serif">'+list.length+' offerte</span></div>';
-    list.forEach(function(s){html+=scRow(s,sec.rgb,sec.col);});
-  });
-  box.innerHTML=html;
-  scInitTimers();
-}
-
-function scRow(s,rgb,col){
-  var diff=s.exp-Date.now();
-  var expired=diff<=0,urgent=diff>0&&diff<2*864e5;
-  var badge=expired
-    ?'<span class="sc-badge sc-badge-exp">Scaduto</span>'
-    :urgent
-      ?'<span class="sc-badge sc-badge-warn">🔥 Scade Presto</span>'
-      :'<span class="sc-badge sc-badge-ok">✓ Attivo</span>';
-
-  return '<div class="sc-row" style="border-left:4px solid rgba('+rgb+',.7)" '
-    +'onmouseover="this.style.borderColor=\'rgba('+rgb+',1)\';this.style.boxShadow=\'0 12px 36px rgba(0,0,0,.55),0 0 0 1px rgba('+rgb+',.3)\'" '
-    +'onmouseout="this.style.borderColor=\'#1c1f3a\';this.style.boxShadow=\'none\'" '
-    +'onclick="scGo(null,\''+s.id+'\',\''+s.code+'\',\''+s.url+'\')">'
-    // LEFT: pct + logo
-    +'<div class="sc-row-left" style="background:linear-gradient(135deg,rgba('+rgb+',.07),rgba('+rgb+',.02))">'
-    +(s.pct>0
-      ?'<div class="sc-row-pct" style="color:#00ff88;text-shadow:0 0 12px rgba(0,255,136,.5)">-'+s.pct+'%</div><div class="sc-row-off" style="color:rgba(0,255,136,.55)">OFF</div>'
-      :'<div style="font-size:13px;font-weight:700;color:rgba('+rgb+',1);font-family:Inter,sans-serif">OFFERTA</div>')
-    +'<img class="sc-row-logo" src="'+logoUrl(s.d)+'" '
-    +'onerror="logoErr(this,s.d,s.n[0])" '
-    +'alt="'+s.n+'">'
-    +'</div>'
-    // CENTER: info
-    +'<div class="sc-row-center">'
-    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">'
-    +'<div class="sc-row-name" style="font-size:18px;font-weight:900;letter-spacing:-.025em">'+s.n+'</div>'
-    + badge
-    +'</div>'
-    +'<div class="sc-row-stars">'+_stars(s.stars)+'<span style="font-size:11px;color:#4b5563;font-family:Inter,sans-serif;margin-left:4px">'+s.stars+' ('+s.rev.toLocaleString('it')+')</span></div>'
-    +'<div class="sc-row-desc">'+s.desc+'</div>'
-    +'<div class="sc-row-timer">'
-    +'<span style="font-size:11px">⏱</span>'
-    +'<span style="font-size:10px;color:#6b7280;font-family:Inter,sans-serif;text-transform:uppercase;letter-spacing:.07em">Scade tra:</span>'
-    +'<span id="sct-'+s.id+'" class="sct" data-e="'+s.exp+'" style="font-size:12px;margin-left:2px">…</span>'
-    +'</div></div>'
-    // RIGHT: code + CTA
-    +'<div class="sc-row-right">'
-    +'<div class="sc-code-box">'
-    +'<div class="sc-code-lbl">Codice sconto</div>'
-    +'<div class="sc-code-val">'+s.code+'</div>'
-    +'</div>'
-    +'<button class="sc-cta" onclick="event.stopPropagation();scGo(null,\''+s.id+'\',\''+s.code+'\',\''+s.url+'\')" '
-    +'style="background:linear-gradient(135deg,rgba('+rgb+',1),rgba('+rgb+',.75));color:#fff;box-shadow:0 4px 18px rgba('+rgb+',.35)">'
-    +'🟢 Copia Codice</button>'
-    +'</div></div>';
-}
+function scRenderList(){}
 
 function scGo(e,id,code,url){
   if(e)e.stopPropagation();
@@ -8706,32 +8563,6 @@ function bridgeUrl(side){ return 'http://127.0.0.1:' + _bridge[side].port; }
 var BRIDGE_URL = 'http://127.0.0.1:7777'; // compat
 
 function renderLive(){
-  /* Controlla versione bridge e mostra banner aggiornamento */
-  setTimeout(function(){
-    Promise.allSettled([
-      fetch('http://127.0.0.1:7777/ping',{cache:'no-store'}).then(r=>r.json()),
-      fetch('http://127.0.0.1:7778/ping',{cache:'no-store'}).then(r=>r.json())
-    ]).then(function(results){
-      var v7 = results[0].status==='fulfilled' ? (results[0].value.version||'0') : '0';
-      var v8 = results[1].status==='fulfilled' ? (results[1].value.version||'0') : '0';
-      var needUpdate = parseFloat(v7) < 8.0 || parseFloat(v8) < 8.0;
-      var oldBanner = document.getElementById('_bridgeUpdateBanner');
-      if(oldBanner) oldBanner.remove();
-      if(needUpdate){
-        var root = document.getElementById('liveRoot');
-        if(!root) return;
-        var banner = document.createElement('div');
-        banner.id = '_bridgeUpdateBanner';
-        banner.style.cssText = 'background:#dc2626;color:#fff;font-family:var(--fd);font-size:12px;font-weight:700;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;';
-        banner.innerHTML = '<span>⚠️ Stai usando bridge.py vecchio (v'+v7+'). Riscaricalo dal software. Serve la v6.0 per connettere entrambi i conti.</span>'
-          +'<div style="display:flex;gap:8px">'
-          +'<button onclick="liveDownloadGuide()" style="background:#fff;color:#dc2626;border:none;border-radius:6px;padding:6px 14px;font-weight:800;font-size:11px;cursor:pointer">⬇ Scarica bridge.py v6.0</button>'
-          +'<span style="font-size:10px;opacity:.8">Poi: chiudi il vecchio bridge → lancia il nuovo → riconnetti</span>'
-          +'</div>';
-        root.insertBefore(banner, root.firstChild);
-      }
-    }).catch(function(){});
-  }, 500);
   /* Carica credenziali salvate */
   function loadCreds(propId){
     try{ var s=localStorage.getItem('ph_live_creds_'+propId); return s?JSON.parse(s):null; }catch(e){return null;}
@@ -8873,7 +8704,7 @@ function renderLive(){
     /* AVVISO: solo una volta */
     +'<div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:10px;padding:12px 16px;margin-bottom:16px">'
     +'<div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:4px">✅ Il Bridge si configura UNA VOLTA SOLA — poi funziona per tutte le sfide</div>'
-    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8">Hai <b>1 solo file</b>: questo software. Il bridge si scarica qui sotto con 1 clic.<br>👉 <b>Passo 1:</b> installa Python (1 volta sola) <b>Passo 2:</b> clicca Scarica Bridge <b>Passo 3:</b> lancia bridge.py</div>'
+    +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);line-height:1.8">Non serve reinstallarlo mai. Ogni giorno basta solo aprire il cmd e scrivere <b>py bridge.py</b>.</div>'
     +'</div>'
     +'<div style="font-size:13px;font-weight:700;color:var(--t);margin-bottom:14px">⚙️ Configurazione iniziale (una sola volta)</div>'
 
@@ -8895,9 +8726,7 @@ function renderLive(){
     +'<div style="flex:1">'
     +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Scarica il Bridge</div>'
     +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:8px">Il file che collega PropHedge ai tuoi conti MetaTrader.</div>'
-    +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);margin-bottom:8px">📦 Il bridge è <b>già dentro questo software</b> — clicca per scaricarlo:</div>'
-    +'<button onclick="liveDownloadGuide()" style="width:100%;background:linear-gradient(135deg,#059669,#34D399);border:none;border-radius:10px;color:#fff;padding:14px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:6px;letter-spacing:.3px">⬇ Scarica Launcher — doppio clic e parte</button>'
-    +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);text-align:center">Doppio clic su bridge.py → oppure apri cmd nella sua cartella e scrivi: py bridge.py</div>'
+    +'<button onclick="liveDownloadGuide()" style="background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:8px;color:#fff;padding:8px 18px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica bridge.py</button>'
     +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:5px">Salvalo sul Desktop</div>'
     +'</div></div>'
 
@@ -8925,7 +8754,7 @@ function renderLive(){
     +'<button onclick="navigator.clipboard.writeText(\'py bridge.py\');this.textContent=\'✓\';setTimeout(()=>this.textContent=\'📋\',2000)" style="background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:5px;color:#34D399;padding:5px 10px;font-size:10px;cursor:pointer;flex-shrink:0">📋 Copia</button>'
     +'</div>'
     +'<div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:7px;padding:8px 12px;margin-top:8px;font-size:11px;color:var(--green);font-family:var(--fd);line-height:1.8">'
-    +'✅ Il bridge si avvia — gestisce automaticamente PROP (7777) e PERSONALE (7778).<br>✅ Per MT4: installa anche l\'EA PropHedge (1 clic dal software).<br>⚠️ Lascia bridge.py aperto durante il trading.'
+    +'✅ Si apre una finestra nera — è normale, lasciala aperta.<br>✅ Gestisce PROP (7777) + PERSONALE (7778) in automatico.<br>⚠️ <b>Non chiudere</b> quella finestra mentre usi il software.'
     +'</div></div></div>'
 
     /* STEP 5: AutoTrading */
@@ -9042,9 +8871,9 @@ async function liveBridgeTest(){
   var p7777 = results[0].status==='fulfilled' && results[0].value==='ok';
   var p7778 = results[1].status==='fulfilled' && results[1].value==='ok';
 
-  var html = '<div style="font-size:11px;font-family:var(--fd);padding:10px 14px;border-radius:8px;border:1px solid '+(p7777?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)')+';background:'+(p7777&&p7778?'rgba(52,211,153,.08)':'rgba(248,113,113,.06)')+'">';
+  var html = '<div style="font-size:11px;font-family:var(--fd);padding:10px 14px;border-radius:8px;border:1px solid '+(p7777&&p7778?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)')+';background:'+(p7777&&p7778?'rgba(52,211,153,.08)':'rgba(248,113,113,.06)')+'">';
 
-  html += '<div style="font-weight:700;margin-bottom:6px;color:'+(p7777?'var(--green)':'var(--red)')+'">'+(p7777?'✅ Bridge PROP attivo':'❌ Bridge PROP non risponde')+'</div>';
+  html += '<div style="font-weight:700;margin-bottom:6px;color:'+(p7777&&p7778?'var(--green)':'var(--red)')+'">'+(p7777&&p7778?'✅ Bridge attivo e funzionante':'❌ Problemi rilevati')+'</div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
   html += '<div style="padding:6px 10px;border-radius:6px;background:var(--bg3);color:'+(p7777?'var(--green)':'var(--red)');
   html += '">'+(p7777?'✅':'❌')+' Bridge PROP (7777)</div>';
@@ -9052,12 +8881,7 @@ async function liveBridgeTest(){
   html += '">'+(p7778?'✅':'❌')+' Bridge PERS (7778)</div>';
   html += '</div>';
 
-  if(p7778){
-    html += '<div style="padding:5px 10px;border-radius:6px;background:var(--bg3);color:var(--green);margin-top:4px">✅ Bridge PERSONALE (7778) attivo — MT5 personale connesso</div>';
-  } else {
-    html += '<div style="padding:5px 10px;border-radius:6px;background:var(--bg3);color:var(--t3);margin-top:4px">ℹ️ Bridge PERSONALE (7778): non attivo — normale se usi MT4 con EA</div>';
-  }
-  if(!p7777){
+  if(!p7777||!p7778){
     html += '<div style="margin-top:8px;color:var(--amber);font-size:10px">⚠️ Il bridge non risponde. Apri il Prompt dei comandi, vai sul Desktop (<code>cd Desktop</code>) e lancia: <b>py bridge.py</b></div>';
   }
   html += '</div>';
@@ -9079,50 +8903,24 @@ async function liveConnectSingle(propId, side){
     return;
   }
 
-  /* MT4 — usa /connect esattamente come MT5, il bridge gestisce EA internamente */
+  /* MT4 — connessione tramite EA WebRequest */  
   if(plat === "mt4"){
-    if(btn){btn.textContent="⏳ Connessione MT4...";btn.disabled=true;}
+    if(btn){btn.textContent="⏳ Verifica EA...";btn.disabled=true;}
     var port = isP ? 7777 : 7778;
-    /* Salva credenziali */
-    try{var sv=JSON.parse(localStorage.getItem("ph_live_creds_"+propId)||"{}");
-      if(isP){sv.propServer=srv;sv.propLogin=log;}else{sv.persServer=srv;sv.persLogin=log;}
-      localStorage.setItem("ph_live_creds_"+propId,JSON.stringify(sv));
-    }catch(e2){}
     try{
-      var r = await fetch("http://127.0.0.1:"+port+"/connect",{
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({login:log,password:pwd,server:srv,platform:"mt4"})
-      });
-      var d = await r.json();
-      if(d.ok){
-        var acc = d.account || {login:log,balance:0,equity:0,currency:'USD',server:srv};
-        _bridge[side].connected=true; _bridge[side].account=acc; _bridge[side].propId=propId;
-        if(_bridge.prop.connected&&_bridge.pers.connected){
-          try{localStorage.setItem('ph_bridge_conn','1');localStorage.setItem('ph_bridge_propId',String(propId));}catch(e){}
-        }
+      var r = await fetch("http://127.0.0.1:"+port+"/account",{cache:"no-store"});
+      var acc = await r.json();
+      if(acc && acc.login){
+        _bridge[side].connected=true; _bridge[side].account=acc;
         if(btn){btn.textContent=isP?"✅ PROP connessa":"✅ PERSONALE connesso";btn.style.background="linear-gradient(135deg,#059669,#34D399)";}
         liveRenderAccount(side, acc);
-        if(!_bridgePollTimer)_bridgePollTimer=setInterval(liveRefreshAll,3000);
-        setTimeout(function(){var el=document.getElementById("liveRoot");if(el)el.outerHTML=renderLive();if(typeof renderJournal==="function")renderJournal();},100);
+        if(!_bridgePollTimer){_bridgePollTimer=setInterval(liveRefreshAll,3000);_bridge[side].propId=propId;}
         return;
-      } else {
-        _bridge[side].connected=false;
-        if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
-        var eMsg = d.error || "Errore sconosciuto";
-        if(typeof eMsg === "object") eMsg = eMsg.msg || JSON.stringify(eMsg);
-        if(errEl){errEl.innerHTML='❌ '+eMsg+'<br>'
-          +'<span style="font-size:10px;line-height:1.8">'
-          +'<b>Per MT4:</b> assicurati che l\'EA PropHedge sia sul grafico MT4 e che il bridge.py sia avviato.<br>'
-          +'<b>Per evitare l\'EA:</b> cambia piattaforma a <b>MT5</b> se il tuo broker Axi supporta MT5.'
-          +'</span>';
-          errEl.style.display="block";}
-      }
+      } else { throw new Error("vuoto"); }
     }catch(e){
       _bridge[side].connected=false;
       if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
-      if(errEl){errEl.innerHTML='❌ Bridge non raggiungibile su porta '+port+'.<br>'
-        +'<span style="font-size:10px">Avvia bridge.py prima di connetterti.</span>';
-        errEl.style.display="block";}
+      if(errEl){errEl.innerHTML="❌ EA non risponde.<br><span style=\"font-size:9px\">Assicurati che bridge.py sia avviato e l'EA PropHedge sia attivo sul grafico MT4</span>";errEl.style.display="block";}
     }
     return;
   }
@@ -9168,19 +8966,7 @@ async function liveConnectSingle(propId, side){
   }catch(e){
     _bridge[side].connected=false;
     if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
-    if(errEl){
-      var errPort = isP ? 7777 : 7778;
-      var errCmd  = isP ? 'py bridge.py' : 'py bridge.py --port 7778';
-      errEl.innerHTML='❌ Bridge non risponde sulla porta '+errPort+'.<br>'
-        +'<span style="font-size:10px;line-height:1.8">'
-        +(isP
-          ?'Avvia il bridge: apri un cmd e scrivi <b>py bridge.py</b>'
-          :'Devi avviare un <b>secondo</b> bridge per il conto personale MT5:<br>'
-           +'Apri un <b>secondo cmd</b> e scrivi: <b>py bridge.py --port 7778</b><br>'
-           +'(Il primo bridge su 7777 gestisce il PROP, il secondo su 7778 il PERSONALE)'
-        )+'</span>';
-      errEl.style.display="block";
-    }
+    if(errEl){errEl.textContent="❌ Bridge non risponde. Avvia bridge.py prima.";errEl.style.display="block";}
   }
 }
 
@@ -9276,11 +9062,9 @@ function renderHedgePanel(calcLots){
     +'<div style="font-size:14px;font-weight:800;color:var(--t);margin-bottom:14px">⚡ APRI HEDGE</div>'
 
     /* Lotti calcolati */
-    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:12px">'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:12px">'
     +'<div><label style="font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Simbolo</label>'
     +'<input id="h_sym" value="'+sym+'" style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);border-radius:7px;color:var(--t);padding:8px 10px;font-size:12px;font-weight:700;margin-top:4px;outline:none"></div>'
-    +'<div><label style="font-size:9px;color:var(--amber);text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Prezzo entrata <span style="font-weight:400;color:var(--t3)">(opz.)</span></label>'
-    +'<input id="h_price" type="number" step="0.001" placeholder="vuoto=mercato" style="width:100%;box-sizing:border-box;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);border-radius:7px;color:var(--amber);padding:8px 10px;font-size:12px;margin-top:4px;outline:none"></div>'
     +'<div><label style="font-size:9px;color:#38BDF8;text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Lot PROP '+(loss70prop?'⚠️-50%':'')+'</label>'
     +'<input id="h_lotProp" type="number" value="'+lotProp+'" step="0.01" min="0.01" style="width:100%;box-sizing:border-box;background:rgba(56,189,248,.07);border:2px solid rgba(56,189,248,.3);border-radius:7px;color:#38BDF8;padding:8px 10px;font-size:13px;font-weight:800;margin-top:4px;outline:none"></div>'
     +'<div><label style="font-size:9px;color:#A78BFA;text-transform:uppercase;letter-spacing:.1em;font-family:var(--fd)">Lot PERS '+(s70&&s70._above70Active?'⚠️-50%':'')+'</label>'
@@ -9475,72 +9259,51 @@ function liveRenderAllPositions(positions){
 }
 
 async function liveOpenHedge(propDir){
-  var sym     = document.getElementById('h_sym')?.value || 'XAUUSD';
-  var lotProp = parseFloat(document.getElementById('h_lotProp')?.value) || 0.01;
-  var lotPers = parseFloat(document.getElementById('h_lotPers')?.value) || 0.01;
-  var slPips  = parseFloat(document.getElementById('h_sl')?.value)  || 0;
-  var tpPips  = parseFloat(document.getElementById('h_tp')?.value)  || 0;
-  var entryPx = parseFloat(document.getElementById('h_price')?.value) || 0;
-  var isLimit = entryPx > 0;
-  var persDir = propDir==='buy' ? 'sell' : 'buy';
-  var res     = document.getElementById('hedgeResult');
-  function setRes(bg,col,msg){ if(res){res.style.display='block';res.style.background=bg;res.style.color=col;res.innerHTML=msg;} }
+  var sym      = document.getElementById('h_sym')?.value || 'XAUUSD';
+  var lotProp  = parseFloat(document.getElementById('h_lotProp')?.value) || 0.01;
+  var lotPers  = parseFloat(document.getElementById('h_lotPers')?.value) || 0.01;
+  var slPips   = parseFloat(document.getElementById('h_sl')?.value) || 100;
+  var tpPips   = parseFloat(document.getElementById('h_tp')?.value) || 100;
+  var persDir  = propDir==='buy' ? 'sell' : 'buy';
+  var res      = document.getElementById('hedgeResult');
 
-  setRes('rgba(251,191,36,.08)','var(--amber)','⏳ Invio ordine PROP...');
-
-  /* Costruisce payload */
-  function payload(side, vol, cmt){
-    var p = {symbol:sym, volume:vol, side:side, sl_pips:slPips, tp_pips:tpPips, comment:cmt};
-    if(isLimit){ p.price = entryPx; p.order_type = (side==='buy')?'buylimit':'selllimit'; }
-    return p;
-  }
+  /* Calcola prezzi SL/TP in punti (approssimazione) */
+  var pipVal   = sym.includes('XAU')||sym.includes('GOLD') ? 0.1 : 0.0001;
 
   try{
-    /* Invia PROP */
-    var rP = await fetch('http://127.0.0.1:7777/order',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload(propDir, lotProp, 'PH_PROP'))
-    }).then(function(r){return r.json();}).catch(function(e){return {retcode:-1,comment:'Bridge PROP non raggiungibile: '+e.message};});
+    var [rProp, rPers] = await Promise.all([
+      fetch('http://127.0.0.1:7777/order',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({symbol:sym, volume:lotProp, side:propDir, sl:0, tp:0, comment:'PH_PROP'})
+      }).then(r=>r.json()),
+      fetch('http://127.0.0.1:7778/order',{
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({symbol:sym, volume:lotPers, side:persDir, sl:0, tp:0, comment:'PH_PERS'})
+      }).then(r=>r.json())
+    ]);
 
-    var okP = rP && (rP.retcode===10009||rP.retcode===10008||rP.retcode===0||rP.order>0);
+    var okProp = rProp&&(rProp.retcode===10009||rProp.retcode===10008||rProp.retcode===0||rProp.order>0);
+    var okPers = rPers&&(rPers.retcode===10009||rPers.retcode===10008||rPers.retcode===0||rPers.order>0);
 
-    if(!okP){
-      /* Mostra errore PROP — include messaggi tipo "mercato chiuso" */
-      var errMsg = rP.comment || (rP.error && rP.error.msg) || JSON.stringify(rP);
-      setRes('rgba(248,113,113,.1)','var(--red)',
-        '❌ PROP non inviata: <b>'+errMsg+'</b><br>'
-        +'<span style="font-size:10px;opacity:.8">retcode: '+(rP.retcode||'?')+'</span>');
-      return;
-    }
-
-    setRes('rgba(251,191,36,.08)','var(--amber)','⏳ PROP ✅ #'+rP.order+' — Invio PERSONALE...');
-
-    /* Invia PERS */
-    var rS = await fetch('http://127.0.0.1:7778/order',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(payload(persDir, lotPers, 'PH_PERS'))
-    }).then(function(r){return r.json();}).catch(function(e){return {retcode:-1,comment:'Bridge PERS non raggiungibile: '+e.message};});
-
-    var okS = rS && (rS.retcode===10009||rS.retcode===10008||rS.retcode===0||rS.order>0);
-
-    if(okP && okS){
-      setRes('rgba(52,211,153,.1)','var(--green)',
-        (isLimit?'📌 LIMITE':'✅ MERCATO')+' PROP '+propDir.toUpperCase()+' '+lotProp+'lot'
-        +(isLimit?' @'+entryPx:'')+(rP.order?' #'+rP.order:'')+' | SL '+slPips+'pip TP '+tpPips+'pip<br>'
-        +(isLimit?'📌 LIMITE':'✅ MERCATO')+' PERS '+persDir.toUpperCase()+' '+lotPers+'lot'
-        +(isLimit?' @'+entryPx:'')+(rS.order?' #'+rS.order:''));
-      _bridgeRegisterTrade(rP.order||0, rS.order||0, sym, propDir, lotProp, lotPers);
-    } else {
-      var errS = rS.comment || (rS.error && rS.error.msg) || JSON.stringify(rS);
-      setRes('rgba(248,113,113,.1)','var(--red)',
-        '✅ PROP #'+(rP.order||'?')+' aperta | ❌ PERS fallita: <b>'+errS+'</b>');
+    if(res){
+      res.style.display='block';
+      if(okProp && okPers){
+        res.style.background='rgba(52,211,153,.1)';res.style.color='var(--green)';
+        res.textContent='✅ Hedge aperto — PROP '+propDir.toUpperCase()+' '+lotProp+'lot #'+rProp.order+' · PERS '+persDir.toUpperCase()+' '+lotPers+'lot #'+rPers.order;
+        /* Registra nel simulatore come trade in corso */
+        _bridgeRegisterTrade(rProp.order, rPers.order, sym, propDir, lotProp, lotPers);
+      } else {
+        res.style.background='rgba(248,113,113,.1)';res.style.color='var(--red)';
+        res.textContent='❌ PROP: '+(okProp?'OK':'ERR '+rProp.comment)+' · PERS: '+(okPers?'OK':'ERR '+rPers.comment);
+      }
     }
     liveRefreshAll();
   } catch(e){
-    setRes('rgba(248,113,113,.1)','var(--red)','❌ Errore JS: '+e.message);
+    if(res){res.style.display='block';res.style.background='rgba(248,113,113,.1)';res.style.color='var(--red)';res.textContent='❌ Bridge non raggiungibile. Controlla che entrambe le istanze siano avviate.';}
   }
 }
 
+/* ── Registro trade aperti per matching con trade chiusi ── */
 var _openHedgeTrades = []; /* [{propTicket, persTicket, sym, dir, day} */
 
 function _bridgeRegisterTrade(propTicket, persTicket, sym, dir, lotProp, lotPers){
@@ -9636,7 +9399,7 @@ async function liveClosePos(side, ticket){
 function liveDownloadBat(){
   /* PowerShell script — non bloccato dalle zone sicurezza Internet come i .bat
      L'utente fa tasto destro → "Esegui con PowerShell" */
-  var code = '# PropHedge Bridge Launcher\r\n# Tasto destro su questo file → Esegui con PowerShell\r\n\r\nWrite-Host "=========================================="\r\nWrite-Host " PropHedge Bridge - Avvio automatico"\r\nWrite-Host "=========================================="\r\nWrite-Host ""\r\n\r\n$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path\r\n$bridge = Join-Path $scriptDir "bridge.py"\r\n\r\nif (-not (Test-Path $bridge)) {\r\n    Write-Host "ERRORE: bridge.py non trovato nella stessa cartella!" -ForegroundColor Red\r\n    Write-Host "Assicurati che bridge.py e questo file siano nella stessa cartella."\r\n    Read-Host "Premi Invio per uscire"\r\n    exit\r\n}\r\n\r\nWrite-Host "Avvio Bridge PROP (porta 7777)..." -ForegroundColor Cyan\r\nStart-Process powershell -ArgumentList "-NoExit", "-Command", "cd \'$scriptDir\'; py bridge.py --port 7777" -WindowStyle Normal\r\n\r\nStart-Sleep -Seconds 2Write-Host \"\\r\\n[OK] Bridge PROP (7777) avviato!\\r\\nPer PERSONALE MT4: installa EA PropHedge su MT4 (gestisce porta 7778 automaticamente).\" -ForegroundColor Green\\r\\nart-Sleep -Seconds 1\r\nWrite-Host ""\r\nWrite-Host "Entrambi i bridge sono avviati!" -ForegroundColor Green\r\nWrite-Host "Torna su PropHedge e connetti i conti."\r\nWrite-Host ""\r\nRead-Host "Premi Invio per chiudere questa finestra"\r\n';
+  var code = '# PropHedge Bridge Launcher\r\n# Tasto destro su questo file → Esegui con PowerShell\r\n\r\nWrite-Host "=========================================="\r\nWrite-Host " PropHedge Bridge - Avvio automatico"\r\nWrite-Host "=========================================="\r\nWrite-Host ""\r\n\r\n$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path\r\n$bridge = Join-Path $scriptDir "bridge.py"\r\n\r\nif (-not (Test-Path $bridge)) {\r\n    Write-Host "ERRORE: bridge.py non trovato nella stessa cartella!" -ForegroundColor Red\r\n    Write-Host "Assicurati che bridge.py e questo file siano nella stessa cartella."\r\n    Read-Host "Premi Invio per uscire"\r\n    exit\r\n}\r\n\r\nWrite-Host "Avvio Bridge PROP (porta 7777)..." -ForegroundColor Cyan\r\nStart-Process powershell -ArgumentList "-NoExit", "-Command", "cd \'$scriptDir\'; py bridge.py --port 7777" -WindowStyle Normal\r\n\r\nStart-Sleep -Seconds 2\r\n\r\nWrite-Host "Avvio Bridge PERSONALE (porta 7778)..." -ForegroundColor Magenta\r\nStart-Process powershell -ArgumentList "-NoExit", "-Command", "cd \'$scriptDir\'; py bridge.py --port 7778" -WindowStyle Normal\r\n\r\nStart-Sleep -Seconds 1\r\nWrite-Host ""\r\nWrite-Host "Entrambi i bridge sono avviati!" -ForegroundColor Green\r\nWrite-Host "Torna su PropHedge e connetti i conti."\r\nWrite-Host ""\r\nRead-Host "Premi Invio per chiudere questa finestra"\r\n';
 
   var blob = new Blob([code], {type:'text/plain'});
   var url  = URL.createObjectURL(blob);
@@ -9775,7 +9538,7 @@ var _tutSteps=[
     <b style="color:#A78BFA">Scarica bridge.py e salvalo sul Desktop</b><br>
     <span style="font-size:11px">Quando il browser chiede dove salvarlo, scegli <b>Desktop</b></span>
   </div>
-  <button onclick="liveDownloadGuide()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#A78BFA);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">⬇ Scarica bridge.py (PROP 7777)</button>
+  <button onclick="liveDownloadGuide()" style="width:100%;background:linear-gradient(135deg,#7c3aed,#A78BFA);border:none;border-radius:8px;color:#fff;padding:10px;font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">⬇ Scarica bridge.py</button>
   <div style="background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:8px;padding:8px;font-size:11px;color:var(--green)">
     ✅ Mettilo sul Desktop — è più facile trovarlo dopo!
   </div>
@@ -10073,163 +9836,393 @@ var _tutSteps=[
 
 ];
 
-function liveDownloadGuide(){
-  var code="# PropHedge Bridge v8.0 \u2014 Auto-installante\n# Avvio: python bridge.py   oppure   py bridge.py\n# Installa tutto da solo al primo avvio.\n\nimport sys, subprocess, os\n\n# \u2500\u2500 Auto-installa dipendenze \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ndef _install(pkg):\n    print(f\"  Installazione {pkg}...\")\n    subprocess.run([sys.executable, \"-m\", \"pip\", \"install\", pkg, \"-q\",\n                    \"--disable-pip-version-check\"], check=False)\n\nfor _pkg, _imp in [(\"flask\",\"flask\"), (\"flask-cors\",\"flask_cors\"), (\"MetaTrader5\",\"MetaTrader5\")]:\n    try: __import__(_imp)\n    except ImportError: _install(_pkg)\n\n# \u2500\u2500 Imports \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nimport time, threading, json as _json, argparse\nfrom flask import Flask, request, jsonify\nfrom flask_cors import CORS\ntry:\n    import MetaTrader5 as _mt5\nexcept ImportError:\n    _mt5 = None\n\n# \u2500\u2500 Stato globale per porta 7778 (EA MT4) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n_ea_last   = 0\n_ea_acc    = {}\n_ea_pos    = []\n_pending   = []\n_plock     = threading.Lock()\n\ndef _pip(sym):\n    s = sym.upper()\n    if any(x in s for x in [\"XAU\",\"GOLD\"]): return 0.1\n    if \"JPY\" in s: return 0.01\n    if any(x in s for x in [\"NAS\",\"US30\",\"US500\",\"GER\",\"DAX\",\"SPX\"]): return 1.0\n    return 0.0001\n\ndef _sltp(sym, side, price, sl_pips, tp_pips):\n    p = _pip(sym)\n    if side == \"buy\":\n        sl = round(price - sl_pips*p, 5) if sl_pips else 0.0\n        tp = round(price + tp_pips*p, 5) if tp_pips else 0.0\n    else:\n        sl = round(price + sl_pips*p, 5) if sl_pips else 0.0\n        tp = round(price - tp_pips*p, 5) if tp_pips else 0.0\n    return sl, tp\n\ndef _find(mt5, sym):\n    for s in [sym, sym+\".a\", sym+\".b\", sym+\"m\"]:\n        t = mt5.symbol_info_tick(s)\n        if t: mt5.symbol_select(s, True); return s, t\n    mt5.symbol_select(sym, True); time.sleep(0.3)\n    t = mt5.symbol_info_tick(sym)\n    return (sym, t) if t else (None, None)\n\ndef _body():\n    try:\n        d = request.get_json(force=True, silent=True)\n        if d: return d\n        raw = request.data.decode(\"utf-8\",\"ignore\").strip()\n        if raw: return _json.loads(raw)\n    except: pass\n    return {}\n\ndef make_app(port):\n    label = \"PROP\" if port == 7777 else \"PERS\"\n    _login = [0]\n    mt5 = _mt5\n\n    app = Flask(f\"ph_{port}\")\n    CORS(app, resources={r\"/*\": {\"origins\": \"*\"}})\n\n    @app.after_request\n    def _cors(r):\n        r.headers[\"Access-Control-Allow-Origin\"] = \"*\"\n        r.headers[\"Access-Control-Allow-Headers\"] = \"Content-Type\"\n        r.headers[\"Access-Control-Allow-Methods\"] = \"GET,POST,OPTIONS\"\n        return r\n\n    @app.route(\"/<path:p>\", methods=[\"OPTIONS\"])\n    def _opt(p): return \"\", 204\n\n    @app.route(\"/ping\")\n    def ping():\n        ea = port==7778 and (time.time()-_ea_last)<12\n        return jsonify({\"ok\":True,\"version\":\"8.0\",\"port\":port,\"label\":label,\n                        \"connected_login\":_login[0],\"ea_alive\":ea})\n\n    @app.route(\"/connect\", methods=[\"POST\"])\n    def connect():\n        global _ea_last, _ea_acc\n        d = _body()\n        if not d: return jsonify({\"ok\":False,\"error\":\"Dati mancanti\"})\n        login = int(d.get(\"login\",0))\n        plat  = d.get(\"platform\",\"mt5\").lower()\n        # MT4: connetti subito con le credenziali fornite\n        # L'EA manda il heartbeat in background \u2014 non blocchiamo la connessione\n        if plat == \"mt4\":\n            # Se l'EA ha gi\u00e0 mandato un heartbeat, usa quei dati\n            if _ea_acc.get(\"login\") and (time.time()-_ea_last)<30:\n                _login[0] = int(_ea_acc[\"login\"])\n                print(f\"[{label}:{port}] MT4 EA gia connessa login={_login[0]}\")\n                return jsonify({\"ok\":True,\"error\":None,\"account\":_ea_acc.copy()})\n            # Altrimenti: connetti con le credenziali fornite, l'EA arriva dopo\n            _login[0] = login\n            fake_acc = {\"login\":login,\"balance\":0,\"equity\":0,\n                        \"currency\":\"USD\",\"server\":d.get(\"server\",\"MT4\")}\n            print(f\"[{label}:{port}] MT4 connessione ottimistica login={login}\")\n            return jsonify({\"ok\":True,\"error\":None,\"account\":fake_acc})\n        # MT5: Python diretto\n        if not mt5: return jsonify({\"ok\":False,\"error\":\"MetaTrader5 non installato. Riavvia bridge.py.\"})\n        try:\n            mt5.initialize()\n            acc = mt5.account_info()\n            if acc and acc.login==login:\n                _login[0]=login; return jsonify({\"ok\":True,\"error\":None})\n            ok = mt5.login(login=login,password=d.get(\"password\",\"\"),server=d.get(\"server\",\"\"))\n            if ok: _login[0]=login; print(f\"[{label}:{port}] MT5 login={login}\"); return jsonify({\"ok\":True,\"error\":None})\n            err=mt5.last_error()\n            return jsonify({\"ok\":False,\"error\":{\"code\":err[0],\"msg\":err[1]}})\n        except Exception as e:\n            return jsonify({\"ok\":False,\"error\":str(e)})\n\n    @app.route(\"/account\")\n    def account():\n        global _ea_last, _ea_acc\n        if request.args.get(\"from_ea\")==\"1\":\n            b=_body()\n            if b and b.get(\"login\"): _ea_acc=b; _ea_last=time.time(); _login[0]=int(b[\"login\"])\n            return jsonify({\"ok\":True})\n        if port==7778 and (time.time()-_ea_last)<12 and _ea_acc.get(\"login\"):\n            return jsonify(_ea_acc)\n        if mt5:\n            try:\n                i=mt5.account_info()\n                if i: return jsonify({k:(float(v) if hasattr(v,\"real\") else v) for k,v in i._asdict().items()})\n            except: pass\n        return jsonify({})\n\n    @app.route(\"/positions\")\n    def positions():\n        global _ea_pos, _ea_last\n        if request.args.get(\"from_ea\")==\"1\":\n            b=_body()\n            if isinstance(b,list): _ea_pos=b\n            _ea_last=time.time()\n            return jsonify({\"ok\":True})\n        if port==7778 and (time.time()-_ea_last)<12: return jsonify(_ea_pos)\n        if mt5:\n            try:\n                pos=mt5.positions_get() or []\n                return jsonify([{k:(float(v) if hasattr(v,\"real\") else v) for k,v in p._asdict().items()} for p in pos])\n            except: pass\n        return jsonify([])\n\n    @app.route(\"/order\", methods=[\"POST\"])\n    def order():\n        d=_body()\n        if not d: return jsonify({\"retcode\":-1,\"comment\":\"Dati mancanti\"})\n        if not _login[0]: return jsonify({\"retcode\":-1,\"comment\":f\"{label} non connesso\"})\n        sym=d.get(\"symbol\",\"\"); side=d.get(\"side\",\"buy\").lower()\n        vol=round(float(d.get(\"volume\",0.01)),2)\n        sl_pips=float(d.get(\"sl_pips\",0)); tp_pips=float(d.get(\"tp_pips\",0))\n        cmt=d.get(\"comment\",\"PropHedge\")\n        # MT4 via EA\n        if port==7778 and (time.time()-_ea_last)<12:\n            oid=int(time.time()*1000)\n            with _plock: _pending.append({\"id\":oid,\"symbol\":sym,\"side\":side,\"volume\":vol,\n                                           \"sl_pips\":sl_pips,\"tp_pips\":tp_pips,\"comment\":cmt})\n            deadline=time.time()+10\n            while time.time()<deadline:\n                time.sleep(0.2)\n                with _plock:\n                    done=[o for o in _pending if o.get(\"id\")==oid and o.get(\"done\")]\n                if done: return jsonify(done[0].get(\"result\",{}))\n            return jsonify({\"retcode\":-1,\"comment\":\"EA timeout 10s\"})\n        # MT5\n        if not mt5: return jsonify({\"retcode\":-1,\"comment\":\"MT5 non disponibile\"})\n        try:\n            sym2,tick=_find(mt5,sym)\n            if not sym2: return jsonify({\"retcode\":-1,\"comment\":f\"Simbolo {sym} non trovato\"})\n            entry_price = float(d.get(\"price\", 0))\n            order_type  = d.get(\"order_type\", \"market\").lower()\n            is_lim      = entry_price > 0 and \"limit\" in order_type\n            price       = entry_price if is_lim else (tick.ask if side==\"buy\" else tick.bid)\n            sl,tp       = _sltp(sym2, side, price, sl_pips, tp_pips)\n            if is_lim:\n                otype  = mt5.ORDER_TYPE_BUY_LIMIT  if side==\"buy\" else mt5.ORDER_TYPE_SELL_LIMIT\n                action = mt5.TRADE_ACTION_PENDING\n            else:\n                otype  = mt5.ORDER_TYPE_BUY if side==\"buy\" else mt5.ORDER_TYPE_SELL\n                action = mt5.TRADE_ACTION_DEAL\n            base={\"action\":action,\"symbol\":sym2,\"volume\":vol,\n                  \"type\":otype,\"price\":price,\"sl\":sl,\"tp\":tp,\n                  \"deviation\":20,\"magic\":234000,\"comment\":cmt,\"type_time\":mt5.ORDER_TIME_GTC}\n            r=None\n            if is_lim:\n                r=mt5.order_send(base)  # ordini pendenti non usano type_filling\n            else:\n                for fill in [mt5.ORDER_FILLING_IOC,mt5.ORDER_FILLING_FOK,mt5.ORDER_FILLING_RETURN]:\n                    r=mt5.order_send(dict(base,type_filling=fill))\n                    if r and r.retcode in (10009,10008,0): break\n                    if r and r.retcode not in (10030,10014): break\n            if not r: return jsonify({\"retcode\":-1,\"comment\":\"order_send None\"})\n            print(f\"[{label}:{port}] {side} {vol}lot {sym2} SL={sl:.5f} TP={tp:.5f} -> #{r.order}\")\n            return jsonify({k:(float(v) if hasattr(v,\"real\") else v) for k,v in r._asdict().items()})\n        except Exception as e:\n            return jsonify({\"retcode\":-1,\"comment\":str(e)})\n\n    @app.route(\"/pending\")\n    def pending():\n        global _ea_last\n        _ea_last=time.time()\n        with _plock: out=[o for o in _pending if not o.get(\"done\")]\n        return jsonify(out)\n\n    @app.route(\"/pending/result\", methods=[\"POST\"])\n    def pending_result():\n        d=_body()\n        with _plock:\n            for o in _pending:\n                if o.get(\"id\")==d.get(\"id\"): o[\"done\"]=True; o[\"result\"]=d.get(\"result\",{}); break\n        return jsonify({\"ok\":True})\n\n    @app.route(\"/close\", methods=[\"POST\"])\n    def close():\n        d=_body(); ticket=int(d.get(\"ticket\",0))\n        if port==7778 and (time.time()-_ea_last)<12:\n            oid=int(time.time()*1000)\n            with _plock: _pending.append({\"id\":oid,\"action\":\"close\",\"ticket\":ticket})\n            deadline=time.time()+10\n            while time.time()<deadline:\n                time.sleep(0.2)\n                with _plock:\n                    done=[o for o in _pending if o.get(\"id\")==oid and o.get(\"done\")]\n                if done: return jsonify(done[0].get(\"result\",{}))\n            return jsonify({\"retcode\":-1,\"comment\":\"timeout\"})\n        if mt5:\n            try:\n                pos=mt5.positions_get(ticket=ticket)\n                if not pos: return jsonify({\"retcode\":-1,\"comment\":\"Non trovata\"})\n                p=pos[0]; t=mt5.symbol_info_tick(p.symbol)\n                price=t.bid if p.type==0 else t.ask\n                r=mt5.order_send({\"action\":mt5.TRADE_ACTION_DEAL,\"symbol\":p.symbol,\"volume\":p.volume,\n                    \"type\":mt5.ORDER_TYPE_SELL if p.type==0 else mt5.ORDER_TYPE_BUY,\n                    \"position\":ticket,\"price\":price,\"deviation\":20,\"magic\":234000,\n                    \"comment\":\"close\",\"type_time\":mt5.ORDER_TIME_GTC,\n                    \"type_filling\":mt5.ORDER_FILLING_IOC})\n                return jsonify({k:(float(v) if hasattr(v,\"real\") else v) for k,v in r._asdict().items()})\n            except Exception as e: return jsonify({\"retcode\":-1,\"comment\":str(e)})\n        return jsonify({\"retcode\":-1,\"comment\":\"Non disponibile\"})\n\n    @app.route(\"/history\")\n    def history():\n        if mt5:\n            try:\n                tk=int(request.args.get(\"ticket\",0))\n                deals=mt5.history_deals_get(position=tk) or []\n                return jsonify({\"profit\":sum(x.profit for x in deals),\"ticket\":tk})\n            except: pass\n        return jsonify({\"profit\":0,\"ticket\":0})\n\n    return app\n\ndef _run(app, port):\n    lbl=\"PROP\" if port==7777 else \"PERS\"\n    try:\n        print(f\"  [{lbl}] http://127.0.0.1:{port}\")\n        app.run(host=\"0.0.0.0\",port=port,debug=False,use_reloader=False)\n    except OSError as e:\n        if \"10048\" in str(e) or \"in use\" in str(e).lower(): print(f\"  [WARN] Porta {port} gia occupata\")\n        else: print(f\"  [ERR] {e}\")\n\nif __name__ == \"__main__\":\n    p = argparse.ArgumentParser(add_help=False)\n    p.add_argument(\"--port\",type=int,default=0)\n    args,_ = p.parse_known_args()\n    print(\"=\"*50)\n    print(\"  PropHedge Bridge v8.0\")\n    print(\"=\"*50)\n    if args.port:\n        _run(make_app(args.port), args.port)\n    else:\n        print(\"  Porta 7777  PROP  (MT5)\")\n        print(\"  Porta 7778  PERS  (MT4 EA / MT5)\")\n        print(\"=\"*50)\n        t=threading.Thread(target=_run,args=(make_app(7777),7777),daemon=True)\n        t.start()\n        _run(make_app(7778),7778)\n";
-  var blob=new Blob([code],{type:"text/plain"});
-  var a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download="bridge.py"; a.click(); URL.revokeObjectURL(a.href);
-  setTimeout(function(){alert("✅ bridge.py scaricato!\n\nDoppio clic su bridge.py\noppure: apri cmd nella cartella → py bridge.py\n\nPoi torna qui e connetti.");},400);
-}
-
 function liveDownloadEA(){
   var code = `//+------------------------------------------------------------------+
-//| PropHedge EA v7.0                                                |
+//|  PropHedge MT4 Bridge EA v2.0                                    |
+//|  Usa WebRequest — nessuna DLL esterna necessaria                 |
+//|  SOLO per conto PERSONALE — non usare su conti prop!             |
 //+------------------------------------------------------------------+
 #property strict
 
-input int InpPort = 7778;
+input int BridgePort = 7778; // Porta bridge personale
 
-string g_url;
-string q;
+string BridgeURL;
 
-int OnInit()
-{
-   q     = CharToStr(34);
-   g_url = "http://127.0.0.1:" + IntegerToString(InpPort);
-   EventSetTimer(1);
-   Print("PropHedge EA v7.0 — ", g_url);
-   return(INIT_SUCCEEDED);
-}
-void OnDeinit(const int r) { EventKillTimer(); }
-void OnTimer()              { Heartbeat(); Poll(); }
-
-void Heartbeat()
-{
-   string s = "{";
-   s += q+"login"+q    +":"+IntegerToString(AccountNumber())+",";
-   s += q+"balance"+q  +":"+DoubleToStr(AccountBalance(),2)+",";
-   s += q+"equity"+q   +":"+DoubleToStr(AccountEquity(),2)+",";
-   s += q+"currency"+q +":"+q+AccountCurrency()+q+",";
-   s += q+"server"+q   +":"+q+AccountServer()+q;
-   s += "}";
-   Post("/account?from_ea=1", s);
-
-   string p = "[";
-   for(int i=0;i<OrdersTotal();i++)
-   {
-      if(!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) continue;
-      if(i>0) p+=",";
-      p+="{";
-      p+=q+"ticket"+q+":"+IntegerToString(OrderTicket())+",";
-      p+=q+"symbol"+q+":"+q+OrderSymbol()+q+",";
-      p+=q+"type"+q+":"+IntegerToString(OrderType())+",";
-      p+=q+"volume"+q+":"+DoubleToStr(OrderLots(),2)+",";
-      p+=q+"profit"+q+":"+DoubleToStr(OrderProfit(),2);
-      p+="}";
+int OnInit(){
+   BridgeURL = "http://127.0.0.1:" + IntegerToString(BridgePort);
+   
+   // Verifica connessione al bridge
+   string result = BridgeGet("/account");
+   if(StringLen(result) > 0){
+      Print("PropHedge Bridge MT4 connesso! ", result);
+   } else {
+      Print("PropHedge: bridge non risponde su porta ", BridgePort, ". Avvia bridge.py prima.");
    }
-   p+="]";
-   Post("/positions?from_ea=1", p);
+   
+   EventSetMillisecondTimer(1000);
+   return INIT_SUCCEEDED;
 }
 
-void Poll()
-{
-   string resp = Get("/pending");
-   if(StringLen(resp)<5) return;
-   int from=0;
-   while(true)
-   {
-      string idkey = q+"id"+q+":";
-      int pi = StringFind(resp,idkey,from);
-      if(pi<0) break;
-      int s=pi+StringLen(idkey);
-      int e=StringFind(resp,",",s);
-      int b=StringFind(resp,"}",s);
-      if(e<0||(b>=0&&b<e)) e=b;
-      if(e<0) break;
-      string id=StringSubstr(resp,s,e-s);
-      StringTrimLeft(id); StringTrimRight(id);
+void OnDeinit(const int reason){
+   EventKillTimer();
+   Print("PropHedge Bridge MT4 disconnesso.");
+}
 
-      string sym  = Val(resp,q+"symbol"+q+":");
-      string side = Val(resp,q+"side"+q+":");
-      double vol  = StrToDouble(Val(resp,q+"volume"+q+":"));
-      double slp  = StrToDouble(Val(resp,q+"sl_pips"+q+":"));
-      double tpp  = StrToDouble(Val(resp,q+"tp_pips"+q+":"));
-      string cmt  = Val(resp,q+"comment"+q+":");
-      if(StringLen(cmt)<1) cmt="PropHedge";
+void OnTimer(){
+   // Heartbeat ogni secondo — aggiorna posizioni aperte
+   BridgeGet("/account");
+}
 
-      string res="";
-      if(StringLen(sym)>0 && vol>0.0)
-      {
-         int cmd=(side=="buy")?OP_BUY:OP_SELL;
-         double prc=(cmd==OP_BUY)?MarketInfo(sym,MODE_ASK):MarketInfo(sym,MODE_BID);
-         double pip=0.0001;
-         if(StringFind(sym,"XAU")>=0||StringFind(sym,"GOLD")>=0) pip=0.1;
-         else if(StringFind(sym,"JPY")>=0) pip=0.01;
-         double sl=0,tp=0;
-         if(slp>0) sl=(cmd==OP_BUY)?prc-slp*pip:prc+slp*pip;
-         if(tpp>0) tp=(cmd==OP_BUY)?prc+tpp*pip:prc-tpp*pip;
-         int tk=OrderSend(sym,cmd,vol,prc,3,sl,tp,cmt,0,0,(cmd==OP_BUY)?clrGreen:clrRed);
-         if(tk>0)
-         {
-            Print("PropHedge #",tk," ",sym," ",side," ",DoubleToStr(vol,2),"lot SL=",DoubleToStr(sl,5)," TP=",DoubleToStr(tp,5));
-            res="{"+q+"retcode"+q+":0,"+q+"order"+q+":"+IntegerToString(tk)+","+q+"comment"+q+":"+q+"OK"+q+"}";
-         }
-         else
-         {
-            int err=GetLastError();
-            Print("PropHedge errore ",err," ",sym);
-            res="{"+q+"retcode"+q+":"+IntegerToString(err)+","+q+"comment"+q+":"+q+"err"+IntegerToString(err)+q+"}";
-         }
+// Funzione GET generica
+string BridgeGet(string endpoint){
+   string headers = "Content-Type: application/json\\r\\n";
+   char   post[];
+   char   result[];
+   string resultHeaders;
+   
+   int res = WebRequest(
+      "GET",
+      BridgeURL + endpoint,
+      headers,
+      5000,
+      post,
+      result,
+      resultHeaders
+   );
+   
+   if(res == -1){
+      int err = GetLastError();
+      if(err == 4060){
+         Print("ERRORE: Devi abilitare WebRequest per 127.0.0.1 in MT4.");
+         Print("Vai su: Strumenti -> Opzioni -> Expert Advisors");
+         Print("Spunta 'Consenti WebRequest per i seguenti URL'");
+         Print("Aggiungi: http://127.0.0.1:7778");
       }
-      else res="{"+q+"retcode"+q+":-1,"+q+"comment"+q+":"+q+"dati mancanti"+q+"}";
-
-      Post("/pending/result","{"+q+"id"+q+":"+id+","+q+"result"+q+":"+res+"}");
-      from=pi+5;
+      return "";
    }
+   
+   return CharArrayToString(result);
 }
 
-string Val(string json,string key)
-{
-   int ki=StringFind(json,key);
-   if(ki<0) return("");
-   int s=ki+StringLen(key);
-   bool isq=(StringGetChar(json,s)==34);
-   if(isq) s++;
-   int e=s;
-   while(e<StringLen(json))
-   {
-      int c=StringGetChar(json,e);
-      if(isq&&c==34) break;
-      if(!isq&&(c==44||c==125)) break;
-      e++;
-   }
-   return(StringSubstr(json,s,e-s));
+// Funzione POST generica
+string BridgePost(string endpoint, string body){
+   string headers = "Content-Type: application/json\\r\\n";
+   char   post[];
+   char   result[];
+   string resultHeaders;
+   
+   StringToCharArray(body, post, 0, StringLen(body));
+   ArrayResize(post, ArraySize(post)-1);
+   
+   int res = WebRequest(
+      "POST",
+      BridgeURL + endpoint,
+      headers,
+      5000,
+      post,
+      result,
+      resultHeaders
+   );
+   
+   if(res == -1) return "";
+   return CharArrayToString(result);
 }
 
-string Get(string ep)
-{
-   string h="Content-Type: application/json"+CharToStr(13)+CharToStr(10);
-   uchar post[],res[]; string rh;
-   int code=WebRequest("GET",g_url+ep,h,3000,post,res,rh);
-   if(code<0){if(GetLastError()==4060)Print("Abilita WebRequest per ",g_url," in MT4 Opzioni");return("");}
-   return(CharArrayToString(res));
+// Apre un ordine tramite PropHedge Bridge
+int PropHedgeOrder(string symbol, int cmd, double lots, double sl=0, double tp=0){
+   string side = (cmd == OP_BUY) ? "buy" : "sell";
+   string body = StringFormat(
+      "{\\\"symbol\\\":\\\"%s\\\",\\\"side\\\":\\\"%s\\\",\\\"volume\\\":%.2f,\\\"sl\\\":%.5f,\\\"tp\\\":%.5f,\\\"comment\\\":\\\"PropHedge\\\"}",
+      symbol, side, lots, sl, tp
+   );
+   string result = BridgePost("/order", body);
+   Print("PropHedge ordine: ", result);
+   return (StringLen(result) > 0) ? 1 : -1;
+}
+`;
+  var blob = new Blob([code], {type:'text/plain'});
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href = url; a.download = 'prophedge_mt4.mq4'; a.click();
+  URL.revokeObjectURL(url);
 }
 
-string Post(string ep,string body)
-{
-   string h="Content-Type: application/json"+CharToStr(13)+CharToStr(10);
-   uchar post[],res[]; string rh;
-   StringToCharArray(body,post,0,StringLen(body));
-   ArrayResize(post,ArraySize(post)-1);
-   int code=WebRequest("POST",g_url+ep,h,3000,post,res,rh);
-   if(code<0) return("");
-   return(CharArrayToString(res));
+function liveTutorialOpenMT4(){
+  /* Apre il tutorial dal passo EA (passo 7 = indice 7) */
+  _tutStep = 7;
+  var m = document.getElementById('liveTutModal');
+  if(m){ m.style.display='flex'; _liveTutRender(); }
 }
 
+function liveTutorialOpen(){
+  _tutStep=0;
+  var m=document.getElementById('liveTutModal');
+  if(m){m.style.display='flex';_liveTutRender();}
+}
+function liveTutorialClose(){
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  var m=document.getElementById('liveTutModal');
+  if(m) m.style.display='none';
+}
+function liveTutAudio(){
+  _tutAudioOn=!_tutAudioOn;
+  var btn=document.getElementById('tutAudioBtn');
+  if(btn) btn.textContent=_tutAudioOn?'🔊 Audio ON':'🔇 Audio OFF';
+  if(!_tutAudioOn && window.speechSynthesis) window.speechSynthesis.cancel();
+}
+function _liveTutSpeak(text){
+  if(!_tutAudioOn||!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var u=new SpeechSynthesisUtterance(text);
+  u.lang='it-IT'; u.rate=0.95; u.pitch=1.0;
+  var voices=window.speechSynthesis.getVoices();
+  var v=voices.find(function(x){return x.lang.startsWith('it');});
+  if(v) u.voice=v;
+  window.speechSynthesis.speak(u);
+}
+function _liveTutRender(){
+  var s=_tutSteps[_tutStep], total=_tutSteps.length;
+  var pg=document.getElementById('tutProg');
+  if(pg){
+    pg.innerHTML='';
+    for(var i=0;i<total;i++){
+      var d=document.createElement('div');
+      d.style.cssText='flex:1;height:4px;border-radius:2px;margin-right:2px;background:'+(i<_tutStep?'#34D399':i===_tutStep?'#7F77DD':'rgba(255,255,255,.1)');
+      pg.appendChild(d);
+    }
+  }
+  var ct=document.getElementById('tutContent');
+  if(ct) ct.innerHTML='<div style="font-size:14px;font-weight:800;color:var(--t);margin-bottom:14px">'+s.title+'</div>'+s.html;
+  var lb=document.getElementById('tutLbl');
+  if(lb) lb.textContent='Passo '+(_tutStep+1)+' di '+total;
+  var bp=document.getElementById('tutBtnPrev'),bn=document.getElementById('tutBtnNext');
+  if(bp) bp.disabled=_tutStep===0;
+  if(bn){
+    bn.textContent=_tutStep===total-1?'✓ Fine':'Avanti →';
+    bn.style.background=_tutStep===total-1?'linear-gradient(135deg,#059669,#34D399)':'linear-gradient(135deg,var(--violet2),var(--teal2))';
+  }
+  setTimeout(function(){_liveTutSpeak(s.audio);},400);
+}
+function liveTutGo(dir){
+  var total=_tutSteps.length;
+  if(dir===1&&_tutStep===total-1){liveTutorialClose();return;}
+  _tutStep=Math.max(0,Math.min(total-1,_tutStep+dir));
+  _liveTutRender();
+}
+if(window.speechSynthesis) window.speechSynthesis.getVoices();
+
+function liveDownloadGuide(){
+  var code = `# PropHedge Bridge v3.0
+# NESSUNA CONFIGURAZIONE — si collega automaticamente a MT4/MT5 aperto
+# Avvio: py bridge.py
+# Requisiti (una volta sola): py -m pip install flask flask-cors MetaTrader5
+
+import threading
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import MetaTrader5 as mt5
+
+def connect_mt5(login, password, server):
+    """
+    Connette a MT4/MT5 in tutti i modi possibili.
+    Strategia a 4 tentativi — funziona su qualsiasi PC.
+    """
+    import os, glob, subprocess, time
+
+    MT5_PATH = r"C:\Program Files\MetaTrader 5\terminal64.exe"
+
+    # Tentativo 1: initialize con credenziali dirette (metodo più affidabile)
+    print(f"  [T1] initialize con credenziali dirette...")
+    mt5.shutdown()
+    ok = mt5.initialize(
+        path=MT5_PATH if os.path.exists(MT5_PATH) else None,
+        login=int(login),
+        password=password,
+        server=server,
+        timeout=30000
+    )
+    print(f"  [T1] result={ok}, error={mt5.last_error()}")
+    if ok:
+        info = mt5.account_info()
+        print(f"  Connesso: {info.login if info else login}")
+        return True, None
+    mt5.shutdown()
+    time.sleep(1)
+
+    # Tentativo 2: initialize senza path poi login separato
+    print(f"  [T2] initialize senza path...")
+    ok = mt5.initialize(login=int(login), password=password, server=server, timeout=30000)
+    print(f"  [T2] result={ok}, error={mt5.last_error()}")
+    if ok:
+        info = mt5.account_info()
+        print(f"  Connesso: {info.login if info else login}")
+        return True, None
+    mt5.shutdown()
+    time.sleep(1)
+
+    # Tentativo 3: initialize vuoto poi login
+    print(f"  [T3] initialize vuoto...")
+    ok = mt5.initialize(timeout=30000)
+    print(f"  [T3] init={ok}, error={mt5.last_error()}")
+    if ok:
+        ok2 = mt5.login(int(login), password=password, server=server)
+        print(f"  [T3] login={ok2}, error={mt5.last_error()}")
+        if ok2:
+            return True, None
+    mt5.shutdown()
+
+    # Tentativo 2: trova il terminale con glob su tutto il PC
+    for exe in ['terminal64.exe', 'terminal.exe']:
+        roots = [
+            r"C:\Program Files",
+            r"C:\Program Files (x86)",
+            r"D:\Program Files",
+            os.path.join(os.environ.get("APPDATA",""), "MetaQuotes", "Terminal"),
+            os.path.join(os.environ.get("LOCALAPPDATA",""), "Programs"),
+        ]
+        for root in roots:
+            if not root or not os.path.isdir(root): continue
+            for path in glob.glob(os.path.join(root, "**", exe), recursive=True):
+                try:
+                    mt5.shutdown()
+                    if mt5.initialize(path=path):
+                        ok = mt5.login(int(login), password=password, server=server)
+                        if ok:
+                            print(f"  Connesso via {path}")
+                            return True, None
+                        mt5.shutdown()
+                except Exception as e:
+                    print(f"  {path}: {e}")
+                    continue
+
+    # Tentativo 3: avvia MT5 dal registro di Windows e riprova
+    try:
+        import winreg
+        reg_paths = [
+            r"SOFTWARE\Classes\mt5\shell\open\command",
+            r"SOFTWARE\MetaQuotes Software Corp.\MetaTrader 5",
+        ]
+        for reg_path in reg_paths:
+            try:
+                key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_path)
+                val, _ = winreg.QueryValueEx(key, "")
+                exe_path = val.split('"')[1] if '"' in val else val.split()[0]
+                if os.path.exists(exe_path):
+                    subprocess.Popen([exe_path])
+                    time.sleep(4)
+                    if mt5.initialize():
+                        ok = mt5.login(int(login), password=password, server=server)
+                        if ok: return True, None
+                    mt5.shutdown()
+            except: pass
+    except: pass
+
+    err = mt5.last_error()
+    return False, {"code": err[0], "msg": "Impossibile connettersi a MetaTrader. Assicurati che sia aperto e che AutoTrading sia attivo (pulsante verde in alto). Errore: " + str(err[1])}
+
+def create_app():
+    app = Flask(__name__)
+    CORS(app, resources={r"/*": {"origins": "*"}})
+
+    @app.after_request
+    def add_cors(r):
+        r.headers["Access-Control-Allow-Origin"] = "*"
+        r.headers["Access-Control-Allow-Headers"] = "Content-Type"
+        r.headers["Access-Control-Allow-Methods"] = "GET,POST,OPTIONS"
+        return r
+
+    @app.route("/<path:p>", methods=["OPTIONS"])
+    def opt(p): return "", 204
+
+    @app.route("/connect", methods=["POST"])
+    def connect():
+        d = request.json
+        ok, err = connect_mt5(int(d["login"]), d["password"], d["server"])
+        return jsonify({"ok": ok, "error": err})
+
+    @app.route("/account")
+    def account():
+        info = mt5.account_info()
+        if not info: return jsonify({})
+        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in info._asdict().items()})
+
+    @app.route("/positions")
+    def positions():
+        pos = mt5.positions_get() or []
+        return jsonify([{k:(float(v) if hasattr(v,"real") else v) for k,v in p._asdict().items()} for p in pos])
+
+    @app.route("/history")
+    def history():
+        ticket = int(request.args.get("ticket", 0))
+        deals = mt5.history_deals_get(position=ticket) or []
+        return jsonify({"profit": sum(d.profit for d in deals), "ticket": ticket})
+
+    @app.route("/order", methods=["POST"])
+    def order():
+        d = request.json
+        sym = d["symbol"]
+        tick = mt5.symbol_info_tick(sym)
+        side = d.get("side", "buy")
+        price = tick.ask if side == "buy" else tick.bid
+        req = {
+            "action": mt5.TRADE_ACTION_DEAL, "symbol": sym,
+            "volume": float(d["volume"]),
+            "type": mt5.ORDER_TYPE_BUY if side == "buy" else mt5.ORDER_TYPE_SELL,
+            "price": price, "sl": float(d.get("sl", 0)), "tp": float(d.get("tp", 0)),
+            "deviation": 10, "magic": 234000,
+            "comment": d.get("comment", "PropHedge"),
+            "type_time": mt5.ORDER_TIME_GTC,
+            "type_filling": mt5.ORDER_FILLING_IOC,
+        }
+        r = mt5.order_send(req)
+        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
+
+    @app.route("/modify", methods=["POST"])
+    def modify():
+        d = request.json
+        req = {"action": mt5.TRADE_ACTION_SLTP, "position": int(d["ticket"]),
+               "sl": float(d["sl"]), "tp": float(d["tp"])}
+        r = mt5.order_send(req)
+        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
+
+    @app.route("/close", methods=["POST"])
+    def close():
+        ticket = int(request.json["ticket"])
+        pos = mt5.positions_get(ticket=ticket)
+        if not pos: return jsonify({"retcode": -1, "comment": "Not found"})
+        p = pos[0]
+        tick = mt5.symbol_info_tick(p.symbol)
+        price = tick.bid if p.type == 0 else tick.ask
+        req = {
+            "action": mt5.TRADE_ACTION_DEAL, "symbol": p.symbol, "volume": p.volume,
+            "type": mt5.ORDER_TYPE_SELL if p.type == 0 else mt5.ORDER_TYPE_BUY,
+            "position": ticket, "price": price, "deviation": 10, "magic": 234000,
+            "comment": "PropHedge close",
+            "type_time": mt5.ORDER_TIME_GTC, "type_filling": mt5.ORDER_FILLING_IOC,
+        }
+        r = mt5.order_send(req)
+        return jsonify({k:(float(v) if hasattr(v,"real") else v) for k,v in r._asdict().items()})
+
+    return app
+
+def run(port):
+    create_app().run(host="127.0.0.1", port=port, debug=False, use_reloader=False)
+
+if __name__ == "__main__":
+    print("=" * 50)
+    print("  PropHedge Bridge v3.0")
+    print("  Porta 7777 (PROP)      attiva")
+    print("  Porta 7778 (PERSONALE) attiva")
+    print("=" * 50)
+    print("  Lascia questa finestra aperta.")
+    print("  Torna su PropHedge e clicca Connetti.")
+    t = threading.Thread(target=run, args=(7777,), daemon=True)
+    t.start()
+    run(7778)
 `;
   var blob=new Blob([code],{type:'text/plain'});
   var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');a.href=url;a.download='prophedge_mt4.mq4';a.click();
+  var a=document.createElement('a');a.href=url;a.download='bridge.py';a.click();
   URL.revokeObjectURL(url);
 }
 function renderEADownload(){
@@ -11150,8 +11143,8 @@ function jrnlRenderMain(){
       /* Parametri calcolati */
       +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">'
       +[
-        ['Lotti PROP',  lotProp+' lot'+((_simCH1&&_simCH1._above70Loss)?' ⚠':''), '#38BDF8'],
-        ['Lotti PERS',  lotPers+' lot'+((_simCH1&&_simCH1._above70Active)?' ⚡':''), '#A78BFA'],
+        ['Lotti PROP',  lotProp+' lot', '#38BDF8'],
+        ['Lotti PERS',  lotPers+' lot', '#A78BFA'],
         ['SL / TP',     sl+' / '+tp+' pip', 'var(--amber)'],
         ['Asset',       sym, 'var(--teal)']
       ].map(function(k){
@@ -11161,12 +11154,10 @@ function jrnlRenderMain(){
       }).join('')
       +'</div>'
 
-      /* Simbolo + Prezzo opzionale */
-      +'<div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;flex-wrap:wrap">'
-      +'<div><div style="font-size:9px;color:var(--t3);font-family:var(--fd);margin-bottom:3px">Simbolo broker</div>'
-      +'<input id="jSym_'+i+'" value="'+sym+'" style="width:110px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--t);padding:6px 8px;font-size:12px;font-weight:700;outline:none"></div>'
-      +'<div><div style="font-size:9px;color:var(--amber);font-family:var(--fd);margin-bottom:3px">Prezzo entrata <span style="opacity:.6">(vuoto=mercato)</span></div>'
-      +'<input id="jPrice_'+i+'" type="number" step="0.001" placeholder="es. 3285.50" style="width:130px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.3);border-radius:6px;color:var(--amber);padding:6px 8px;font-size:12px;font-weight:700;outline:none"></div>'
+      /* Simbolo editabile */
+      +'<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">'
+      +'<div style="font-size:11px;color:var(--t3);font-family:var(--fd);white-space:nowrap">Simbolo broker:</div>'
+      +'<input id="jSym_'+i+'" value="'+sym+'" placeholder="XAUUSD" style="width:120px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--t);padding:5px 8px;font-size:11px;font-weight:700;outline:none">'
       +'</div>'
 
       /* Pulsanti APRI HEDGE */
@@ -11361,18 +11352,20 @@ async function jrnlOpenHedge(sessIdx, propDir){
   var sess = jrnl.sessions[sessIdx];
   if(!sess) return;
 
-  /* ── Parametri DALLA PROP collegata + regola 70% dal simulatore ── */
-  var prop    = (typeof props !== 'undefined' && sess.linkedPropId)
-                ? props.find(function(p){return p.id===sess.linkedPropId;}) : null;
-  var asset   = (prop&&prop.asset)||sess.asset||'GOLD';
-  var sym     = document.getElementById('jSym_'+sessIdx)?.value.trim()
-                || ((asset==='GOLD'||asset==='XAU')?'XAUUSD':asset);
-  var lotProp = parseFloat((prop&&prop.lots)||sess.lotProp||0.01);
-  var lotPers = parseFloat((prop&&(prop.lotPers||prop.lotsHedge))||sess.lotPers||0.01);
-  var sl      = parseFloat((prop&&prop.slPips)||sess.slPips||0);
-  var tp      = parseFloat((prop&&prop.tpPips)||sess.tpPips||0);
+  var prop = null;
+  if(sess.linkedPropId && typeof props !== 'undefined')
+    prop = props.find(function(p){return p.id===sess.linkedPropId;});
+  if(!prop){ alert('Parametri sfida non trovati.'); return; }
 
-  /* Applica regola 70% dal simulatore in tempo reale */
+  var sym     = document.getElementById('jSym_'+sessIdx)?.value || prop.asset || 'XAUUSD';
+  if(sym==='GOLD') sym='XAUUSD';
+  var lotProp = prop.lots || 0.01;
+  var lotPers = prop.lotPers || prop.lotsHedge || 0.01;
+  var sl      = prop.slPips || 100;
+  var tp      = prop.tpPips || 100;
+  var persDir = propDir==='buy' ? 'sell' : 'buy';
+
+  /* Applica regole 70% dal simulatore */
   if(typeof _simCH1 !== 'undefined'){
     if(_simCH1._above70Active && _simCH1._lotPersHalved > 0)
       lotPers = _simCH1._lotPersHalved;
@@ -11380,69 +11373,38 @@ async function jrnlOpenHedge(sessIdx, propDir){
       lotProp = Math.floor(lotProp * 50) / 100;
   }
 
-  /* Prezzo entrata opzionale (ordine limite) */
-  var entryPx = parseFloat(document.getElementById('jPrice_'+sessIdx)?.value) || 0;
-  var isLimit = entryPx > 0;
-
-  var persDir = propDir==='buy' ? 'sell' : 'buy';
-  var resEl   = document.getElementById('jHedgeResult_'+sessIdx);
-  function setRes(bg, col, msg){
-    if(resEl){resEl.style.display='block';resEl.style.background=bg;resEl.style.color=col;resEl.innerHTML=msg;}
-  }
-
-  setRes('rgba(251,191,36,.08)','var(--amber)',
-    '⏳ '+(isLimit?'Invio ordine LIMITE @'+entryPx:'Invio ordine a mercato')+'...<br>'
-    +'<span style="font-size:10px">PROP: '+propDir.toUpperCase()+' '+lotProp+'lot | '
-    +'PERS: '+persDir.toUpperCase()+' '+lotPers+'lot | SL '+sl+'pip TP '+tp+'pip</span>');
-
-  function mkPayload(side, vol, cmt){
-    var p = {symbol:sym, volume:vol, side:side, sl_pips:sl, tp_pips:tp, comment:cmt};
-    if(isLimit){ p.price=entryPx; p.order_type=(side==='buy'?'buylimit':'selllimit'); }
-    return p;
-  }
+  var res = document.getElementById('jHedgeResult_'+sessIdx);
+  if(res){ res.style.display='block'; res.style.background='rgba(251,191,36,.08)'; res.style.color='var(--amber)'; res.textContent='⏳ Apertura in corso...'; }
 
   try{
-    /* Invia PROP prima */
-    var rP = await fetch('http://127.0.0.1:7777/order',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(mkPayload(propDir, lotProp, 'PH_PROP'))
-    }).then(function(r){return r.json();})
-    .catch(function(e){return {retcode:-1,comment:'Bridge PROP non raggiungibile: '+e.message};});
+    var [rProp, rPers] = await Promise.all([
+      fetch('http://127.0.0.1:7777/order',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({symbol:sym,volume:lotProp,side:propDir,sl:0,tp:0,comment:'PH_PROP_'+sess.name})}).then(r=>r.json()),
+      fetch('http://127.0.0.1:7778/order',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({symbol:sym,volume:lotPers,side:persDir,sl:0,tp:0,comment:'PH_PERS_'+sess.name})}).then(r=>r.json())
+    ]);
 
-    var okP = rP&&(rP.retcode===10009||rP.retcode===10008||rP.retcode===0||rP.order>0);
-    if(!okP){
-      setRes('rgba(248,113,113,.1)','var(--red)',
-        '❌ PROP non inviata: <b>'+(rP.comment||rP.retcode)+'</b><br>'
-        +'<span style="font-size:10px">Controlla che bridge.py sia avviato e PROP sia connessa.</span>');
-      return;
-    }
+    var okProp = rProp.retcode===10009||rProp.retcode===0;
+    var okPers = rPers.retcode===10009||rPers.retcode===0;
 
-    /* Invia PERS */
-    var rS = await fetch('http://127.0.0.1:7778/order',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(mkPayload(persDir, lotPers, 'PH_PERS'))
-    }).then(function(r){return r.json();})
-    .catch(function(e){return {retcode:-1,comment:'Bridge PERS non raggiungibile: '+e.message};});
-
-    var okS = rS&&(rS.retcode===10009||rS.retcode===10008||rS.retcode===0||rS.order>0);
-
-    if(okP && okS){
-      setRes('rgba(52,211,153,.1)','var(--green)',
-        (isLimit?'📌 LIMITE @'+entryPx:'✅ MERCATO')
-        +' | PROP '+propDir.toUpperCase()+' '+lotProp+'lot #'+(rP.order||'?')
-        +' | PERS '+persDir.toUpperCase()+' '+lotPers+'lot #'+(rS.order||'?')
-        +'<br><span style="font-size:10px">SL '+sl+'pip  TP '+tp+'pip  Sym: '+sym+'</span>');
-      _bridgeRegisterTrade(rP.order||0, rS.order||0, sym, propDir, lotProp, lotPers);
-      /* Pulisci campo prezzo dopo ordine */
-      var px=document.getElementById('jPrice_'+sessIdx); if(px) px.value='';
+    if(okProp && okPers){
+      if(res){ res.style.background='rgba(52,211,153,.1)'; res.style.color='var(--green)';
+        res.textContent='✅ PROP '+propDir.toUpperCase()+' '+lotProp+'lot #'+rProp.order+' · PERS '+persDir.toUpperCase()+' '+lotPers+'lot #'+rPers.order; }
+      /* Registra trade aperto per tracking chiusura */
+      if(!_openHedgeTrades) _openHedgeTrades=[];
+      _openHedgeTrades.push({
+        propTicket:rProp.order, persTicket:rPers.order,
+        sym:sym, dir:propDir, lotProp:lotProp, lotPers:lotPers,
+        sessIdx:sessIdx, linkedPropId:sess.linkedPropId,
+        day: _getSimCurrentDay(sess.linkedPropId)
+      });
     } else {
-      setRes('rgba(248,113,113,.1)','var(--red)',
-        '✅ PROP #'+(rP.order||'?')+' aperta | ❌ PERS: '
-        +'<b>'+(rS.comment||rS.retcode||JSON.stringify(rS))+'</b>');
+      if(res){ res.style.background='rgba(248,113,113,.1)'; res.style.color='var(--red)';
+        res.textContent='❌ PROP: '+(okProp?'OK':JSON.stringify(rProp.comment||rProp.retcode))+' · PERS: '+(okPers?'OK':JSON.stringify(rPers.comment||rPers.retcode)); }
     }
-    liveRefreshAll();
   } catch(e){
-    setRes('rgba(248,113,113,.1)','var(--red)','❌ Errore JS: '+e.message);
+    if(res){ res.style.background='rgba(248,113,113,.1)'; res.style.color='var(--red)';
+      res.textContent='❌ Bridge non raggiungibile. Assicurati che bridge.py sia avviato.'; }
   }
 }
 
@@ -11712,8 +11674,7 @@ function jrnlDelete(i){
     try{ localStorage.removeItem('ph_live_creds_'+linkedId); } catch(e){}
     try{ localStorage.removeItem('ph_sim_'+linkedId); } catch(e){}
     /* Aggiorna dashboard */
-    if(typeof saveProps==='function')saveProps();
-    if(typeof render==='function')render();
+    if(typeof render === 'function') render();
   }
   renderJournal();
 }
@@ -14913,7 +14874,14 @@ function render(){
 
 
   else if(currentTab==='proplist')ct.innerHTML=renderPropList();
-  else if(currentTab==='sconti'){ct.innerHTML=renderSconti();scRenderList();}
+  else if(currentTab==='sconti'){
+    ct.style.padding='0';
+    ct.style.maxWidth='none';
+    ct.style.margin='0';
+    ct.innerHTML=renderSconti();
+    scRenderList();
+    return;
+  }
 
 
 
@@ -17430,174 +17398,6 @@ window.addEventListener('DOMContentLoaded',function(){
   checkNet();window.addEventListener('online',checkNet);window.addEventListener('offline',checkNet);
 
 });
-
-/* ── POPUP OFFERTA SETTIMANA ── */
-(function(){
-  var PROMOS = [
-    {name:'FundedElite', domain:'fundedelite.com', pct:25, code:'VISIONTRADING',
-     url:'https://fundedelite.com',
-     col:'#60a5fa', facts:['Payout 80%','DD 8%','Rimborso 1° tentativo']},
-    {name:'FTMO', domain:'ftmo.com', pct:10, code:'',
-     url:'https://trader.ftmo.oanda.com/?affiliates=jBQuRQOpcgjJjRDepMFl',
-     col:'#60a5fa', facts:['Payout 80%','DD 10%','200k+ trader']},
-    {name:'FTUK', domain:'ftuk.com', pct:20, code:'',
-     url:'https://ftuk.com/?ref=1124',
-     col:'#60a5fa', facts:['Payout 80%','DD 8%','No time limit']},
-    {name:'The5ers', domain:'the5ers.com', pct:15, code:'',
-     url:'https://www.the5ers.com/?afmc=19dh',
-     col:'#60a5fa', facts:['Payout 50%','DD 6%','Crescita organica']},
-    {name:'FundingPips', domain:'app.fundingpips.com', pct:10, code:'',
-     url:'https://app.fundingpips.com/register?ref=3060E5C8',
-     col:'#60a5fa', facts:['Payout 90%','Challenge flessibili','Scaling illimitato']}
-  ];
-  var best = PROMOS.slice().sort(function(a,b){return b.pct-a.pct;})[0];
-  var ID = '_promo4';
-
-  function beep(){
-    try{
-      var ctx = new (window.AudioContext||window.webkitAudioContext)();
-      var o=ctx.createOscillator();
-      var g=ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.frequency.value=880;
-      o.type='sine';
-      g.gain.setValueAtTime(0,ctx.currentTime);
-      g.gain.linearRampToValueAtTime(0.18,ctx.currentTime+0.01);
-      g.gain.linearRampToValueAtTime(0,ctx.currentTime+0.22);
-      o.start(ctx.currentTime);
-      o.stop(ctx.currentTime+0.25);
-    }catch(e){}
-  }
-
-  function close(){
-    var el=document.getElementById(ID);
-    if(el){
-      el.style.opacity='0';
-      el.style.transform='translateY(14px)';
-      setTimeout(function(){el.parentNode&&el.parentNode.removeChild(el);},300);
-    }
-    try{localStorage.setItem('_pd4',String(Date.now()));}catch(e){}
-  }
-
-  function build(p){
-    if(document.getElementById(ID)) return;
-    var d=document.createElement('div');
-    d.id=ID;
-    d.style.cssText='position:fixed;bottom:76px;left:14px;z-index:99999;width:210px;'
-      +'background:#080e1c;border-radius:16px;overflow:hidden;'
-      +'border:1px solid rgba(96,165,250,0.2);'
-      +'opacity:0;transform:translateY(16px);'
-      +'transition:opacity .35s ease,transform .35s ease;'
-      +'font-family:system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,0.5)';
-
-    /* Top stripe */
-    var stripe=document.createElement('div');
-    stripe.style.cssText='background:linear-gradient(90deg,rgba(96,165,250,0.15),rgba(96,165,250,0.05));'
-      +'padding:8px 12px;display:flex;align-items:center;justify-content:space-between;'
-      +'border-bottom:1px solid rgba(96,165,250,0.12)';
-    var lbl=document.createElement('div');
-    lbl.style.cssText='display:flex;align-items:center;gap:5px';
-    var dot=document.createElement('span');
-    dot.style.cssText='width:6px;height:6px;border-radius:50%;background:#60a5fa;display:inline-block;'
-      +'animation:_pulse 1.5s ease infinite';
-    var ltxt=document.createElement('span');
-    ltxt.textContent='Offerta settimana';
-    ltxt.style.cssText='font-size:10px;color:rgba(147,197,253,0.8);font-weight:600;letter-spacing:.04em';
-    lbl.appendChild(dot); lbl.appendChild(ltxt);
-    var xb=document.createElement('button');
-    xb.textContent='×';
-    xb.style.cssText='background:none;border:none;color:rgba(147,197,253,0.35);'
-      +'font-size:16px;cursor:pointer;padding:0;line-height:1';
-    xb.onclick=close;
-    stripe.appendChild(lbl); stripe.appendChild(xb);
-
-    /* Logo */
-    var logoArea=document.createElement('div');
-    logoArea.style.cssText='padding:12px 14px 8px;display:flex;align-items:center;gap:10px';
-    var img=document.createElement('img');
-    img.src='https://www.google.com/s2/favicons?domain='+p.domain+'&sz=32';
-    img.style.cssText='width:26px;height:26px;border-radius:6px;flex-shrink:0';
-    img.onerror=function(){this.style.display='none';};
-    var nameEl=document.createElement('div');
-    nameEl.textContent=p.name;
-    nameEl.style.cssText='font-size:15px;font-weight:700;color:rgba(255,255,255,0.9)';
-    logoArea.appendChild(img); logoArea.appendChild(nameEl);
-
-    /* Sconto */
-    var discRow=document.createElement('div');
-    discRow.style.cssText='padding:2px 14px 10px;display:flex;align-items:baseline;gap:8px';
-    var pctEl=document.createElement('div');
-    pctEl.textContent='-'+p.pct+'%';
-    pctEl.style.cssText='font-size:38px;font-weight:900;color:#4ade80;line-height:1;letter-spacing:-1.5px';
-    var subEl=document.createElement('div');
-    subEl.textContent='di sconto';
-    subEl.style.cssText='font-size:12px;color:rgba(255,255,255,0.35);padding-bottom:4px';
-    discRow.appendChild(pctEl); discRow.appendChild(subEl);
-
-    /* Code */
-    if(p.code){
-      var codeBox=document.createElement('div');
-      codeBox.style.cssText='margin:0 14px 10px;background:rgba(74,222,128,0.08);'
-        +'border:1px solid rgba(74,222,128,0.2);border-radius:7px;padding:6px 10px;'
-        +'display:flex;align-items:center;gap:6px';
-      var ck=document.createElement('span');
-      ck.textContent='✓';
-      ck.style.cssText='color:#4ade80;font-weight:700;font-size:12px';
-      var ct=document.createElement('span');
-      ct.textContent='Codice: '+p.code;
-      ct.style.cssText='font-size:11px;color:#4ade80;font-weight:600;letter-spacing:.04em;font-family:monospace';
-      codeBox.appendChild(ck); codeBox.appendChild(ct);
-      d.appendChild(stripe); d.appendChild(logoArea); d.appendChild(discRow); d.appendChild(codeBox);
-    } else {
-      d.appendChild(stripe); d.appendChild(logoArea); d.appendChild(discRow);
-    }
-
-    /* Facts */
-    var facts=document.createElement('div');
-    facts.style.cssText='padding:0 14px 12px;display:flex;flex-direction:column;gap:4px';
-    p.facts.forEach(function(f){
-      var r=document.createElement('div');
-      r.style.cssText='display:flex;align-items:center;gap:6px';
-      var dot2=document.createElement('div');
-      dot2.style.cssText='width:3px;height:3px;border-radius:50%;background:rgba(96,165,250,0.5);flex-shrink:0';
-      var t=document.createElement('span');
-      t.textContent=f;
-      t.style.cssText='font-size:10px;color:rgba(255,255,255,0.4)';
-      r.appendChild(dot2); r.appendChild(t);
-      facts.appendChild(r);
-    });
-    d.appendChild(facts);
-
-    /* CTA */
-    var foot=document.createElement('div');
-    foot.style.cssText='padding:0 10px 10px';
-    var btn=document.createElement('button');
-    btn.textContent='Scopri offerta →';
-    btn.style.cssText='width:100%;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.25);'
-      +'border-radius:9px;padding:9px;color:#93c5fd;font-size:12px;font-weight:700;cursor:pointer';
-    btn.onmouseenter=function(){this.style.background='rgba(96,165,250,0.2)';};
-    btn.onmouseleave=function(){this.style.background='rgba(96,165,250,0.12)';};
-    btn.onclick=function(){window.open(p.url,'_blank');};
-    foot.appendChild(btn);
-    d.appendChild(foot);
-
-    /* Pulse animation */
-    var st=document.createElement('style');
-    st.textContent='@keyframes _pulse{0%,100%{opacity:1}50%{opacity:.3}}';
-    d.appendChild(st);
-
-    document.body.appendChild(d);
-    setTimeout(function(){d.style.opacity='1';d.style.transform='none';},50);
-    beep();
-  }
-
-  window.addEventListener('load',function(){
-    try{
-      var t=parseInt(localStorage.getItem('_pd4')||'0');
-      if(Date.now()-t>30*60*1000) setTimeout(function(){build(best);},4000);
-    }catch(e){}
-  });
-})();
 
 </script>
 
