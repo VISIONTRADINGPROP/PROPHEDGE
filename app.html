@@ -7830,15 +7830,19 @@ function renderDash(){
 
 
     /* ── Stato connessione bridge per questa sfida ── */
-    var bridgeConn = typeof _bridge !== "undefined" && _bridge.prop.connected && _bridge.pers.connected;
+    /* Mostra trading se prop connessa — pers opzionale */
+  var bridgeConn = typeof _bridge !== "undefined" && _bridge.prop.connected;
     var livePos = bridgeConn
       ? (_bridge.prop.positions||[]).map(function(pos){return Object.assign({},pos,{_side:"prop"});}).concat(
           (_bridge.pers.positions||[]).map(function(pos){return Object.assign({},pos,{_side:"pers"});}))
       : [];
 
-    var connBadge = bridgeConn
-      ? '<div style="display:flex;align-items:center;gap:5px;padding:4px 10px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);border-radius:6px;font-size:10px;font-family:var(--fd);color:#34D399"><span style="width:6px;height:6px;border-radius:50%;background:#34D399;box-shadow:0 0 5px #34D399;flex-shrink:0"></span>LIVE CONNESSO</div>'
-      : '<div style="display:flex;align-items:center;gap:5px;padding:4px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-size:10px;font-family:var(--fd);color:var(--t3)"><span style="width:6px;height:6px;border-radius:50%;background:var(--t3);flex-shrink:0"></span>Non connesso</div>';
+    var _pConn=typeof _bridge!=='undefined'&&_bridge.prop.connected;
+    var _eConn=typeof _bridge!=='undefined'&&_bridge.pers.connected;
+    var connBadge = '<div style="display:flex;gap:6px;align-items:center">'
+      +(_pConn?'<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);border-radius:6px;font-size:9px;color:#34D399"><span style="width:5px;height:5px;border-radius:50%;background:#34D399"></span>PROP</div>':'<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:6px;font-size:9px;color:#f87171"><span style="width:5px;height:5px;border-radius:50%;background:#f87171"></span>PROP</div>')
+      +(_eConn?'<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3);border-radius:6px;font-size:9px;color:#34D399"><span style="width:5px;height:5px;border-radius:50%;background:#34D399"></span>PERS</div>':'<div style="display:flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:6px;font-size:9px;color:#f87171"><span style="width:5px;height:5px;border-radius:50%;background:#f87171"></span>PERS</div>')
+      +'</div>';
 
     var posRows = "";
     livePos.slice(0,4).forEach(function(pos){
@@ -8757,7 +8761,7 @@ function renderLive(){
     +'<div style="flex:1">'
     +'<div style="font-size:12px;font-weight:700;color:var(--t);margin-bottom:4px">Scarica il Bridge</div>'
     +'<div style="font-size:11px;color:var(--t2);font-family:var(--fd);margin-bottom:8px">Il file che collega PropHedge ai tuoi conti MetaTrader.</div>'
-    +'<button onclick="liveDownloadGuide()" style="background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:8px;color:#fff;padding:8px 18px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica bridge.py</button>'
+    +'<div style="display:flex;gap:8px;margin-bottom:4px">'+'<button onclick="liveDownloadGuide()" style="flex:1;background:linear-gradient(135deg,var(--violet2),var(--teal2));border:none;border-radius:8px;color:#fff;padding:8px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica bridge.py</button>'+'<button onclick="liveDownloadEA()" style="flex:1;background:linear-gradient(135deg,#059669,#34D399);border:none;border-radius:8px;color:#fff;padding:8px 14px;font-size:11px;font-weight:700;cursor:pointer">⬇ Scarica EA MT4</button>'+'</div>'
     +'<div style="font-size:10px;color:var(--t3);font-family:var(--fd);margin-top:5px">Salvalo sul Desktop</div>'
     +'</div></div>'
 
@@ -8992,15 +8996,14 @@ async function liveConnectSingle(propId, side){
       }
       return;
     }
-    /* Step 3: verifica login */
+    /* Step 3: avvisa se login diverso ma NON blocca */
+    if(errEl) errEl.style.display="none";
     if(log && String(acc.login) !== String(log)){
-      if(btn){btn.textContent=isP?"🎯 Connetti PROP":"🛡️ Connetti PERSONALE";btn.disabled=false;}
       if(errEl){
-        errEl.innerHTML="⚠️ EA connesso al conto <b>"+acc.login+"</b>, inserito <b>"+log+"</b>.<br>"
-          +"<span style=\"font-size:9px\">Apri MT4 col conto "+log+" o correggi il login.</span>";
+        errEl.innerHTML="⚠️ MT4 loggato col conto <b>"+acc.login+"</b> (non "+log+").<br>"
+          +"<span style=\"font-size:9px\">Connesso ugualmente. Per usare il conto "+log+" loga MT4 con quell\'account.</span>";
         errEl.style.display="block";
       }
-      return;
     }
     /* Connesso! */
     _bridge[side].connected=true;
@@ -9010,6 +9013,8 @@ async function liveConnectSingle(propId, side){
     if(errEl) errEl.style.display="none";
     liveRenderAccount(side, acc);
     if(!_bridgePollTimer){_bridgePollTimer=setInterval(liveRefreshAll,3000);_bridge[side].propId=propId;}
+    /* Sincronizza anche il Journal */
+    _liveSyncJournal(propId, side, 'mt4', acc);
     return;
   }
 
@@ -9041,6 +9046,7 @@ async function liveConnectSingle(propId, side){
         setTimeout(_bridgeRestoreGrids,50);
         /* Aggiorna Journal se aperto */
         if(typeof currentTab!=="undefined"&&currentTab==="journal"&&typeof renderJournal==="function") renderJournal();
+        _liveSyncJournal(propId, side, plat, _bridge[side].account);
       },0);
     } else {
       _bridge[side].connected=false;
