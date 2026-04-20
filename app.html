@@ -3882,7 +3882,7 @@ function doRegisterFree(){
 
 
 
-    <a href="javascript:void(0)" id="adminFooterLink" style="color:#534AB7;text-decoration:none;font-size:10px;font-family:var(--fd);opacity:0.6;cursor:pointer">⚙ Admin</a>
+    <a href="prophedge_admin.html" target="_blank" style="color:#534AB7;text-decoration:none;font-size:10px;font-family:var(--fd);opacity:0.6;cursor:pointer">⚙ Admin</a>
 
 
 
@@ -4182,7 +4182,7 @@ function doRegisterFree(){
       <div id="ch1LotsRow" style="display:none;margin-bottom:8px">
         <div class="fr2">
           <div class="f"><label>Lotti Prop (manuale)</label><input id="ch1Lots" type="number" step="0.01" min="0.01" placeholder="auto" oninput="_ch1ManualLotChange()"></div>
-          <div class="f"><label>Lotti Personale (manuale)</label><div style="display:flex;gap:5px;align-items:center"><input id="ch1LotsPers" type="number" step="0.01" min="0.01" placeholder="auto" style="flex:1;min-width:70px" oninput="_ch1ManualLotChange()"><button type="button" onclick="var f=document.getElementById('ch1LotsPers');f.value='';_ch1ManualMode=false;calcPreviewFull();" style="padding:4px 7px;border-radius:5px;background:rgba(167,139,250,.2);border:1px solid rgba(167,139,250,.4);color:#a78bfa;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">↺ Auto</button></div></div>
+          <div class="f"><label>Lotti Personale (manuale)</label><div style="display:flex;gap:5px;align-items:center"><input id="ch1LotsPers" type="number" step="0.01" min="0.01" placeholder="auto" style="flex:1;min-width:70px" oninput="_ch1ManualLotChange()"><button type="button" onclick="_ch1AutoCalcPersonale()"  style="padding:4px 7px;border-radius:5px;background:rgba(167,139,250,.2);border:1px solid rgba(167,139,250,.4);color:#a78bfa;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">↺ Auto</button></div></div>
         </div>
       </div>
       <!-- SIMULATORE INTERATTIVO -->
@@ -16154,6 +16154,50 @@ function _autoCalcChallenge1() {
   document.body.appendChild(t);
   setTimeout(function(){ var el=document.getElementById('_phCalcToast'); if(el) el.remove(); }, 7000);
 }
+/* ↺ Auto lotti personale — Challenge 1 Step
+   Legge i lotti prop inseriti manualmente e calcola
+   i lotti personale con la formula della sessione.
+   NON tocca mai i lotti prop. */
+function _ch1AutoCalcPersonale() {
+  var cost    = parseFloat(document.getElementById('mCost')?.value)        || 1500;
+  var maxDD   = parseFloat(document.getElementById('mDD')?.value)          || 6;
+  var size    = parseFloat(document.getElementById('mSize')?.value)        || 100000;
+  var covPct  = parseFloat(document.getElementById('ch1Cov')?.value)       || 85;
+  var asset   = (document.getElementById('mAsset')?.value || 'GOLD:10').split(':')[0];
+  var pipVal  = typeof _chPipVal === 'function' ? _chPipVal(asset) : 10;
+  var sl      = 100;
+  var tickVal = sl * pipVal;
+
+  /* Legge i lotti prop dal campo manuale ch1Lots */
+  var propLot = parseFloat(document.getElementById('ch1Lots')?.value) || 0;
+  if (propLot < 0.01) {
+    /* Se non c'è manuale usa il campo auto mLots */
+    propLot = parseFloat(document.getElementById('mLots')?.value) || 0.01;
+  }
+
+  /* Stessa formula di _autoCalcChallenge1:
+     nLossMax = quante volte può perdere la prop con questi lotti
+     lotPers  = (cost × covPct%) / (nLossMaxSafe × tickVal) */
+  var maxDDusd     = size * (maxDD / 100);
+  var tradeAmt     = propLot * tickVal;
+  var nLossMax     = tradeAmt > 0 ? Math.floor(maxDDusd / tradeAmt) : 3;
+  var nLossMaxSafe = Math.max(nLossMax, 3);
+  var lotPers      = (cost * (covPct / 100)) / (nLossMaxSafe * tickVal);
+  lotPers = Math.round(lotPers * 100) / 100;
+  if (lotPers < 0.01) lotPers = 0.01;
+
+  /* Scrivi SOLO il campo personale */
+  _ch1AutoCalcWriting = true;
+  var ch1P = document.getElementById('ch1LotsPers');
+  if (ch1P) ch1P.value = lotPers;
+  _simCH1._lotPersTrue = lotPers;
+  _ch1ManualMode = false;
+  _ch1AutoCalcWriting = false;
+
+  /* Aggiorna preview e simulatore */
+  if (typeof calcPreview === 'function') calcPreview();
+}
+
 
 /* ════════════════════════════════════════════════════════════════════
    OPEN SIMULATOR — Challenge 1 Step
@@ -17670,6 +17714,24 @@ document.addEventListener('click', function(e){
     e.preventDefault(); e.stopPropagation(); openAdmin();
   }
 });
+
+
+
+
+/* Calcola personale dai lotti prop correnti — NON tocca mai il campo prop */
+
+
+/* ─────────────────────────────────────────────────
+   CH1: ↺ Auto personale — calcola lotPers dai lotti prop correnti
+   Usa la stessa formula di _autoCalcChallenge1 ma legge i lotti prop
+   sia da ch1Lots (manuale) che dall'auto-calc
+───────────────────────────────────────────────── */
+
+
+/* ─────────────────────────────────────────────────
+   PROP+PROP: ↺ Auto prop2 — calcola lot2 da lot1 e parametri prop2
+───────────────────────────────────────────────── */
+
 </script>
 
 </body>
